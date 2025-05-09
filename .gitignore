@@ -187,5 +187,12 @@ models/
 output/
 
 
+*.jsonl
+*.xml
+
+
+
+
+
 
 
