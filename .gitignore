@@ -182,8 +182,10 @@ results/
 
 
 
-dataset
-models
-output
-logs
+dataset/
+models/
+output/
+
+
+
 
