@@ -1,14 +1,14 @@
 
-from trl import ModelConfig, ScriptArguments, SFTTrainer, TrlParser, get_peft_config, setup_chat_format
+from trl import ModelConfig, TrlParser
 
-from open_r1.configs import SFTConfig
+
+from open_r1.configs import LoraArguments, SFTConfig, SFTScriptArguments
 from open_r1.trainer.sft_trainer import SftTrainer
-from open_r1.trainer.trainer import Trainer
 
-def main(config_file: str):
+def main(script_args, training_args, model_args, peft_args):
     # Parse config
-    parser = TrlParser((ScriptArguments, SFTConfig, ModelConfig))
-    script_args, training_args, model_args = parser.parse_args_and_config(config_file)
+    # parser = TrlParser((SFTScriptArguments, SFTConfig, ModelConfig))
+    # script_args, training_args, model_args = parser.parse_args_and_config(config_file)
 
     # Log summary
     print("✅ Config parsed successfully.")
@@ -16,7 +16,7 @@ def main(config_file: str):
     print("📂 Output directory:", training_args.output_dir)
 
     # Initialize trainer
-    sft_trainer = SftTrainer(script_args, training_args, model_args)
+    sft_trainer = SftTrainer(script_args, training_args, model_args, peft_args)
     sft_trainer.load_trainer()
 
     # Start training
@@ -26,6 +26,9 @@ def main(config_file: str):
 
 
 if __name__ == '__main__':
-    pass
+    parser = TrlParser((SFTScriptArguments, SFTConfig, ModelConfig, LoraArguments))
+    script_args, training_args, model_args, peft_args= parser.parse_args_and_config()
+    main(script_args, training_args, model_args, peft_args)
+    # fire.Fire(main)
 
-    # main(script_args, training_args, model_args)
+    

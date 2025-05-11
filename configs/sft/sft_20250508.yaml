@@ -1,30 +1,30 @@
 # Model arguments
-model_name_or_path: "models/llama3-8b"
+model_name_or_path: models/DeepSeek-R1-Distill-Llama-8B
 model_revision: 20250508
 torch_dtype: bfloat16
 attn_implementation: flash_attention_2
 
 # Data training arguments
-dataset_name_or_path: "dataset/training_data/fomc_qa"
-dataset_config: default
-dataset_prompt_column: prompt
+dataset_name: dataset/training_data/fomc_qa_sft
+# dataset_config: default
+dataset_prompt_column: "prompt"
 system_prompt: "You are a helpful AI Assistant, designed to provided well-reasoned and detailed responses. You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. The reasoning process MUST BE enclosed within <think> and </think> tags."
 
 
 # SFT trainer config
 bf16: true
-use_vllm: true
-vllm_gpu_memory_utilization: 0.95
-vllm_mode: "colocate"
+# use_vllm: false
+# vllm_gpu_memory_utilization: 0.95
+# vllm_mode: "colocate"
 
 
 do_eval: true
 eval_strategy: steps
 eval_steps: 20
-gradient_accumulation_steps: 1
-gradient_checkpointing: true
-gradient_checkpointing_kwargs:
-  use_reentrant: false
+gradient_accumulation_steps: 2
+gradient_checkpointing: false
+
+
 learning_rate: 5.0e-05
 log_level: info
 logging_steps: 5
@@ -33,21 +33,19 @@ lr_scheduler_type: cosine_with_min_lr
 lr_scheduler_kwargs:
   min_lr_rate: 0.1
 packing: false
-max_length: 16384
-max_steps: -1
 
 num_train_epochs: 3
 output_dir: output/llama_sft_20250508
 overwrite_output_dir: true
-per_device_eval_batch_size: 16
-per_device_train_batch_size: 16
+per_device_eval_batch_size: 4
+per_device_train_batch_size: 2
 
 
 push_to_hub: false
 #hub_model_id: Qwen2.5-1.5B-Open-R1-Distill
 #hub_strategy: every_save
-#report_to:
-#- wandb
+report_to: []
+# - wandb
 save_strategy: "steps"
 save_steps: 100
 save_total_limit: 1
@@ -56,16 +54,24 @@ use_liger_kernel: true
 warmup_ratio: 0.05
 
 
-temperature: 0.7
-max_prompt_length: 512
-max_completion_length: 2048
+max_steps: -1
+top_p: 0.9
+temperature: 0.6
+max_prompt_length: 16384
+max_completion_length: 4096
+
 
 # Peft config
-r: 16
-lora_alpha: 32
-lora_dropout: 0.05
-bias: "none"
-task_type: "CAUSAL_LM"
+peft_r: 8
+peft_lora_alpha: 16
+peft_lora_dropout: 0.05
+peft_bias: "none"
+peft_task_type: CAUSAL_LM
+peft_target_modules:
+  - q_proj
+  - v_proj
+
+
 
 
 

@@ -1,7 +1,8 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer
 
-from trl import ModelConfig, get_kbit_device_map, get_quantization_config, get_peft_config, LoraConfig
+from trl import ModelConfig, get_kbit_device_map, get_quantization_config, get_peft_config
+
 
 from ..configs import GRPOConfig, SFTConfig
 
@@ -42,14 +43,6 @@ def get_model(
         use_cache=False if training_args.gradient_checkpointing else True,
         device_map=get_kbit_device_map() if quantization_config is not None else None,
         quantization_config=quantization_config,
-        peft_config = LoraConfig(
-        r=16,
-        lora_alpha=32,
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-
     )
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,

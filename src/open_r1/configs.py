@@ -108,6 +108,11 @@ class SFTConfig(trl.SFTConfig):
         metadata={"help": ("The group to store runs under.")},
     )
 
+    # deepspeed: str = Optional[field](
+    #     default=None,
+    #     metadata={"help": "deepseek config path"}
+    # )
+
 
 @dataclass
 class GRPOScriptArguments(trl.ScriptArguments):
@@ -187,14 +192,14 @@ class GRPOScriptArguments(trl.ScriptArguments):
         },
     )
 
-    dataset_name_or_path: str = field(
+    dataset_name: str = field(
         default=None,
         metadata={"help": "Path to the dataset or dataset name."},
     )
 
-    dataset_prompt_column: str = field(
+    dataset_prompt_column: Optional[str] = field(
         default="prompt",
-        metadata={"help": "Column to use as prompts for training."},
+        metadata={"help": "Column to use as prompts for training."}
     )
 
     dataset_train_split: str = field(
@@ -203,7 +208,7 @@ class GRPOScriptArguments(trl.ScriptArguments):
     )
 
     dataset_test_split: str = field(
-        default="eval",
+        default="validation",
         metadata={"help": "Split to use for evaluation."},
     )
 
@@ -232,3 +237,141 @@ class GRPOScriptArguments(trl.ScriptArguments):
             "choices": ["piston", "morph"],
         },
     )
+
+
+@dataclass
+class SFTScriptArguments(trl.ScriptArguments):
+    """
+    Script arguments for the SFT training script.
+
+    Args:
+        cosine_min_value_wrong (`float`):
+            Minimum reward for cosine scaling for wrong answers.
+        cosine_max_value_wrong (`float`):
+            Maximum reward for cosine scaling for wrong answers.
+        cosine_min_value_correct (`float`):
+            Minimum reward for cosine scaling for correct answers.
+        cosine_max_value_correct (`float`):
+            Maximum reward for cosine scaling for correct answers.
+        cosine_max_len (`int`):
+            Maximum length for cosine scaling.
+        code_language (`str`):
+            Language for code format reward.
+    """
+
+
+    cosine_min_value_wrong: float = field(
+        default=0.0,
+        metadata={"help": "Minimum reward for wrong answers"},
+    )
+    cosine_max_value_wrong: float = field(
+        default=-0.5,
+        metadata={"help": "Maximum reward for wrong answers"},
+    )
+    cosine_min_value_correct: float = field(
+        default=0.5,
+        metadata={"help": "Minimum reward for correct answers"},
+    )
+    cosine_max_value_correct: float = field(
+        default=1.0,
+        metadata={"help": "Maximum reward for correct answers"},
+    )
+    cosine_max_len: int = field(
+        default=1000,
+        metadata={"help": "Maximum length for scaling"},
+    )
+    repetition_n_grams: int = field(
+        default=3,
+        metadata={"help": "Number of n-grams for repetition penalty reward"},
+    )
+    repetition_max_penalty: float = field(
+        default=-1.0,
+        metadata={
+            "help": "Maximum (negative) penalty for for repetition penalty reward"
+        },
+    )
+    code_language: str = field(
+        default="python",
+        metadata={
+            "help": "Language for code format reward. Based on E2B supported languages https://e2b.dev/docs/code-interpreting/supported-languages",
+            "choices": ["python", "javascript", "r", "java", "bash", "cpp"],
+        },
+    )
+    code_eval_test_batch_size: int = field(
+        default=1,
+        metadata={
+            "help": "for each generation, evaluate these many test cases in parallel, then check if any of them failed (0 score): if so stop evaluating; otherwise continue with the next batch of test cases. Useful to avoid overloading the eval server + save time on wrong solutions"
+        },
+    )
+    parallel_code_exec_per_proc: int = field(
+        default=2,
+        metadata={
+            "help": "Number of parallel E2B code executions per process. Default of 2 is suitable for the Free Hobby tier of E2B with 8 GPUs used for training."
+        },
+    )
+
+    dataset_name: str = field(
+        default=None,
+        metadata={"help": "Path to the dataset or dataset name."},
+    )
+
+    dataset_prompt_column: str = field(
+        default="prompt",
+        metadata={"help": "Column to use as prompts for training."},
+    )
+
+    dataset_train_split: str = field(
+        default="train",
+        metadata={"help": "Split to use for training."},
+    )
+
+    dataset_test_split: str = field(
+        default="validation",
+        metadata={"help": "Split to use for evaluation."},
+    )
+
+    e2b_router_url: Optional[str] = field(
+        default=None,
+        metadata={"help": "URL for the E2B router. See scripts/e2b_router.py"},
+    )
+
+    morph_router_url: Optional[str] = field(
+        default=None,
+        metadata={"help": "URL for the MorphCloud router. See scripts/morph_router.py"},
+    )
+
+    code_provider: Optional[str] = field(
+        default="e2b",
+        metadata={
+            "help": "Provider for code execution. Options: 'e2b', 'local', 'morph'.",
+            "choices": ["e2b", "local", "morph"],
+        },
+    )
+
+    ioi_provider: Optional[str] = field(
+        default="piston",
+        metadata={
+            "help": "Provider for IOI code execution. Options: 'piston', 'morph'.",
+            "choices": ["piston", "morph"],
+        },
+    )
+
+
+@dataclass
+class LoraArguments:
+    peft_r: int = field(default=8, metadata={"help": "LoRA rank"})
+    peft_lora_alpha: int = field(default=32, metadata={"help": "LoRA alpha"})
+    peft_lora_dropout: float = field(default=0.05, metadata={"help": "LoRA dropout"})
+
+    peft_target_modules: list[str] = field(
+        default_factory=lambda: ["q_proj", "v_proj"],
+        metadata={"help": "Target modules to apply LoRA"}
+    )
+
+
+
+
+
+
+
+

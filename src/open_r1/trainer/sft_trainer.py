@@ -16,21 +16,40 @@ from open_r1.trainer.trainer import Trainer
 from open_r1.utils.callbacks import get_callbacks
 
 from trl import SFTTrainer, get_peft_config
+from peft import LoraConfig
 
 
 class SftTrainer(Trainer):
-    def __init__(self, script_args, training_args, model_args):
-        super().__init__(script_args, training_args, model_args)
+    def __init__(self, script_args, training_args, model_args, peft_args):
+        super().__init__(script_args, training_args, model_args, peft_args)
         self.script_args = script_args
         self.training_args = training_args
         self.model_args = model_args
+        self.peft_args = peft_args
         self.trainer = None
 
 
 
     def load_trainer(self):
+        import time
+        self.logger.info("*** 🚀 Loading trainer ***")
+        s = time.time()
 
-        self.logger.info("*** Loading trainer ***")
+        def convert_chat(example):
+            if isinstance(example["prompt"], list):
+                return {"prompt": self._tokenizer.apply_chat_template(example["prompt"], tokenize=False)}
+            return example
+
+        self._dataset = self._dataset.map(convert_chat)
+        peft_config = LoraConfig(
+                            r=self.peft_args.peft_r,
+                            lora_alpha=self.peft_args.peft_lora_alpha,
+                            lora_dropout=self.peft_args.peft_lora_dropout,
+                            bias="none",
+                            task_type="CAUSAL_LM",
+                            target_modules=self.peft_args.peft_target_modules
+                        )
+
         trainer = SFTTrainer(
             model=self._model,
             args=self.training_args,
@@ -41,10 +60,12 @@ class SftTrainer(Trainer):
                 else None
             ),
             processing_class=self._tokenizer,
-            peft_config=get_peft_config(self.model_args),
-            callbacks=get_callbacks(self.training_args, self.model_args),
+            peft_config=peft_config,
+            callbacks=get_callbacks(self.training_args, self.model_args)
         )
         self.trainer = trainer
+        e = time.time()
+        self.logger.info(f"*** ✅ Loaded trainer, Time Usage {e - s} s ***")
         return trainer
 
 

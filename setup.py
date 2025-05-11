@@ -63,6 +63,7 @@ _deps = [
     "parameterized>=0.9.0",
     "peft>=0.14.0",
     "pytest",
+    "fire",
     "python-dotenv",
     "ruff>=0.9.0",
     "safetensors>=0.3.3",
