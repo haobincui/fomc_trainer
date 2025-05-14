@@ -21,7 +21,6 @@ import math
 import re
 from typing import Dict, Optional
 
-import requests
 from latex2sympy2_extended import NormalizationConfig
 from math_verify import LatexExtractionConfig, parse, verify
 
@@ -572,126 +571,6 @@ def get_code_format_reward(language: str = "python"):
         return [1.0 if match else 0.0 for match in matches]
 
     return code_format_reward
-
-
-
-
-
-_URL = "http://localhost:11434/api/chat"
-
-_ANSWER_PROMPT = open("./online_reward_prompt/output_evaluation.md", "r").read()
-
-
-def _parse_score(text: str) -> int:
-    pattern = r"\*\*Total Score\*\*:\s*\\boxed\{\{?(\d+)\}?\}"
-
-    match = re.search(pattern, text)
-    if match:
-        total_score = int(match.group(1))
-    else:
-        total_score = 0
-    return total_score
-
-def _parse_reasoning_and_answer(text: str) -> tuple[str, str]:
-    pattern = r"<think>(.*?)</think>\s*<answer>(.*?)</answer>"
-
-    match = re.search(pattern, text, re.DOTALL)
-    if match:
-        reasoning = match.group(1).strip()
-        answer = match.group(2).strip()
-        return reasoning, answer
-
-    else:
-        return "", ""
-
-
-
-def answer_reward(
-        completions: list[list[dict[str, str]]], provided_data: list[str], ** kwargs
-    ) -> list[Optional[float]]:
-    """Reward function that checks if the completion is the same as the ground truth."""
-    contents = [completion[0]["content"] for completion in completions]
-
-    rewards = []
-
-    for content, pdata in zip(contents, provided_data):
-        answer = _parse_reasoning_and_answer(content)[1]
-        message = {
-          "role": "user",
-          "content": _ANSWER_PROMPT.format(provided_data = pdata, model_analysis = answer)
-        }
-
-        body = {
-            "model": "deepseek-r1:8b",
-            "messages": [{
-                "role": "system",
-                "content": "Wrap the reasoning process in <think> and </think> tags, while the final answer should be enclosed within <answer> and </answer> tags."
-                           "The total score should be reported as: **Total Score**: \\boxed{{total_score}}"
-            },
-                {"role": "user",
-                    "content": message
-                }
-            ],
-            "stream": False,
-            "keep_alive": -1
-        }
-        try:
-            response = requests.post(_URL, json=body, timeout=30)
-            response.raise_for_status()
-            # json.loads(response.text)["message"]["content"]
-            result_text = response.json().get("message", {}).get("content", "")
-            score = _parse_score(result_text)
-        except Exception as e:
-            print(f"❌ Error during reward call: {e}")
-            score = None
-
-        rewards.append(score)
-    return rewards
-
-
-
-_REASONING_PROMPT = open("./online_reward_prompt/output_evaluation.md", "r").read()
-
-def reasoning_reward(
-        completions: list[list[dict[str, str]]], provided_data: list[str], ** kwargs
-    ) -> list[Optional[float]]:
-    """Reward function that checks if the completion is the same as the ground truth."""
-    contents = [completion[0]["content"] for completion in completions]
-
-    rewards = []
-
-    for content, pdata in zip(contents, provided_data):
-        reasoning = _parse_reasoning_and_answer(content)[0]
-        message = {
-          "role": "user",
-          "content": _REASONING_PROMPT.format(provided_data = pdata, model_analysis = reasoning)
-        }
-
-        body = {
-            "model": "deepseek-r1:8b",
-            "messages": [{
-                "role": "system",
-                "content": "Wrap the reasoning process in <think> and </think> tags, while the final answer should be enclosed within <answer> and </answer> tags."
-                           "The total score should be reported as: **Total Score**: \\boxed{{total_score}}"
-            },
-                {"role": "user",
-                    "content": message
-                }
-            ],
-            "stream": False,
-            "keep_alive": -1
-        }
-        try:
-            response = requests.post(_URL, json=body, timeout=30)
-            response.raise_for_status()
-            result_text = response.json().get("message", {}).get("content", "")
-            score = _parse_score(result_text)
-        except Exception as e:
-            print(f"❌ Error during reward call: {e}")
-            score = None
-
-        rewards.append(score)
-    return rewards
 
 
 

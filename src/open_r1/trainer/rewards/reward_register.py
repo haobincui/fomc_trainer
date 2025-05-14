@@ -1,9 +1,11 @@
 from functools import update_wrapper, partial
 from typing import Callable
 
-from open_r1.trainer.rewards.reward_funcs import accuracy_reward, format_reward, reasoning_steps_reward, \
+from open_r1.trainer.rewards.reward_funcs.online_reward import reasoning_reward, answer_reward
+from open_r1.trainer.rewards.reward_funcs.reward_funcs import accuracy_reward, format_reward, reasoning_steps_reward, \
     get_cosine_scaled_reward, get_repetition_penalty_reward, len_reward, code_reward, binary_code_reward, \
-    ioi_code_reward, get_code_format_reward, tag_count_reward, reasoning_reward, answer_reward
+    ioi_code_reward, get_code_format_reward, tag_count_reward
+
 
 
 def get_reward_funcs(script_args) -> list[Callable]:

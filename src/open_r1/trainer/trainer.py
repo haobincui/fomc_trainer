@@ -2,27 +2,25 @@ import logging
 import os
 import sys
 from abc import ABC, abstractmethod
+from typing import Union
 
 import datasets
 import transformers
-from transformers import set_seed
 from transformers.trainer_utils import get_last_checkpoint
-from transformers import TrainerCallback
-import json
+from trl import ModelConfig
+from trl import ScriptArguments
 
-
+from open_r1.configs import GRPOConfig, SFTConfig
 from open_r1.data_loader import load_train_eval_datasets
 from open_r1.utils import get_model, get_tokenizer
 from open_r1.utils.plot_loss import plot_training_curve
 from open_r1.utils.wandb_logging import init_wandb_training
 
 
-
-
 class Trainer(ABC):
 
 
-    def __init__(self, script_args, training_args, model_args, peft_args):
+    def __init__(self, script_args: ScriptArguments, training_args: Union[SFTConfig, GRPOConfig], model_args: ModelConfig, peft_args: LoraArguments):
         self.script_args = script_args
         self.training_args = training_args
         self.model_args = model_args
@@ -104,7 +102,6 @@ class Trainer(ABC):
             return {"prompt": prompt}
 
         dataset = dataset.map(_make_conversation)
-        dataset = dataset.rename_column("response", "completion")
 
 
         for split in dataset:

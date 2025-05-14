@@ -18,7 +18,7 @@ vllm_mode: "colocate"
 
 do_eval: true
 eval_strategy: steps
-eval_steps: 100
+eval_steps: 20
 
 gradient_accumulation_steps: 8
 gradient_checkpointing: true
@@ -53,6 +53,7 @@ reward_weights:
 - 0.5
 - 1.0
 - 1.0
+save_reward: true
 save_strategy: "no"
 seed: 42
 warmup_ratio: 0.1

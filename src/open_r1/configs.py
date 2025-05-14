@@ -142,6 +142,13 @@ class GRPOScriptArguments(trl.ScriptArguments):
             "help": "List of reward functions. Possible values: 'accuracy', 'format', 'reasoning_steps', 'cosine', 'repetition_penalty', 'length', tag_count', 'code', 'code_format'"
         },
     )
+    save_reward: bool = field(
+        default=False,
+        metadata={
+            "help": "Whether to save the reward values to a file. If True, the reward values will be saved to a file."
+        },
+    )
+
     cosine_min_value_wrong: float = field(
         default=0.0,
         metadata={"help": "Minimum reward for wrong answers"},

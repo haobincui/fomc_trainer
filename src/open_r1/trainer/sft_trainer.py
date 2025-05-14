@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from peft import LoraConfig
+from trl import SFTTrainer, ModelConfig
+
+from open_r1.configs import LoraArguments, SFTConfig, SFTScriptArguments
 from open_r1.trainer.trainer import Trainer
 from open_r1.utils.callbacks import get_callbacks
 
-from trl import SFTTrainer, get_peft_config
-from peft import LoraConfig
-
 
 class SftTrainer(Trainer):
-    def __init__(self, script_args, training_args, model_args, peft_args):
+    def __init__(self, script_args: SFTScriptArguments, training_args: SFTConfig, model_args: ModelConfig, peft_args: LoraArguments):
         super().__init__(script_args, training_args, model_args, peft_args)
         self.script_args = script_args
         self.training_args = training_args
@@ -41,6 +42,7 @@ class SftTrainer(Trainer):
             return example
 
         self._dataset = self._dataset.map(convert_chat)
+        self._dataset = self._dataset.rename_column("response", "completion")
         peft_config = LoraConfig(
                             r=self.peft_args.peft_r,
                             lora_alpha=self.peft_args.peft_lora_alpha,
