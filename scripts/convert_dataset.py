@@ -63,8 +63,8 @@ def convert_response_jsonl_split(
                     f_out.write(json.dumps(formatted, ensure_ascii=False) + '\n')
 
     # Write
-    sft_jsonl = train_jsonl.replace("fomc_qa_train.jsonl", "fomc_qa_sft.jsonl")
-    grpo_jsonl = train_jsonl.replace("fomc_qa_train.jsonl", "fomc_qa_grpo.jsonl")
+    sft_jsonl = train_jsonl.replace("fomc_qa_train.jsonl", "fomc_qa_sft_train.jsonl")
+    grpo_jsonl = train_jsonl.replace("fomc_qa_train.jsonl", "fomc_qa_grpo_train.jsonl")
     write_jsonl(sft_jsonl, sft_lines)
     write_jsonl(grpo_jsonl, grpo_lines)
     write_jsonl(val_jsonl, eval_lines)
