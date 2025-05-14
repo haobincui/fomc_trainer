@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import subprocess
 from typing import List
 
@@ -43,7 +44,7 @@ class DummyConfig:
 
 
 class PushToHubRevisionCallback(TrainerCallback):
-    def __init__(self, model_config) -> None:
+    def __init__(self, train_config, model_config,) -> None:
         self.model_config = model_config
 
     def on_save(
@@ -79,8 +80,25 @@ class PushToHubRevisionCallback(TrainerCallback):
                 future.add_done_callback(run_benchmark_callback)
 
 
+
+
+class LossLoggingCallback(TrainerCallback):
+    def __init__(self, train_config, model_config, output_file="loss_history.jsonl"):
+        self.output_file = train_config.output_dir + "/" + output_file
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs is not None:
+            with open(self.output_file, "a") as f:
+                json.dump({
+                    "step": state.global_step,
+                    "train_loss": logs.get("loss"),
+                    "eval_loss": logs.get("eval_loss"),
+                }, f)
+                f.write("\n")
+
 CALLBACKS = {
     "push_to_hub_revision": PushToHubRevisionCallback,
+    "loss_log": LossLoggingCallback
 }
 
 
@@ -89,6 +107,6 @@ def get_callbacks(train_config, model_config) -> List[TrainerCallback]:
     for callback_name in train_config.callbacks:
         if callback_name not in CALLBACKS:
             raise ValueError(f"Callback {callback_name} not found in CALLBACKS.")
-        callbacks.append(CALLBACKS[callback_name](model_config))
+        callbacks.append(CALLBACKS[callback_name](train_config, model_config))
 
     return callbacks

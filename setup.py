@@ -64,6 +64,7 @@ _deps = [
     "peft>=0.14.0",
     "pytest",
     "fire",
+    "matplotlib",
     "python-dotenv",
     "ruff>=0.9.0",
     "safetensors>=0.3.3",

@@ -7,9 +7,13 @@ import datasets
 import transformers
 from transformers import set_seed
 from transformers.trainer_utils import get_last_checkpoint
+from transformers import TrainerCallback
+import json
+
 
 from open_r1.data_loader import load_train_eval_datasets
 from open_r1.utils import get_model, get_tokenizer
+from open_r1.utils.plot_loss import plot_training_curve
 from open_r1.utils.wandb_logging import init_wandb_training
 
 
@@ -64,6 +68,7 @@ class Trainer(ABC):
 
         self.logger = logger
         return logger
+    
 
 
     def load_checkpoint(self):
@@ -172,6 +177,18 @@ class Trainer(ABC):
             self.logger.info("Pushing to hub...")
             self.trainer.push_to_hub(**kwargs)
         self.logger.info("✅ Training completed successfully.")
+        #############
+        # plot loss curve
+        #############
+
+        if self.trainer.accelerator.is_main_process:
+            loss_jsonl = os.path.join(self.training_args.output_dir, "loss_history.jsonl")
+            save_plot = os.path.join(self.training_args.output_dir, "training_curve.png")
+            if os.path.exists(loss_jsonl):
+                self.logger.info("📈 Plotting training curve...")
+                plot_training_curve(loss_jsonl, save_plot)
+                self.logger.info(f"✅ Training curve saved to {save_plot}")
+
 
 
 

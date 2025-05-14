@@ -20,7 +20,7 @@ echo "${LINE}"
 
 
 nohup accelerate launch --config_file configs/accelerate/zero3.yaml train_sft.py \
-    --config configs/sft/sft_20250508.yaml > "$LOG_FILE" 2>&1 &
+    --config configs/sft/sft_20250513.yaml > "$LOG_FILE" 2>&1 &
 
 echo "Finished training:"
 echo "tail -f $LOG_FILE"

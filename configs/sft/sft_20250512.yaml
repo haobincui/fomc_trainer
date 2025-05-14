@@ -54,7 +54,7 @@ peft_target_modules:
   - v_proj
 
 
-output_dir: output/llama_sft_20250508
+output_dir: output/llama_sft_20250512
 overwrite_output_dir: true
 
 push_to_hub: false
