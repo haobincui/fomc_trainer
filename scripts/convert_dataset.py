@@ -1,36 +1,48 @@
 import json
 import random
 
-def convert_response_jsonl_split(input_jsonl: str, train_jsonl: str, eval_jsonl: str, split_ratio: float = 0.9, seed: int = 42):
+def convert_response_jsonl_split(
+    input_jsonl: str,
+    train_jsonl: str,
+    val_jsonl: str,
+    test_jsonl: str,
+    seed: int = 42
+):
     """
-    Convert a JSONL dataset of {"prompt", "reasoning", "response"} into:
-    - train set with <think>reasoning</think><answer>response</answer>
-    - eval set with the same format
-    Saves to separate .jsonl files.
-
-    Args:
-        input_jsonl: Path to original jsonl file
-        train_jsonl: Path to output train file
-        eval_jsonl: Path to output eval file
-        split_ratio: Proportion of data for training
-        seed: Random seed for reproducibility
+    Split dataset:
+    - total train = 80% → sft = 80% of train, grpo = 20% of train + 10% sft
+    - eval = 10%
+    - test = 10%
     """
     _think_start = "<think>"
     _think_end = "</think>"
     _answer_start = "<answer>"
     _answer_end = "</answer>"
 
-    # Load all lines
+    # Load data
     with open(input_jsonl, 'r', encoding='utf-8') as f:
         lines = [json.loads(line) for line in f]
         print(f"✅ Loaded {len(lines)} entries from {input_jsonl}")
 
-    # Shuffle and split
     random.seed(seed)
     random.shuffle(lines)
-    split_idx = int(len(lines) * split_ratio)
-    train_lines = lines[:split_idx]
-    eval_lines = lines[split_idx:]
+    n = len(lines)
+
+    # First split: 80% train, 10% eval, 10% test
+    train_size = int(n * 0.8)
+    eval_size = int(n * 0.1)
+
+    train_lines = lines[:train_size]
+    eval_lines = lines[train_size:train_size + eval_size]
+    test_lines = lines[train_size + eval_size:]
+
+    # Split train into sft and grpo
+    sft_size = int(train_size * 0.8)  # 80% of train
+    grpo_base_size = train_size - sft_size  # 20% of train
+    grpo_extra_size = int(sft_size * 0.1)  # extra 10% of sft
+
+    sft_lines = train_lines[:sft_size]
+    grpo_lines = train_lines[sft_size:] + random.sample(sft_lines, grpo_extra_size)
 
     def format_response(entry):
         try:
@@ -40,24 +52,36 @@ def convert_response_jsonl_split(input_jsonl: str, train_jsonl: str, eval_jsonl:
                 "provided_data": entry["provided_data"],
             }
         except KeyError as e:
-            print(f"⚠️ Missing key {entry['index']} in entry: {e}")
+            print(f"⚠️ Missing key in entry {entry.get('index', 'unknown')}: {e}")
             return None
 
-    # Write train
-    with open(train_jsonl, 'w', encoding="utf-8") as f_train:
-        for entry in train_lines:
-            f_train.write(json.dumps(format_response(entry), ensure_ascii=False) + '\n')
+    def write_jsonl(path, dataset):
+        with open(path, 'w', encoding="utf-8") as f_out:
+            for entry in dataset:
+                formatted = format_response(entry)
+                if formatted:
+                    f_out.write(json.dumps(formatted, ensure_ascii=False) + '\n')
 
-    # Write eval
-    with open(eval_jsonl, 'w', encoding="utf-8") as f_eval:
-        for entry in eval_lines:
-            f_eval.write(json.dumps(format_response(entry), ensure_ascii=False) + '\n')
+    # Write
+    sft_jsonl = train_jsonl.replace("fomc_qa_train.jsonl", "fomc_qa_sft.jsonl")
+    grpo_jsonl = train_jsonl.replace("fomc_qa_train.jsonl", "fomc_qa_grpo.jsonl")
+    write_jsonl(sft_jsonl, sft_lines)
+    write_jsonl(grpo_jsonl, grpo_lines)
+    write_jsonl(val_jsonl, eval_lines)
+    write_jsonl(test_jsonl, test_lines)
 
-    print(f"✅ Conversion complete: {len(train_lines)} train, {len(eval_lines)} eval examples saved.")
+    print(f"✅ Dataset split complete:")
+    print(f"SFT: {len(sft_lines)}")
+    print(f"GRPO: {len(grpo_lines)}")
+    print(f"Eval: {len(eval_lines)}")
+    print(f"Test: {len(test_lines)}")
 
 if __name__ == '__main__':
     input_jsonl = "./../dataset/raw_data/merged_response.jsonl"
     output_jsonl = "./../dataset/training_data/fomc_qa/fomc_qa.jsonl"
-    convert_response_jsonl_split(input_jsonl, output_jsonl.replace("fomc_qa.jsonl", "fomc_qa_train.jsonl"), output_jsonl.replace("fomc_qa.jsonl", "fomc_qa_eval.jsonl"))
-
-
+    convert_response_jsonl_split(
+        input_jsonl,
+        output_jsonl.replace("fomc_qa.jsonl", "fomc_qa_train.jsonl"),
+        output_jsonl.replace("fomc_qa.jsonl", "fomc_qa_eval.jsonl"),
+        output_jsonl.replace("fomc_qa.jsonl", "fomc_qa_test.jsonl")
+    )
