@@ -1,9 +1,8 @@
-
 from trl import ModelConfig, TrlParser
 
+from open_r1.configs import LoraArguments, GRPOScriptArguments, GRPOConfig
+from open_r1.trainer.grpo_trainer import GrpoTrainer
 
-from open_r1.configs import LoraArguments, SFTConfig, SFTScriptArguments
-from open_r1.trainer.sft_trainer import SftTrainer
 
 def main(script_args, training_args, model_args, peft_args):
 
@@ -13,7 +12,7 @@ def main(script_args, training_args, model_args, peft_args):
     print("📂 Output directory:", training_args.output_dir)
 
     # Initialize trainer
-    sft_trainer = SftTrainer(
+    grpo_trainer = GrpoTrainer(
         script_args=script_args,
         training_args=training_args,
         model_args=model_args,
@@ -21,17 +20,15 @@ def main(script_args, training_args, model_args, peft_args):
     )
 
     # Start training
-    sft_trainer.logger.info("*** 🚀 Start SFT training ***")
-    sft_trainer.start_train()
-    sft_trainer.logger.info("*** 🎉 Training finished successfully ***")
-
-
+    grpo_trainer.logger.info("*** 🚀 Start SFT training ***")
+    grpo_trainer.start_train()
+    grpo_trainer.logger.info("*** 🎉 Training finished successfully ***")
 
 
 if __name__ == '__main__':
-    parser = TrlParser((SFTScriptArguments, SFTConfig, ModelConfig, LoraArguments))
-    script_args, training_args, model_args, peft_args= parser.parse_args_and_config()
+    parser = TrlParser((GRPOScriptArguments, GRPOConfig, ModelConfig, LoraArguments))
+    script_args, training_args, model_args, peft_args = parser.parse_args_and_config()
     main(script_args, training_args, model_args, peft_args)
 
 
-    
+

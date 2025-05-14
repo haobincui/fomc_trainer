@@ -14,18 +14,11 @@
 from collections.abc import Callable
 from typing import List
 
+from trl import GRPOTrainer, ModelConfig
+
+from open_r1.configs import LoraArguments, GRPOConfig, GRPOScriptArguments
 from open_r1.trainer.rewards.reward_register import get_reward_funcs
 from open_r1.trainer.trainer import Trainer
-from open_r1.utils.callbacks import get_callbacks
-from open_r1.configs import LoraArguments, GRPOConfig, GRPOScriptArguments
-
-from trl import GRPOTrainer, get_peft_config, ModelConfig
-from peft import LoraConfig
-
-
-
-
-
 
 
 class GrpoTrainer(Trainer):
