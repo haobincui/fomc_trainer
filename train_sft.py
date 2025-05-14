@@ -16,12 +16,18 @@ def main(script_args, training_args, model_args, peft_args):
     print("📂 Output directory:", training_args.output_dir)
 
     # Initialize trainer
-    sft_trainer = SftTrainer(script_args, training_args, model_args, peft_args)
-    sft_trainer.load_trainer()
+    sft_trainer = SftTrainer(
+        script_args=script_args,
+        training_args=training_args,
+        model_args=model_args,
+        peft_args=peft_args
+    )
 
     # Start training
-    sft_trainer.logger.info("*** Start training ***")
+    sft_trainer.logger.info("*** 🚀 Start SFT training ***")
     sft_trainer.start_train()
+    sft_trainer.logger.info("*** 🎉 Training finished successfully ***")
+
 
 
 

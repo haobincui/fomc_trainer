@@ -71,6 +71,7 @@ save_reward: true
 # ====================
 # PEFT LoRA Configuration
 # ====================
+peft_adapter_path: "output/llama_sft_20250512"
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -90,7 +91,7 @@ logging_strategy: "steps"
 logging_steps: 20
 logging_first_step: true
 
-output_dir: "output/Qwen-2.5-7B-Simple-RL"
+output_dir: "output/llama_grpo_20250513"
 overwrite_output_dir: true
 save_strategy: "no"
 callbacks:

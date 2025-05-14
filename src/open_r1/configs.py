@@ -366,6 +366,10 @@ class SFTScriptArguments(trl.ScriptArguments):
 
 @dataclass
 class LoraArguments:
+    peft_adapter_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "Path to the LoRA adapter."}
+    )
     peft_r: int = field(default=8, metadata={"help": "LoRA rank"})
     peft_lora_alpha: int = field(default=32, metadata={"help": "LoRA alpha"})
     peft_lora_dropout: float = field(default=0.05, metadata={"help": "LoRA dropout"})

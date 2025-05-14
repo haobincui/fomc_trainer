@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from peft import LoraConfig
+
 from trl import SFTTrainer, ModelConfig
 
 from open_r1.configs import LoraArguments, SFTConfig, SFTScriptArguments
@@ -27,7 +27,6 @@ class SftTrainer(Trainer):
         self.training_args = training_args
         self.model_args = model_args
         self.peft_args = peft_args
-        self.trainer = None
 
 
 
@@ -38,36 +37,27 @@ class SftTrainer(Trainer):
 
         def convert_chat(example):
             if isinstance(example["prompt"], list):
-                return {"prompt": self._tokenizer.apply_chat_template(example["prompt"], tokenize=False)}
+                return {"prompt": self.tokenizer.apply_chat_template(example["prompt"], tokenize=False)}
             return example
 
-        self._dataset = self._dataset.map(convert_chat)
-        self._dataset = self._dataset.rename_column("response", "completion")
-        peft_config = LoraConfig(
-                            r=self.peft_args.peft_r,
-                            lora_alpha=self.peft_args.peft_lora_alpha,
-                            lora_dropout=self.peft_args.peft_lora_dropout,
-                            bias="none",
-                            task_type="CAUSAL_LM",
-                            target_modules=self.peft_args.peft_target_modules
-                        )
+        dataset = self.dataset.map(convert_chat).rename_column("response", "completion")
 
         trainer = SFTTrainer(
             model=self._model,
             args=self.training_args,
-            train_dataset=self._dataset[self.script_args.dataset_train_split],
+            train_dataset=dataset[self.script_args.dataset_train_split],
             eval_dataset=(
-                self._dataset[self.script_args.dataset_test_split]
+                dataset[self.script_args.dataset_test_split]
                 if self.training_args.eval_strategy != "no"
                 else None
             ),
-            processing_class=self._tokenizer,
-            peft_config=peft_config,
-            callbacks=get_callbacks(self.training_args, self.model_args), 
+            processing_class=self.tokenizer,
+            peft_config=self.peft_config,
+            callbacks=self.load_callbacks(),
         )
-        self.trainer = trainer
         e = time.time()
-        self.logger.info(f"*** ✅ Loaded trainer, Time Usage {e - s} s ***")
+        elapsed = e - s
+        self.logger.info(f"*** ✅ Loaded trainer, Time Usage {elapsed:.2f} s ***")
         return trainer
 
 

@@ -35,9 +35,16 @@ class GrpoTrainer(Trainer):
         self.training_args = training_args
         self.model_args = model_args
         self.peft_args = peft_args
-        self.trainer = None
 
-        self._reward_funcs = self.load_reward_funcs()
+
+        self._reward_funcs = None
+
+
+    @property
+    def reward_funcs(self):
+        if self._reward_funcs is None:
+            self._reward_funcs = self.load_reward_funcs()
+        return self._reward_funcs
 
 
     def load_reward_funcs(self) -> List[Callable]:
@@ -51,37 +58,29 @@ class GrpoTrainer(Trainer):
         self.logger.info("*** 🚀 Loading trainer ***")
         s = time.time()
 
-        peft_config = LoraConfig(
-                            r=self.peft_args.peft_r,
-                            lora_alpha=self.peft_args.peft_lora_alpha,
-                            lora_dropout=self.peft_args.peft_lora_dropout,
-                            bias="none",
-                            task_type="CAUSAL_LM",
-                            target_modules=self.peft_args.peft_target_modules
-                        )
         reward_kwargs = {}
         if self.script_args.save_reward:
             reward_kwargs["save_path"] = f"{self.training_args.output_dir}/reward.jsonl"
 
 
         trainer = GRPOTrainer(
-            model=self._model,
-            reward_funcs=self._reward_funcs,
+            model=self.model,
+            reward_funcs=self.reward_funcs,
             reward_kwargs=reward_kwargs,
             args=self.training_args,
-            train_dataset=self._dataset[self.script_args.dataset_train_split],
+            train_dataset=self.dataset[self.script_args.dataset_train_split],
             eval_dataset=(
-                self._dataset[self.script_args.dataset_test_split]
+                self.dataset[self.script_args.dataset_test_split]
                 if self.training_args.eval_strategy != "no"
                 else None
             ),
-            peft_config=peft_config,
-            callbacks=get_callbacks(self.training_args, self.model_args),
-            processing_class=self._tokenizer,
+            peft_config=self.peft_config,
+            callbacks=self.load_callbacks(),
+            processing_class=self.tokenizer,
         )
-        self.trainer = trainer
         e = time.time()
-        self.logger.info(f"*** ✅ Loaded trainer, Time Usage {e - s} s ***")
+        elapsed = e - s
+        self.logger.info(f"*** ✅ Loaded trainer, Time Usage {elapsed:.2f} s ***")
         return trainer
 
 

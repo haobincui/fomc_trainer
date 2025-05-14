@@ -9,10 +9,12 @@ import transformers
 from transformers.trainer_utils import get_last_checkpoint
 from trl import ModelConfig
 from trl import ScriptArguments
+from peft import LoraConfig, PeftModel
 
 from open_r1.configs import GRPOConfig, SFTConfig
 from open_r1.data_loader import load_train_eval_datasets
 from open_r1.utils import get_model, get_tokenizer
+from open_r1.utils.callbacks import get_callbacks
 from open_r1.utils.plot_loss import plot_training_curve
 from open_r1.utils.wandb_logging import init_wandb_training
 
@@ -25,14 +27,52 @@ class Trainer(ABC):
         self.training_args = training_args
         self.model_args = model_args
         self.peft_args = peft_args
-        self.logger = self._set_logger()
 
-        self.trainer = None
 
-        self._model = self.load_model()
-        self._tokenizer = self.load_tokenizer()
-        self._dataset = self.load_dataset()
+        self._trainer = None
 
+        self._logger = None
+        self._model = None
+        self._tokenizer = None
+        self._dataset = None
+        self._peft_config = None
+
+    @property
+    def logger(self):
+        if self._logger is None:
+            self._logger = self._set_logger()
+        return self._logger
+
+    @property
+    def model(self):
+        if self._model is None:
+            self._model = self.load_model()
+        return self._model
+
+    @property
+    def tokenizer(self):
+        if self._tokenizer is None:
+            self._tokenizer = self.load_tokenizer()
+        return self._tokenizer
+
+    @property
+    def dataset(self):
+        if self._dataset is None:
+            self._dataset = self.load_dataset()
+        return self._dataset
+
+    @property
+    def trainer(self):
+        if self._trainer is None:
+            self._trainer = self.load_trainer()
+        return self._trainer
+
+
+    @property
+    def peft_config(self):
+        if self._peft_config is None:
+            self._peft_config = self.load_peft_adapter()
+        return self._peft_config
 
     def _set_logger(self):
         # create logger
@@ -63,8 +103,9 @@ class Trainer(ABC):
         logger.info(f"Model parameters {self.model_args}")
         logger.info(f"Script parameters {self.script_args}")
         logger.info(f"Training parameters {self.training_args}")
+        logger.info(f"Peft parameters {self.peft_args}")
 
-        self.logger = logger
+        self._logger = logger
         return logger
     
 
@@ -120,9 +161,36 @@ class Trainer(ABC):
         model = get_model(self.model_args, self.training_args)
         return model
 
+    def load_peft_adapter(self):
+        if self.peft_args.peft_adapter_path:
+            self.logger.info(f"🔗 Loading LoRA adapter from {self.peft_args.peft_adapter_path}")
+            self._model = PeftModel.from_pretrained(self._model, self.peft_args.peft_adapter_path)
+            peft_config = None
+        else:
+            self.logger.info(f"🛠️ Initializing new LoRA config")
+            peft_config = LoraConfig(
+                                r=self.peft_args.peft_r,
+                                lora_alpha=self.peft_args.peft_lora_alpha,
+                                lora_dropout=self.peft_args.peft_lora_dropout,
+                                bias="none",
+                                task_type="CAUSAL_LM",
+                                target_modules=self.peft_args.peft_target_modules
+                            )
+        return peft_config
+
+
     @abstractmethod
     def load_trainer(self):
-        pass
+        raise NotImplementedError("load_trainer() must be implemented in subclasses")
+
+
+    def load_callbacks(self):
+        try:
+            callbacks = get_callbacks(self.training_args, self.model_args)
+        except Exception as e:
+            self.logger.warning(f"⚠️ Failed to load callbacks, continuing without: {e}")
+            callbacks = None
+        return callbacks
 
 
     def start_train(self):
@@ -135,7 +203,7 @@ class Trainer(ABC):
             checkpoint = last_checkpoint
         train_result = self.trainer.train(resume_from_checkpoint=checkpoint)
         metrics = train_result.metrics
-        metrics["train_samples"] = len(self._dataset[self.script_args.dataset_train_split])
+        metrics["train_samples"] = len(self.dataset[self.script_args.dataset_train_split])
         self.trainer.log_metrics("train", metrics)
         self.trainer.save_metrics("train", metrics)
         self.trainer.save_state()
@@ -162,7 +230,7 @@ class Trainer(ABC):
         if self.training_args.do_eval:
             self.logger.info("*** 🚀 Evaluating ***")
             metrics = self.trainer.evaluate()
-            metrics["eval_samples"] = len(self._dataset[self.script_args.dataset_test_split])
+            metrics["eval_samples"] = len(self.dataset[self.script_args.dataset_test_split])
             self.trainer.log_metrics("eval", metrics)
             self.trainer.save_metrics("eval", metrics)
             self.logger.info("*** ✅ Evaluated ***")
@@ -185,6 +253,7 @@ class Trainer(ABC):
                 self.logger.info("📈 Plotting training curve...")
                 plot_training_curve(loss_jsonl, save_plot)
                 self.logger.info(f"✅ Training curve saved to {save_plot}")
+
 
 
 
