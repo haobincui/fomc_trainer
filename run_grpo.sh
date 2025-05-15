@@ -1,29 +1,40 @@
 #!/bin/bash
+set -e
 
-echo "Starting the Pipeline to generate response"
+LINE="==============================================="
+
+LOG_DIR=logs/train
+mkdir -p "$LOG_DIR"
+LOG_FILE=$LOG_DIR/grpo_$(date "+%Y%m%d_%H%M%S").log
+
+
 source activate fomc_trainer
-LINE="--------------------------------------------------------------------------------------"
-
-LOG_FILE=logs/train_grpo_$(date "+%Y%m%d_%H%M%S").log
-
-
-mkdir -p "./logs"
-
-echo " "
-echo "${LINE}"
-
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-1}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # export TRANSFORMERS_VERBOSITY=debug
 
+CONFIG=configs/grpo/grpo_20250514.yaml
+ACCELERATE_CONFIG=configs/accelerate/zero3.yaml
 
-accelerate launch --config_file configs/accelerate/zero3.yaml train_grpo.py \
-    --config configs/grpo/grpo_20250514.yaml
+echo " "
+echo "${LINE}"
+echo "Initializing **GRPO** training"
+echo "Using config: [$CONFIG]"
+echo "Using accelerate config: [$ACCELERATE_CONFIG]"
+echo "Log file: [$LOG_FILE]"
+echo "Using conda env: $(which python)"
+echo "CUDA_VISIBLE_DEVICES: [$CUDA_VISIBLE_DEVICES]"
+echo "${LINE}"
+
+nohup accelerate launch --config_file "$ACCELERATE_CONFIG" train_grpo.py \
+    --config "$CONFIG" > "$LOG_FILE" 2>&1 &
+
+echo " "
+echo "✅ Start training PID: [$!]"
+echo "✅ To monitor logs: tail -f $LOG_FILE"
+echo "${LINE}"
 
 
 
-# nohup CUDA_VISIBLE_DEVICES=1 accelerate launch --config_file configs/accelerate/zero3.yaml train_grpo.py \
-#     --config configs/grpo/grpo_20250514.yaml > "$LOG_FILE" 2>&1 &
-
-echo "Finished training:"
-echo "tail -f $LOG_FILE"
+# accelerate launch --config_file configs/accelerate/zero3.yaml train_grpo.py \
+#     --config configs/grpo/grpo_20250514.yaml

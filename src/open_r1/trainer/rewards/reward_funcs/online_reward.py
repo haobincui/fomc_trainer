@@ -2,23 +2,13 @@ import json
 import os
 import re
 import requests
+from pathlib import Path
 
 _URL = "http://localhost:8000/v1/chat/completions"
 _MODEL = "models/DeepSeek-R1-Distill-Qwen-14B-unsloth-bnb-4bit"
-
-
-
-
-# _URL = "http://localhost:11433/api/chat"
-# _MODEL = "deepseek-r1:32b"
 _API_KEY = None
 
-# _URL = "https://api.deepseek.com/chat/completions"
-# _MODEL = "deepseek-chat"
-# _API_KEY = "sk-b477d6bce95b4ae7a534f8777cfeea74"
 
-
-from pathlib import Path
 
 _ANSWER_PROMPT = (Path(__file__).parent / "online_reward_prompt/output_evaluation.md").resolve().read_text()
 _REASONING_PROMPT = (Path(__file__).parent / "online_reward_prompt/reasoning_process_evaluation.md").resolve().read_text()
@@ -58,7 +48,6 @@ def _parse_reasoning_and_answer(text: str) -> tuple[str, str]:
         think, answer = text.split("</think>", 1)
         return think.strip(), answer.strip()
     else:
-        # fallback 如果没有</think>，全部归为answer
         return "", text.strip()
 
 

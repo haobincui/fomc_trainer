@@ -1,29 +1,46 @@
 #!/bin/bash
 
-echo "Starting the Pipeline to generate response"
+
+
+set -e
+
+
+LINE="==============================================="
+
+
+CURRENT_DATE=$(date +%Y%m%d_%H%M%S)
+
+LOG_DIR=logs/train
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/sft_${CURRENT_DATE}.log"
+
 source activate fomc_trainer
-CURRENT_DATE=$(date +%Y%m%d)
-LINE="--------------------------------------------------------------------------------------"
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-LOG_FILE="./logs/train_${CURRENT_DATE}.log"
-
-mkdir -p "./logs"
+CONFIG=configs/sft/sft_20250515.yaml
+ACCELERATE_CONFIG=configs/accelerate/zero3.yaml
 
 echo " "
 echo "${LINE}"
+echo "Initializing **SFT** training"
+echo "Using config: [$CONFIG]"
+echo "Using accelerate config: [$ACCELERATE_CONFIG]"
+echo "Log file: [$LOG_FILE]"
+echo "Using conda env: $(which python)"
+echo "CUDA_VISIBLE_DEVICES: [$CUDA_VISIBLE_DEVICES]"
+echo "${LINE}"
 
-export CUDA_VISIBLE_DEVICES=1
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+nohup accelerate launch --config_file "$ACCELERATE_CONFIG" train_sft.py \
+    --config "$CONFIG" > "$LOG_FILE" 2>&1 &
+
+echo " "
+echo "✅ Start training PID: [$!]"
+echo "✅ To monitor logs: tail -f $LOG_FILE"
+echo "${LINE}"
+
+# accelerate launch --config_file configs/accelerate/zero3.yaml train_grpo.py \
+#     --config configs/grpo/grpo_20250514.yaml
 
 
-# nohup cve-cli run \
-# --input_file="./input/llm_data.xlsx" \
-# --use_async=True \
-#   > "$LOG_FILE" 2>&1 &
 
-
-nohup accelerate launch --config_file configs/accelerate/zero3.yaml train_sft.py \
-    --config configs/sft/sft_20250514.yaml > "$LOG_FILE" 2>&1 &
-
-echo "Finished training:"
-echo "tail -f $LOG_FILE"
