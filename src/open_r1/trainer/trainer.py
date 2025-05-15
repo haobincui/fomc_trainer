@@ -257,6 +257,7 @@ class Trainer(ABC):
                 self.logger.info("📈 Plotting training curve...")
                 plot_training_curve(loss_jsonl, save_plot)
                 self.logger.info(f"✅ Training curve saved to {save_plot}")
+            self.plot_customized_curve()
 
 
 

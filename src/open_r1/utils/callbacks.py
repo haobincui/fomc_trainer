@@ -96,32 +96,30 @@ class LossLoggingCallback(TrainerCallback):
                 }, f)
                 f.write("\n")
 
-class RewardCallback(TrainerCallback):
+
+class RewardLoggingCallback(TrainerCallback):
+    """
+    日志仅输出 reward 和 eval_reward，兼容 plot_reward_curve。
+    """
     def __init__(self, train_config, model_config, output_file="reward_history.jsonl"):
         self.output_file = train_config.output_dir + "/" + output_file
-        
 
-    def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        logs = kwargs.get('logs', {})
-        reward = logs.get("reward", None) or logs.get("rewards", None)
-        if reward is not None:
-            if isinstance(reward, (float, int)):
-                record = {"step": state.global_step, "reward": reward}
-            else:
-                try:
-                    import numpy as np
-                    mean_reward = float(np.mean(reward))
-                except Exception:
-                    mean_reward = sum(reward) / len(reward)
-                record = {"step": state.global_step, "reward": mean_reward, "raw_reward": reward}
-        
-            with open(self.output_file, "a", encoding="utf-8") as f:
-                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if logs is not None:
+            with open(self.output_file, "a") as f:
+                json.dump({
+                    "step": state.global_step,
+                    "reward": logs.get("reward"),
+                    "eval_reward": logs.get("eval_reward"),
+                }, f)
+                f.write("\n")
+
 
 CALLBACKS = {
     "push_to_hub_revision": PushToHubRevisionCallback,
     "loss_log": LossLoggingCallback,
-    "reward_log": RewardCallback
+    "reward_log": RewardLoggingCallback
 }
 
 

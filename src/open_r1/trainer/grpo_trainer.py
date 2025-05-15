@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 from collections.abc import Callable
 from typing import List
 
@@ -20,9 +21,8 @@ from open_r1.configs import LoraArguments, GRPOConfig, GRPOScriptArguments
 from open_r1.trainer.rewards.reward_register import get_reward_funcs
 from open_r1.trainer.trainer import Trainer
 
-from torch.optim import AdamW
 
-
+from open_r1.utils.plot_loss import plot_reward_curve
 
 
 class GrpoTrainer(Trainer):
@@ -81,6 +81,11 @@ class GrpoTrainer(Trainer):
         return trainer
 
     def plot_customized_curve(self):
-        pass
+        reward_jsonl = os.path.join(self.training_args.output_dir, "reward_history.jsonl")
+        save_plot = os.path.join(self.training_args.output_dir, "reward_curve.png")
+        if os.path.exists(reward_jsonl):
+            self.logger.info("📈 Plotting reward curve...")
+            plot_reward_curve(reward_jsonl, save_plot)
+            self.logger.info(f"✅ Reward curve saved to {save_plot}")
 
 
