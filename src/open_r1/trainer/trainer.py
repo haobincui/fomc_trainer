@@ -110,12 +110,12 @@ class Trainer(ABC):
     
 
 
-    def load_checkpoint(self):
+    def load_checkpoint(self, checkpoint_path: str = None):
         last_checkpoint = None
-        if os.path.isdir(self.training_args.output_dir): # type: ignore
-            last_checkpoint = get_last_checkpoint(self.training_args.output_dir)
+        if os.path.isdir(checkpoint_path): # type: ignore
+            last_checkpoint = get_last_checkpoint(checkpoint_path)
         if last_checkpoint is not None and self.training_args.resume_from_checkpoint is None:
-            self.logger.info(f"Checkpoint detected, resuming training at {last_checkpoint=}.")
+            self.logger.info(f"Checkpoint detected, resuming training at {last_checkpoint}.")
 
         if "wandb" in self.training_args.report_to: # type: ignore
             init_wandb_training(self.training_args)
@@ -189,7 +189,8 @@ class Trainer(ABC):
 
 
     def start_train(self):
-        last_checkpoint = self.load_checkpoint()
+        last_checkpoint = self.load_checkpoint(self.training_args.output_dir)
+
         self.logger.info("*** 🚀 Start Training ***")
         checkpoint = None
         if self.training_args.resume_from_checkpoint is not None:
@@ -251,31 +252,15 @@ class Trainer(ABC):
 
 
 
-    def merge_adapter(self):
-        adapter_path = self.training_args.output_dir
-        merged_model_path = self.peft_args.peft_merged_path
-        if not merged_model_path:
+    def export_model(self):
+        if not self.peft_args.peft_merged_model_path:
             self.logger.warning("❌ Merged model path is not set. Skipping merge.")
             return
-        if not os.path.exists(adapter_path):
-            self.logger.warning(f"❌ Adapter path {adapter_path} does not exist. Skipping merge.")
-            return
 
-        from peft import AutoPeftModelForCausalLM
-        torch_dtype = (
-            self.model_args.torch_dtype
-            if self.model_args.torch_dtype in ["auto", None]
-            else getattr(torch, model_args.torch_dtype)  # type: ignore
-        )
-        model = AutoPeftModelForCausalLM.from_pretrained(
-            adapter_path,
-            device_map=None,
-            torch_dtype=torch_dtype,
-        )
+        model = self.trainer.model.merge_and_unload()
+        model.save_pretrained(self.peft_args.peft_merged_model_path)
 
-        model = model.merge_and_unload()  # ⭐️ 合并LoRA adapter
-        model.save_pretrained(merged_model_path)
-        self.logger.info(f"✅ Merged model saved to {merged_model_path}")
+        self.logger.info(f"✅ Merged model saved to {self.peft_args.peft_merged_model_path}")
 
 
 
