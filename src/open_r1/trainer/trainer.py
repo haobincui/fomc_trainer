@@ -71,7 +71,7 @@ class Trainer(ABC):
     @property
     def peft_config(self):
         if self._peft_config is None:
-            self._peft_config = self.load_peft_adapter()
+            self._peft_config = self.load_peft_config()
         return self._peft_config
 
     def _set_logger(self):
@@ -161,21 +161,16 @@ class Trainer(ABC):
         model = get_model(self.model_args, self.training_args)
         return model
 
-    def load_peft_adapter(self):
-        if self.peft_args.peft_adapter_path:
-            self.logger.info(f"🔗 Loading LoRA adapter from {self.peft_args.peft_adapter_path}")
-            self._model = PeftModel.from_pretrained(self._model, self.peft_args.peft_adapter_path)
-            peft_config = None
-        else:
-            self.logger.info(f"🛠️ Initializing new LoRA config")
-            peft_config = LoraConfig(
-                                r=self.peft_args.peft_r,
-                                lora_alpha=self.peft_args.peft_lora_alpha,
-                                lora_dropout=self.peft_args.peft_lora_dropout,
-                                bias="none",
-                                task_type="CAUSAL_LM",
-                                target_modules=self.peft_args.peft_target_modules
-                            )
+    def load_peft_config(self):
+        self.logger.info(f"🛠️ Initializing new LoRA config")
+        peft_config = LoraConfig(
+                            r=self.peft_args.peft_r,
+                            lora_alpha=self.peft_args.peft_lora_alpha,
+                            lora_dropout=self.peft_args.peft_lora_dropout,
+                            bias="none",
+                            task_type="CAUSAL_LM",
+                            target_modules=self.peft_args.peft_target_modules
+                        )
         return peft_config
 
 
@@ -253,6 +248,36 @@ class Trainer(ABC):
                 self.logger.info("📈 Plotting training curve...")
                 plot_training_curve(loss_jsonl, save_plot)
                 self.logger.info(f"✅ Training curve saved to {save_plot}")
+
+
+
+    def merge_adapter(self):
+        adapter_path = self.training_args.output_dir
+        merged_model_path = self.peft_args.peft_merged_path
+        if not merged_model_path:
+            self.logger.warning("❌ Merged model path is not set. Skipping merge.")
+            return
+        if not os.path.exists(adapter_path):
+            self.logger.warning(f"❌ Adapter path {adapter_path} does not exist. Skipping merge.")
+            return
+
+        from peft import AutoPeftModelForCausalLM
+        torch_dtype = (
+            self.model_args.torch_dtype
+            if self.model_args.torch_dtype in ["auto", None]
+            else getattr(torch, model_args.torch_dtype)  # type: ignore
+        )
+        model = AutoPeftModelForCausalLM.from_pretrained(
+            adapter_path,
+            device_map=None,
+            torch_dtype=torch_dtype,
+        )
+
+        model = model.merge_and_unload()  # ⭐️ 合并LoRA adapter
+        model.save_pretrained(merged_model_path)
+        self.logger.info(f"✅ Merged model saved to {merged_model_path}")
+
+
 
 
 

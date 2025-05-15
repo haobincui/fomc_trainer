@@ -366,9 +366,9 @@ class SFTScriptArguments(trl.ScriptArguments):
 
 @dataclass
 class LoraArguments:
-    peft_adapter_path: Optional[str] = field(
+    peft_merged_path: Optional[str] = field(
         default=None,
-        metadata={"help": "Path to the LoRA adapter."}
+        metadata={"help": "Path to export the merged model."}
     )
     peft_r: int = field(default=8, metadata={"help": "LoRA rank"})
     peft_lora_alpha: int = field(default=32, metadata={"help": "LoRA alpha"})
