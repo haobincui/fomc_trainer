@@ -11,7 +11,7 @@ from trl import ModelConfig
 from trl import ScriptArguments
 from peft import LoraConfig, PeftModel
 
-from open_r1.configs import GRPOConfig, SFTConfig
+from open_r1.configs import GRPOConfig, LoraArguments, SFTConfig
 from open_r1.data_loader import load_train_eval_datasets
 from open_r1.utils import get_model, get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
@@ -112,12 +112,12 @@ class Trainer(ABC):
 
     def load_checkpoint(self):
         last_checkpoint = None
-        if os.path.isdir(self.training_args.output_dir):
+        if os.path.isdir(self.training_args.output_dir): # type: ignore
             last_checkpoint = get_last_checkpoint(self.training_args.output_dir)
         if last_checkpoint is not None and self.training_args.resume_from_checkpoint is None:
             self.logger.info(f"Checkpoint detected, resuming training at {last_checkpoint=}.")
 
-        if "wandb" in self.training_args.report_to:
+        if "wandb" in self.training_args.report_to: # type: ignore
             init_wandb_training(self.training_args)
         return last_checkpoint
 

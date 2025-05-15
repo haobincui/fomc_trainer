@@ -20,6 +20,10 @@ from open_r1.configs import LoraArguments, GRPOConfig, GRPOScriptArguments
 from open_r1.trainer.rewards.reward_register import get_reward_funcs
 from open_r1.trainer.trainer import Trainer
 
+from torch.optim import AdamW
+
+
+
 
 class GrpoTrainer(Trainer):
     def __init__(self, script_args: GRPOScriptArguments, training_args: GRPOConfig, model_args: ModelConfig, peft_args: LoraArguments):
@@ -57,9 +61,9 @@ class GrpoTrainer(Trainer):
 
 
         trainer = GRPOTrainer(
-            model=self.model,
-            reward_funcs=self.reward_funcs,
-            reward_kwargs=reward_kwargs,
+            model=self.model, # type: ignore
+            reward_funcs=self.reward_funcs, # type: ignore
+            # reward_kwargs=reward_kwargs,
             args=self.training_args,
             train_dataset=self.dataset[self.script_args.dataset_train_split],
             eval_dataset=(

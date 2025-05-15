@@ -12,6 +12,9 @@ mkdir -p "./logs"
 echo " "
 echo "${LINE}"
 
+export CUDA_VISIBLE_DEVICES=1
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
 
 # nohup cve-cli run \
 # --input_file="./input/llm_data.xlsx" \
@@ -20,7 +23,7 @@ echo "${LINE}"
 
 
 nohup accelerate launch --config_file configs/accelerate/zero3.yaml train_sft.py \
-    --config configs/sft/sft_20250513.yaml > "$LOG_FILE" 2>&1 &
+    --config configs/sft/sft_20250514.yaml > "$LOG_FILE" 2>&1 &
 
 echo "Finished training:"
 echo "tail -f $LOG_FILE"

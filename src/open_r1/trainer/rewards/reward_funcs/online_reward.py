@@ -3,12 +3,26 @@ import os
 import re
 import requests
 
+_URL = "http://localhost:8000/v1/chat/completions"
+_MODEL = "models/DeepSeek-R1-Distill-Qwen-14B-unsloth-bnb-4bit"
 
-_URL = "http://localhost:11434/api/chat"
+
+
+
+# _URL = "http://localhost:11433/api/chat"
+# _MODEL = "deepseek-r1:32b"
 _API_KEY = None
 
-_ANSWER_PROMPT = open("./online_reward_prompt/output_evaluation.md", "r").read()
-_REASONING_PROMPT = open("./online_reward_prompt/reasoning_process_evaluation.md", "r").read()
+# _URL = "https://api.deepseek.com/chat/completions"
+# _MODEL = "deepseek-chat"
+# _API_KEY = "sk-b477d6bce95b4ae7a534f8777cfeea74"
+
+
+from pathlib import Path
+
+_ANSWER_PROMPT = (Path(__file__).parent / "online_reward_prompt/output_evaluation.md").resolve().read_text()
+_REASONING_PROMPT = (Path(__file__).parent / "online_reward_prompt/reasoning_process_evaluation.md").resolve().read_text()
+
 
 
 _SYSTEM_PROMPT = (
@@ -47,7 +61,7 @@ def _send_eval_request(prompt: str, url: str) -> float:
         headers["Authorization"] = f"Bearer {_API_KEY}"
 
     body = {
-        "model": "deepseek-r1:8b",
+        "model": _MODEL,
         "messages": [
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
@@ -57,9 +71,10 @@ def _send_eval_request(prompt: str, url: str) -> float:
     }
 
     try:
-        resp = requests.post(url,headers=headers, json=body, timeout=30)
+        resp = requests.post(url,headers=headers, json=body, timeout=60)
         resp.raise_for_status()
-        result_text = resp.json().get("message", {}).get("content", "")
+        # result_text = resp.json().get("message", {}).get("content", "")
+        result_text = resp.json()["choices"][0]["message"]["content"]
         return _parse_score(result_text)
     except Exception as e:
         print(f"❌ Error during reward call: {e}")

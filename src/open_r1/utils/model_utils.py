@@ -1,5 +1,5 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizer # type: ignore
 
 from trl import ModelConfig, get_kbit_device_map, get_quantization_config, get_peft_config
 
@@ -30,7 +30,7 @@ def get_model(
     torch_dtype = (
         model_args.torch_dtype
         if model_args.torch_dtype in ["auto", None]
-        else getattr(torch, model_args.torch_dtype)
+        else getattr(torch, model_args.torch_dtype) # type: ignore
     )
     quantization_config = get_quantization_config(model_args)
 
@@ -41,7 +41,8 @@ def get_model(
         attn_implementation=model_args.attn_implementation,
         torch_dtype=torch_dtype,
         use_cache=False if training_args.gradient_checkpointing else True,
-        device_map=get_kbit_device_map() if quantization_config is not None else None,
+        # device_map=get_kbit_device_map() if quantization_config is not None else None,
+        device_map = None,
         quantization_config=quantization_config,
     )
     model = AutoModelForCausalLM.from_pretrained(

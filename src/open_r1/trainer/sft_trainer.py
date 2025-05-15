@@ -43,7 +43,7 @@ class SftTrainer(Trainer):
         dataset = self.dataset.map(convert_chat).rename_column("response", "completion")
 
         trainer = SFTTrainer(
-            model=self._model,
+            model=self.model,
             args=self.training_args,
             train_dataset=dataset[self.script_args.dataset_train_split],
             eval_dataset=(
