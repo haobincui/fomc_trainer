@@ -177,6 +177,10 @@ class Trainer(ABC):
     @abstractmethod
     def load_trainer(self):
         raise NotImplementedError("load_trainer() must be implemented in subclasses")
+    
+    @abstractmethod
+    def plot_customized_curve(self):
+        pass
 
 
     def load_callbacks(self):
@@ -238,11 +242,15 @@ class Trainer(ABC):
             self.logger.info("Pushing to hub...")
             self.trainer.push_to_hub(**kwargs)
         self.logger.info("✅ Training completed successfully.")
+
+
+
         #############
         # plot loss curve
         #############
 
         if self.trainer.accelerator.is_main_process:
+
             loss_jsonl = os.path.join(self.training_args.output_dir, "loss_history.jsonl")
             save_plot = os.path.join(self.training_args.output_dir, "training_curve.png")
             if os.path.exists(loss_jsonl):

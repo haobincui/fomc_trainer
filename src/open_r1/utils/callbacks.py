@@ -96,10 +96,34 @@ class LossLoggingCallback(TrainerCallback):
                 }, f)
                 f.write("\n")
 
+class RewardCallback(TrainerCallback):
+    def __init__(self, train_config, model_config, output_file="reward_history.jsonl"):
+        self.output_file = train_config.output_dir + "/" + output_file
+        
+
+    def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        logs = kwargs.get('logs', {})
+        reward = logs.get("reward", None) or logs.get("rewards", None)
+        if reward is not None:
+            if isinstance(reward, (float, int)):
+                record = {"step": state.global_step, "reward": reward}
+            else:
+                try:
+                    import numpy as np
+                    mean_reward = float(np.mean(reward))
+                except Exception:
+                    mean_reward = sum(reward) / len(reward)
+                record = {"step": state.global_step, "reward": mean_reward, "raw_reward": reward}
+        
+            with open(self.output_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
 CALLBACKS = {
     "push_to_hub_revision": PushToHubRevisionCallback,
-    "loss_log": LossLoggingCallback
+    "loss_log": LossLoggingCallback,
+    "reward_log": RewardCallback
 }
+
 
 
 def get_callbacks(train_config, model_config) -> List[TrainerCallback]:

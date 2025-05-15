@@ -59,5 +59,8 @@ class SftTrainer(Trainer):
         elapsed = e - s
         self.logger.info(f"*** ✅ Loaded trainer, Time Usage {elapsed:.2f} s ***")
         return trainer
+    
+    def plot_customized_curve(self):
+        pass
 
 

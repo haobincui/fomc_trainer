@@ -107,6 +107,7 @@ overwrite_output_dir: true
 save_strategy: "no"
 callbacks:
   - loss_log
+  - reward_log
 
 
 # ====================
