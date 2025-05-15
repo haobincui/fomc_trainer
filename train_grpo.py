@@ -22,7 +22,13 @@ def main(script_args, training_args, model_args, peft_args):
     # Start training
     grpo_trainer.logger.info("*** 🚀 Start SFT training ***")
     grpo_trainer.start_train()
-    grpo_trainer.logger.info("*** 🎉 Training finished successfully ***")
+    grpo_trainer.logger.info(f"*** 🎉 Training finished successfully, saved in {training_args.output_dir} ***")
+    
+    # export
+    grpo_trainer.export_model()
+    grpo_trainer.logger.info(f"*** ✅ Model merged and exported to {peft_args.peft_merged_model_path}***")
+
+
 
 
 if __name__ == '__main__':
