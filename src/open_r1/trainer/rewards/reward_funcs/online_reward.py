@@ -42,15 +42,25 @@ def save_judge_record(save_path, record):
 
 
 def _parse_score(text: str) -> float:
-    pattern = r"\*\*Total Score\*\*:\s*\\boxed\{\{?(\d+)\}?\}"
+    pattern = r"\*\*Total Score\*\*:\s*\\boxed\{(\d+)\}"
     match = re.search(pattern, text)
     return float(match.group(1)) if match else 0
 
 
+
+# def _parse_reasoning_and_answer(text: str) -> tuple[str, str]:
+#     pattern = r"<think>(.*?)</think>\s*<answer>(.*?)</answer>"
+#     match = re.search(pattern, text, re.DOTALL)
+#     return (match.group(1).strip(), match.group(2).strip()) if match else ("", "")
+
 def _parse_reasoning_and_answer(text: str) -> tuple[str, str]:
-    pattern = r"<think>(.*?)</think>\s*<answer>(.*?)</answer>"
-    match = re.search(pattern, text, re.DOTALL)
-    return (match.group(1).strip(), match.group(2).strip()) if match else ("", "")
+    if "</think>" in text:
+        think, answer = text.split("</think>", 1)
+        return think.strip(), answer.strip()
+    else:
+        # fallback 如果没有</think>，全部归为answer
+        return "", text.strip()
+
 
 
 def _send_eval_request(prompt: str, url: str) -> float:
@@ -75,6 +85,7 @@ def _send_eval_request(prompt: str, url: str) -> float:
         resp.raise_for_status()
         # result_text = resp.json().get("message", {}).get("content", "")
         result_text = resp.json()["choices"][0]["message"]["content"]
+        print(result_text)
         return _parse_score(result_text)
     except Exception as e:
         print(f"❌ Error during reward call: {e}")

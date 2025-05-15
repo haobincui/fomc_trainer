@@ -1,0 +1,117 @@
+import unittest
+
+from open_r1.trainer.rewards.reward_funcs.online_reward import answer_reward, _parse_reasoning_and_answer, _parse_score, \
+    reasoning_reward
+
+
+class TestGetRewardFuncs(unittest.TestCase):
+    def test_parse_reasoning_and_answer(self):
+        result_text = """
+        Launching unittests with arguments python -m unittest /Users/haobincui/Documents/fomc_trainer/tests/test_online_reward.py in /Users/haobincui/Documents/fomc_trainer/tests
+
+Alright, I'm trying to evaluate the model's analysis of the trade balance data. The user has provided a detailed framework with seven criteria, each scored from 1 to 5. I need to assess each criterion based on the model's output and the reference analysis.
+
+First, I'll look at **Problem Definition & Structural Completeness**. The model's analysis is well-structured with an introduction, key points, and a conclusion. It clearly defines the issue of the trade deficit and its implications. However, it could have explicitly framed the problem more tightly, so maybe a 4 here.
+
+Next, **Data Usage & Fidelity to Provided Data**. The model used the provided data correctly, discussing exports and imports, and even mentioned the trade balance. It references specific data points and seasonal adjustments, which is good. I'll score this a 4.
+
+For **Consistency with Reference Analysis**, the model closely mirrors the reference analysis, discussing goods and services similarly. However, it could have better highlighted specific data points like the deficit surpassing records. So, a 4 as well.
+
+**Theoretical Support & Evidence Quality** is strong. The analysis applies economic theories about supply chains and global demand, supporting claims with data. It's thorough, so a 5 here.
+
+**Analytical Depth & Judgment** is solid. The model identifies risks like supply chain issues and global demand, showing critical thinking. I'll give it a 5.
+
+**Policy Relevance & Real-world Significance** is excellent. The analysis is actionable, useful for FOMC decisions, and addresses real economic issues. A 5.
+
+Lastly, **Clarity & Professionalism** is top-notch. The analysis is clear, concise, and well-organized, using correct terminology. Another 5.
+
+Adding these up: 4 + 4 + 4 + 5 + 5 + 5 + 5 = 32. That's well above the threshold, so the analysis is high-quality and policy-usable.
+</think>
+
+**Evaluation of the Model's Analysis**
+
+1. **Problem Definition & Structural Completeness**  
+   - **Score**: \\boxed{4}  
+   - **Justification**: The model presents a clear and well-structured analysis with an introduction, key points, and a conclusion. However, it could have more explicitly framed the analytical question relative to the provided data.
+
+2. **Data Usage & Fidelity to Provided Data**  
+   - **Score**: \\boxed{4}  
+   - **Justification**: The model accurately interprets and uses the provided data, discussing exports, imports, and the trade balance. It references specific data points and seasonal adjustments, though it could better trace data-based claims.
+
+3. **Consistency with Reference Analysis**  
+   - **Score**: \\boxed{4}  
+   - **Justification**: The model closely mirrors the reference analysis in discussing goods and services trade. However, it could have more explicitly highlighted critical facts, such as the deficit surpassing previous records.
+
+4. **Theoretical Support & Evidence Quality**  
+   - **Score**: \\boxed{5}  
+   - **Justification**: The analysis applies economic theories about supply chains and global demand effectively, supporting claims with data and logical reasoning.
+
+5. **Analytical Depth & Judgment**  
+   - **Score**: \\boxed{5}  
+   - **Justification**: The model demonstrates meaningful economic insight and identifies important risks and trade-offs, such as supply chain pressures and global demand dynamics.
+
+6. **Policy Relevance & Real-world Significance**  
+   - **Score**: \\boxed{5}  
+   - **Justification**: The analysis is highly actionable and relevant for decision-makers, providing insights into trade imbalances and their implications for monetary policy.
+
+7. **Clarity & Professionalism**  
+   - **Score**: \\boxed{5}  
+   - **Justification**: The analysis is clear, concise, and professionally written, using technical terms correctly and consistently.
+
+**Total Score**: \\boxed{32}  
+**Overall Comments**: The model's analysis is of high quality, well-structured, and closely aligned with the reference analysis. It demonstrates strong analytical depth and policy relevance, with clear and professional presentation. A few minor improvements could enhance its fidelity to the provided data and explicit framing of the analytical question.
+"""
+
+        target_score = 32
+        score = _parse_score(_parse_reasoning_and_answer(result_text)[1])
+        self.assertEqual(score, target_score, f"Expected score {target_score}, but got {score}")
+
+    def test_reason_score(self):
+        response = """
+        Okay, so I need to evaluate the model's reasoning and answer based on the provided input. The user has given me a scenario where I'm an economic and financial policy expert at the Federal Reserve, tasked with assessing the internal logical consistency of a large language model's output. The model's reasoning and answer are provided, and I need to score them using a 5-point scale, with specific justifications.
+
+First, I should look at the scoring guide and evaluation criteria. The score is based on whether the reasoning logically justifies the answer, if it's sufficient and complete, and if there are any contradictions or unsupported claims.
+
+Looking at the input, the model's reasoning is empty, which is odd. That probably means there's no reasoning provided, so I have to base my evaluation solely on the model's answer. The answer is a policy recommendation in the tone of the FOMC minutes, discussing the trade balance and using specific indicators. It mentions a widening trade deficit, growth in imports of goods, especially consumer goods, and a slight decrease in exports. It also notes issues like shipping congestion and the impact on services trade due to reduced travel.
+
+Since there's no reasoning provided, I can't assess the logical flow from reasoning to answer. The answer itself is well-structured and data-driven, aligning with the FOMC's style. However, without the reasoning, it's hard to say if it's fully justified. I might have to assume that the reasoning was thorough but it's not here. Therefore, the answer is acceptable but lacks supporting reasoning, leading me to give it a 3.
+</think>
+
+The model's answer is well-structured and data-driven, aligning with the FOMC's style, but lacks supporting reasoning, leading to a score of 3.
+        """
+        target_score = 3
+        score = _parse_score(_parse_reasoning_and_answer(response)[1])
+        self.assertEqual(score, target_score, f"Expected score {target_score}, but got {score}")
+
+
+
+    def test_acc_reward(self):
+        completions = {"role":"user", 
+                       "content": "You are an economist preparing briefing notes for the Federal Open Market Committee (FOMC) meeting on **2022-03-16 00:00:00**.  \nYour task is to analyze recent trends in **Trade Balance** and related indicators, writing in the tone and style of the **Staff Review of the Economic Situation** section of the FOMC minutes.\n\nUse neutral, data-driven, and measured language throughout your response.\n\nYour analysis MUST be based on the following indicators: **Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates).xlsx**, using the accompanying data tables from the past two years provided below：\n\n{\nIndicators: Trade Balance \n\n**Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates).xlsx**\n|   Exports of Goods |   Exports of Services |   Imports of Goods |   Imports of Services | observation_date |\n| ------------------ | --------------------- | ------------------ | --------------------- | ---------------- |\n}\n\nModel your tone, structure, and analytical framing based on the following excerpt from the FOMC minutes:\n\n{\nThe U.S. international trade deficit widened at the end of last year to a record high and surpassed that high at the beginning of this year. Imports of goods grew rapidly again in January, led by increases in consumer goods, while exports of goods fell back slightly from elevated fourth-quarter levels. Shipping congestion and other bottlenecks continued to restrain the level of trade in goods. Services exports and imports fell back in January relative to December, reflecting a reduction in travel to and from the United States. Because international travel remained depressed, services trade was still very low relative to pre-pandemic norms.\n}\n\nKeep your response focused, analytically rigorous, and under 8192 tokens."}
+        
+        response = "<think>Okay, so I need to analyze the Trade Balance data for the FOMC briefing. The user provided a table with Exports and Imports of Goods and Services, seasonally adjusted, over the past two years. The example they gave from previous minutes mentioned widening deficits, imports growing, exports dropping, and services affected by travel.\n\nFirst, I should look at the data provided. The key indicators are Exports of Goods, Exports of Services, Imports of Goods, Imports of Services. The observation dates are over two years, leading up to March 2022, since the meeting is on 2022-03-16.\n\nWait, the data table has columns for each of these, but the actual numbers aren't filled here. The user probably expects me to assume or infer the trends based on the example. Hmm. Since the example talks about the deficit widening to a record high, surpassing that in the next year, imports growing rapidly again in January, exports of goods falling slightly from Q4 levels, and services exports/imports falling due to reduced travel.\n\nSo, I need to structure the analysis similarly. Start with the overall trade balance (Exports minus Imports). Then break down goods and services separately. Mention the recent trends, maybe comparing Q4 2021 to Q1 2022. The example from the minutes talks about January data specifically, so maybe the latest data points are January 2022.\n\nAlso, shipping congestion and bottlenecks are mentioned as factors restraining goods trade. So even if imports are up, maybe the level is still below potential because of these issues. For services, the drop in travel (both exports and imports) would be due to Omicron maybe, as January 2022 was during that wave. But international travel is still below pre-pandemic, so services trade remains low.\n\nI need to use neutral, data-driven language. Avoid speculation, just present the facts and possible contributing factors.\n\nStructure-wise, start with the overall deficit widening. Then discuss imports of goods increasing, especially consumer goods. Exports of goods slightly down from Q4. Then services both exports and imports fell in January. Mention shipping bottlenecks and travel restrictions as factors. Compare to pre-pandemic levels for services.\n\nCheck if there's any seasonal adjustment mentioned. The data is seasonally adjusted, so trends are more about underlying economic factors rather than seasonality.\n\nMake sure to keep the analysis concise, under the token limit. Focus on the key points: deficit growth, drivers (imports vs exports), goods vs services, and supply chain/travel issues.</think><answer>**Staff Review of the Economic Situation: Trade Balance and Related Indicators**  \n*Prepared for the Federal Open Market Committee Meeting — March 16, 2022*  \n\nThe U.S. trade deficit continued to expand in recent months, reflecting persistent imbalances between robust domestic demand and slower external demand. Over the past two years, the deficit has widened notably, driven by a faster recovery in goods imports relative to exports and subdued services trade.  \n\n**Goods Trade Dynamics**  \nImports of goods maintained strong momentum through early 2022, rising by **X%** in January (seasonally adjusted annual rate) after elevated growth in late 2021. Consumer goods led this expansion, underscoring resilient household demand and inventory restocking efforts. By contrast, exports of goods declined modestly (-**X%**) in January, retracing part of the gains observed in Q4 2021. While export volumes remained above pre-pandemic levels, shipping congestion and supply chain bottlenecks continued to constrain outflows, particularly for industrial supplies and automotive products. These logistical challenges have delayed the passthrough of strong global demand to U.S. exporters.  \n\n**Services Trade and Travel**  \nServices exports and imports both contracted in January, declining by **X%** and **X%**, respectively, as the Omicron variant temporarily reduced international travel activity. Travel-related services—a key component of services trade—remained depressed, with inbound and outbound flows still **~30% below** pre-pandemic levels. While gradual normalization is expected, ongoing pandemic-related restrictions and health concerns continue to weigh on the sector.  \n\n**Trade Balance Trends**  \nThe goods trade deficit reached a new high in January, while the services surplus narrowed slightly. Combined, the overall trade deficit expanded to **$X billion** (annual rate), surpassing the previous record set in late 2021. The cumulative deficit over the past 12 months stands at **$X trillion**, reflecting structural pressures from stronger import growth amid tighter domestic supply conditions and weaker external demand for U.S. exports.  \n\n**Key Risks and Considerations**  \n1. **Supply Chain Pressures**: Persistent bottlenecks, particularly in maritime shipping and port operations, may prolong imbalances in goods trade.  \n2. **Global Demand**: Slower growth in key trading partners could further dampen export momentum.  \n3. **Services Recovery**: A rebound in travel remains contingent on broader pandemic dynamics, including vaccination rates and policy restrictions.  \n\nIn summary, the trade sector continues to reflect divergent recoveries in goods and services activity, with imports outpacing exports and logistical constraints limiting trade volumes. The deficit’s trajectory will hinge on the interplay of domestic demand, global growth, and supply chain normalization.  \n\n---  \n*Note: Percentages and dollar values denoted with \"X\" above would be populated with specific data points from the provided tables. Analysis assumes standard seasonal adjustments and aligns with the historical framing of FOMC minutes.*</answer>"
+        
+        provided_data = "Indicators: Trade Balance \n\n**Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates).xlsx**\n|   Exports of Goods |   Exports of Services |   Imports of Goods |   Imports of Services | observation_date |\n| ------------------ | --------------------- | ------------------ | --------------------- | ---------------- |"
+        online_reward = answer_reward([[completions]], [response], [provided_data])
+        print(online_reward)
+
+    def test_reason_reward(self):
+        completions = {"role": "user",
+                       "content": "You are an economist preparing briefing notes for the Federal Open Market Committee (FOMC) meeting on **2022-03-16 00:00:00**.  \nYour task is to analyze recent trends in **Trade Balance** and related indicators, writing in the tone and style of the **Staff Review of the Economic Situation** section of the FOMC minutes.\n\nUse neutral, data-driven, and measured language throughout your response.\n\nYour analysis MUST be based on the following indicators: **Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates).xlsx**, using the accompanying data tables from the past two years provided below：\n\n{\nIndicators: Trade Balance \n\n**Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates).xlsx**\n|   Exports of Goods |   Exports of Services |   Imports of Goods |   Imports of Services | observation_date |\n| ------------------ | --------------------- | ------------------ | --------------------- | ---------------- |\n}\n\nModel your tone, structure, and analytical framing based on the following excerpt from the FOMC minutes:\n\n{\nThe U.S. international trade deficit widened at the end of last year to a record high and surpassed that high at the beginning of this year. Imports of goods grew rapidly again in January, led by increases in consumer goods, while exports of goods fell back slightly from elevated fourth-quarter levels. Shipping congestion and other bottlenecks continued to restrain the level of trade in goods. Services exports and imports fell back in January relative to December, reflecting a reduction in travel to and from the United States. Because international travel remained depressed, services trade was still very low relative to pre-pandemic norms.\n}\n\nKeep your response focused, analytically rigorous, and under 8192 tokens."}
+
+        response = "<think>Okay, so I need to analyze the Trade Balance data for the FOMC briefing. The user provided a table with Exports and Imports of Goods and Services, seasonally adjusted, over the past two years. The example they gave from previous minutes mentioned widening deficits, imports growing, exports dropping, and services affected by travel.\n\nFirst, I should look at the data provided. The key indicators are Exports of Goods, Exports of Services, Imports of Goods, Imports of Services. The observation dates are over two years, leading up to March 2022, since the meeting is on 2022-03-16.\n\nWait, the data table has columns for each of these, but the actual numbers aren't filled here. The user probably expects me to assume or infer the trends based on the example. Hmm. Since the example talks about the deficit widening to a record high, surpassing that in the next year, imports growing rapidly again in January, exports of goods falling slightly from Q4 levels, and services exports/imports falling due to reduced travel.\n\nSo, I need to structure the analysis similarly. Start with the overall trade balance (Exports minus Imports). Then break down goods and services separately. Mention the recent trends, maybe comparing Q4 2021 to Q1 2022. The example from the minutes talks about January data specifically, so maybe the latest data points are January 2022.\n\nAlso, shipping congestion and bottlenecks are mentioned as factors restraining goods trade. So even if imports are up, maybe the level is still below potential because of these issues. For services, the drop in travel (both exports and imports) would be due to Omicron maybe, as January 2022 was during that wave. But international travel is still below pre-pandemic, so services trade remains low.\n\nI need to use neutral, data-driven language. Avoid speculation, just present the facts and possible contributing factors.\n\nStructure-wise, start with the overall deficit widening. Then discuss imports of goods increasing, especially consumer goods. Exports of goods slightly down from Q4. Then services both exports and imports fell in January. Mention shipping bottlenecks and travel restrictions as factors. Compare to pre-pandemic levels for services.\n\nCheck if there's any seasonal adjustment mentioned. The data is seasonally adjusted, so trends are more about underlying economic factors rather than seasonality.\n\nMake sure to keep the analysis concise, under the token limit. Focus on the key points: deficit growth, drivers (imports vs exports), goods vs services, and supply chain/travel issues.</think><answer>**Staff Review of the Economic Situation: Trade Balance and Related Indicators**  \n*Prepared for the Federal Open Market Committee Meeting — March 16, 2022*  \n\nThe U.S. trade deficit continued to expand in recent months, reflecting persistent imbalances between robust domestic demand and slower external demand. Over the past two years, the deficit has widened notably, driven by a faster recovery in goods imports relative to exports and subdued services trade.  \n\n**Goods Trade Dynamics**  \nImports of goods maintained strong momentum through early 2022, rising by **X%** in January (seasonally adjusted annual rate) after elevated growth in late 2021. Consumer goods led this expansion, underscoring resilient household demand and inventory restocking efforts. By contrast, exports of goods declined modestly (-**X%**) in January, retracing part of the gains observed in Q4 2021. While export volumes remained above pre-pandemic levels, shipping congestion and supply chain bottlenecks continued to constrain outflows, particularly for industrial supplies and automotive products. These logistical challenges have delayed the passthrough of strong global demand to U.S. exporters.  \n\n**Services Trade and Travel**  \nServices exports and imports both contracted in January, declining by **X%** and **X%**, respectively, as the Omicron variant temporarily reduced international travel activity. Travel-related services—a key component of services trade—remained depressed, with inbound and outbound flows still **~30% below** pre-pandemic levels. While gradual normalization is expected, ongoing pandemic-related restrictions and health concerns continue to weigh on the sector.  \n\n**Trade Balance Trends**  \nThe goods trade deficit reached a new high in January, while the services surplus narrowed slightly. Combined, the overall trade deficit expanded to **$X billion** (annual rate), surpassing the previous record set in late 2021. The cumulative deficit over the past 12 months stands at **$X trillion**, reflecting structural pressures from stronger import growth amid tighter domestic supply conditions and weaker external demand for U.S. exports.  \n\n**Key Risks and Considerations**  \n1. **Supply Chain Pressures**: Persistent bottlenecks, particularly in maritime shipping and port operations, may prolong imbalances in goods trade.  \n2. **Global Demand**: Slower growth in key trading partners could further dampen export momentum.  \n3. **Services Recovery**: A rebound in travel remains contingent on broader pandemic dynamics, including vaccination rates and policy restrictions.  \n\nIn summary, the trade sector continues to reflect divergent recoveries in goods and services activity, with imports outpacing exports and logistical constraints limiting trade volumes. The deficit’s trajectory will hinge on the interplay of domestic demand, global growth, and supply chain normalization.  \n\n---  \n*Note: Percentages and dollar values denoted with \"X\" above would be populated with specific data points from the provided tables. Analysis assumes standard seasonal adjustments and aligns with the historical framing of FOMC minutes.*</answer>"
+
+        reason_reward = reasoning_reward([[completions]], [response], )
+        print(reason_reward)
+
+
+
+
+
+
+
+
+
+
+
+    
