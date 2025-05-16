@@ -80,6 +80,14 @@ def _send_eval_request(prompt: str, url: str) -> float:
         print(f"❌ Error during reward call: {e}")
         return 0.0
 
+def _parse_answer(text: str):
+    pattern = r"<answer>(.*?)</answer>"
+    match = re.search(pattern, text, flags=re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    else:
+        return ""
+
 
 def answer_reward(
     completions: list[list[dict[str, str]]],
@@ -94,7 +102,7 @@ def answer_reward(
     for completion, reference, pdata in zip(completions, response, provided_data):
         content = completion[0]["content"]
         _, model_answer = _parse_reasoning_and_answer(content)
-        prompt = _ANSWER_PROMPT.format(provided_data = pdata, reference_analysis=reference, model_analysis=model_answer)
+        prompt = _ANSWER_PROMPT.format(provided_data = pdata, reference_analysis=_parse_answer(reference), model_analysis=model_answer)
         score = _send_eval_request(prompt, _URL)
         rewards.append(score)
         idx += 1
