@@ -28,7 +28,7 @@ nohup python -m vllm.entrypoints.openai.api_server \
     --gpu-memory-utilization 0.85 \
     --max-model-len 6144 \
     --tensor-parallel-size 1 \
-    --max-num-seqs 1 \
+    --max-num-seqs 2 \
     --port "$PORT" > "$LOG_FILE" 2>&1 &
 
 echo " "

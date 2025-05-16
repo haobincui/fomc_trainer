@@ -2,6 +2,7 @@ import json
 import os
 import re
 import requests
+import time
 from pathlib import Path
 
 _URL = "http://localhost:8000/v1/chat/completions"
@@ -66,7 +67,10 @@ def _send_eval_request(prompt: str, url: str) -> float:
             {"role": "user", "content": prompt}
         ],
         "stream": False,
-        "keep_alive": -1
+        "keep_alive": -1,
+        "temperature": 0.3,
+        "max_tokens": 2048,
+        "top_p": 0.9,
     }
 
     try:
@@ -106,6 +110,7 @@ def answer_reward(
         score = _send_eval_request(prompt, _URL)
         rewards.append(score)
         idx += 1
+        time.sleep(0.5)
         if save_path:
             save_judge_record(save_path, {
                 "type": "answer",
@@ -136,6 +141,7 @@ def reasoning_reward(
         score = _send_eval_request(prompt, _URL)
         rewards.append(score)
         idx += 1
+        time.sleep(0.5)
         if save_path:
             save_judge_record(save_path, {
                 "type": "reasoning",
