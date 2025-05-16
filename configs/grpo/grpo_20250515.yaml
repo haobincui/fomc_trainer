@@ -3,7 +3,8 @@
 # ====================
 # model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
 model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B-unsloth-bnb-4bit"
-model_revision: "20250514"
+# model_name_or_path: "output/merged/llama_sft_20250515"
+model_revision: "20250515"
 
 
 torch_dtype: "bfloat16"
@@ -27,14 +28,14 @@ bf16: true
 
 
 # quantization
-load_in_4bit: true
-torch_dtype: bfloat16  
-bnb_4bit_quant_type: nf4
-use_bnb_nested_quant: true
+# load_in_4bit: false
+# torch_dtype: bfloat16  
+# bnb_4bit_quant_type: nf4
+# use_bnb_nested_quant: true
 
 
 # Optimization
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 2
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
@@ -58,13 +59,14 @@ num_train_epochs: 1
 
 # Input Length Settings
 # max_prompt_length: 16384
-max_prompt_length: 8192
-max_completion_length: 8192
-num_generations: 4
+max_prompt_length: 4096
+# max_completion_length: 8192
+max_completion_length: 2048
+num_generations: 2
 
 # Batch Sizes
 per_device_train_batch_size: 1
-per_device_eval_batch_size: 4
+per_device_eval_batch_size: 2
 
 # ====================
 # Reward Settings
@@ -75,14 +77,14 @@ reward_funcs:
   - format
 reward_weights:
   - 1.0
-  - 1.0
+  - 1
   - 1.0
 save_reward: true
 
 # ====================
 # PEFT LoRA Configuration
 # ====================
-peft_merged_model_path: f"output/llama_sft_{model_revision}"
+peft_merged_model_path: output/merged/llama_grpo_20250515
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -102,7 +104,7 @@ logging_strategy: "steps"
 logging_steps: 20
 logging_first_step: true
 
-output_dir: f"output/llama_grpo_{model_revision}"
+output_dir: output/adapters/llama_grpo_20250515
 overwrite_output_dir: true
 save_strategy: "no"
 callbacks:

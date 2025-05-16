@@ -23,7 +23,7 @@ Judge whether the reasoning clearly, logically, and sufficiently supports the fi
 
 ### Output Instructions
 
-- Output the score using the format: `\\boxed{score}`  
+- Output the score using the format: `\\boxed{{score}}`  
 - Then provide a **short paragraph** (1–3 sentences) summarizing the main justification  
 - If the reasoning is incoherent, irrelevant, or contradicts the answer, assign a score of **1**
 

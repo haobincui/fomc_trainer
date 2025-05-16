@@ -24,10 +24,10 @@ system_prompt: |
 bf16: true
 
 # quantization
-load_in_4bit: true
+load_in_4bit: false
 torch_dtype: bfloat16  
-bnb_4bit_quant_type: nf4
-use_bnb_nested_quant: true
+# bnb_4bit_quant_type: nf4
+# use_bnb_nested_quant: true
 
 # Optimization
 gradient_accumulation_steps: 2
@@ -72,7 +72,7 @@ per_device_eval_batch_size: 4
 # ====================
 # PEFT LoRA Configuration
 # ====================
-peft_merged_model_path: f"output/llama_sft_{model_revision}"
+peft_merged_model_path: output/merged/llama_sft_20250515_2
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -85,7 +85,7 @@ peft_target_modules:
 # ====================
 # Output & Saving
 # ====================
-output_dir: f"output/adapters/llama_sft_{model_revision}"
+output_dir: output/adapters/llama_sft_20250515
 overwrite_output_dir: true
 save_strategy: "steps"
 save_steps: 500

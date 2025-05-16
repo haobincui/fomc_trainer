@@ -33,7 +33,7 @@ Use the following 7 evaluation criteria. For each, assign a score from **1 to 5*
 ### Output Instructions
 
 - Assign a **single integer score** (1–5) for each of the 7 criteria  
-- Then output the **total score** as: `\\boxed{total_score}`  
+- Then output the **total score** as: `\\boxed{{total_score}}`  
 - Finally, write one concise paragraph of **Overall Comments** summarizing the Model Analysis's strengths and weaknesses
 
 **Do not include explanations for individual scores**.  

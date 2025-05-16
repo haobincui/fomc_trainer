@@ -2,7 +2,7 @@
 set -e
 
 source activate vllm_env
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 echo "Using conda env: $(which python)"
@@ -26,7 +26,7 @@ nohup python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --dtype bfloat16 \
     --gpu-memory-utilization 0.85 \
-    --max-model-len 16384 \
+    --max-model-len 6144 \
     --tensor-parallel-size 1 \
     --max-num-seqs 1 \
     --port "$PORT" > "$LOG_FILE" 2>&1 &
