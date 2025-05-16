@@ -45,7 +45,7 @@ Where `XX` is the integer score from 1 to 35.
 Format Enforcement Rules:
 - Do **not** include any explanation outside the `<think>` or `<answer>` blocks.
 - Do **not** include headings, bullet points, or free text before or after the tags.
-- Output must always end with the `**Total Score**: \boxed{XX}` line.
+- Output must always end with the `**Total Score**: \\boxed{{XX}}` line.
 - Ensure only **one** `<think>` and **one** `<answer>` block per response.
 
 Follow these formatting instructions strictly.
