@@ -63,7 +63,7 @@ def save_judge_record(save_path, record):
 
 
 def _parse_score(text: str) -> float:
-    pattern = r"\*\*Total Score\*\*:\s*\\boxed\{(\d+)\}"
+    pattern = r"\s*\\boxed\{(\d+)\}"
     match = re.search(pattern, text)
     return float(match.group(1)) if match else 0
 
