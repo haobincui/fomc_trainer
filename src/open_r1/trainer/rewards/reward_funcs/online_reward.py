@@ -74,7 +74,7 @@ def _send_eval_request(prompt: str, url: str) -> float:
     }
 
     try:
-        resp = requests.post(url,headers=headers, json=body, timeout=60)
+        resp = requests.post(url,headers=headers, json=body, timeout=180)
         resp.raise_for_status()
         # result_text = resp.json().get("message", {}).get("content", "")
         result_text = resp.json()["choices"][0]["message"]["content"]
@@ -163,8 +163,14 @@ def online_reward(
     save_path: str = None,
     **kwargs
 ) -> list[float]:
-    answer_score = answer_reward(completions, response, provided_data, save_path, **kwargs)
-    reasoning_score = reasoning_reward(completions, response, save_path, **kwargs)
-    final_reward = [0.5 * a + 0.5 * r for a, r in zip(answer_score, reasoning_score)]
+    answer_scores = []
+    reasoning_scores = []
+    for completion, reference, pdata in zip(completions, response, provided_data):
+        answer_score = answer_reward([completion], [reference], [pdata], save_path, **kwargs)
+        reasoning_score = reasoning_reward([completion], [reference], save_path, **kwargs)
+        answer_scores.append(answer_score[0])
+        reasoning_scores.append(reasoning_score[0])
+    time.sleep(2)
+    final_reward = [0.5 * a + 0.5 * r for a, r in zip(answer_scores, reasoning_scores)]
     return final_reward
 
