@@ -148,3 +148,17 @@ def reasoning_reward(
                 "score": score
             })
     return rewards
+
+
+def online_reward(
+    completions: list[list[dict[str, str]]],
+    response: list[str],
+    provided_data: list[str],
+    save_path: str = None,
+    **kwargs
+) -> list[float]:
+    answer_score = answer_reward(completions, response, provided_data, save_path, **kwargs)
+    reasoning_score = reasoning_reward(completions, response, save_path, **kwargs)
+    final_reward = [0.5 * a + 0.5 * r for a, r in zip(answer_score, reasoning_score)]
+    return final_reward
+
