@@ -9,12 +9,12 @@ LOG_FILE=$LOG_DIR/grpo_$(date "+%Y%m%d").log
 
 
 source activate fomc_trainer
-export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-1}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # export TRANSFORMERS_VERBOSITY=debug
 
-CONFIG=configs/grpo/grpo_20250515.yaml
-ACCELERATE_CONFIG=configs/accelerate/zero3.yaml
+CONFIG=configs/grpo/grpo_20250518.yaml
+ACCELERATE_CONFIG=configs/accelerate/zero2.yaml
 
 echo " "
 echo "${LINE}"

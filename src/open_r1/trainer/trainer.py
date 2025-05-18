@@ -154,6 +154,8 @@ class Trainer(ABC):
     def load_tokenizer(self):
         self.logger.info("*** Loading tokenizer ***")
         tokenizer = get_tokenizer(self.model_args, self.training_args)
+        if tokenizer.pad_token is None:
+            tokenizer.pad_token = tokenizer.eos_token
         return tokenizer
 
     def load_model(self):
@@ -172,6 +174,21 @@ class Trainer(ABC):
                             target_modules=self.peft_args.peft_target_modules
                         )
         return peft_config
+    
+    def patch_model_and_tokenizer(self):
+        from peft import prepare_model_for_kbit_training
+
+        self.logger.info("*** Patching model for 4-bit + gradient checkpointing ***")
+
+        # ✅ 必须在 tokenizer 设置后同步 pad_token_id 到 model.config
+        self.model.config.pad_token_id = self.tokenizer.pad_token_id
+
+        # ✅ 使用 PEFT 的官方函数做 checkpointing 安全封装
+        self.model = prepare_model_for_kbit_training(
+            self.model,
+            use_gradient_checkpointing=self.training_args.gradient_checkpointing
+        )
+
 
 
     @abstractmethod

@@ -1,8 +1,8 @@
 # ====================
 # Model Arguments
 # ====================
-# model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
-model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B-unsloth-bnb-4bit"
+model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
+# model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B-unsloth-bnb-4bit"
 # model_name_or_path: "output/merged/llama_sft_20250515"
 model_revision: "20250515"
 
@@ -82,7 +82,7 @@ save_reward: true
 # ====================
 # PEFT LoRA Configuration
 # ====================
-peft_merged_model_path: output/merged/llama_grpo_20250515
+peft_merged_model_path: output/merged/llama_grpo_20250518
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -102,7 +102,7 @@ logging_strategy: "steps"
 logging_steps: 1
 logging_first_step: true
 
-output_dir: output/adapters/llama_grpo_20250517
+output_dir: output/adapters/llama_grpo_20250518
 overwrite_output_dir: true
 save_strategy: "no"
 callbacks:

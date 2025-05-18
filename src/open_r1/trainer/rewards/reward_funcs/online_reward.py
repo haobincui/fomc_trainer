@@ -6,10 +6,10 @@ import time
 from pathlib import Path
 
 # _URL = "http://localhost:8000/v1/chat/completions"
-# _MODEL = "models/DeepSeek-R1-Distill-Qwen-14B-unsloth-bnb-4bit"
+# _MODEL = "models/Qwen3-14B-unsloth-bnb-4bit"
 _API_KEY = None
 
-_URL = "http://10.30.58.139:11432/api/chat/"
+_URL = "http://localhost:11432/api/chat/"
 _MODEL = "gemma3:12b"
 
 
@@ -106,9 +106,11 @@ def _send_eval_request(prompt: str, url: str) -> float:
     try:
         resp = requests.post(url,headers=headers, json=body, timeout=180)
         resp.raise_for_status()
-        result_text = resp.json().get("message", {}).get("content", "")
-        # result_text = resp.json()["choices"][0]["message"]["content"]
+        result_text = resp.json().get("message", {}).get("content", "") # ollama
+        # result_text = resp.json()["choices"][0]["message"]["content"] # vllm
+        print("\n=============\n")
         print(result_text)
+        print("\n=============\n")
         return _parse_score(result_text)
     except Exception as e:
         print(f"❌ Error during reward call: {e}")
@@ -137,7 +139,7 @@ def answer_reward(
         content = completion[0]["content"]
         _, model_answer = _parse_reasoning_and_answer(content)
         prompt = _ANSWER_PROMPT.format(provided_data = pdata, reference_analysis=_parse_answer(reference), model_analysis=model_answer)
-        score = _send_eval_request(prompt, _URL)
+        score = _send_eval_request(prompt, _URL) / 35
         rewards.append(score)
         idx += 1
         time.sleep(0.5)
@@ -168,7 +170,7 @@ def reasoning_reward(
         content = completion[0]["content"]
         model_reasoning, model_analysis = _parse_reasoning_and_answer(content)
         prompt = _REASONING_PROMPT.format(model_analysis=model_analysis, model_reasoning=model_reasoning)
-        score = _send_eval_request(prompt, _URL)
+        score = _send_eval_request(prompt, _URL) / 5
         rewards.append(score)
         idx += 1
         time.sleep(0.5)

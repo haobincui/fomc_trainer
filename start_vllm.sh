@@ -7,7 +7,8 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 echo "Using conda env: $(which python)"
 
-MODEL=${MODEL:-models/DeepSeek-R1-Distill-Qwen-14B-unsloth-bnb-4bit}
+# MODEL=${MODEL:-models/DeepSeek-R1-Distill-Qwen-14B-unsloth-bnb-4bit}
+MODEL=${MODEL:-models/Qwen3-14B-unsloth-bnb-4bit}
 PORT=${PORT:-8000}
 LOG_DIR=logs/vllm_service
 mkdir -p "$LOG_DIR"
