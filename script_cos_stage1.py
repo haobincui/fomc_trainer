@@ -2,12 +2,58 @@ import json
 import logging
 import random
 
-from open_r1.generate import generate_response
+import requests
+
 from validator.cos.cos_calc import cosine_similarity_calc
 from validator.cos.embedding_model import EmbeddingModel
 
 
 import pandas as pd
+
+_SYSTEM_PROMPT = """
+  You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses. 
+  You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. 
+  The reasoning process MUST BE enclosed within <think> and </think> tags. The answer MUST BE enclosed within <answer> and </answer> tags.
+"""
+
+
+def generate_response(prompt, model_path = None, temperature=0.7, top_p=0.9, max_new_tokens=256):
+    _URL = "http://10.30.58.139:8000/v1/chat/completions"
+    # _MODEL = "models/Qwen3-14B-unsloth-bnb-4bit"
+    _API_KEY = None
+
+    headers = {
+        "Content-Type": "application/json",
+    }
+    if _API_KEY:
+        headers["Authorization"] = f"Bearer {_API_KEY}"
+
+    body = {
+        "model": model_path,
+        "messages": [
+            {"role": "system", "content": _SYSTEM_PROMPT},
+            {"role": "user", "content": prompt}
+        ],
+        "stream": False,
+        "keep_alive": -1,
+        "temperature": temperature,
+        "max_tokens": max_new_tokens,
+        "top_p": top_p,
+    }
+
+    try:
+        resp = requests.post(_URL, headers=headers, json=body, timeout=180)
+        resp.raise_for_status()
+        # result_text = resp.json().get("message", {}).get("content", "")  # ollama
+        result_text = resp.json()["choices"][0]["message"]["content"] # vllm
+        print("\n=============\n")
+        print(result_text)
+        print("\n=============\n")
+        return result_text
+    except Exception as e:
+        print(f"❌ Error during reward call: {e}")
+        return ""
+
 
 def validate_cos_stage1(input_prompt_file:str, output_file: str, model_path: str, sample_size: int = 10):
     lines = open(input_prompt_file, 'r').readlines()
