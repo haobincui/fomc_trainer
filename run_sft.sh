@@ -15,11 +15,11 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/sft_${CURRENT_DATE}.log"
 
 source activate fomc_trainer
-export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-1}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 CONFIG=configs/sft/sft_20250515.yaml
-ACCELERATE_CONFIG=configs/accelerate/zero3_sft.yaml
+ACCELERATE_CONFIG=configs/accelerate/zero3.yaml
 
 
 echo " "

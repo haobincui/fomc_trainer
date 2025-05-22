@@ -1,7 +1,7 @@
 # ====================
 # Model Arguments
 # ====================
-model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B-unsloth-bnb-4bit"
+model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
 model_revision: "20250515"
 
 
@@ -34,10 +34,11 @@ gradient_accumulation_steps: 2
 gradient_checkpointing: false
 gradient_checkpointing_kwargs:
   use_reentrant: false
-learning_rate: 3.0e-06
-lr_scheduler_type: cosine
-# lr_scheduler_kwargs:
-#   min_lr_rate: 0.1
+learning_rate: 1.0e-05
+lr_scheduler_type: cosine_with_min_lr
+# lr_scheduler_type: cosine
+lr_scheduler_kwargs:
+  min_lr_rate: 0.1
 warmup_ratio: 0.1
 packing: false
 
@@ -72,7 +73,7 @@ per_device_eval_batch_size: 4
 # ====================
 # PEFT LoRA Configuration
 # ====================
-peft_merged_model_path: output/merged/llama_sft_20250515_2
+# peft_merged_model_path: output/merged/llama_sft_20250515_2
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -85,7 +86,7 @@ peft_target_modules:
 # ====================
 # Output & Saving
 # ====================
-output_dir: output/adapters/llama_sft_20250515
+output_dir: output/adapters/llama_sft_20250521_2
 overwrite_output_dir: true
 save_strategy: "steps"
 save_steps: 500

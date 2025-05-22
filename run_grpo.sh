@@ -13,7 +13,7 @@ export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-1}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # export TRANSFORMERS_VERBOSITY=debug
 
-CONFIG=configs/grpo/grpo_20250518.yaml
+CONFIG=configs/grpo/grpo_20250521.yaml
 ACCELERATE_CONFIG=configs/accelerate/zero2.yaml
 
 echo " "
