@@ -5,6 +5,7 @@ from trl import ModelConfig, get_kbit_device_map, get_quantization_config, get_p
 
 
 from ..configs import GRPOConfig, SFTConfig
+from ..generation_model.model import Model
 
 
 def get_tokenizer(
@@ -51,3 +52,17 @@ def get_model(
         **model_kwargs,
     )
     return model
+
+
+
+def load_generation_model(model_path: str, temperature: float, top_p: float, max_new_tokens: int) -> Model:
+    # os.environ["CUDA_VISIBLE_DEVICES"] = 0, 1
+    print(f"🚀 Loading model ...")
+
+    return Model(
+        model_path=model_path,
+        temperature=temperature,
+        top_p=top_p,
+        max_new_tokens=max_new_tokens,
+    )
+
