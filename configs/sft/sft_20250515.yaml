@@ -73,7 +73,7 @@ per_device_eval_batch_size: 4
 # ====================
 # PEFT LoRA Configuration
 # ====================
-# peft_merged_model_path: output/merged/llama_sft_20250515_2
+peft_merged_model_path: output/merged/llama_sft_20250522
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05

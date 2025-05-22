@@ -9,7 +9,7 @@ conda create -n fomc_trainer python=3.10
 # for linux
 source activate fomc_trainer
 
-pip install -e. [dev]
+pip install -e.[dev]
 pip install flash-attn==2.5.6 --no-build-isolation
 ```
 

@@ -7,8 +7,8 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 echo "Using conda env: $(which python)"
 
-# MODEL=${MODEL:-models/DeepSeek-R1-Distill-Qwen-14B-unsloth-bnb-4bit}
-MODEL=${MODEL:-models/Qwen3-14B-unsloth-bnb-4bit}
+MODEL=${MODEL:-output/merged/llama_sft_20250522}
+# MODEL=${MODEL:-models/Qwen3-14B-unsloth-bnb-4bit}
 PORT=${PORT:-8000}
 LOG_DIR=logs/vllm_service
 mkdir -p "$LOG_DIR"
@@ -27,9 +27,9 @@ nohup python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --dtype bfloat16 \
     --gpu-memory-utilization 0.85 \
-    --max-model-len 6144 \
+    --max-model-len 8192 \
     --tensor-parallel-size 1 \
-    --max-num-seqs 2 \
+    --max-num-seqs 1 \
     --port "$PORT" > "$LOG_FILE" 2>&1 &
 
 echo " "

@@ -35,6 +35,7 @@ echo "${LINE}"
 nohup accelerate launch --config_file "$ACCELERATE_CONFIG" train_sft.py \
     --config "$CONFIG" > "$LOG_FILE" 2>&1 &
 
+
 echo " "
 echo "✅ Start training PID: [$!]"
 echo "✅ To monitor logs: tail -f $LOG_FILE"
@@ -42,6 +43,10 @@ echo "${LINE}"
 
 # accelerate launch --config_file configs/accelerate/zero3.yaml train_grpo.py \
 #     --config configs/grpo/grpo_20250514.yaml
+
+# accelerate launch --config_file configs/accelerate/zero3.yaml script_merge_model.py
+
+script_merge_model.py --config configs/sft/sft_20250515.yaml
 
 
 

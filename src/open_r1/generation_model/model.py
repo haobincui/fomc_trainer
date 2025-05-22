@@ -42,7 +42,7 @@ class Model:
         return responses
 
     def chat_completion(self, messages: List[dict]) -> str:
-        outputs = self.model.chat(messages, self.sampling_params)
+        outputs = self.model.chat([messages], self.sampling_params)
         if not outputs:
             raise ValueError("No outputs from the model.")
         response = outputs[0].outputs[0].text

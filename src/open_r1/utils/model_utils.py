@@ -55,14 +55,5 @@ def get_model(
 
 
 
-def load_generation_model(model_path: str, temperature: float, top_p: float, max_new_tokens: int) -> Model:
-    # os.environ["CUDA_VISIBLE_DEVICES"] = 0, 1
-    print(f"🚀 Loading model ...")
 
-    return Model(
-        model_path=model_path,
-        temperature=temperature,
-        top_p=top_p,
-        max_new_tokens=max_new_tokens,
-    )
 

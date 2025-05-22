@@ -1,6 +1,8 @@
 import pandas as pd
 
-from validator.cos.embedding_model import EmbeddingModel
+from open_r1.validator.cos.embedding_model import EmbeddingModel
+
+
 
 
 def cosine_similarity_calc(target: list|str, generated: list|str, model_wrapper: EmbeddingModel) -> float:
