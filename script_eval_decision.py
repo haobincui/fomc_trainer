@@ -11,15 +11,20 @@ def _parse_final_vote(text):
     return match.group(1).strip() if match else ""
 
 
-def run_eval_decision(input_file):
-    df = pd.read_excel(input_file)
+def run_eval_decision(input_file: str):
+    if input_file.endswith(".xlsx"):
+        df = pd.read_excel(input_file)
+    elif input_file.endswith(".jsonl"):
+        df = pd.read_json(input_file, lines=True)
+    else:
+        raise ValueError(f"Unsupported file name {input_file}")
+    
     results = []
-
     for idx, row in df.iterrows():
         row_dict = row.to_dict()
-        target = row.get("target", "")
-        if not target:
-            target = row['rate_change']
+        # target = row.get("target", "")
+        # if not target:
+        target = row['rate_change']
         generated = row.get("generated", "")
         target_vote = _parse_final_vote(target)
         generated_vote = _parse_final_vote(generated)
@@ -47,7 +52,8 @@ def run_eval_decision(input_file):
     print(f"✅ Correct predictions: {correct}")
     print(f"📊 Accuracy: {accuracy:.2f}%")
 
-    return accuracy
+    return accuracy, output_path
+
 
 
 if __name__ == '__main__':

@@ -328,13 +328,13 @@ def assemble_synthetic_data(section_file: str, output_file: str):
 
             result_dict = {
                 'meeting_date': meeting_date,
-                'minutes': minutes.strip(),
+                'generated': minutes.strip(),
                 'rate_change': content['rate_change']
             }
             fout.write(json.dumps(result_dict, ensure_ascii=False) + '\n')
             print(f"✅ Assembled data for meeting {meeting_date}")
     # 转换为 Excel 格式
-    jsonl_to_xlsx(output_file, output_file.replace(".jsonl", ".xlsx"))
+    # jsonl_to_xlsx(output_file, output_file.replace(".jsonl", ".xlsx"))
     print(f"🎉 Finished assembling synthetic data， saved in {output_file}.")
 
 
@@ -385,6 +385,7 @@ if __name__ == '__main__':
 
     # %%% synthetic data for stage 2 input
     run_stage2_synthetic_full()
+    
 
 
     #%%% stage 2 decision-making 20250531
