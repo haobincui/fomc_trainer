@@ -1,17 +1,16 @@
-import glob
+import logging
 import json
 import logging
-import random
 import os
-import time
-
-
-from open_r1.generate import generate_response, generate_responses
-from open_r1.validator.cos.cos_calc import cosine_similarity_calc
-from open_r1.validator.cos.embedding_model import EmbeddingModel
+import random
+import re
+from pathlib import Path
 
 import pandas as pd
-import json
+
+from open_r1.generate import generate_responses
+from open_r1.validator.cos.cos_calc import cosine_similarity_calc
+from open_r1.validator.cos.embedding_model import EmbeddingModel
 
 
 def generate_new_response(input_prompt_file: str, output_file: str, model_path: str, sample_size = None):
@@ -157,14 +156,6 @@ def jsonl_to_xlsx(jsonl_file, xlsx_file):
 
 
 
-
-
-
-import re
-import pandas as pd
-from pathlib import Path
-
-
 def _parse_final_vote(text):
     """Extracts content inside the last \\boxed{} after </think>."""
     if not isinstance(text, str):
@@ -285,16 +276,73 @@ def run_stage2_synthetic_generation():
     # model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
     
     generate_new_response(input_prompt_file, output_file, model_path)
-    print("finshed stage 2 synthetic generation")
+    print("finished stage 2 synthetic generation")
 
 
+def assemble_synthetic_data(section_file: str, output_file: str):
+    """Combine section-level JSONL data into meeting-level minutes.
+
+    Each input line must contain:
+    meeting_date, section_name, rate_change, section_detail
+
+    Output fields:
+    - meeting_date
+    - minutes (synthetic full text)
+    - rate_change
+    """
+
+    def _combine_sections(section_name, section_detail):
+        return f"{section_name}\n{section_detail}\n\n"
+
+    meeting_dict = {}
+
+    # 读取 section 级别数据
+    with open(section_file, 'r', encoding='utf-8') as fin:
+        for line in fin:
+            line_dict = json.loads(line)
+            date = line_dict['meeting_date']
+            section = line_dict['section_name']
+            detail = line_dict['section_detail']
+            rate = line_dict['rate_change']
+
+            if date not in meeting_dict:
+                meeting_dict[date] = {
+                    'sections': {},
+                    'rate_change': rate
+                }
+            meeting_dict[date]['sections'][section] = detail
+
+    print(f"📊 Total meetings found: {len(meeting_dict)}")
+
+    with open(output_file, 'w', encoding='utf-8') as fout:
+        for meeting_date, content in meeting_dict.items():
+            minutes = f"FOMC Minutes for {meeting_date}\n\n"
+            for section_name, section_detail in content['sections'].items():
+                minutes += _combine_sections(section_name, section_detail)
+
+            result_dict = {
+                'meeting_date': meeting_date,
+                'minutes': minutes.strip(),
+                'rate_change': content['rate_change']
+            }
+            fout.write(json.dumps(result_dict, ensure_ascii=False) + '\n')
+            print(f"✅ Assembled data for meeting {meeting_date}")
+    # 转换为 Excel 格式
+    jsonl_to_xlsx(output_file, output_file.replace(".jsonl", ".xlsx"))
+    print(f"🎉 Finished assembling synthetic data， saved in {output_file}.")
 
 
 
 
 def run_stage2_synthetic_full():
+    """Generate synthetic data for stage 2 to explore the decision-making accuracy.
+    each output file (.jsonl and .xlsx) contains sections, meeting_dates, and rate_changes.
+    generation {total} synthetic file samples.
+    saved in output dir.
+    """
     input_prompt_file = "dataset/raw_data/synthetic_text_20250520.jsonl"
-    for i in range(100):
+    total = 100
+    for i in range(total):
         
         output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/base_model/synthetic_text_base_20250601_{i}.xlsx"
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -302,28 +350,15 @@ def run_stage2_synthetic_full():
         # model_path = 'output/merged/llama_sft_synthetic_20250526'
         model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
         print(f"using model {model_path}")
-        
+        print(f"Output file: {output_file}")
+        print(f"Generating synthetic data for {i+1}/{total}...")
         generate_new_response(input_prompt_file, output_file, model_path)
+        assemble_synthetic_data(output_file, output_file.replace(".xlsx", "_merged.jsonl"))
+        print(f"saved in {output_file.replace('.xlsx', '_merged.jsonl')}")
         print(f"Finished {i}")
+    print(f"🎉 Finished stage 2 synthetic full generation, Total {total}.")
 
 
-
-
-
-
-  
-
-
-
-        
-
-                            
-                            
-
-
-
-
-    
 
 
 
