@@ -291,8 +291,14 @@ def assemble_synthetic_data(section_file: str, output_file: str):
     - rate_change
     """
 
+    def _parse_section_detail(detail: str):
+        text = detail.split("<answer>")[-1]
+        text = text.split("</answer>")[0]
+        text = text.replace("<answer>", "").replace("</answer>", "").strip()
+        return text
+
     def _combine_sections(section_name, section_detail):
-        return f"{section_name}\n{section_detail}\n\n"
+        return f"{section_name}\n{_parse_section_detail(section_detail)}\n\n"
 
     meeting_dict = {}
 
@@ -302,7 +308,7 @@ def assemble_synthetic_data(section_file: str, output_file: str):
             line_dict = json.loads(line)
             date = line_dict['meeting_date']
             section = line_dict['section_name']
-            detail = line_dict['section_detail']
+            detail = line_dict['generated']
             rate = line_dict['rate_change']
 
             if date not in meeting_dict:
