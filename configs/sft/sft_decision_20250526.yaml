@@ -12,7 +12,7 @@ attn_implementation: "flash_attention_2"
 # ====================
 # Data Arguments
 # ====================
-dataset_name: "dataset/training_data/synthetic_text"
+dataset_name: "dataset/training_data/decision_making"
 dataset_prompt_column: "prompt"
 system_prompt: |
   You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses. 
@@ -68,8 +68,8 @@ max_completion_length: 8192
 # ====================
 # Batch Sizes
 # ====================
-per_device_train_batch_size: 2
-per_device_eval_batch_size: 4
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 2
 
 # ====================
 # PEFT LoRA Configuration
@@ -87,7 +87,7 @@ peft_target_modules:
 # ====================
 # Output & Saving
 # ====================
-output_dir: output/adapters/llama_sft_synthetic_20250526
+output_dir: output/adapters/llama_sft_decision_20250526
 overwrite_output_dir: true
 save_strategy: "steps"
 save_steps: 500

@@ -110,6 +110,9 @@ class RewardLoggingCallback(TrainerCallback):
             with open(self.output_file, "a") as f:
                 json.dump({
                     "step": state.global_step,
+                    "reward":logs.get("reward"),
+                    "vote_accuracy_reward":logs.get("rewards/rate_accuracy_reward/mean"),
+                    "vote_format_reward": logs.get("rewards/rate_format_reward/mean"),
                     "reasoning_reward": logs.get("rewards/reasoning_reward/mean"),
                     "answer_reward": logs.get("rewards/answer_reward/mean"),
                     "format_reward": logs.get("rewards/format_reward/mean"),

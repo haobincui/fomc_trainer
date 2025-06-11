@@ -1,9 +1,9 @@
 # ====================
 # Model Arguments
 # ====================
-model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
+# model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
 # model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B-unsloth-bnb-4bit"
-# model_name_or_path: "output/merged/llama_sft_20250515"
+model_name_or_path: "output/merged/llama_sft_20250522"
 model_revision: "20250515"
 
 
@@ -13,13 +13,22 @@ attn_implementation: "flash_attention_2"
 # ====================
 # Data Arguments
 # ====================
-dataset_name: dataset/training_data/fomc_qa_grpo
+dataset_name: dataset/training_data/decision_grpo
 dataset_config: "default"
 dataset_prompt_column: "prompt"
 system_prompt: |
   You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses. 
   You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. 
   The reasoning process MUST BE enclosed within <think> and </think> tags. The answer MUST BE enclosed within <answer> and </answer> tags.
+  Your final vote **MUSH BE** one of the options:   
+   - Raise by 75 basis points
+   - Raise by 50 basis points
+   - Raise by 25 basis points
+   - No change
+   - Cut by 25 basis points
+   - Cut by 50 basis points
+   - Cut by 75 basis points
+
 
 # ====================
 # Trainer (GRPO) Arguments
@@ -56,14 +65,14 @@ eval_steps: 20
 
 # Training Steps
 max_steps: -1            # -1 means no limit (run until epochs complete)
-num_train_epochs: 1
+num_train_epochs: 10
 
 
 # Input Length Settings
 # max_prompt_length: 16384
 max_prompt_length: 4096
 # max_completion_length: 8192
-max_completion_length: 2048
+max_completion_length: 4096
 num_generations: 4
 
 # Batch Sizes
@@ -74,17 +83,17 @@ per_device_eval_batch_size: 4
 # Reward Settings
 # ====================
 reward_funcs:
-  - reasoning
-  - answer
+  - rate_accuracy
+  - rate_format
 reward_weights:
-  - 0.4
-  - 0.6
+  - 1.0
+  - 1.0
 save_reward: true
 
 # ====================
 # PEFT LoRA Configuration
 # ====================
-peft_merged_model_path: output/merged/llama_grpo_20250521
+# peft_merged_model_path: output/merged/llama_grpo_decision_20250526
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -104,10 +113,10 @@ logging_strategy: "steps"
 logging_steps: 1
 logging_first_step: true
 
-output_dir: output/adapters/llama_grpo_20250521
+output_dir: output/adapters/llama_grpo_decision_20250529
 overwrite_output_dir: true
 save_strategy: "steps"
-save_steps: 200
+save_steps: 50
 save_total_limit: 10
 callbacks:
   - loss_log

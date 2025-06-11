@@ -26,8 +26,8 @@ def main(script_args, training_args, model_args, peft_args):
     sft_trainer.logger.info(f"*** 🎉 Training finished successfully, saved in {training_args.output_dir} ***")
 
     # export
-    sft_trainer.export_model()
-    sft_trainer.logger.info(f"*** ✅ Model merged and exported to {peft_args.peft_merged_model_path}***")
+    # sft_trainer.export_model()
+    # sft_trainer.logger.info(f"*** ✅ Model merged and exported to {peft_args.peft_merged_model_path}***")
 
 
 

@@ -2,8 +2,9 @@
 # Model Arguments
 # ====================
 # model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
+# model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B-unsloth-bnb-4bit"
 model_name_or_path: "output/merged/llama_sft_20250522"
-model_revision: "20250515"
+model_revision: "20250601"
 
 
 torch_dtype: "bfloat16"
@@ -12,69 +13,87 @@ attn_implementation: "flash_attention_2"
 # ====================
 # Data Arguments
 # ====================
-dataset_name: "dataset/training_data/synthetic_text"
+dataset_name: dataset/training_data/decision_grpo
+dataset_config: "default"
 dataset_prompt_column: "prompt"
 system_prompt: |
   You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses. 
   You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. 
   The reasoning process MUST BE enclosed within <think> and </think> tags. The answer MUST BE enclosed within <answer> and </answer> tags.
+  Your final vote **MUSH BE** one of the options:   
+   - Raise by 75 basis points
+   - Raise by 50 basis points
+   - Raise by 25 basis points
+   - No change
+   - Cut by 25 basis points
+   - Cut by 50 basis points
+   - Cut by 75 basis points
+
 
 # ====================
-# Trainer (SFT) Arguments
+# Trainer (GRPO) Arguments
 # ====================
 bf16: true
 
+
 # quantization
-load_in_4bit: false
-torch_dtype: bfloat16  
+# load_in_4bit: false
+# torch_dtype: bfloat16  
 # bnb_4bit_quant_type: nf4
 # use_bnb_nested_quant: true
 
+
 # Optimization
-gradient_accumulation_steps: 2
-gradient_checkpointing: false
+gradient_accumulation_steps: 4
+gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
-learning_rate: 1.0e-05
+learning_rate: 1.0e-06
 lr_scheduler_type: cosine_with_min_lr
-# lr_scheduler_type: cosine
 lr_scheduler_kwargs:
   min_lr_rate: 0.1
 warmup_ratio: 0.1
-packing: false
 
-# ====================
+dataloader_num_workers: 0
+dataloader_pin_memory: false
+
+
 # Evaluation
-# ====================
-do_eval: true
-eval_strategy: "steps"
+do_eval: false
+eval_strategy: "no"
 eval_steps: 20
 
-# ====================
 # Training Steps
-# ====================
 max_steps: -1            # -1 means no limit (run until epochs complete)
-num_train_epochs: 3
+num_train_epochs: 10
 
 
-# ====================
-# Generation Settings (optional, if inference involved)
-# ====================
-top_p: 0.9
-temperature: 0.6
-max_prompt_length: 16384
-max_completion_length: 8192
+# Input Length Settings
+# max_prompt_length: 16384
+max_prompt_length: 8096
+# max_completion_length: 8192
+max_completion_length: 2048
+num_generations: 4
 
-# ====================
 # Batch Sizes
-# ====================
-per_device_train_batch_size: 2
+per_device_train_batch_size: 1
 per_device_eval_batch_size: 4
+
+# ====================
+# Reward Settings
+# ====================
+reward_funcs:
+  - rate_accuracy
+  - rate_format
+reward_weights:
+  - 1.0
+  - 1.0
+save_reward: true
 
 # ====================
 # PEFT LoRA Configuration
 # ====================
-# peft_merged_model_path: output/merged/llama_sft_synthetic_20250526
+# peft_merged_model_path: output/merged/llama_grpo_decision_20250526
 peft_r: 8
 peft_lora_alpha: 16
 peft_lora_dropout: 0.05
@@ -84,29 +103,31 @@ peft_target_modules:
   - q_proj
   - v_proj
 
-# ====================
-# Output & Saving
-# ====================
-output_dir: output/adapters/llama_sft_synthetic_20250526
-overwrite_output_dir: true
-save_strategy: "steps"
-save_steps: 500
-save_total_limit: 1
-callbacks:
-  - loss_log
 
 # ====================
-# Logging
+# Logging & Saving
 # ====================
+log_completions: true
 log_level: "info"
 logging_strategy: "steps"
-logging_steps: 20
+logging_steps: 1
+logging_first_step: true
+
+output_dir: output/adapters/llama_grpo_decision_20250601
+overwrite_output_dir: true
+save_strategy: "steps"
+save_steps: 50
+save_total_limit: 30
+callbacks:
+  - loss_log
+  - reward_log
+
 
 # ====================
 # Miscellaneous
 # ====================
 push_to_hub: false
+# hub_model_id: "Qwen-2.5-7B-Simple-RL"
+# hub_strategy: "every_save"
 report_to: []
 seed: 42
-use_liger_kernel: true
-

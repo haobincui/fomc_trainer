@@ -18,7 +18,9 @@ source activate fomc_trainer
 export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-1}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
-CONFIG=configs/sft/sft_20250515.yaml
+# CONFIG=configs/sft/sft_20250515.yaml
+# CONFIG=configs/sft/sft_synthetic_20250521.yaml
+CONFIG=configs/sft/sft_decision_20250526.yaml
 ACCELERATE_CONFIG=configs/accelerate/zero3.yaml
 
 
@@ -44,9 +46,10 @@ echo "${LINE}"
 # accelerate launch --config_file configs/accelerate/zero3.yaml train_grpo.py \
 #     --config configs/grpo/grpo_20250514.yaml
 
-# accelerate launch --config_file configs/accelerate/zero3.yaml script_merge_model.py
+# CUDA_VISIBLE_DEVICES=1 accelerate launch --config_file configs/accelerate/zero3.yaml script_merge_model.py
 
-script_merge_model.py --config configs/sft/sft_20250515.yaml
+
+
 
 
 

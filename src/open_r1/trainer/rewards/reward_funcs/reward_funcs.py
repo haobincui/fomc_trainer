@@ -572,6 +572,70 @@ def get_code_format_reward(language: str = "python"):
 
     return code_format_reward
 
+def _parse_final_vote(text):
+    match = re.search(r"\\boxed\{(.*?)\}", text, re.DOTALL)
+
+    if match:
+        boxed_content = match.group(1)
+        return boxed_content.strip()
+    else:
+        return ""
+
+
+
+def rate_accuracy_reward(
+    completions: list[list[dict[str, str]]], rate_change: list[str], **kwargs
+) -> list[Optional[float]]:
+    contents = [completion[0]["content"] for completion in completions]
+    rewards = []
+    for content, rate in zip(contents, rate_change):
+        try:
+            current_vote = _parse_final_vote(content.split("</think>")[-1])
+            print(f"Final Vote: {current_vote}, Target Vote: {rate}")
+            target_vote = rate
+            if current_vote == target_vote:
+                reward = 1
+            else:
+                reward = 0
+        except Exception as e:
+            print(f"Failed to parse current vote")
+            reward = 0
+        rewards.append(reward)
+    return rewards
+
+def rate_format_reward(
+    completions: list[list[dict[str, str]]], **kwargs
+) -> list[Optional[float]]:
+    contents = [completion[0]["content"] for completion in completions]
+    target_choices = [
+        "Raise by 100 basis points",
+        "Raise by 75 basis points",
+        "Raise by 50 basis points",
+        "Raise by 25 basis points",
+        "No change",
+        "Cut by 25 basis points",
+        "Cut by 50 basis points",
+        "Cut by 75 basis points",
+        "Cut by 100 basis points"
+    ]
+    rewards = []
+    for content in contents:
+        try:
+            current_vote = _parse_final_vote(content.split("</think>")[-1])
+            
+            if current_vote.strip() in target_choices:
+                reward = 1
+            else:
+                reward = 0
+        except Exception as e:
+            print(f"Failed to parse current vote")
+            reward = 0
+        rewards.append(reward)
+    return rewards
+
+
+    
+
 
 
 

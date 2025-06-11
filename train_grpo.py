@@ -25,8 +25,8 @@ def main(script_args, training_args, model_args, peft_args):
     grpo_trainer.logger.info(f"*** 🎉 Training finished successfully, saved in {training_args.output_dir} ***")
     
     # export
-    grpo_trainer.export_model()
-    grpo_trainer.logger.info(f"*** ✅ Model merged and exported to {peft_args.peft_merged_model_path}***")
+    # grpo_trainer.export_model()
+    # grpo_trainer.logger.info(f"*** ✅ Model merged and exported to {peft_args.peft_merged_model_path}***")
 
 
 

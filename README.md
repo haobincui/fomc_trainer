@@ -16,7 +16,7 @@ pip install flash-attn==2.5.6 --no-build-isolation
 
 ## setup for judge model (GRPO)
 ```bash
-conda create -n vllm_env
+conda create -n vllm_env python=3.10
 # for mac and windows
 # conda activate vllm_env
 
@@ -48,4 +48,18 @@ Accelerate configs: configs/accelerate/*.yaml
 
 SFT configs: configs/sft/sft_*.yaml
 GRPO configs: configs/grpo/grpo_*.yaml
+
+
+## merged model
+
+# save model
+```
+source activate synthetic_text
+CUDA_VISIBLE_DEVICES=1 python script_merge_model.py
+# script_merge_model.py --config configs/sft/sft_20250515.yaml
+```
+
+## generation
+CUDA_VISIBLE_DEVICES=1 python script_generation.py
+
 
