@@ -341,19 +341,26 @@ def run_stage2_synthetic_full():
     saved in output dir.
     """
     input_prompt_file = "dataset/raw_data/synthetic_text_20250520.jsonl"
+    model_name_map = {
+        "output/merged/llama_sft_synthetic_20250526": "ft",
+        'models/DeepSeek-R1-Distill-Llama-8B': "base"
+    }
+    model_path = 'output/merged/llama_sft_synthetic_20250526'
+    # model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
+
     total = 100
     for i in range(total):
-        
-        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/base_model/synthetic_text_base_20250601_{i}.xlsx"
+    
+        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/{model_name_map[model_path]}_model/synthetic_text_20250601_{i}.xlsx"
+
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-        # model_path = 'output/merged/llama_sft_synthetic_20250526'
-        model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
+
         print(f"using model {model_path}")
         print(f"Output file: {output_file}")
         print(f"Generating synthetic data for {i+1}/{total}...")
-        generate_new_response(input_prompt_file, output_file, model_path)
-        assemble_synthetic_data(output_file, output_file.replace(".xlsx", "_merged.jsonl"))
+        # generate_new_response(input_prompt_file, output_file, model_path)
+        assemble_synthetic_data(output_file.replace(".xlsx", ".jsonl"), output_file.replace(".xlsx", "_merged.jsonl"))
         print(f"saved in {output_file.replace('.xlsx', '_merged.jsonl')}")
         print(f"Finished {i}")
     print(f"🎉 Finished stage 2 synthetic full generation, Total {total}.")
