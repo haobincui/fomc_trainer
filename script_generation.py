@@ -1,4 +1,3 @@
-import logging
 import json
 import logging
 import os
@@ -8,112 +7,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from open_r1.generate import generate_responses
+from create_prompt.prompt_template import DecisionPrompt
+from generate_new_response import generate_new_response
 from open_r1.validator.cos.cos_calc import cosine_similarity_calc
 from open_r1.validator.cos.embedding_model import EmbeddingModel
-
-
-def generate_new_response(input_prompt_file: str, output_file: str, model_path: str, sample_size = None):
-    lines = open(input_prompt_file, 'r').readlines()
-    total = len(lines)
-    print(f"✅ Total prompts available: {total}")
-
-    if sample_size:
-        lines = random.sample(lines, sample_size)
-        print(f"🎯 Sampled {sample_size} prompts.")
-
-    # 输出收集
-    output_index = []
-    output_target = []
-    output_generated = []
-    failed_index = []
-
-    batch_size = 20
-    index = -1
-    s = 0  # 成功数量
-    f = 0  # 失败数量
-    n = 0  # 总尝试数
-
-    batch_prompts = []
-    batch_targets = []
-    batch_indices = []
-
-    for line in lines:
-        index += 1
-        item = json.loads(line)
-        prompt = item["prompt"]
-        target = item["response"]
-
-        batch_prompts.append(prompt)
-        batch_targets.append(target)
-        batch_indices.append(index)
-
-        if len(batch_prompts) == batch_size:
-            try:
-                batch_outputs = generate_responses(batch_prompts, model_path, max_new_tokens=8192)
-                for i, generated in enumerate(batch_outputs):
-                    output_index.append(batch_indices[i])
-                    output_target.append(batch_targets[i])
-                    output_generated.append(generated)
-                    print(f"✅ No. {batch_indices[i]} : Suc {s+1}, Fail {f}")
-                    s += 1
-                    n += 1
-            except Exception as e:
-                print(f"❌ Batch starting at index {batch_indices[0]} failed: {e}")
-                failed_index.extend(batch_indices)
-                f += len(batch_prompts)
-                n += len(batch_prompts)
-            finally:
-                batch_prompts = []
-                batch_targets = []
-                batch_indices = []
-
-    # 处理最后一个不满 batch 的剩余
-    if batch_prompts:
-        try:
-            batch_outputs = generate_responses(batch_prompts, model_path, max_new_tokens=8192)
-            for i, generated in enumerate(batch_outputs):
-                output_index.append(batch_indices[i])
-                output_target.append(batch_targets[i])
-                output_generated.append(generated)
-                print(f"✅ No. {batch_indices[i]} : Suc {s+1}, Fail {f}")
-                s += 1
-                n += 1
-        except Exception as e:
-            print(f"❌ Final batch starting at index {batch_indices[0]} failed: {e}")
-            failed_index.extend(batch_indices)
-            f += len(batch_prompts)
-            n += len(batch_prompts)
-
-    # 写出结果到 output_file
-    output_dicts = []
-    with open(output_file.replace(".xlsx", ".jsonl"), 'w', encoding='utf-8') as fout:
-        for idx, tgt, gen in zip(output_index, output_target, output_generated):
-            try:
-                base_data = json.loads(lines[idx])
-            except (IndexError, json.JSONDecodeError) as e:
-                print(f"⚠️ Skipping index {idx} due to error: {e}")
-                continue
-
-            # Overwrite or add the new fields
-            base_data.update({
-                "index": idx,
-                "target": tgt,
-                "generated": gen
-            })
-
-            fout.write(json.dumps(base_data, ensure_ascii=False) + '\n')
-    print(f"🎯 Finished. Total: {n}, Success: {s}, Failed: {f}")
-    if failed_index:
-        print(f"❗ Failed indices: {failed_index}")
-
-    # pd.DataFrame(output_dicts).to_excel(output_file.replace(".xlsx", "_generated.xlsx"), index=False)
-    # pd.DataFrame(output_dicts).to_csv(output_file.replace(".xlsx", "_generated.csv"), index=False)
-
-
-    pd.DataFrame({"Failed": failed_index}).to_csv(output_file.replace(".xlsx", "_failed.csv"), index=False)
-    print(f"✅ Finished processing all prompts.")
-    print(f"✅ Total: {total}, Suc: {s}, Fail: {f}")
+from utils import save_output
 
 
 def calc_cos(input_prompt_file: str, output_file: str, model_path: str, sample_size: int = 10):
@@ -145,14 +43,6 @@ def bootstrap_cos(input_prompt_file: str, output_file: str, model_path: str, sam
     logging.info(f"✅ Finished Bootstrop Cos.")
 
 
-def jsonl_to_xlsx(jsonl_file, xlsx_file):
-    jsonl_df = pd.read_json(jsonl_file, lines=True)
-    jsonl_df.to_excel(xlsx_file, index=False)
-    jsonl_df.to_csv(xlsx_file.replace(".xlsx", ".csv"), index=False)
-    print(f"Finished convert {jsonl_file}")
-    
-
-
 
 
 
@@ -164,10 +54,17 @@ def _parse_final_vote(text):
     return match.group(1).strip() if match else ""
 
 
-def run_eval_decision(input_file):
-    df = pd.read_excel(input_file)
-    results = []
+def run_eval_decision(input_file: str | pd.DataFrame) -> float:
+    if isinstance(input_file, pd.DataFrame):
+        df = input_file
+    elif input_file.endswith(".xlsx"):
+        df = pd.read_excel(input_file)
+    elif input_file.endswith(".jsonl"):
+        df = pd.read_json(input_file, lines=True)
+    else:
+        raise ValueError(f"Unsupported file format: {input_file}")
 
+    results = []
     for idx, row in df.iterrows():
         row_dict = row.to_dict()
         target_vote = row['rate_change']
@@ -279,7 +176,8 @@ def run_stage2_synthetic_generation():
     print("finished stage 2 synthetic generation")
 
 
-def assemble_synthetic_data(section_file: str, output_file: str):
+
+def assemble_synthetic_data(section_file: str, output_file = None) -> list[dict]:
     """Combine section-level JSONL data into meeting-level minutes.
 
     Each input line must contain:
@@ -303,6 +201,7 @@ def assemble_synthetic_data(section_file: str, output_file: str):
     meeting_dict = {}
 
     # 读取 section 级别数据
+
     with open(section_file, 'r', encoding='utf-8') as fin:
         for line in fin:
             line_dict = json.loads(line)
@@ -310,32 +209,77 @@ def assemble_synthetic_data(section_file: str, output_file: str):
             section = line_dict['section_name']
             detail = line_dict['generated']
             rate = line_dict['rate_change']
+            target_rate = line_dict['target_rate']
 
             if date not in meeting_dict:
                 meeting_dict[date] = {
                     'sections': {},
-                    'rate_change': rate
+                    'rate_change': rate,
+                    'target_rate': target_rate
                 }
             meeting_dict[date]['sections'][section] = detail
 
     print(f"📊 Total meetings found: {len(meeting_dict)}")
+    results  = []
+    for meeting_date, content in meeting_dict.items():
+        minutes = f"FOMC Minutes for {meeting_date}\n\n"
+        for section_name, section_detail in content['sections'].items():
+            minutes += _combine_sections(section_name, section_detail)
 
-    with open(output_file, 'w', encoding='utf-8') as fout:
-        for meeting_date, content in meeting_dict.items():
-            minutes = f"FOMC Minutes for {meeting_date}\n\n"
-            for section_name, section_detail in content['sections'].items():
-                minutes += _combine_sections(section_name, section_detail)
+        result_dict = {
+            'meeting_date': meeting_date,
+            'minutes': minutes.strip(),
+            'rate_change': content['rate_change'],
+            'target_rate': content['target_rate'],
+        }
+        results.append(result_dict)
 
-            result_dict = {
-                'meeting_date': meeting_date,
-                'generated': minutes.strip(),
-                'rate_change': content['rate_change']
-            }
-            fout.write(json.dumps(result_dict, ensure_ascii=False) + '\n')
-            print(f"✅ Assembled data for meeting {meeting_date}")
-    # 转换为 Excel 格式
-    # jsonl_to_xlsx(output_file, output_file.replace(".jsonl", ".xlsx"))
-    print(f"🎉 Finished assembling synthetic data， saved in {output_file}.")
+    if output_file:
+        # 确保输出目录存在
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        print(f"📂 Saving assembled data to {output_file}")
+        save_output(results, output_file)
+        print(f"🎉 Finished assembling synthetic data， saved in {output_file}.")
+    return  results
+
+
+def minutes_to_decision_prompt(minutes_file: str | list[dict] | pd.DataFrame, output_file = None) -> list[dict]:
+    prompt_template = DecisionPrompt()
+
+    def _create_prompt(row):
+        meeting_date = row['meeting_date']
+        analysis = row['minutes']
+        target_rate = row['target_rate']
+
+        # Create the prompt using the template
+        prompt = prompt_template.reformat_prompt(
+            current_analysis=analysis,
+            current_rate=target_rate,
+            meeting_date=meeting_date
+        )
+        return prompt
+
+    if isinstance(minutes_file, list):
+        df = pd.DataFrame(minutes_file)
+    elif isinstance(minutes_file, pd.DataFrame):
+        df = minutes_file
+    elif minutes_file.endswith(".jsonl"):
+        df = pd.read_json(minutes_file, lines=True)
+    elif minutes_file.endswith(".xlsx"):
+        df = pd.read_excel(minutes_file)
+    else:
+        raise ValueError("Unsupported file format. Please provide a .jsonl or .xlsx file.")
+
+    df['prompt'] = df.apply(_create_prompt, axis=1)
+    if output_file:
+        # 确保输出目录存在
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        print(f"📂 Saving decision prompts to {output_file}")
+        save_output(df, output_file)
+        print(f"🎉 Finished creating decision prompts， saved in {output_file}.")
+    return df.to_dict(orient="records")
+
+
 
 
 
@@ -357,7 +301,7 @@ def run_stage2_synthetic_full():
     total = 100
     for i in range(total):
     
-        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/{model_name_map[model_path]}_model/synthetic_text_20250601_{i}.xlsx"
+        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/{model_name_map[model_path]}_model/synthetic_text_20250601_{i}.jsonl"
 
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
@@ -366,7 +310,12 @@ def run_stage2_synthetic_full():
         print(f"Output file: {output_file}")
         print(f"Generating synthetic data for {i+1}/{total}...")
         # generate_new_response(input_prompt_file, output_file, model_path)
-        assemble_synthetic_data(output_file.replace(".xlsx", ".jsonl"), output_file.replace(".xlsx", "_merged.jsonl"))
+        synthetic_minutes = assemble_synthetic_data(output_file)
+        synthetic_minutes_with_prompt = minutes_to_decision_prompt(synthetic_minutes)
+        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/{model_name_map[model_path]}_model/results/synthetic_text_20250601_{i}.xlsx"
+        generate_new_response(synthetic_minutes_with_prompt, model_path)
+
+
         print(f"saved in {output_file.replace('.xlsx', '_merged.jsonl')}")
         print(f"Finished {i}")
     print(f"🎉 Finished stage 2 synthetic full generation, Total {total}.")
