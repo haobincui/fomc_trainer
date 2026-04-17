@@ -34,7 +34,7 @@ echo "Using conda env: $(which python)"
 echo "CUDA_VISIBLE_DEVICES: [$CUDA_VISIBLE_DEVICES]"
 echo "${LINE}"
 
-nohup accelerate launch --config_file "$ACCELERATE_CONFIG" train_sft.py \
+nohup accelerate launch --config_file "$ACCELERATE_CONFIG" ./script/train/train_sft.py \
     --config "$CONFIG" > "$LOG_FILE" 2>&1 &
 
 

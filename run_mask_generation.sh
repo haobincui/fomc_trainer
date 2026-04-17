@@ -1,7 +1,5 @@
 #!/bin/bash
 
-
-
 set -e
 
 
@@ -19,10 +17,11 @@ export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 
-nohup python scripts/generation/synthetic_generation.py  > "$LOG_FILE" 2>&1 &
+nohup python scripts/generation/mask_generation.py  > "$LOG_FILE" 2>&1 &
 
 
 echo " "
 echo "✅ Start training PID: [$!]"
 echo "✅ To monitor logs: tail -f $LOG_FILE"
 echo "${LINE}"
+

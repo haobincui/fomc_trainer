@@ -19,7 +19,7 @@ class Model:
         return LLM(
             model=self.model_path,
             dtype="bfloat16",
-            max_model_len=40960,
+            max_model_len=16384,
             gpu_memory_utilization=0.95,
             trust_remote_code=True,
         )

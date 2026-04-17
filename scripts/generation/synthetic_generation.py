@@ -1,3 +1,4 @@
+from log_config import *
 import json
 import logging
 import os
@@ -20,7 +21,7 @@ def calc_cos(input_prompt_file: str, output_file: str, model_path: str, sample_s
     embed_model = EmbeddingModel(model_path)
     df['cos'] = df.apply(lambda x: cosine_similarity_calc(x['target'], x['generated'], embed_model), axis=1)
     df.to_excel(output_file, index=False)
-    print(f"✅ Finished COS for all prompts.")
+    logging.info(f"✅ Finished COS for all prompts.")
 
 
 def bootstrap_cos(input_prompt_file: str, output_file: str, model_path: str, sample_size: int = 10):
@@ -88,9 +89,9 @@ def run_eval_decision(input_file: str | pd.DataFrame) -> float:
     correct = result_df['match_result'].sum()
     accuracy = correct / total * 100
 
-    print(f"\n🎯 Total samples: {total}")
-    print(f"✅ Correct predictions: {correct}")
-    print(f"📊 Accuracy: {accuracy:.2f}%")
+    logging.info(f"\n🎯 Total samples: {total}")
+    logging.info(f"✅ Correct predictions: {correct}")
+    logging.info(f"📊 Accuracy: {accuracy:.2f}%")
 
     return accuracy
 
@@ -145,7 +146,7 @@ def bootstrap_acc(input_excels: list[str], output_file: str) -> dict:
 
             # 写入当前 sheet
             pd.DataFrame([acc_result]).to_excel(writer, sheet_name=sheet_name, index=False)
-            print(f"✅ Finished {tag} for model {model_name}, saved in sheet '{sheet_name}'")
+            logging.info(f"✅ Finished {tag} for model {model_name}, saved in sheet '{sheet_name}'")
 
     return full_result
 
@@ -160,7 +161,7 @@ def run_stage1_generation():
     # model_path = 'output/merged/llama_sft_20250522'
     model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
     generate_new_response(input_prompt_file, output_file, model_path)
-    print("finshed stage 1 generation")
+    logging.info("finshed stage 1 generation")
 
 
 def run_stage2_synthetic_generation():
@@ -173,7 +174,7 @@ def run_stage2_synthetic_generation():
     # model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
     
     generate_new_response(input_prompt_file, output_file, model_path)
-    print("finished stage 2 synthetic generation")
+    logging.info("finished stage 2 synthetic generation")
 
 
 
@@ -209,7 +210,7 @@ def assemble_synthetic_data(section_file: str, output_file = None) -> list[dict]
             section = line_dict['section_name']
             detail = line_dict['generated']
             rate = line_dict['rate_change']
-            target_rate = line_dict['target_rate']
+            target_rate = line_dict['current_rate']
 
             if date not in meeting_dict:
                 meeting_dict[date] = {
@@ -219,7 +220,7 @@ def assemble_synthetic_data(section_file: str, output_file = None) -> list[dict]
                 }
             meeting_dict[date]['sections'][section] = detail
 
-    print(f"📊 Total meetings found: {len(meeting_dict)}")
+    logging.info(f"📊 Total meetings found: {len(meeting_dict)}")
     results  = []
     for meeting_date, content in meeting_dict.items():
         minutes = f"FOMC Minutes for {meeting_date}\n\n"
@@ -237,9 +238,9 @@ def assemble_synthetic_data(section_file: str, output_file = None) -> list[dict]
     if output_file:
         # 确保输出目录存在
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        print(f"📂 Saving assembled data to {output_file}")
+        logging.info(f"📂 Saving assembled data to {output_file}")
         save_output(results, output_file)
-        print(f"🎉 Finished assembling synthetic data， saved in {output_file}.")
+        logging.info(f"🎉 Finished assembling synthetic data， saved in {output_file}.")
     return  results
 
 
@@ -272,11 +273,10 @@ def minutes_to_decision_prompt(minutes_file: str | list[dict] | pd.DataFrame, ou
 
     df['prompt'] = df.apply(_create_prompt, axis=1)
     if output_file:
-        # 确保输出目录存在
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        print(f"📂 Saving decision prompts to {output_file}")
+        logging.info(f"📂 Saving decision prompts to {output_file}")
         save_output(df, output_file)
-        print(f"🎉 Finished creating decision prompts， saved in {output_file}.")
+        logging.info(f"🎉 Finished creating decision prompts， saved in {output_file}.")
     return df.to_dict(orient="records")
 
 
@@ -284,7 +284,7 @@ def minutes_to_decision_prompt(minutes_file: str | list[dict] | pd.DataFrame, ou
 
 
 
-def run_stage2_synthetic_full():
+def run_stage2_synthetic_full(model_path, start_index, total_index):
     """Generate synthetic data for stage 2 to explore the decision-making accuracy.
     each output file (.jsonl and .xlsx) contains sections, meeting_dates, and rate_changes.
     generation {total} synthetic file samples.
@@ -295,30 +295,37 @@ def run_stage2_synthetic_full():
         "output/merged/llama_sft_synthetic_20250526": "ft",
         'models/DeepSeek-R1-Distill-Llama-8B': "base"
     }
-    model_path = 'output/merged/llama_sft_synthetic_20250526'
+    
     # model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
 
-    total = 100
+    total = total_index - start_index
+    output_path = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/20250602/{model_name_map[model_path]}_model"
     for i in range(total):
+        i += start_index
     
-        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/{model_name_map[model_path]}_model/synthetic_text_20250601_{i}.jsonl"
+        section_output_file = output_path + f"/section_file/synthetic_text_20250601_{i}.jsonl"
 
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        os.makedirs(os.path.dirname(section_output_file), exist_ok=True)
 
+        logging.info(f"using model {model_path}")
+        logging.info(f"Output file: {section_output_file}")
+        logging.info(f"Generating synthetic data for {i+1}/{total}...")
 
-        print(f"using model {model_path}")
-        print(f"Output file: {output_file}")
-        print(f"Generating synthetic data for {i+1}/{total}...")
-        # generate_new_response(input_prompt_file, output_file, model_path)
-        synthetic_minutes = assemble_synthetic_data(output_file)
+        # generate synthetic sections
+        generate_new_response(input_prompt_file, model_path, section_output_file, batch_size=20)
+        # combine all sections into a minutes
+        synthetic_minutes = assemble_synthetic_data(section_output_file)
+        # create new prompt using the synthetic minutes
         synthetic_minutes_with_prompt = minutes_to_decision_prompt(synthetic_minutes)
-        output_file = f"output/valiation/generation_stage2_synthetic/synthetic_for_decision/{model_name_map[model_path]}_model/results/synthetic_text_20250601_{i}.xlsx"
-        generate_new_response(synthetic_minutes_with_prompt, model_path)
+        output_file = output_path + f"/minutes/synthetic_text_20250601_{i}.jsonl"
+        # generate decisions based on the synthetic minutes
+        generate_new_response(synthetic_minutes_with_prompt, model_path, output_file, batch_size=1) 
 
+    
+        logging.info(f"saved in {output_file}")
+        logging.info(f"Finished {i}")
+    logging.info(f"🎉 Finished stage 2 synthetic full generation, Total {total}.")
 
-        print(f"saved in {output_file.replace('.xlsx', '_merged.jsonl')}")
-        print(f"Finished {i}")
-    print(f"🎉 Finished stage 2 synthetic full generation, Total {total}.")
 
 
 
@@ -333,8 +340,15 @@ if __name__ == '__main__':
     # run_stage2_synthetic_generation()
 
     # %%% synthetic data for stage 2 input
-    run_stage2_synthetic_full()
-    
+    # 20250910
+    # model_path = 'output/merged/llama_sft_synthetic_20250526'
+    # run_stage2_synthetic_full(model_path, 283, 500)
+
+
+    # model_path = 'models/DeepSeek-R1-Distill-Llama-8B'
+    model_path = "output/merged/llama_sft_synthetic_20250526"
+    run_stage2_synthetic_full(model_path, 392, 500)
+
 
 
     #%%% stage 2 decision-making 20250531
@@ -378,7 +392,7 @@ if __name__ == '__main__':
 
     #             # time.sleep(5)
 
-    #             print(f"✅ Finished {key} for {model_name}")
+    #             logging.info(f"✅ Finished {key} for {model_name}")
     #         output_acc_file = os.path.join(base_output_dir,f"summary_{i}.xlsx")
     #         bootstrap_acc(glob.glob(base_output_dir + "*_result.xlsx"), output_acc_file)
 
@@ -397,7 +411,7 @@ if __name__ == '__main__':
         
 
     #         run_eval_decision(output_file_xlsx)
-    # print("finished all")
+    # logging.info("finished all")
 
         
         

@@ -2,12 +2,17 @@ import os
 import random
 from abc import ABC, abstractmethod
 
-# Load prompt templates from files
+import os
+
+base_dir = os.path.dirname(__file__)  # 当前 .py 文件所在目录
+
 decision_map = {
-    1: open("../prompt_template/decision_making_1.md").read(),
-    2: open("../prompt_template/decision_making_2.md").read(),
-    3: open("../prompt_template/decision_making_3.md").read(),
+    1: open(os.path.join(base_dir, "prompt_template/decision/decision_making_1.md")).read(),
+    2: open(os.path.join(base_dir, "prompt_template/decision/decision_making_2.md")).read(),
+    3: open(os.path.join(base_dir, "prompt_template/decision/decision_making_3.md")).read(),
 }
+
+
 
 class PromptTemplate(ABC):
     def __init__(self) -> None:

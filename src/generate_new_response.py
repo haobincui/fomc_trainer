@@ -1,4 +1,5 @@
 import json
+import os
 import random
 
 import pandas as pd
@@ -7,7 +8,7 @@ from open_r1.generate import generate_responses
 from utils import save_output
 
 
-def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, model_path: str, output_file: str = None, sample_size=None) -> list[dict]:
+def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, model_path: str, output_file: str = None, batch_size: int = None, sample_size: int =None) -> list[dict]:
 
     if isinstance(input_prompt_file, pd.DataFrame):
         lines = input_prompt_file.to_dict(orient='records')
@@ -15,6 +16,7 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
         lines = input_prompt_file
     elif isinstance(input_prompt_file, str):
         lines = open(input_prompt_file, 'r').readlines()
+        lines = [json.loads(line) for line in lines]
     else:
         raise ValueError("input_prompt_file must be a DataFrame, list of dicts, or a file path string.")
 
@@ -31,7 +33,8 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
     output_generated = []
     failed_index = []
 
-    batch_size = 20
+    if not batch_size:
+        batch_size = 20
     index = -1
     s = 0  # 成功数量
     f = 0  # 失败数量
@@ -41,9 +44,8 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
     batch_targets = []
     batch_indices = []
 
-    for line in lines:
+    for item in lines:
         index += 1
-        item = json.loads(line)
         prompt = item["prompt"]
         target = item.get("response", "")
 
@@ -92,7 +94,7 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
     output_dicts = []
     for idx, tgt, gen in zip(output_index, output_target, output_generated):
         try:
-            base_data = json.loads(lines[idx])
+            base_data = lines[idx]
         except (IndexError, json.JSONDecodeError) as e:
             print(f"⚠️ Skipping index {idx} due to error: {e}")
             continue
@@ -106,12 +108,13 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
         output_dicts.append(base_data)
 
     if output_file:
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
         save_output(output_dicts, output_file)
         print(f"✅ Output saved to {output_file}")
     print(f"🎯 Finished. Total: {n}, Success: {s}, Failed: {f}")
     if failed_index:
         print(f"❗ Failed indices: {failed_index}")
-        pd.DataFrame({"Failed": failed_index}).to_csv(output_file.replace(".xlsx", "_failed.csv"), index=False)
+        pd.DataFrame({"Failed": failed_index}).to_csv(output_file.split(".")[0] + "_failed.csv", index=False)
 
     print(f"✅ Finished processing all prompts.")
     print(f"✅ Total: {total}, Suc: {s}, Fail: {f}")
