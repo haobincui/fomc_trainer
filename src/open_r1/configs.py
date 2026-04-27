@@ -19,6 +19,22 @@ from typing import Optional
 import trl
 
 
+@dataclass
+class ModelConfig(trl.ModelConfig):
+    torch_dtype: Optional[str] = field(
+        default=None,
+        metadata={"help": "Backward-compatible alias for `dtype`."},
+    )
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.torch_dtype is not None:
+            if self.dtype not in (None, "float32", self.torch_dtype):
+                raise ValueError(f"Conflicting dtype values: dtype={self.dtype}, torch_dtype={self.torch_dtype}")
+            self.dtype = self.torch_dtype
+        self.torch_dtype = self.dtype
+
+
 # TODO: add the shared options with a mixin to reduce code duplication
 @dataclass
 class GRPOConfig(trl.GRPOConfig):
@@ -62,6 +78,22 @@ class GRPOConfig(trl.GRPOConfig):
         default=None,
         metadata={"help": ("The group to store runs under.")},
     )
+    max_prompt_length: Optional[int] = field(
+        default=None,
+        metadata={"help": "Backward-compatible prompt truncation length for GRPO prompt encoding."},
+    )
+    overwrite_output_dir: bool = field(
+        default=False,
+        metadata={"help": "Backward-compatible no-op flag accepted from legacy configs."},
+    )
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.max_prompt_length is not None and hasattr(self, "chat_template_kwargs"):
+            chat_template_kwargs = getattr(self, "chat_template_kwargs", None) or {}
+            chat_template_kwargs.setdefault("truncation", True)
+            chat_template_kwargs.setdefault("max_length", self.max_prompt_length)
+            self.chat_template_kwargs = chat_template_kwargs
 
 
 @dataclass
@@ -107,11 +139,25 @@ class SFTConfig(trl.SFTConfig):
         default=None,
         metadata={"help": ("The group to store runs under.")},
     )
+    max_prompt_length: Optional[int] = field(
+        default=None,
+        metadata={"help": "Backward-compatible alias for `max_length` in legacy SFT configs."},
+    )
+    overwrite_output_dir: bool = field(
+        default=False,
+        metadata={"help": "Backward-compatible no-op flag accepted from legacy configs."},
+    )
 
     # deepspeed: str = Optional[field](
     #     default=None,
     #     metadata={"help": "deepseek config path"}
     # )
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.max_prompt_length is not None:
+            if getattr(self, "max_length", None) in (None, trl.SFTConfig.__dataclass_fields__["max_length"].default):
+                self.max_length = self.max_prompt_length
 
 
 @dataclass
@@ -147,6 +193,30 @@ class GRPOScriptArguments(trl.ScriptArguments):
         metadata={
             "help": "Whether to save the reward values to a file. If True, the reward values will be saved to a file."
         },
+    )
+    judge_url: Optional[str] = field(
+        default=None,
+        metadata={"help": "Optional override for the online judge HTTP endpoint."},
+    )
+    judge_model: Optional[str] = field(
+        default=None,
+        metadata={"help": "Optional override for the online judge model name."},
+    )
+    judge_timeout: int = field(
+        default=180,
+        metadata={"help": "Timeout in seconds for each online judge request."},
+    )
+    judge_sleep_seconds: float = field(
+        default=0.0,
+        metadata={"help": "Optional sleep interval between online judge requests."},
+    )
+    judge_verbose: bool = field(
+        default=False,
+        metadata={"help": "Whether to print full online judge responses during training."},
+    )
+    judge_api_key_env: Optional[str] = field(
+        default="OPEN_R1_JUDGE_API_KEY",
+        metadata={"help": "Environment variable name used to resolve the judge API key."},
     )
 
     cosine_min_value_wrong: float = field(
@@ -378,8 +448,6 @@ class LoraArguments:
         default_factory=lambda: ["q_proj", "v_proj"],
         metadata={"help": "Target modules to apply LoRA"}
     )
-
-
 
 
 

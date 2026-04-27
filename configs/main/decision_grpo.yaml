@@ -1,0 +1,73 @@
+model_name_or_path: "output/training/main/merged/decision_sft"
+model_revision: null
+torch_dtype: "bfloat16"
+attn_implementation: "flash_attention_2"
+
+dataset_name: "dataset/processed/train/decision_grpo"
+dataset_prompt_column: "prompt"
+system_prompt: |
+  <|think|>
+  You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses.
+  Think carefully as internal reasoning before answering.
+  Use the model's native thought-channel output format and do not emit legacy XML wrapper tags.
+  Your final vote MUST be one of the policy actions listed in the prompt.
+
+bf16: true
+gradient_accumulation_steps: 4
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 1.0e-06
+lr_scheduler_type: cosine_with_min_lr
+lr_scheduler_kwargs:
+  min_lr_rate: 0.1
+warmup_ratio: 0.1
+dataloader_num_workers: 0
+dataloader_pin_memory: false
+
+do_eval: false
+eval_strategy: "no"
+eval_steps: 20
+
+max_steps: -1
+num_train_epochs: 10
+max_prompt_length: 8096
+max_completion_length: 2048
+num_generations: 4
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 4
+
+reward_funcs:
+  - rate_accuracy
+  - rate_format
+reward_weights:
+  - 1.0
+  - 1.0
+save_reward: true
+
+peft_merged_model_path: output/training/main/merged/decision_grpo
+peft_r: 8
+peft_lora_alpha: 16
+peft_lora_dropout: 0.05
+peft_target_modules:
+  - q_proj
+  - v_proj
+
+log_completions: true
+log_level: "info"
+logging_strategy: "steps"
+logging_steps: 1
+logging_first_step: true
+
+output_dir: output/training/main/adapters/decision_grpo
+overwrite_output_dir: true
+save_strategy: "steps"
+save_steps: 50
+save_total_limit: 30
+callbacks:
+  - loss_log
+  - reward_log
+
+push_to_hub: false
+report_to: []
+seed: 42

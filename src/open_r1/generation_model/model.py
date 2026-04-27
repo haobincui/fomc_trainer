@@ -53,13 +53,11 @@ class Model:
             outputs = self.model.chat(batch_messages, self.sampling_params)
         except Exception as e:
             logging.warning(f"❌ vLLM chat batch failed: {e}")
-            print(f"❌ vLLM chat batch failed: {e}")
             return ["Failed"] * len(batch_messages)
 
         responses = []
         if not outputs or len(outputs) != len(batch_messages):
             logging.warning(f"⚠️ Output length mismatch: expected {len(batch_messages)}, got {len(outputs)}")
-            print(f"⚠️ Output length mismatch: expected {len(batch_messages)}, got {len(outputs)}")
             return ["Failed"] * len(batch_messages)
 
         for i, output in enumerate(outputs):
@@ -70,11 +68,9 @@ class Model:
                     responses.append(output.outputs[0].text)
             except Exception as e:
                 logging.warning(f"❌ Failed to parse output at index {i}: {e}")
-                print(f"❌ Failed to parse output at index {i}: {e}")
                 responses.append("Failed")
 
         return responses
-
 
 
 

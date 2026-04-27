@@ -189,7 +189,10 @@ output/
 
 *.jsonl
 *.xml
+*data/
 
+output*/
+*output/
 
 
 docs/

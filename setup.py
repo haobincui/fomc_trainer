@@ -42,6 +42,7 @@ if stale_egg_info.exists():
 #   * If a dependency is fast-moving (e.g. trl), pin to the exact version
 _deps = [
     "accelerate==1.4.0",
+    "bert-score>=0.3.13",
     "bitsandbytes>=0.43.0",
     "datasets>=3.2.0",
     "deepspeed==0.16.7",
@@ -66,6 +67,7 @@ _deps = [
     "fire",
     "matplotlib",
     "python-dotenv",
+    "scikit-learn>=1.5.0",
     "ruff>=0.9.0",
     "safetensors>=0.3.3",
     "sentencepiece>=0.1.99",
@@ -99,6 +101,7 @@ extras["dev"] = extras["quality"] + extras["tests"] + extras["eval"] + extras["c
 # core dependencies shared across the whole project - keep this to a bare minimum :)
 install_requires = [
     deps["accelerate"],
+    deps["bert-score"],
     deps["bitsandbytes"],
     deps["einops"],
     deps["datasets"],
@@ -110,6 +113,7 @@ install_requires = [
     deps["math-verify"],
     deps["liger-kernel"],
     deps["packaging"],  # utilities from PyPA to e.g., compare versions
+    deps["scikit-learn"],
     deps["safetensors"],
     deps["sentencepiece"],
     deps["transformers"],
@@ -130,6 +134,8 @@ setup(
     url="https://github.com/huggingface/open-r1",
     package_dir={"": "src"},
     packages=find_packages("src"),
+    py_modules=["utils", "log_config", "generate_new_response"],
+    include_package_data=True,
     zip_safe=False,
     extras_require=extras,
     python_requires=">=3.10.9",

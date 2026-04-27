@@ -1,6 +1,7 @@
 import json
 import os
 import random
+from pathlib import Path
 
 import pandas as pd
 
@@ -9,14 +10,20 @@ from utils import save_output
 
 
 def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, model_path: str, output_file: str = None, batch_size: int = None, sample_size: int =None) -> list[dict]:
+    if output_file is not None:
+        output_suffixes = {".jsonl", ".xlsx", ".csv"}
+        second_suffix = Path(model_path).suffix.lower()
+        third_suffix = Path(output_file).suffix.lower()
+        if second_suffix in output_suffixes and third_suffix not in output_suffixes:
+            model_path, output_file = output_file, model_path
 
     if isinstance(input_prompt_file, pd.DataFrame):
         lines = input_prompt_file.to_dict(orient='records')
     elif isinstance(input_prompt_file, list):
         lines = input_prompt_file
     elif isinstance(input_prompt_file, str):
-        lines = open(input_prompt_file, 'r').readlines()
-        lines = [json.loads(line) for line in lines]
+        with open(input_prompt_file, "r", encoding="utf-8") as f:
+            lines = [json.loads(line) for line in f]
     else:
         raise ValueError("input_prompt_file must be a DataFrame, list of dicts, or a file path string.")
 
@@ -57,6 +64,12 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
             try:
                 batch_outputs = generate_responses(batch_prompts, model_path, max_new_tokens=8192)
                 for i, generated in enumerate(batch_outputs):
+                    if not isinstance(generated, str) or not generated.strip() or generated.strip() == "Failed":
+                        failed_index.append(batch_indices[i])
+                        f += 1
+                        n += 1
+                        print(f"❌ No. {batch_indices[i]} : Suc {s}, Fail {f}")
+                        continue
                     output_index.append(batch_indices[i])
                     output_target.append(batch_targets[i])
                     output_generated.append(generated)
@@ -78,6 +91,12 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
         try:
             batch_outputs = generate_responses(batch_prompts, model_path, max_new_tokens=8192)
             for i, generated in enumerate(batch_outputs):
+                if not isinstance(generated, str) or not generated.strip() or generated.strip() == "Failed":
+                    failed_index.append(batch_indices[i])
+                    f += 1
+                    n += 1
+                    print(f"❌ No. {batch_indices[i]} : Suc {s}, Fail {f}")
+                    continue
                 output_index.append(batch_indices[i])
                 output_target.append(batch_targets[i])
                 output_generated.append(generated)
@@ -94,7 +113,7 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
     output_dicts = []
     for idx, tgt, gen in zip(output_index, output_target, output_generated):
         try:
-            base_data = lines[idx]
+            base_data = dict(lines[idx])
         except (IndexError, json.JSONDecodeError) as e:
             print(f"⚠️ Skipping index {idx} due to error: {e}")
             continue
@@ -112,11 +131,10 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
         save_output(output_dicts, output_file)
         print(f"✅ Output saved to {output_file}")
     print(f"🎯 Finished. Total: {n}, Success: {s}, Failed: {f}")
-    if failed_index:
+    if failed_index and output_file:
         print(f"❗ Failed indices: {failed_index}")
         pd.DataFrame({"Failed": failed_index}).to_csv(output_file.split(".")[0] + "_failed.csv", index=False)
 
     print(f"✅ Finished processing all prompts.")
     print(f"✅ Total: {total}, Suc: {s}, Fail: {f}")
     return output_dicts
-

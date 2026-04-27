@@ -25,12 +25,22 @@ from latex2sympy2_extended import NormalizationConfig
 from math_verify import LatexExtractionConfig, parse, verify
 
 from open_r1.utils.code_providers import get_provider
+from open_r1.utils.fomc import parse_boxed_vote
 from open_r1.utils.ioi import (
     SubtaskResult,
     add_includes,
     get_morph_client_from_env,
     get_piston_client_from_env,
     score_subtask,
+)
+from open_r1.trainer.rewards.reward_funcs.structured_response import (
+    DEEPSEEK_THINK_COMPLETION_FORMAT,
+    GEMINI_THOUGHT_CHANNEL_FORMAT,
+    LEGACY_XML_FORMAT,
+    contains_deepseek_markers,
+    contains_gemini_markers,
+    contains_legacy_markers,
+    parse_structured_response,
 )
 
 
@@ -84,32 +94,58 @@ def accuracy_reward(
 
 
 def format_reward(completions, **kwargs):
-    """Reward function that checks if the reasoning process is enclosed within <think> and </think> tags, while the final answer is enclosed within <answer> and </answer> tags."""
-    pattern = r"^<think>\n.*?\n</think>\n<answer>\n.*?\n</answer>$"
+    """Reward responses that follow either legacy XML or Gemini4 thought-channel formatting."""
     completion_contents = [completion[0]["content"] for completion in completions]
-    matches = [
-        re.match(pattern, content, re.DOTALL | re.MULTILINE)
+    return [
+        1.0 if parse_structured_response(content).is_well_formed else 0.0
         for content in completion_contents
     ]
-    return [1.0 if match else 0.0 for match in matches]
 
 
 def tag_count_reward(completions, **kwargs) -> list[float]:
-    """Reward function that checks if we produce the desired number of think and answer tags associated with `format_reward()`.
+    """Reward function that checks if we produce the expected reasoning/answer delimiters.
 
     Adapted from: https://gist.github.com/willccbb/4676755236bb08cab5f4e54a0475d6fb#file-grpo_demo-py-L90
     """
 
     def count_tags(text: str) -> float:
+        parsed = parse_structured_response(text)
+
+        if parsed.format_name == LEGACY_XML_FORMAT or contains_legacy_markers(text):
+            count = 0.0
+            if text.count("<think>") == 1:
+                count += 0.25
+            if text.count("</think>") == 1:
+                count += 0.25
+            if text.count("<answer>") == 1:
+                count += 0.25
+            if text.count("</answer>") == 1:
+                count += 0.25
+            if count == 1.0 and not parsed.is_well_formed:
+                return 0.0
+            return count
+
+        if parsed.format_name == GEMINI_THOUGHT_CHANNEL_FORMAT or contains_gemini_markers(text):
+            count = 0.0
+            if text.count("<|channel>thought") == 1:
+                count += 0.25
+            if text.count("<channel|>") == 1:
+                count += 0.25
+            if parsed.format_name == GEMINI_THOUGHT_CHANNEL_FORMAT and parsed.is_well_formed:
+                count += 0.25
+            if parsed.answer:
+                count += 0.25
+            return count
+
+        if parsed.format_name == DEEPSEEK_THINK_COMPLETION_FORMAT or contains_deepseek_markers(text):
+            count = 0.0
+            if text.count("</think>") == 1:
+                count += 0.5
+            if parsed.format_name == DEEPSEEK_THINK_COMPLETION_FORMAT and parsed.answer:
+                count += 0.5
+            return count
+
         count = 0.0
-        if text.count("<think>\n") == 1:
-            count += 0.25
-        if text.count("\n</think>\n") == 1:
-            count += 0.25
-        if text.count("\n<answer>\n") == 1:
-            count += 0.25
-        if text.count("\n</answer>") == 1:
-            count += 0.25
         return count
 
     contents = [completion[0]["content"] for completion in completions]
@@ -553,35 +589,25 @@ def code_reward(
 
 
 def get_code_format_reward(language: str = "python"):
-    """Format reward function specifically for code responses.
+    """Format reward function specifically for code responses in legacy or Gemini4 format.
 
     Args:
         language: Programming language supported by E2B https://e2b.dev/docs/code-interpreting/supported-languages
     """
-    pattern = (
-        rf"^<think>\n.*?\n</think>\n<answer>\n.*?```{language}.*?```.*?\n</answer>$"
-    )
+    code_pattern = re.compile(rf"```{language}\n.*?```", re.DOTALL)
 
     def code_format_reward(completions, **kwargs):
         completion_contents = [completion[0]["content"] for completion in completions]
-        matches = [
-            re.match(pattern, content, re.DOTALL | re.MULTILINE)
-            for content in completion_contents
-        ]
-        return [1.0 if match else 0.0 for match in matches]
+        rewards = []
+        for content in completion_contents:
+            parsed = parse_structured_response(content)
+            if not parsed.is_well_formed:
+                rewards.append(0.0)
+                continue
+            rewards.append(1.0 if code_pattern.search(parsed.answer) else 0.0)
+        return rewards
 
     return code_format_reward
-
-def _parse_final_vote(text):
-    match = re.search(r"\\boxed\{(.*?)\}", text, re.DOTALL)
-
-    if match:
-        boxed_content = match.group(1)
-        return boxed_content.strip()
-    else:
-        return ""
-
-
 
 def rate_accuracy_reward(
     completions: list[list[dict[str, str]]], rate_change: list[str], **kwargs
@@ -590,7 +616,7 @@ def rate_accuracy_reward(
     rewards = []
     for content, rate in zip(contents, rate_change):
         try:
-            current_vote = _parse_final_vote(content.split("</think>")[-1])
+            current_vote = parse_boxed_vote(content)
             print(f"Final Vote: {current_vote}, Target Vote: {rate}")
             target_vote = rate
             if current_vote == target_vote:
@@ -621,7 +647,7 @@ def rate_format_reward(
     rewards = []
     for content in contents:
         try:
-            current_vote = _parse_final_vote(content.split("</think>")[-1])
+            current_vote = parse_boxed_vote(content)
             
             if current_vote.strip() in target_choices:
                 reward = 1
@@ -635,8 +661,5 @@ def rate_format_reward(
 
 
     
-
-
-
 
 

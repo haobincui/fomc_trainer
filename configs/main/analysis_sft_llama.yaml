@@ -1,0 +1,61 @@
+model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
+model_revision: null
+torch_dtype: "bfloat16"
+attn_implementation: "sdpa"
+
+dataset_name: "dataset/processed_llama/train/analysis_sft"
+dataset_prompt_column: "prompt"
+system_prompt: |
+  You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses.
+  Think carefully as internal reasoning before answering.
+  Use the model's native <think>...</think> format for internal reasoning.
+
+bf16: true
+load_in_4bit: false
+gradient_accumulation_steps: 1
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: true
+learning_rate: 1.0e-05
+lr_scheduler_type: cosine_with_min_lr
+lr_scheduler_kwargs:
+  min_lr_rate: 0.1
+warmup_ratio: 0.1
+packing: false
+
+do_eval: true
+eval_strategy: "steps"
+eval_steps: 20
+
+max_steps: -1
+num_train_epochs: 3
+max_prompt_length: 8192
+truncation_mode: keep_end
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+
+peft_merged_model_path: output/training/main/merged/analysis_sft_llama
+peft_r: 8
+peft_lora_alpha: 16
+peft_lora_dropout: 0.05
+peft_target_modules:
+  - q_proj
+  - v_proj
+
+output_dir: output/training/main/adapters/analysis_sft_llama
+overwrite_output_dir: true
+save_strategy: "steps"
+save_steps: 500
+save_total_limit: 1
+callbacks:
+  - loss_log
+
+log_level: "info"
+logging_strategy: "steps"
+logging_steps: 20
+
+push_to_hub: false
+report_to: []
+seed: 42
+use_liger_kernel: false
+activation_offloading: false

@@ -1,0 +1,96 @@
+response_template: gemma4_thought_channel
+
+pipeline:
+  raw_html_root: dataset/processed/input_sources/reformatted_html
+  input_root: dataset/processed/input_sources
+  pipeline_root: dataset/processed/pipeline
+  audit_root: dataset/processed/pipeline/audit
+  train_root: dataset/processed/train
+
+analysis:
+  pipeline_root: dataset/processed/pipeline/analysis_sft
+  master_path: dataset/processed/pipeline/analysis_sft/master/qa_master.jsonl
+  labeled_paths:
+    after_2009: dataset/processed/pipeline/analysis_sft/labeled/merged_labeled_after_2009.xlsx
+    before_2009: dataset/processed/pipeline/analysis_sft/labeled/merged_labeled_before_2009.xlsx
+  split_manifests:
+    after_2009:
+      train: dataset/processed/manifests/qa_train_manifest.jsonl
+      eval: dataset/processed/manifests/qa_eval_manifest.jsonl
+      test: dataset/processed/manifests/qa_test_manifest.jsonl
+  teacher_prompt_root: dataset/processed/pipeline/analysis_sft/teacher_prompts
+  teacher_response_root: dataset/processed/pipeline/analysis_sft/teacher_responses
+  analysis_sft_prompt_root: dataset/processed/pipeline/analysis_sft/student_prompts
+  analysis_grpo_prompt_root: dataset/processed/pipeline/analysis_grpo/prompts
+  train_roots:
+    analysis_sft: dataset/processed/train/analysis_sft
+    analysis_grpo: dataset/processed/train/analysis_grpo
+  compat_sft_train_rows: 3112
+  compat_grpo_core_rows: 778
+  replay_stride: 10
+  audit_thresholds:
+    max_prompt_chars: 12000
+    max_prompt_words: 1500
+profiles:
+  strict:
+    require_nonempty_table: true
+    drop_abnormal_section: true
+    drop_abnormal_topic: true
+    drop_missing_reference: true
+    drop_too_long_prompt: true
+    drop_missing_indicator_data: true
+  compat:
+    require_nonempty_table: false
+    drop_abnormal_section: false
+    drop_abnormal_topic: false
+    drop_missing_reference: false
+    drop_too_long_prompt: false
+    drop_missing_indicator_data: false
+teacher:
+  source: archived_master
+  model_name: deepseek-reasoner
+  # Replace with a real key, or leave empty to fall back to api_key_env.
+  api_key: sk-f086ddaea0da404ea6d1aa926e847849
+  api_key_env: OPENAI_API_KEY
+  base_url: https://api.deepseek.com
+  base_url_env: OPENAI_BASE_URL
+  system_prompt: |
+    You are a senior Federal Reserve research economist. Write high-quality,
+    concise, data-grounded analysis suitable for internal FOMC briefing notes.
+  max_tokens: 4096
+  temperature: 0.2
+  max_retry: 3
+  sleep_seconds: 0.0
+  resume: true
+labeling:
+  input_glob: ""
+  output_root: dataset/processed/pipeline/analysis_sft/labeled
+  indicator_file: dataset/raw_data/input_data/indicators.xlsx
+  model_name: deepseek-reasoner
+  # Replace with a real key, or leave empty to fall back to api_key_env.
+  api_key: sk-f086ddaea0da404ea6d1aa926e847849
+  api_key_env: OPENAI_API_KEY
+  base_url: https://api.deepseek.com
+  base_url_env: OPENAI_BASE_URL
+  sleep_seconds: 0.0
+  run_in_all: false
+rewrite:
+  source_prompt_root: dataset/processed/pipeline/analysis_sft/teacher_prompts
+  source_teacher_response_root: dataset/processed/pipeline/analysis_sft/teacher_responses
+  prompt_root: dataset/processed/pipeline/minutes_alignment/prompts
+  teacher_response_root: dataset/processed/pipeline/minutes_alignment/teacher_responses
+  normalized_target_root: dataset/processed/pipeline/minutes_alignment/targets
+  train_root: dataset/processed/train/minutes_alignment
+decision:
+  sft_source_files:
+    train: dataset/processed/input_sources/decision_making/decision_making_20250526_reason_train.jsonl
+    eval: dataset/processed/input_sources/decision_making/decision_making_20250526_reason_eval.jsonl
+    test: dataset/processed/input_sources/decision_making/decision_making_20250526_reason_test.jsonl
+  grpo_source_pattern: dataset/processed/input_sources/decision_grpo/*.jsonl
+  prompt_roots:
+    decision_sft: dataset/processed/pipeline/decision/decision_sft_prompts
+    decision_grpo: dataset/processed/pipeline/decision/decision_grpo_prompts
+  train_roots:
+    decision_sft: dataset/processed/train/decision_sft
+    decision_grpo: dataset/processed/train/decision_grpo
+  split_seed: 42

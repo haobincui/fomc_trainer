@@ -34,7 +34,7 @@ def register_lighteval_task(
     """Registers a LightEval task configuration.
 
     - Core tasks can be added from this table: https://github.com/huggingface/lighteval/blob/main/src/lighteval/tasks/tasks_table.jsonl
-    - Custom tasks that require their own metrics / scripts, should be stored in scripts/evaluation/extended_lighteval_tasks
+    - Custom tasks that require their own metrics or entrypoints should be stored alongside the active evaluation jobs.
 
     Args:
         configs (Dict[str, str]): The dictionary to store the task configuration.

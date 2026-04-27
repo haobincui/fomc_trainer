@@ -1,0 +1,11 @@
+host: "127.0.0.1"
+port: 8000
+gpu_ids: "0"
+tp_size: 1
+gpu_memory_utilization: 0.95
+max_model_len: 12288
+model_path: "models/gemma-4-E4B-it"
+model_name: "models/gemma-4-E4B-it"
+disable_custom_all_reduce: "auto"
+enforce_eager: false
+extra_args: ""

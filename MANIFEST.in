@@ -1,0 +1,2 @@
+recursive-include src/process_fomc_report/generate_prompt_and_response/templates *.md
+recursive-include src/process_fomc_report/generate_prompt_and_response/input_data *

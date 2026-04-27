@@ -108,6 +108,33 @@ class TestRewards(unittest.TestCase):
         rewards = format_reward(completion)
         self.assertEqual(rewards[0], 1.0)
 
+    def test_format_reward_accepts_gemini_thought_channel(self):
+        completion = [
+            [
+                {
+                    "content": "<|channel>thought\nSome reasoning\n<channel|>The answer"
+                }
+            ]
+        ]
+        rewards = format_reward(completion)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_format_reward_accepts_gemini_empty_thought_channel(self):
+        completion = [
+            [
+                {
+                    "content": "<|channel>thought\n<channel|>The answer"
+                }
+            ]
+        ]
+        rewards = format_reward(completion)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_format_reward_accepts_deepseek_completion_suffix_format(self):
+        completion = [[{"content": "Some reasoning\n</think>\nThe answer"}]]
+        rewards = format_reward(completion)
+        self.assertEqual(rewards[0], 1.0)
+
     def test_format_reward_incorrect(self):
         """Test format_reward with incorrect format."""
         incorrect_formats = [
@@ -116,12 +143,57 @@ class TestRewards(unittest.TestCase):
             "No tags at all",
             "<think>Missing closing</think><answer>Missing closing",
             "<think>Wrong order</answer><answer>Wrong order</think>",
+            "<think>legacy</think><|channel>thought\nmixed<channel|>final",
         ]
 
         for fmt in incorrect_formats:
             completion = [[{"content": fmt}]]
             rewards = format_reward(completion)
             self.assertEqual(rewards[0], 0.0)
+
+    def test_tag_count_reward_accepts_gemini_canonical_format(self):
+        completion = [[{"content": "<|channel>thought\nSome reasoning\n<channel|>The answer"}]]
+        rewards = tag_count_reward(completion)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_tag_count_reward_penalizes_broken_gemini_delimiters(self):
+        completion = [[{"content": "<|channel>thought\nReasoning<channel|><channel|>The answer"}]]
+        rewards = tag_count_reward(completion)
+        self.assertLess(rewards[0], 1.0)
+
+    def test_tag_count_reward_accepts_deepseek_completion_suffix_format(self):
+        completion = [[{"content": "Reasoning\n</think>\nThe answer"}]]
+        rewards = tag_count_reward(completion)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_code_format_reward_accepts_legacy_and_gemini_formats(self):
+        reward_fn = get_code_format_reward(language="python")
+        completions = [
+            [
+                {
+                    "content": "<think>\nReasoning\n</think>\n<answer>\n```python\nprint('x')\n```\n</answer>"
+                }
+            ],
+            [
+                {
+                    "content": "<|channel>thought\nReasoning\n<channel|>```python\nprint('x')\n```"
+                }
+            ],
+        ]
+        rewards = reward_fn(completions)
+        self.assertEqual(rewards, [1.0, 1.0])
+
+    def test_code_format_reward_accepts_deepseek_completion_suffix_format(self):
+        reward_fn = get_code_format_reward(language="python")
+        completion = [[{"content": "Reasoning\n</think>\n```python\nprint('x')\n```"}]]
+        rewards = reward_fn(completion)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_code_format_reward_rejects_missing_code_block_in_gemini_format(self):
+        reward_fn = get_code_format_reward(language="python")
+        completion = [[{"content": "<|channel>thought\nReasoning\n<channel|>print('x')"}]]
+        rewards = reward_fn(completion)
+        self.assertEqual(rewards[0], 0.0)
 
     def test_reasoning_steps_reward(self):
         """Test reasoning_steps_reward with various formats."""
