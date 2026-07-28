@@ -1,0 +1,29 @@
+\section{Literature Review}\label{ch2:sec:lr}
+
+\subsection*{Related Works on Synthetic Data}\label{ch2:sec:lr:related work}
+Current literature on synthetic data generation has shown remarkable improvement with the significant advancement of the Generative Artificial Intelligence (AI) technologies. 
+
+
+The Royal Society (\cite{jordon2022synthetic}) defines synthetic data as \textit{``... data that has been generated using a purpose-built mathematical model or algorithm, with the aim of solving a (set of) data science task(s)''}. Traditional approaches to generating synthetic data focus on quantitative data and rely on numerical procedures based on specific assumptions and random numbers drawn from distributions such as the normal or uniform distribution. Examples include the Autoregressive Moving Average model (ARMA; \cite{whittle1951hypothesis}) and the Generalized Autoregressive Conditional Heteroskedasticity model (GARCH; \cite{Bollerslev:1986}). However, recent advances in Artificial Neural Networks (ANNs) and Large Language Models (LLMs) have introduced new approaches to generating not only numerical data but also textual data. LLMs, which are pre-trained on a wide range of existing textual data, can successfully capture various linguistic features and generate human-like text.
+
+
+
+Prior surveys (\citet{potluru2023synthetic}; \citet{assefa2020generating}; \citet{guo2024generative}) summarize LLM-based synthetic text generation and emphasize three persistent issues: controllability, privacy, and evaluation. In macro-finance, the small number of major policy episodes further motivates simulation-based methods in which text is generated conditionally on counterfactual indicator paths.
+
+
+A parallel literature studies the informational content of FOMC communications using text mining and sentiment methods. \citet{huang2021economic} show predictive value in FOMC text, and event-study evidence finds market effects around Minutes releases (\cite{jubinski2013fomc}; \cite{tadle2022fomc}). Emerging studies on generative AI for policy analysis provide additional motivation for Minutes-style synthetic generation and for evaluation designs that test economic relevance rather than style alone (\cite{dunn2024using}).
+
+\subsection*{Large Language Models (LLMs) for Structured Text Generation}\label{ch2:sec:lr:llm}
+
+
+Transformer-based LLMs are the dominant architecture for text generation and representation learning. Chapter~\ref{ch:ch0} (Section~\ref{sec:ch0:ml-finance}) reviews Transformer foundations, GPT/BERT model families, and fine-tuning strategies. In this chapter, we treat the LLM as a conditional generator: given prompts that encode macro-financial indicators and policy context, the model generates section-level policy narratives. This maps naturally to scenario analysis, where each indicator path corresponds to one scenario and the generated Minutes-style text acts as a document-level representation of that scenario.
+
+
+\subsection*{Consistent Texts}\label{ch2:sec:lr:text}
+
+
+LLMs can generate human-like text, but ensuring \textit{consistency} remains challenging, especially for long-form and structured documents. In this chapter, consistency has two dimensions: (i) internal coherence across paragraphs and sections, and (ii) faithfulness to conditioning inputs (macroeconomic and financial indicators). A common failure mode is hallucination, where generated claims are unsupported by inputs or conflict with external facts (\cite{huang2025survey}).
+
+Because base LLMs are optimized for broad-domain and general-purpose text, their default behavior may not match the style constraints and evidence standards required in specialized domains. Fine-tuning addresses this mismatch by aligning the model with task-specific constraints. For instance, the Llama family has been fine-tuned into variants optimized for different use cases, such as dialogue-oriented chat models and code-focused models (\cite{llama-recips}). In our setting, fine-tuning is used to align the model with (i) macro-financial reasoning grounded in numerical indicators and (ii) the formal, section-structured writing conventions of FOMC Minutes, thereby reducing inconsistency and unsupported generation.
+
+These considerations motivate both the two-step post-training pipeline in Section~\ref{ch2:sec:2-step-training} and the evaluation design in Section~\ref{ch2:sec:applictaion}.

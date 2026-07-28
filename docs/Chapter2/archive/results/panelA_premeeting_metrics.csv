@@ -1,0 +1,6 @@
+baseline,panel,status,notes,n_predictions,accuracy,macro_f1,balanced_accuracy,brier_score,log_loss
+A0_NaiveHold,PanelA,ran,Always predicts hold.,219.0,0.8082191780821918,0.29797979797979796,0.3333333333333333,0.3835616438356164,25.23380923829291
+A1_Persistence,PanelA,ran,Predicts the previous meeting action.,219.0,0.9178082191780822,0.8434627467711282,0.8434627467711282,0.1643835616438356,24.72913305352709
+A2_FuturesProb,PanelA,skipped,data/futures_features.csv not available; no free public historical series was prepared.,,,,,,
+A3_OrderedProbit,PanelA,ran,custom ordered probit MLE; optimization fallback,219.0,0.7853881278538812,0.6683517476200403,0.757527569845764,0.3642706243150858,9.030828018162826
+A4_OrdinalForestApprox,PanelA,ran,ordinal approximation used; not an exact replication of Yoon and Fan (2024),219.0,0.9041095890410958,0.8198846863861028,0.8221524087792559,0.16841686046327087,3.2950589923074953

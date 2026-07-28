@@ -1,0 +1,738 @@
+\newcommand{\inputtag}[1]{**\textless #1\textgreater**}
+
+
+
+\section{Dataset Construction}\label{ch2:sec:the dataset}
+
+This section describes the construction of the training corpus. The raw text comes from Federal Open Market Committee (FOMC) Minutes and is paired with macroeconomic and financial indicators. We then process these sources into structured samples for model training and evaluation.
+
+
+\subsection*{FOMC Minutes and Indicators}\label{ch2:sec:raw_data}
+
+
+The Federal Open Market Committee (FOMC) meetings have been recorded since the committee's formation under the Banking Act of 1935 (\cite{todd2016corollary}). Initially, from 1936 to 1967, the minutes were released only once a year in these early years. Between 1967 and 1992, the minutes were named as ``the Minutes of Actions''. combined with ``the Record of Policy Actions'', these documents provided detailed insights not only into the policies but also the reasoning and proceedings behind them. Starting in 1993, a timely record of all policy issues and decisions made by the Committee was published after each meeting, although the documentation lacked a structured format. After 2009, the minutes were organized into distinct sections, including "Economic Situation," "Financial Situation," "Economic Outlook," and "Committee Policy Action," and the Committee has continued to use this structure to the present day. 
+
+Because early records were less frequent and less standardized, while post-2009 Minutes adopted a relatively stable section structure and section-level consistency is essential for supervised alignment, we use post-2009 Minutes as the primary source corpus.
+
+
+
+
+We downloaded Minutes from January 2009 to January 2025 from the Federal Reserve website as the \textbf{main text corpus}. Given the stable section structure after 2009, we parsed major sections ( ``Staff Review of the Economic Situation'', ``Staff Review of the Financial Situation'', ``Staff Economic Outlook'', ``Participants' Views on Current Conditions and Economic Outlook'', and ``Committee Policy Actions'') when available, yielding 486 section-level samples. We also collected Minutes from February 1993 to December 2008 as a \textbf{supplementary corpus}. Because these earlier files lack stable section headings, they require additional processing described below.
+
+Table~\ref{tab:ch2:summary_statis} reports token-level summary statistics for both full Minutes and extracted sections under the tokenizer used in our experiments. Across the sample, Minutes length ranges from roughly 8,000 to 25,000 tokens, while most individual analytical sections fall below 4,096 tokens.
+
+
+In this chapter, ``word'' does not necessarily mean a full lexical word. LLMs operate on tokens (often sub-word units). For example, ``Negative'' may be split into smaller units such as ``Neg'' and ``ative''. This tokenization is controlled by the model-specific tokenizer. Larger models often use larger vocabularies; for example, GPT-4 class models use larger token vocabularies, while LLaMA 3 uses a 128,000-token vocabulary. Table~\ref{tab:ch2:summary_statis} reports token-level summary statistics.
+
+
+\begin{table}[htbp]
+    \scriptsize
+    \centering
+    \begin{tabular}{p{3.8cm}cccccccc}
+        \toprule
+        Names&                                                Count&	    Mean&	    Std&	 Min&	   25\%&	  50\%&	   75\%&	Max \\
+        \hline
+        Total Minutes&	                                        123&	15119.50&	5136.89&	8144&	  10545&	 13117&	  20234&	25106 \\
+        Total Sections&	                                        486&	 2883.71&	2921.00&	 294&	 1391.5&	1729.5&	3014.75&	13621\\
+        Staff Economic Outlook&	                                123&	 3002.20&	 779.20&	 294&	   2556&	  3076&	   3481&	5080 \\
+        Staff Review of the Economic Situation&	                120&	 1348.81&	 314.13&	 653&	1178.25&	  1356&	   1490&	2929 \\
+        Staff Review of the Financial Situation&	            119&	 1491.61&	 291.48&	 903&	   1293&	  1479&	 1643.5&	2461 \\
+        Committee Policy Action&	                            122&	 5625.28&	4646.81&	1262&	   1770&	2448.5&	  11118&	13621 \\
+        Staff Review of the Economic and Financial Situation&	  2&	    3286&	 200.82&	3144&	   3215&	  3286&	   3357&	3428 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Summary Statistics for Tokens of Different Sections and Minutes}
+    \label{tab:ch2:summary_statis}
+\end{table}
+
+
+Because most major sections are shorter than 4,096 tokens (except ``Committee Policy Action''), we cap the assistant output length at 4,096 tokens to control memory usage.
+
+
+
+
+\subsection*{From FOMC Minutes to Analysis}
+
+
+Because our prompts are constructed from macroeconomic and financial indicators, we must map unstructured Minutes paragraphs to the corresponding indicator topics. We use an LLM (ChatGPT-4o) as a \textit{weakly supervised classifier} to assign indicator labels to Minutes paragraphs, which enables systematic alignment between numerical inputs and textual targets. Since LLM-based labeling can introduce noise or bias, we mitigate this risk by (i) manually cleaning and standardizing the label ontology and (ii) relabeling with a constrained reference list after cleaning. Importantly, we exclude administrative paragraphs and the ``Committee Policy Action'' content from the \textit{analysis-generation} dataset to avoid leaking realized policy decisions into training, which is crucial for a fair decision-prediction evaluation later in the chapter.
+
+
+To construct candidate indicator labels, we first asked the LLM to label paragraphs without a predefined reference list. These model-generated tags are treated as \textit{raw labels}. We then identified several quality issues that required cleaning and standardization.
+
+First, some of the raw labels were too general or lacked measurable indicators—for example, labels like ``Housing'', ``International Markets'', ``Swap Arrangements'', and ``Liquidity Facilities''. These categories do not correspond to specific economic indicators.
+
+Second, different labels were often used for the same underlying indicator. For instance, ``PCE Price Index'', ``Consumer Spending'', and ``Personal Consumption Expenditures (PCE)'' all refer to the same economic concept and were consolidated under ``Personal Consumption Expenditures (PCE)''.
+
+
+Finally, some labels represented subcomponents of broader constructs. For example, ``Total Assets of the Federal Reserve'' and ``Total Liabilities of the Federal Reserve'' were consolidated under ``Federal Reserve Balance Sheet''.
+
+
+Therefore, we manually cleaned the \textit{raw labels} and created a list of \textit{reference labels} based on them. We then asked the LLM to relabel the paragraphs using this refined set of reference labels.
+
+Our raw corpus contains 18,957 paragraphs. We removed paragraphs related to ``Secretary'', ``Attendance'', and ``Voting for this action'' because they contain no substantive analytical content. We also removed ``Committee Policy Action'' paragraphs from the analysis-generation dataset, because these paragraphs primarily summarize realized decisions rather than the underlying discussion; excluding them also reduces the risk of decision-information leakage when we later evaluate the model’s ability to infer policy actions from analytical context. After filtering, 6,266 paragraphs remained for indicator labeling.
+
+
+
+Next, we introduced two fallback tags: ``Non-Core'' for paragraphs without analytical content, and ``Other'' when no relevant indicator could be mapped. Because some paragraphs refer to multiple indicators, the model was allowed to assign multiple labels separated by commas. This stage produced 5,290 labeled analytical paragraphs, which expanded to 5,397 rows across 37 raw labels.
+
+
+We then manually standardized the raw labels into 26 \textit{reference-label} categories and relabeled all 6,266 filtered paragraphs using this controlled taxonomy. ``Other'' was assigned when no indicator matched, and ``Non-Core'' when the paragraph contained no analytical content.
+
+
+
+
+Finally, we extracted 4,889 analytical paragraphs with a total of 5,781 corresponding standardized labels for our \textbf{main dataset}. We applied the same cleaning process to our \textbf{supplementary dataset}, resulting in 4,464 analytical paragraphs associated with 44,178 standardized labels. Table~\ref{tab:ch2:indicator_count} summarizes the frequency distribution of the reference labels for both datasets. Notably, the supplementary dataset contains significantly more labels than the main dataset. This discrepancy arises because the FOMC Minutes prior to 2009 were less structured, often referencing multiple indicators within a single paragraph. Consequently, for these earlier Minutes, we instructed the model to assign all relevant labels to each paragraph. In contrast, Minutes published after 2009 typically focused on one indicator per paragraph. Thus, we asked the model to assign only the single most relevant label in these cases.
+
+
+
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Indicator} & \textbf{Main Dataset} & \textbf{Supplementary Dataset} \\
+\hline
+GDP Growth & 623 & 2339 \\
+Federal Funds Rate & 614 & 2859 \\
+Personal Consumption Expenditures (PCE) & 592 & 3517 \\
+Bank Credit to Private Sector & 506 & 1683 \\
+Federal Reserve Balance Sheet & 324 & 1381 \\
+Consumer Price Index (CPI) & 295 & 2383 \\
+Unemployment Rate & 287 & 2276 \\
+Business Investment & 232 & 2300 \\
+Labour Market & 225 & 1893 \\
+Government Purchases & 203 & 1070 \\
+Treasury Yields & 200 & 1557 \\
+Industrial Production & 164 & 2234 \\
+Equity Market Indices & 135 & 1723 \\
+Others & 927 & 16901 \\
+% Housing Starts & 130 & 2121 \\
+% Trade Balance & 115 & 2560 \\
+% Exchange Rate & 96 & 2125 \\
+% Overnight Rate & 94 & 82 \\
+% International Equity Markets & 93 & 349 \\
+% Corporate Bond Yields & 82 & 964 \\
+% Market Volatility (VIX) & 80 & 514 \\
+% Mortgage Rates & 56 & 1586 \\
+% Home Prices & 47 & 1067 \\
+% Commodity Prices & 45 & 1750 \\
+% Money Supply & 39 & 2128 \\
+% Bank Capital & 37 & 26 \\
+% Consumer Confidence Index & 13 & 1629 \\
+\midrule
+~\\
+Total & 5327 & 44116 \\
+\bottomrule
+\end{tabular}
+\caption{Indicators for Main and Supplementary Datasets}
+\label{tab:ch2:indicator_count}
+\end{table}
+
+
+
+
+    
+
+
+
+\subsection*{Economic and Financial Market Indicators}
+
+% [CH2-020][Original Start]
+% After processing the FOMC Minutes, we extracted relevant numerical data to construct the input prompts for our model. Based on our reference labels, we obtained both financial data from WRDS and economic data from the FRED Economic Database.
+% [CH2-020][Original End]
+After processing the Minutes, we extracted numerical series to build model prompts. Guided by the reference-label taxonomy, we collected macroeconomic series from the FRED database and financial-market series from WRDS. FRED offers country-level macroeconomic data, while WRDS provides standardized access to widely used asset-pricing variables and benchmark series.
+
+For macroeconomic coverage, we include GDP growth, Consumer Price Index measures, Federal Funds Rate series, unemployment measures, trade indicators, and Treasury yields. For financial coverage, we include equity indices, commodity prices, volatility indices, Federal Reserve balance-sheet measures, overnight-rate series, and corporate-bond yields.
+
+
+Overall, the dataset spans 102 indicators in 26 categories that are relevant for monetary-policy analysis. Table~\ref{tab:ch2:extracted_data} lists the indicators used in this chapter.
+
+
+\begin{center}
+\begin{singlespace}    
+\begin{scriptsize}
+\begin{longtable}{p{0.33\textwidth}|p{0.66\textwidth}}
+        \toprule
+        \textbf{Category}  & \textbf{Indicator} \\
+        \hline
+        Labour Market  & All Employees, Total Nonfarm (Thousands of Persons, Seasonally Adjusted) \\
+        \hline
+        Labour Market  & Job Openings, Total Nonfarm(Level in Thousands, Seasonally Adjusted) \\
+        \hline
+        Labour Market  & Labor Force Participation Rate(Percent, Seasonally Adjusted) \\
+        \hline
+        Labour Market  & Total Nonfarm Private Payroll Employment(Persons, Seasonally Adjusted) \\
+        \hline
+        Money Supply  & Total Monetary Base( currency in circulation plus reserve balances, Billions of Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Money Supply  & M2SL(Billions of Dollars, Seasonally Adjusted) \\
+        \hline
+        Unemployment Rate  & Unemployment Rate (Seasonal adjusted) \\
+        \hline
+        International Equity Markets  & MSCI WORLD \\
+        \hline
+        International Equity Markets  & MSCI Emerging Markets Index(future) \\
+        \hline
+        Housing Starts  & Annual Rate for Housing Units Authorized in Permit-Issuing Places in United States (Seasonally Adjusted Total Units [Thousands of Units]) \\
+        \hline
+        Housing Starts  & New Privately-Owned Housing Units Started, Total Units(Thousands of Units, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Home Prices  & Rental Vacancy Rate in the United States(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Home Prices  & All-Transactions House Price Index for the United States( Index 1980Q1=100, Not Seasonally Adjusted) \\
+        \hline
+        Home Prices  & S\&P CoreLogic Case-Shiller U.S. National Home Price Index (Index Jan 2000=100, Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Balance Sheet,Total Assets(Millions of U.S. Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Balance Sheet, Mortgage-Backed Securities(Millions of U.S. Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Reserve Balances with Federal Reserve Banks(Billions of U.S. Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Summary Of SOMA holdings \\
+        \hline
+        Exchange Rate  & U.S. Dollars to Euro Spot Exchange Rate(U.S. Dollars to One Euro, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate(U.S. Dollars to One U.K. Pound Sterling, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & Japanese Yen to U.S. Dollar Spot Exchange Rate(Japanese Yen to One U.S. Dollar, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & Nominal Broad U.S. Dollar Index(Index Jan 2006=100, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate(Chinese Yuan Renminbi to One U.S. Dollar, Not Seasonally Adjusted) \\
+        \hline
+        Consumer Confidence Index  & Advance Monthly Sales for Retail and Food Services(Seasonally Adjusted Sales - Monthly [Millions of Dollars]) \\
+        \hline
+        Consumer Confidence Index  & Consumer Sentiment(Index 1966Q1=100, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 1-3 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA CCC \& Lower US High Yield Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA AAA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 7-10 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA BBB US Corporate Index Effective Yield (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 5-7 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 3-5 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA B \& Lower US Emerging Markets Liquid Corporate Plus Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 15+ Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA BB US High Yield Index Effective Yield (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA AA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 10-15 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & Moody's Seasoned Baa Corporate Bond Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & Moody's Seasoned Aaa Corporate Bond Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, Fuels and Related Products and Power (Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, Farm Products(Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, All Commodities(Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Crude Oil Prices(West Texas Intermediate, Dollars per Barrel, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, Metals and Metal Products(Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Crude Oil Prices(Brent,Dollars per Barrel, Not Seasonally Adjusted) \\
+        \hline
+        GDP Growth  & Gross domestic product ([Millions of dollars] Seasonally adjusted at annual rates) \\
+        \hline
+        Mortgage Rates  & 30-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted, Weekly, Ending Thursday) \\
+        \hline
+        Mortgage Rates  & 15-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Equity Market Indices  & Dow Jones Industrial Average \\
+        \hline
+        Equity Market Indices  & NASDAQ Composite Index \\
+        \hline
+        Equity Market Indices  & S\&P 500 Index \\
+        \hline
+        Industrial Production  & industrial\_production(total manufacturing, Index 2017=100, Seasonally Adjusted) \\
+        \hline
+        Industrial Production  & Industrial Production( Manufacturing, Durable Goods, Semiconductor and Other Electronic Component ) \\
+        \hline
+        Industrial Production  & Industrial Production( Mining) \\
+        \hline
+        Industrial Production  & Industrial Production( Manufacturing, Nondurable Goods, Food, Beverage, and Tobacco) \\
+        \hline
+        Industrial Production  & Industrial Production( Utilities, Electric and Gas Utilities) \\
+        \hline
+        Industrial Production  & Industrial Production(Manufacturing, Durable Goods,  Motor Vehicles and Parts) \\
+        \hline
+        Industrial Production  & industrial\_production(total\_index, Index 2017=100, Seasonally Adjusted) \\
+        \hline
+        Business Investment  & Real Private Nonresidential Fixed Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Business Investment  & Real Gross Private Domestic Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Business Investment  & Commercial Paper Outstanding(Billions of Dollars, Seasonally Adjusted) \\
+        \hline
+        Personal Consumption Expenditures (PCE)  & Personal Consumption Expenditures Index(Index 2017=100, Seasonally Adjusted) \\
+        \hline
+        Personal Consumption Expenditures (PCE)  & Personal consumption expenditures by major function (Index numbers, 2017=100; quarters and months are seasonally adjusted) \\
+        \hline
+        Personal Consumption Expenditures (PCE)  & Personal consumption expenditures by major function(Millions of dollars; quarters and months are seasonally adjusted at annual rates) \\
+        \hline
+        Market Volatility (VIX)  & CBOE S\&P 500 3-Month Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Gold ETF Volatility Index(Index, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Crude Oil ETF Volatility Index(Index, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE DJIA Volatility Index (Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE NASDAQ 100 Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Volatility Index(Index, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Russell 2000 Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Trade Balance  & Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates) \\
+        \hline
+        Federal Funds Rate  & Federal Funds Effective Rate(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Federal Funds Rate  & Federal Funds Target Range - Upper Limit (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Capital  & Bank Total Assets, All Commercial Banks(Billions of U.S. Dollars, Seasonally Adjusted) \\
+        \hline
+        Bank Capital  & Bank Capital to Total Assets for United States(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Overnight Rate  & Secured Overnight Financing Rate (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Government Purchases  & Government current expenditures, National defense(Billions of Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Government Purchases  & Real Government Consumption Expenditures and Gross Investment (Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Government Purchases  & Federal Government,Current Expenditures(Billions of Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Consumer Price Index (CPI)  & Consumer Price Index for All Urban Consumers (CPI-U, seasonal adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Credit Card Loans(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & Total Consumer Credit Owned and Securitized(Millions of Dollars, Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Tightening Standards for Auto Loans(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & Personal Saving Rate(Percent, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Reporting Increased Willingness to Make Consumer Installment Loans(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Small Firms(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & Percent Change of Total Consumer Credit(Percent Change at Annual Rate, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Bank Credit to Private Sector  & KBW Nasdaq Bank Index \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Tightening Standards for Commercial Real Estate Loans with Construction and Land Development Purposes(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 3-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 1-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 7-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 3-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 6-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \bottomrule   
+        \caption{Economic and Financial Market Indicators}
+        \label{tab:ch2:extracted_data}   
+\end{longtable}
+\end{scriptsize}
+\end{singlespace}
+\end{center}
+
+
+
+
+\subsection*{Constructing Reasoning Process}
+
+
+
+The next step is to link numerical indicators to the analytical narratives in FOMC Minutes. Minutes typically provide high-level conclusions intended to support policy decisions, often lacking detailed and explicit reasoning processes. As a result, large language models (LLMs) cannot infer these summaries directly from the raw data. To train the model to generate logical and reliable conclusions, we simulate the underlying reasoning by distilling intermediate reasoning traces.
+
+
+
+Model distillation (\cite{hinton2015distilling}) trains a smaller, less powerful model using data generated by a larger, more capable teacher model. Instead of exposing the smaller model to a wide range of general data, distillation provides focused, high-quality data that encapsulates expert-level reasoning. For instance, the 8-billion-parameter LLaMA 3 model achieves comparable accuracy on Math benchmarks to OpenAI's ChatGPT-o1-mini, which has around 100 billion parameters, after fine-tuned with distilled, high-quality datasets.
+
+
+
+More specifically, we applied the ``DeepSeek-R1'' as our teacher model for reasoning-trace generation. As shown in Table~\ref{tab:ch2:prompt_for_data_distillation}, each prompt includes the \texttt{meeting date}, \texttt{section name}, \texttt{topic} of the indicators, \texttt{table} that contains the indicators' data, and the \texttt{reference excerpt} from the FOMC Minutes. Here, the \texttt{reference excerpt} provided a reference to the model to ensure the relevance of the output to the FOMC Minutes.
+
+
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{0.98\textwidth}}
+    \toprule
+    \textbf{Prompt for Data Distillation} \\
+    \midrule
+You are an economist preparing briefing notes for the Federal Open Market Committee (FOMC) meeting on \texttt{**\{meeting\_date\}**}.  
+Your task is to analyze recent developments in \texttt{**\{topic\}**} and related indicators, using the tone and structure of the \texttt{**\{section\_style\}**} section of the FOMC Minutes. \\
+
+Use neutral, data-driven, and measured language throughout your response. \\
+
+Your analysis must be based on the following indicators: \texttt{**\{emphasized\_label\}**}, using the accompanying data tables from the previous two years: \\
+
+~\\
+\texttt{\{table\_str\}} \\
+~\\
+
+
+Model your tone, structure, and analytical framing on the following excerpt from the FOMC Minutes:\\
+
+~\\
+\texttt{\{reference\_excerpt\}} \\
+~\\
+
+Keep your response focused, analytically rigorous, and under 4,096 tokens. \\
+    \bottomrule
+    \end{tabular}
+    \caption{Prompt for Data Distillation}
+    \label{tab:ch2:prompt_for_data_distillation}
+\end{table}
+
+
+Finally, this procedure produced 4,889 ``Question-Reasoning-Answer'' training samples for fine-tuning.
+
+
+
+
+\subsection*{Synthetic Text Generation}
+
+
+To evaluate structured-text simulation, we add a downstream alignment stage that trains the model to rewrite analysis into authentic FOMC-Minutes style.
+
+
+To achieve this, we designed a pipeline that accepts individual indicator data as input and produces structured text aligned with sections from actual FOMC Minutes as output. The process comprises three main steps: analysis generation, summary creation, and section rewriting. First, the model analyzes individual economic or financial indicators and generates analytical paragraphs for each. Next, analyses for several related indicators are combined, and a concise summary is created to serve as input for the subsequent step. Finally, the model rewrites this summary into text that closely follows the format and stylistic conventions of the official FOMC Minutes.
+
+
+
+% [CH2-030][Original Start]
+% Since the model had already demonstrated robust proficiency in economic and financial analysis from last stage, the primary objective at this stage was to teach it to generate structured text precisely aligned with specific formatting guidelines.
+% [CH2-030][Original End]
+Because the model already demonstrates baseline analytical capability from the prior stage, the objective here is style and structure alignment rather than new domain learning.
+
+
+
+% [CH2-031][Original Start]
+% To facilitate this, we reorganized the FOMC Minutes data according to their respective section titles, using the model-generated summaries as inputs and the actual text from corresponding sections of the Minutes as target outputs. The model was then instructed to rewrite the provided analytical summaries to match the style and format of the authentic FOMC sections. Table~\ref{tab:ch2:fomc_summary_prompt} illustrates the prompt structure and corresponding expected outputs for this synthetic FOMC-style text generation task.
+% [CH2-031][Original End]
+Accordingly, we reorganize Minutes data by section title, use model-generated summaries as inputs, and use the corresponding official section text as targets. The model is trained to rewrite summaries into section-consistent FOMC language. Table~\ref{tab:ch2:fomc_summary_prompt} shows the prompt template.
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabular}{p{0.96\textwidth}}
+\toprule
+\textbf{User Prompt: FOMC Minutes-Style Economic Summary Generation} \\
+\midrule
+You are a senior economist at the Federal Reserve responsible for drafting internal briefing materials that may be incorporated into the official \textbf{FOMC Minutes}. \\
+Your task is to transform the following economic or financial analysis into a formal, institutionally appropriate paragraph aligned with the tone and structure of the \textbf{\{section\_name\}} section in the FOMC Minutes for the \textbf{\{meeting\_date\}} meeting. \\[1ex]
+~\\
+\textbf{\#\#\# You will be provided with:}\\
+    - \textbf{\textless Raw Analysis\textgreater}: A semi-structured or informal analytical paragraph that may include market commentary, data points, or economic observations. \\
+    - \textbf{\textless Target Section\textgreater}: The FOMC Minutes section in which the rewritten paragraph would appear (e.g., \textit{“Economic Outlook,” “Financial Markets,” “Monetary Policy Considerations”}). \\
+~\\
+\textbf{\#\#\# Your Objective:} \\
+   - Rewrite the content in the formal, precise, and policy-grounded style used in FOMC Minutes. \\
+   -  Use an \textbf{objective, technical, and neutral tone} — avoid informal language, first-person voice, or speculative remarks. \\
+   - Where appropriate, incorporate phrases typical of FOMC drafting style, such as: \\
+   \textbullet\ ``Participants noted that...'' \\
+    \textbullet\ ``The Committee observed that...'' \\
+    \textbullet\ ``Recent indicators suggested...'' \\
+~\\
+\textbf{\#\#\# Output Requirements:} \\
+- Generate a \textbf{single, coherent paragraph} between \textbf{100–200 words} in FOMC Minutes style. \\
+- \textbf{Do not merely summarize} — restructure and elevate the input to meet institutional standards. \\
+- Avoid lists or bullet points; use complete sentences and formal syntax. \\
+~\\
+\textbf{\#\#\# FOMC Minutes Section Name:} \\[1ex]
+\inputtag{Target Section} \\
+\texttt{\{section\_name\}} \\
+\inputtag{/Target Section} \\[1ex]
+~\\
+\textbf{\#\#\# Input Content:} \\
+\inputtag{Raw Analysis} \\
+\texttt{\{raw\_analysis\}} \\
+\inputtag{/Raw Analysis} \\
+\bottomrule
+\toprule
+\textbf{Target Output:} \\
+\midrule
+\texttt{\{Corresponding FOMC Section\}} \\
+\bottomrule
+\end{tabular}
+\caption{Prompt for FOMC-Style Text Generation}
+\label{tab:ch2:fomc_summary_prompt}
+\end{table}
+
+
+% [CH2-032][Original Start]
+% After that, we need to construct the reasoning process ($c_i$) in the model's target response. As we have the target answer ($a_i$), here we applied a standard model distillation pipeline. Firstly, we use the prompt in Table~\ref{tab:ch2:fomc_summary_prompt} in prompting a powerful reasoning model (we used DeepSeek-R1 in our experiment). For each prompt, we generated 5 candidate responses with a high hyperparameters (temperature = 0.6 and top\_p = 0.9). Then, we calculate the Cosine Similarity and the BertScore between each answer part from the responses and the FOMC Minutes' section. For each section, we choose two responses with the highest total score, and use the corresponding reasoning part as our reasoning process ($c_i$).
+%
+% Next, we constructed the reasoning process ($c_i$) in the model's target response. Given the target answer ($a_i$), we adopted a standard model distillation pipeline. Specifically, we used the prompt shown in Table~\ref{tab:ch2:fomc_summary_prompt} to query a powerful reasoning model, (DeepSeek-R1 in our experiment). For each prompt, we generated five candidate responses using high sampling parameters (temperature = 0.6; top\_p = 0.9). We then evaluated the answer portion of each response by computing both the sentence-level cosine similarity and BERTScore (\cite{zhang2019bertscore}) against the corresponding section of the FOMC Minutes. For each section, we selected the two responses with the highest total scores, and extracted their reasoning components as the final reasoning processes ($c_i$).
+% [CH2-032][Original End]
+We then construct the reasoning component ($c_i$) for each target response. Given target answer text ($a_i$), we query a stronger reasoning model (DeepSeek-R1) with the template in Table~\ref{tab:ch2:fomc_summary_prompt}. For each prompt, we generate five candidates with high-sampling settings (temperature = 0.6, top\_p = 0.9), score candidate answers against the reference section using cosine similarity and BERTScore (\cite{zhang2019bertscore}), and keep the two highest-scoring traces. Their reasoning segments are used as distilled $c_i$ targets.
+
+
+
+% Finally, we collected 718 sections from 128 FOMC Minutes of the FOMC meeting from Jan 2019 to Jan 2025. Table~\ref{tab:ch2:section_name_distribution} listed the most commonly used section names. After applying the prompt template in Table~\ref{tab:ch2:fomc_summary_prompt}, we constructed 1,392 corresponding Q\&A pair questions with two different reasoning process for each section. 
+%
+% Finally, we collected 718 sections from 128 FOMC Minutes spanning meetings held between January 2019 and January 2025. Table~\ref{tab:ch2:section_name_distribution} presents the most commonly used section titles. By applying the prompt template shown in Table~\ref{tab:ch2:fomc_summary_prompt}, we constructed 1,392 corresponding question-answer (Q\&A) pairs, each accompanied by two distinct reasoning processes for every section.
+% [Codex 修改版] 2026-02-26: 修正明显不可能的时间范围（2019--2025 不可能有 128 次 Minutes），并合并重复段落。
+Finally, we collected 718 section-level samples from the post-2009 Minutes corpus used in this study (spanning meetings between January 2009 and January 2025). Table~\ref{tab:ch2:section_name_distribution} presents the most common section titles. By applying the prompt template shown in Table~\ref{tab:ch2:fomc_summary_prompt}, we constructed 1,392 corresponding Q\&A pairs, each accompanied by two distinct distilled reasoning processes for the same target section.
+
+
+
+\begin{table}[ht]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{0.65\textwidth} r}
+        \toprule
+        \textbf{Section Name} & \textbf{Count} \\
+        \midrule
+        Staff Review of the Financial Situation & 125 \\
+        Staff Economic Outlook & 124 \\
+        Staff Review of the Economic Situation & 124 \\
+        Participants' Views on Current Conditions and the Economic Outlook & 116 \\
+        Developments in Financial Markets and Open Market Operations & 70 \\
+        Developments in Financial Markets and the Federal Reserve's Balance Sheet & 45 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Distribution of Major Section Names in FOMC Minutes}
+    \label{tab:ch2:section_name_distribution}
+\end{table}
+
+% [CH2-033][Original Start]
+% The dataset is relative small for model fine-tuning. Therefore, we used the Minutes before 2009 to boost our data. However, these Minutes have no clear section titles. We need create the section name for each paragraph and then construct the section. We used the section names from Table~\ref{tab:ch2:section_name_distribution} in the construction and designed a prompt (Table~\ref{tab:ch2:section_name_prompt}) asking the LLM to assign the section name to each paragraph.
+% [CH2-033][Original End]
+The post-2009 section-aligned sample is relatively small for fine-tuning. To expand coverage, we incorporate pre-2009 Minutes, which do not provide stable section headers. We therefore infer section labels paragraph by paragraph using the section taxonomy in Table~\ref{tab:ch2:section_name_distribution} and the prompt in Table~\ref{tab:ch2:section_name_prompt}.
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabular}{p{0.96\textwidth}}
+\toprule
+\textbf{User Prompt: Create Section Name} \\
+\hline
+% [CH2-034][Original Start]
+% You are a policy editor at the Federal Reserve tasked with organizing the content of the **FOMC Minutes**. \\
+% [CH2-034][Original End]
+You are a policy editor at the Federal Reserve responsible for organizing **FOMC Minutes** content. \\
+
+Given a paragraph from the FOMC Minutes, assign it to the **single most appropriate section title** from the official list below: \\
+
+**Available Section Titles**: \\
+
+\texttt{**\{Section Names\}**}
+
+--- \\
+~\\
+\#\#\# Instructions: \\
+
+- Read the paragraph carefully and select **one** section title that best reflects its content and purpose. \\
+- Choose the **closest thematic match** based on subject matter, phrasing, and policy focus. \\
+- If multiple titles appear plausible, select the one that best reflects **official FOMC categorization**.\\
+- Your output must follow this format:   \\
+  `\textbackslash boxed\{\{section\_title\}\}` \\
+
+--- \\
+~\\
+\#\#\# FOMC Paragraph: \\
+\inputtag{Paragraph}\\
+\texttt{\{fomc\_paragraph\}}  \\
+\inputtag{/Paragraph}\\
+
+--- \\
+~\\
+\#\#\# Output: \\
+\textbackslash \\boxed\{\{Your selected section title from the list above\}\} \\
+
+Also provide a brief rationale (1--2 sentences) below the boxed output. \\
+
+\bottomrule
+\end{tabular}
+\caption{Prompt for Section Name Creation}
+\label{tab:ch2:section_name_prompt}
+\end{table}
+
+
+
+
+
+
+
+
+
+
+% \subsection*{Monetary Policy Decision Making}
+% The final section in the FOMC Minutes is the committee's action on the monetary policy. Therefore, to explore the capability of LLMs in predicting government monetary policy—specifically in influencing the interest rate market, we ask the model to specialize in making decisions on the Effective Federal Funds Rate (EFFR). As the model was trained to conduct logical analyses based on provided data, the objective at this stage was to enable it to make informed decisions grounded in that analysis.
+
+% To this end, we first extracted historical EFFR changes from the Federal Reserve Bank of New York. We then designed a tailored prompt to guide the model in predicting government interest rate decisions. Table~\ref{tab:ch2:prompt_for_decision_prediction} presents the template used for decision prediction prompts.
+
+
+% \begin{table}[htp]
+%     \centering
+%     \footnotesize
+%     \begin{tabular}{p{0.98\textwidth}}
+%     \toprule
+%     \textbf{Prompt for Government Decision Prediction} \\
+%     \midrule
+% You are a voting member of the Federal Open Market Committee (FOMC), responsible for setting U.S. monetary policy. 
+% Below is an analysis of U.S. economic and financial conditions ahead of the FOMC meeting on \texttt{**\{meeting\_date\}**}.  \\
+% The current Effective Federal Funds Rate is \texttt{**\{current\_rate\}\%** }. \\
+% ~\\
+% Your assignment:  
+% 1. Review the analysis and summarize the key economic and financial factors influencing the decision.  
+% 2. Provide a step-by-step explanation of your policy recommendation for this meeting.  
+% 3. Conclude with your \textbf{vote}. Select only one of the following:  \\
+% \hspace*{0.5cm} - Raise by 100 basis points  \\
+% \hspace*{0.5cm} - Raise by 75 basis points  \\
+% \hspace*{0.5cm} - Raise by 50 basis points  \\
+% \hspace*{0.5cm} - Raise by 25 basis points  \\
+% \hspace*{0.5cm} - No change  \\
+% \hspace*{0.5cm} - Cut by 25 basis points  \\
+% \hspace*{0.5cm} - Cut by 50 basis points  \\
+% \hspace*{0.5cm} - Cut by 75 basis points  \\
+% \hspace*{0.5cm} - Cut by 100 basis points  \\
+% ~\\
+% Guidelines:  \\
+% - Stay professional, structured, and objective.  \\
+% - Do not speculate beyond the information provided. \\  
+% ~\\
+% \textbf{---} \\
+% \textbf{Current Economic and Financial Market Analysis} \\
+% \texttt{\{current\_analysis\}} \\
+% \textbf{---} \\
+% Please structure your response as follows:  \\
+% \textbf{1. Summary of Key Economic Factors} (\(\leq 150\) words)  \\
+% \textbf{2. Step-by-Step Policy Reasoning}  \\
+% \hspace*{0.5cm} - Analyze the data  \\
+% \hspace*{0.5cm} - Consider all policy alternatives  \\
+% \hspace*{0.5cm} - Justify the your final choice \\
+% ~\\
+% \textbf{3. Final Vote}  \\
+% State your choice as: \texttt{**\textbackslash boxed\{\{your choice\}\}**} (e.g., \texttt{\textbackslash boxed\{\{No change\}\}}). \\
+%     \bottomrule
+%     \toprule
+% \textbf{Target Output:} \\
+% \midrule
+% \texttt{\{Federal Fund Rate Change\}} \\
+% \bottomrule
+%     \end{tabular}
+%     \caption{Prompt for Government Decision Prediction}
+%     \label{tab:ch2:prompt_for_decision_prediction}
+% \end{table}
+
+
+% % Generate many reasoning traces for the prompt.
+% % Use a verifier to remove reasoning traces with the wrong final answer.
+% % For each remaining trace, extract the set of equations appearing in it. Deduplicate the traces so that each one has a different set of equations. Add those to the dataset.
+
+
+
+
+
+
+
+
+
+
+
+% \subsection*{Reasoning and Analysis Quality Cleaning}
+
+
+
+% Before we move the model fine-tuning, we conduct a filtering to the dataset. As the ``teacher model'' may generate low quality reasoning and answer, we further evaluated both the logical between the data and the reasoning process and the relationship between the data and the answer. Here, we applied ``DeepSeek-R1'' as our evaluator and designed prompts to ask the model scoring the logical processes. A higher score indicate a higher quality output.
+
+
+% First of all, to ensure that the model generate a reasoning process based on the given data, we evaluate the logical between the data and the reasoning process. We listed 7 aspects as our criteria in the evaluation. 
+
+
+\subsection*{Dataset Allocation}
+
+
+% [CH2-035][Original Start]
+% Finally, we divided the entire dataset into three parts: Training data, Evaluation data, and Test data. The full dataset comprises 4,889 question-answer (Q\&A) pairs, covering the FOMC Minutes from Jan 2009 to Jan 2025. This dataset was initially divided into 80\% for training, 10\% for evaluation, and 10\% for testing. Within the training subset, 80\% was allocated to the Supervised Fine-Tuning (SFT) step, while the remaining 20\% was reserved for Group Relative Policy Optimization (GRPO). Compared with SFT, GRPO is significantly more computationally intensive; therefore, only a smaller sample of the training data was used for this step. Additionally, to mitigate the risk of GRPO training overwriting knowledge or stylistic features learned during SFT, 10\% of the SFT training data was also included in the GRPO training set. Table~\ref{tab:ch2:dataset_partition_stage1} provides a summary of the dataset partitioning for the training.
+% [CH2-035][Original End]
+Finally, we split the dataset into training, evaluation, and test subsets. The full set contains 4,889 question--answer samples (January 2009 to January 2025), partitioned as 80\% training, 10\% evaluation, and 10\% test. Within training, 80\% is used for SFT and 20\% for GRPO. Because GRPO is more computationally expensive than SFT, it uses a smaller subset; additionally, 10\% of \texttt{train\_sft} is mixed into \texttt{train\_grpo} to reduce forgetting of SFT-learned style and domain alignment. Table~\ref{tab:ch2:dataset_partition_stage1} summarizes the split.
+
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabular}{l l r}
+\toprule
+\textbf{Subset Name} & \textbf{Description} & \textbf{Count} \\
+\midrule
+\texttt{train} & 80\% of total dataset & 3,911 \\
+\texttt{train\_sft} & 80\% of training dataset & 3,129 \\
+\texttt{train\_grpo} & 20\% of training dataset + 10\% of \texttt{train\_sft} & 1,095 \\
+\midrule
+\texttt{evaluation} & 10\% of total dataset & 489 \\
+\texttt{test} & 10\% of total dataset & 489 \\
+\midrule
+\texttt{total} &  & 4,889 \\
+\bottomrule
+\end{tabular}
+\caption{Dataset Partitioning for Training}
+\label{tab:ch2:dataset_partition_stage1}
+\end{table}
+
+
+% \subsubsection*{Stage 2}
+% In our second stage, we ask the model to do some synthetic text generation. We need to train the model to rewrite the analysis into the FOMC Minutes. We have 1,392 Q\&A pairs in the dataset, covering the FOMC Minutes from Jan 2009 to Jan 2025. We randomly split it into 1,134 (80\%) training data, 139 (10\%) evaluation data, and 140 (10\%) test data. 
+
+
+
+
+% For our second task, we 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

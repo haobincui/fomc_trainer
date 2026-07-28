@@ -1,0 +1,34 @@
+FOMC baseline run log
+Generated at: 2026-04-23T18:52:02Z
+
+Information sets:
+Panel A: pre-meeting forecasting with lagged macro/financial features only.
+Panel B: same-meeting stripped official statements only.
+Panel C: same-meeting stripped minutes only; treated as ex post.
+
+Approximations / exact formulas:
+A2 Futures-Prob skipped because no free public historical fed funds futures feature file is available.
+A3 Ordered-Probit uses custom Gaussian ordered-response MLE because statsmodels is unavailable in this environment.
+A4 Ordinal-Forest uses cumulative binary random-forest decomposition and renormalized probabilities.
+B3 Lexicon baseline uses a stripped-text hawk-minus-dove score divided by token count, then multinomial logistic on that scalar score.
+B4 DCS-style baseline skipped in this run; not silently approximated.
+
+Evaluation protocol: expanding window, min_train_size=24, train=all meetings <= t-1, test=meeting t.
+Meeting sample: 1994-02-04 to 2026-03-18 (244 meetings).
+Statement sample: 1994-02-04 to 2026-03-18 (244 meetings).
+Minutes sample: 1994-02-04 to 2026-03-18 (227 meetings).
+
+Ran / skipped baselines:
+- PanelA / A0_NaiveHold: ran | Always predicts hold.
+- PanelA / A1_Persistence: ran | Predicts the previous meeting action.
+- PanelA / A2_FuturesProb: skipped | data/futures_features.csv not available; no free public historical series was prepared.
+- PanelA / A3_OrderedProbit: ran | custom ordered probit MLE; optimization fallback
+- PanelA / A4_OrdinalForestApprox: ran | ordinal approximation used; not an exact replication of Yoon and Fan (2024)
+- PanelB / B1_TFIDFLogit: ran | TF-IDF + multinomial logistic on text.
+- PanelB / B2_EmbeddingLinear: ran | Sentence-transformer embeddings + linear probe (all-MiniLM-L6-v2).
+- PanelB / B3_LexiconLogit: ran | Literature-inspired stripped-statement lexicon score with multinomial logistic on the scalar score.
+- PanelB / B4_DCSStyle: skipped | Simplified DCS-style training objective not implemented in this run.
+- PanelC / C1_TFIDFLogit: ran | TF-IDF + multinomial logistic on text.
+- PanelC / C2_EmbeddingLinear: ran | Sentence-transformer embeddings + linear probe (all-MiniLM-L6-v2).
+
+Panel D historical-research baselines skipped because no alternative statements or transcript panel was prepared in this run.

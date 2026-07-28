@@ -1,0 +1,5 @@
+baseline,panel,status,notes,n_predictions,accuracy,macro_f1,balanced_accuracy,brier_score,log_loss
+B1_TFIDFLogit,PanelB,ran,TF-IDF + multinomial logistic on text.,220.0,0.8772727272727273,0.7252696949326163,0.732261160962984,0.22829239248267605,2.1077056693883005
+B2_EmbeddingLinear,PanelB,ran,Sentence-transformer embeddings + linear probe (all-MiniLM-L6-v2).,220.0,0.8363636363636363,0.620684225335388,0.602242048697709,0.26182259458486584,1.9880393372529794
+B3_LexiconLogit,PanelB,ran,Literature-inspired stripped-statement lexicon score with multinomial logistic on the scalar score.,220.0,0.7545454545454545,0.46450459652706844,0.46798909829532304,0.3995293815380489,1.441540247970818
+B4_DCSStyle,PanelB,skipped,Simplified DCS-style training objective not implemented in this run.,,,,,,

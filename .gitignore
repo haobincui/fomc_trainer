@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# macOS metadata
+.DS_Store
+
+# Editor backup files in the dissertation tree
+/docs/**/*.back
+
 # C extensions
 *.so
 
@@ -176,6 +182,8 @@ wandb/
 logs/
 eval_results/
 results/
+!/docs/Chapter2/archive/results/
+!/docs/Chapter2/archive/results/**
 
 .vscode/
 .python-version
@@ -194,9 +202,6 @@ output/
 output*/
 *output/
 
-
-docs/
-
-
+/archive/docs/
 
 *_output*/

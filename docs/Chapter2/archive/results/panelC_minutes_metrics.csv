@@ -1,0 +1,3 @@
+baseline,panel,status,notes,n_predictions,accuracy,macro_f1,balanced_accuracy,brier_score,log_loss
+C1_TFIDFLogit,PanelC,ran,TF-IDF + multinomial logistic on text.,203.0,0.7931034482758621,0.48425381509958615,0.4961365931562507,0.30655273944836514,1.7671759973845065
+C2_EmbeddingLinear,PanelC,ran,Sentence-transformer embeddings + linear probe (all-MiniLM-L6-v2).,203.0,0.8078817733990148,0.5267724867724868,0.5196458348011931,0.2862608182738927,1.801538930982449
