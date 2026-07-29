@@ -17,7 +17,7 @@ On the other hand, recent advances in neural networks and LLMs have led to remar
 
 Moreover, synthetic data have been widely accepted by financial researchers as powerful tools for robustness testing. For instance, \cite{cao2022synthetic} created a synthetic limit order book to evaluate forecasting models, while \cite{carvajal2022synthetic} used synthetic stock prices to train trading algorithms. Beyond time-series data, the financial industry manages vast volumes of structured documents, such as financial reports, Bank of England Monetary Policy Committee (MPC) meeting minutes, and Federal Reserve FOMC meeting minutes. The simulation capabilities of LLMs make them ideal for generating synthetic structured textual data in these contexts.
 
-This chapter proposes a fine-tuned LLM framework for simulating monetary-policy communication and decision-relevant analysis. Conditioned on macroeconomic and financial indicators, the model is trained to generate (i) domain-consistent analytical narratives and (ii) institutionally styled text aligned with FOMC Minutes sections. We then evaluate whether the synthetic text is stylistically faithful, input-grounded, and economically meaningful through prompt-contribution tests, sentiment--return regressions, and policy-decision prediction.
+This chapter proposes a fine-tuned LLM framework for simulating monetary-policy communication and decision-relevant analysis. Conditioned on macroeconomic and financial indicators, the model is trained to generate (i) domain-consistent analytical narratives and (ii) institutionally styled text aligned with FOMC Minutes sections. We then evaluate stylistic fidelity, target-relative indicator sensitivity, and economic relevance through paired leave-one-out diagnostics, sentiment--return regressions, and policy-decision prediction. The leave-one-out evidence is treated as a sensitivity diagnostic rather than as proof that every generated claim is grounded in the supplied indicators.
 
 
 
@@ -33,7 +33,7 @@ LLMs provide a practical route to close this gap by integrating structured indic
 
 This chapter investigates whether large language models can be used as simulation tools for monetary-policy communication and decision support. The main research question is:
 
-\textit{Can a fine-tuned, reasoning-capable LLM generate FOMC-Minutes-style sections grounded in macroeconomic and financial indicators, and do those synthetic texts preserve policy-relevant signals such as market impact and policy-rate outcomes?}
+\textit{Can a fine-tuned, reasoning-capable LLM generate FOMC-Minutes-style sections that respond systematically to macroeconomic and financial indicators, and do those synthetic texts preserve policy-relevant signals such as market impact and policy-rate outcomes?}
 
 To address this central question, we study the following sub-questions:
 
@@ -55,7 +55,7 @@ To address this central question, we study the following sub-questions:
 This study makes several important contributions to the literature at the intersection of central banking, financial economics, and artificial intelligence:
 
 \begin{itemize}
-\item[] \textbf{Methodological Innovation:} We employed a two-step post-training pipeline (SFT + GRPO) to adapt an LLM for data-grounded macro-financial reasoning, together with a downstream alignment procedure for generating structured Minutes-style text.
+\item[] \textbf{Methodological Innovation:} We employed a two-step post-training pipeline (SFT + GRPO) to adapt an LLM for indicator-conditioned macro-financial reasoning, together with a downstream alignment procedure for generating structured Minutes-style text.
 
 \item[] \textbf{Framework for Synthetic Text Generation:} We propose a framework for generating structured textual data through LLM fine-tuning. This approach translates discrete qualitative information into a continuous distribution, offering new perspectives on risk management strategies in the financial sector.
 
@@ -68,12 +68,11 @@ This study makes several important contributions to the literature at the inters
 
 \item[] \textbf{Practical and Policy-Relevant Implications:} The findings offer actionable insights for central banks, financial market participants, and policymakers by demonstrating the potential of LLMs to augment human decision-making under conditions of uncertainty and information overload.
 
-\item[] \textbf{Multi-Dimensional Evaluation:} We evaluate synthetic Minutes not only with text-based similarity metrics, but also with grounding (prompt-contribution) tests and economics-based validations (market relevance and decision prediction), thereby providing a more comprehensive notion of ``realism'' than surface-level textual resemblance alone.
+\item[] \textbf{Multi-Dimensional Evaluation:} We evaluate synthetic Minutes not only with text-based similarity metrics, but also with target-relative indicator-sensitivity diagnostics and economics-based validations (market relevance and decision prediction), thereby providing a more comprehensive notion of ``realism'' than surface-level textual resemblance alone.
 \end{itemize}
 
 
 \subsection*{Chapter Structure}
 
 This chapter is organized as follows. Section~\ref{ch2:sec:lr} reviews the related literature on synthetic data and large language models. Section~\ref{ch2:sec:2-step-training} outlines the two-step post-training framework. Section~\ref{ch2:sec:the-dataset} describes the dataset construction process and prompt templates. Section~\ref{ch2:sec:base_model} introduces the base model, while Sections~\ref{ch2:sec:training} and~\ref{ch2:sec:parameter} describe the fine-tuning method and hyperparameter settings. Section~\ref{ch2:sec:application} presents the evaluation dimensions and empirical tests, and Section~\ref{ch2:sec:result} reports the training and evaluation results. Finally, Section~\ref{ch2:sec:conclusion} concludes the chapter and discusses future research.
-
 

@@ -6,10 +6,74 @@ from pathlib import Path
 import pandas as pd
 
 from open_r1.generate import generate_responses
+from open_r1.provenance import sha256_text
+from open_r1.validator.loo_generation_spec import derive_row_seed
 from utils import save_output
 
 
-def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, model_path: str, output_file: str = None, batch_size: int = None, sample_size: int =None) -> list[dict]:
+ROW_SEED_POLICY_BATCH = "batch-seed-v1"
+ROW_SEED_POLICY_SAMPLE = "sample-id-sha256-v1"
+
+
+def _normalise_generation_result(result: object) -> dict:
+    if isinstance(result, str):
+        return {
+            "text": result,
+            "finish_reason": None,
+            "stop_reason": None,
+            "prompt_token_count": None,
+            "prompt_preflight_token_count": None,
+            "output_token_count": None,
+            "input_was_truncated": None,
+        }
+    if isinstance(result, dict):
+        return {
+            "text": str(result.get("text") or ""),
+            "finish_reason": result.get("finish_reason"),
+            "stop_reason": result.get("stop_reason"),
+            "prompt_token_count": result.get("prompt_token_count"),
+            "prompt_preflight_token_count": result.get(
+                "prompt_preflight_token_count"
+            ),
+            "output_token_count": result.get("output_token_count"),
+            "input_was_truncated": result.get("input_was_truncated"),
+        }
+    return {
+        "text": "",
+        "finish_reason": "invalid_result_type",
+        "stop_reason": None,
+        "prompt_token_count": None,
+        "prompt_preflight_token_count": None,
+        "output_token_count": None,
+        "input_was_truncated": None,
+    }
+
+
+def generate_new_response(
+    input_prompt_file: str | list[dict] | pd.DataFrame,
+    model_path: str,
+    output_file: str = None,
+    batch_size: int = None,
+    sample_size: int = None,
+    *,
+    seed: int | None = None,
+    replicate_id: str | int | None = None,
+    temperature: float = 0.7,
+    top_p: float = 0.9,
+    max_new_tokens: int = 8192,
+    max_model_len: int = 16384,
+    tokenizer_path: str | None = None,
+    seed_policy: str = ROW_SEED_POLICY_BATCH,
+    generation_metadata: dict | None = None,
+) -> list[dict]:
+    if seed_policy not in {ROW_SEED_POLICY_BATCH, ROW_SEED_POLICY_SAMPLE}:
+        raise ValueError(
+            f"Unsupported seed_policy {seed_policy!r}; expected "
+            f"{ROW_SEED_POLICY_BATCH!r} or {ROW_SEED_POLICY_SAMPLE!r}"
+        )
+    if seed_policy == ROW_SEED_POLICY_SAMPLE and seed is None:
+        raise ValueError("sample-id-sha256-v1 requires a non-null base seed")
+
     if output_file is not None:
         output_suffixes = {".jsonl", ".xlsx", ".csv"}
         second_suffix = Path(model_path).suffix.lower()
@@ -31,13 +95,15 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
     print(f"✅ Total prompts available: {total}")
 
     if sample_size:
-        lines = random.sample(lines, sample_size)
+        lines = random.Random(seed).sample(lines, sample_size)
         print(f"🎯 Sampled {sample_size} prompts.")
 
     # 输出收集
     output_index = []
     output_target = []
     output_generated = []
+    output_generation_seeds = []
+    output_generation_metadata = []
     failed_index = []
 
     if not batch_size:
@@ -50,6 +116,7 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
     batch_prompts = []
     batch_targets = []
     batch_indices = []
+    batch_number = 0
 
     for item in lines:
         index += 1
@@ -61,9 +128,31 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
         batch_indices.append(index)
 
         if len(batch_prompts) == batch_size:
+            batch_seed = None if seed is None else seed + batch_number
+            row_seeds = (
+                [
+                    derive_row_seed(seed, lines[row_index].get("sample_id"))
+                    for row_index in batch_indices
+                ]
+                if seed_policy == ROW_SEED_POLICY_SAMPLE
+                else None
+            )
             try:
-                batch_outputs = generate_responses(batch_prompts, model_path, max_new_tokens=8192)
-                for i, generated in enumerate(batch_outputs):
+                batch_outputs = generate_responses(
+                    batch_prompts,
+                    model_path,
+                    max_new_tokens=max_new_tokens,
+                    temperature=temperature,
+                    top_p=top_p,
+                    seed=None if row_seeds is not None else batch_seed,
+                    row_seeds=row_seeds,
+                    return_metadata=True,
+                    max_model_len=max_model_len,
+                    tokenizer_path=tokenizer_path,
+                )
+                for i, result in enumerate(batch_outputs):
+                    metadata = _normalise_generation_result(result)
+                    generated = metadata["text"]
                     if not isinstance(generated, str) or not generated.strip() or generated.strip() == "Failed":
                         failed_index.append(batch_indices[i])
                         f += 1
@@ -73,6 +162,10 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
                     output_index.append(batch_indices[i])
                     output_target.append(batch_targets[i])
                     output_generated.append(generated)
+                    output_generation_seeds.append(
+                        row_seeds[i] if row_seeds is not None else batch_seed
+                    )
+                    output_generation_metadata.append(metadata)
                     print(f"✅ No. {batch_indices[i]} : Suc {s + 1}, Fail {f}")
                     s += 1
                     n += 1
@@ -85,12 +178,35 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
                 batch_prompts = []
                 batch_targets = []
                 batch_indices = []
+                batch_number += 1
 
     # 处理最后一个不满 batch 的剩余
     if batch_prompts:
+        batch_seed = None if seed is None else seed + batch_number
+        row_seeds = (
+            [
+                derive_row_seed(seed, lines[row_index].get("sample_id"))
+                for row_index in batch_indices
+            ]
+            if seed_policy == ROW_SEED_POLICY_SAMPLE
+            else None
+        )
         try:
-            batch_outputs = generate_responses(batch_prompts, model_path, max_new_tokens=8192)
-            for i, generated in enumerate(batch_outputs):
+            batch_outputs = generate_responses(
+                batch_prompts,
+                model_path,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                seed=None if row_seeds is not None else batch_seed,
+                row_seeds=row_seeds,
+                return_metadata=True,
+                max_model_len=max_model_len,
+                tokenizer_path=tokenizer_path,
+            )
+            for i, result in enumerate(batch_outputs):
+                metadata = _normalise_generation_result(result)
+                generated = metadata["text"]
                 if not isinstance(generated, str) or not generated.strip() or generated.strip() == "Failed":
                     failed_index.append(batch_indices[i])
                     f += 1
@@ -100,6 +216,10 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
                 output_index.append(batch_indices[i])
                 output_target.append(batch_targets[i])
                 output_generated.append(generated)
+                output_generation_seeds.append(
+                    row_seeds[i] if row_seeds is not None else batch_seed
+                )
+                output_generation_metadata.append(metadata)
                 print(f"✅ No. {batch_indices[i]} : Suc {s + 1}, Fail {f}")
                 s += 1
                 n += 1
@@ -111,23 +231,61 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
 
     # 写出结果到 output_file
     output_dicts = []
-    for idx, tgt, gen in zip(output_index, output_target, output_generated):
+    for idx, tgt, gen, generation_seed, result_metadata in zip(
+        output_index,
+        output_target,
+        output_generated,
+        output_generation_seeds,
+        output_generation_metadata,
+        strict=True,
+    ):
         try:
             base_data = dict(lines[idx])
         except (IndexError, json.JSONDecodeError) as e:
             print(f"⚠️ Skipping index {idx} due to error: {e}")
             continue
 
-        # Overwrite or add the new fields
+        if generation_metadata:
+            base_data.update(generation_metadata)
+
+        source_index = base_data.get("source_index", base_data.get("index", idx))
+
+        # Overwrite or add the new fields.
         base_data.update({
-            "index": idx,
+            "index": base_data.get("index", idx),
+            "source_index": source_index,
+            "generation_position": idx,
+            "source_prompt_sha256": sha256_text(str(base_data.get("prompt") or "")),
             "target": tgt,
-            "generated": gen
+            "generated": gen,
+            "generated_sha256": sha256_text(gen),
+            "replicate_id": None if replicate_id is None else str(replicate_id),
+            "generation_seed": generation_seed,
+            "generation_seed_policy": seed_policy,
+            "generation_model": model_path,
+            "generation_tokenizer": tokenizer_path or model_path,
+            "generation_batch_size": int(batch_size),
+            "decoding_temperature": float(temperature),
+            "decoding_top_p": float(top_p),
+            "max_new_tokens": int(max_new_tokens),
+            "max_model_len": int(max_model_len),
+            "generation_finish_reason": result_metadata.get("finish_reason"),
+            "generation_stop_reason": result_metadata.get("stop_reason"),
+            "prompt_token_count": result_metadata.get("prompt_token_count"),
+            "prompt_preflight_token_count": result_metadata.get(
+                "prompt_preflight_token_count"
+            ),
+            "output_token_count": result_metadata.get("output_token_count"),
+            "input_was_truncated": result_metadata.get(
+                "input_was_truncated"
+            ),
         })
         output_dicts.append(base_data)
 
     if output_file:
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        output_parent = os.path.dirname(output_file)
+        if output_parent:
+            os.makedirs(output_parent, exist_ok=True)
         save_output(output_dicts, output_file)
         print(f"✅ Output saved to {output_file}")
     print(f"🎯 Finished. Total: {n}, Success: {s}, Failed: {f}")
@@ -135,6 +293,6 @@ def generate_new_response(input_prompt_file: str | list[dict] | pd.DataFrame, mo
         print(f"❗ Failed indices: {failed_index}")
         pd.DataFrame({"Failed": failed_index}).to_csv(output_file.split(".")[0] + "_failed.csv", index=False)
 
-    print(f"✅ Finished processing all prompts.")
+    print("✅ Finished processing all prompts.")
     print(f"✅ Total: {total}, Suc: {s}, Fail: {f}")
     return output_dicts

@@ -1,16 +1,16 @@
 # FOMC Trainer
 
-`fomc_trainer` 现在只保留一条活跃主线：`main`。
+`fomc_trainer` now maintains a single active workflow: `main`.
 
-核心约束：
+Core conventions:
 
-- `dataset/raw_data/` 只放原始上游数据
-- `dataset/processed/main/` 放所有派生输入、prompt、中间产物、训练集、manifests、评估输入
-- `output/training/main/` 放训练输出
-- `output/evaluation/main/` 放评估输出
-- `archive/` 放历史代码、历史数据、旧脚本、旧文档，不再作为活跃入口
+- `dataset/raw_data/` contains only raw upstream data.
+- `dataset/processed/main/` contains all derived inputs, prompts, intermediate artifacts, training sets, manifests, and evaluation inputs.
+- `output/training/main/` contains training outputs.
+- `output/evaluation/main/` contains evaluation outputs.
+- `archive/` contains historical code, data, scripts, and documentation; it is not an active entry point.
 
-## 目录结构
+## Repository Layout
 
 ```text
 fomc_trainer/
@@ -37,7 +37,7 @@ fomc_trainer/
 └── archive/
 ```
 
-当前活跃配置文件：
+Active configuration files:
 
 - `configs/main/analysis_sft.yaml`
 - `configs/main/analysis_grpo.yaml`
@@ -46,7 +46,7 @@ fomc_trainer/
 - `configs/main/decision_grpo.yaml`
 - `configs/main/prompt_pipeline.yaml`
 
-## 环境安装
+## Environment Setup
 
 ```bash
 conda create -n fomc_trainer python=3.10
@@ -57,7 +57,7 @@ pip install -e .
 pip install flash-attn==2.5.6 --no-build-isolation
 ```
 
-安装完成后，先确认几个主入口可见：
+After installation, verify that the main entry points are available:
 
 ```bash
 python -m jobs.main.run_pipeline --help
@@ -66,32 +66,32 @@ python -m process_fomc_report.build_qa_master --help
 python -m process_fomc_report.generate_prompt_and_response.run_generate_prompt_pipeline --help
 ```
 
-## 推荐入口
+## Recommended Entry Points
 
-推荐优先使用这两个入口：
+Prefer these two entry points:
 
-- 训练与评估总入口：`python -m jobs.main.run_pipeline`
-- 数据生成主入口：`./run/generate_input/chk1.sh` 到 `./run/generate_input/chk4.sh`
+- Unified training and evaluation entry point: `python -m jobs.main.run_pipeline`
+- Data-generation entry points: `./run/generate_input/chk1.sh` through `./run/generate_input/chk4.sh`
 
-## 数据路径约定
+## Data Path Conventions
 
-常用活跃路径：
+Frequently used active paths:
 
-- QA 主数据：`dataset/processed/main/pipeline/final/qa/`
-- rewrite 数据：`dataset/processed/main/pipeline/final/rewrite/`
-- decision 数据：`dataset/processed/main/pipeline/final/decision/`
-- canonical 训练集：`dataset/processed/main/datasets/`
-- split manifests：`dataset/processed/main/manifests/`
-- prompt/eval 输入：`dataset/processed/main/evaluation_inputs/`
-- adapter 输出：`output/training/main/adapters/`
-- merged model 输出：`output/training/main/merged/`
-- 评估输出：`output/evaluation/main/`
+- QA master data: `dataset/processed/main/pipeline/final/qa/`
+- Rewrite data: `dataset/processed/main/pipeline/final/rewrite/`
+- Decision data: `dataset/processed/main/pipeline/final/decision/`
+- Canonical training sets: `dataset/processed/main/datasets/`
+- Split manifests: `dataset/processed/main/manifests/`
+- Prompt and evaluation inputs: `dataset/processed/main/evaluation_inputs/`
+- Adapter outputs: `output/training/main/adapters/`
+- Merged-model outputs: `output/training/main/merged/`
+- Evaluation outputs: `output/evaluation/main/`
 
-## 一条主线怎么跑
+## Running the Main Workflow
 
-### 1. 运行四个 checkpoint 数据脚本
+### 1. Run the four checkpoint data scripts
 
-按顺序执行：
+Run them in order:
 
 ```bash
 ./run/generate_input/chk1.sh
@@ -100,28 +100,28 @@ python -m process_fomc_report.generate_prompt_and_response.run_generate_prompt_p
 ./run/generate_input/chk4.sh
 ```
 
-行为约定：
+Behavior:
 
-- `chk1.sh` 会重建 QA master、标准化 input sources，并在 `dataset/processed/main/pipeline/labeled/after_2009` 缺失或为空时自动补跑 `label_html`
-- `chk2.sh` 只生成 `analysis_grpo` 对应的数据，要求 `chk1` 已完成
-- `chk3.sh` 只生成 `minutes_alignment` 对应的数据，要求 `chk1` 已完成
-- `chk4.sh` 只生成 `decision` 对应的数据，并在最后同步 `dataset/processed/main/datasets/`
+- `chk1.sh` rebuilds the QA master, normalizes input sources, and automatically runs `label_html` if `dataset/processed/main/pipeline/labeled/after_2009` is missing or empty.
+- `chk2.sh` generates only the `analysis_grpo` data and requires `chk1` to have completed.
+- `chk3.sh` generates only the `minutes_alignment` data and requires `chk1` to have completed.
+- `chk4.sh` generates only the `decision` data and synchronizes `dataset/processed/main/datasets/` at the end.
 
-默认参数：
+Defaults:
 
 - `FOMC_INPUT_CONFIG=configs/main/prompt_pipeline.yaml`
 - `FOMC_INPUT_SCOPE=after_2009`
 - `FOMC_INPUT_PROFILE=compat`
 
-例如：
+Example:
 
 ```bash
 FOMC_INPUT_PROFILE=strict ./run/generate_input/chk1.sh
 ```
 
-### 2. 低层 prompt pipeline CLI
+### 2. Low-level prompt-pipeline CLI
 
-调试或只跑单个阶段时，直接使用 Python 模块入口：
+For debugging or running one stage only, invoke the Python module directly:
 
 ```bash
 python -m process_fomc_report.generate_prompt_and_response.run_generate_prompt_pipeline --help
@@ -132,20 +132,20 @@ python -m process_fomc_report.generate_prompt_and_response.run_generate_prompt_p
   --stage chk3_prompts
 ```
 
-### 3. 额外的 canonical dataset / split CLI
+### 3. Additional canonical dataset and split CLI
 
-如果你要直接走 `jobs.main` 侧的底层命令，仍然保留：
+The lower-level `jobs.main` commands remain available:
 
 ```bash
 python -m jobs.main.run_pipeline build-datasets
 python -m jobs.main.run_pipeline audit
 ```
 
-## 训练 CLI
+## Training CLI
 
-### 推荐入口
+### Recommended entry point
 
-单阶段训练：
+Train one stage:
 
 ```bash
 python -m jobs.main.run_pipeline train analysis_sft
@@ -155,7 +155,7 @@ python -m jobs.main.run_pipeline train decision_sft
 python -m jobs.main.run_pipeline train decision_grpo
 ```
 
-单阶段 merge：
+Merge one stage:
 
 ```bash
 python -m jobs.main.run_pipeline merge analysis_sft
@@ -165,23 +165,23 @@ python -m jobs.main.run_pipeline merge decision_sft
 python -m jobs.main.run_pipeline merge decision_grpo
 ```
 
-全量训练或全量 merge：
+Train or merge all stages:
 
 ```bash
 python -m jobs.main.run_pipeline train all
 python -m jobs.main.run_pipeline merge all
 ```
 
-只看实际会执行的命令，不真正运行：
+Preview the commands without executing them:
 
 ```bash
 python -m jobs.main.run_pipeline train analysis_sft --dry-run
 python -m jobs.main.run_pipeline merge analysis_sft --dry-run
 ```
 
-### 底层训练入口
+### Low-level training entry points
 
-SFT：
+SFT:
 
 ```bash
 accelerate launch --config_file configs/accelerate/zero3.yaml \
@@ -189,7 +189,7 @@ accelerate launch --config_file configs/accelerate/zero3.yaml \
   --config configs/main/analysis_sft.yaml
 ```
 
-GRPO：
+GRPO:
 
 ```bash
 accelerate launch --config_file configs/accelerate/zero2.yaml \
@@ -197,46 +197,46 @@ accelerate launch --config_file configs/accelerate/zero2.yaml \
   --config configs/main/analysis_grpo.yaml
 ```
 
-### `chk2` 后台运行脚本
+### Background scripts for `chk2`
 
-`chk2` 现在固定拆成两步：
+`chk2` is split into two fixed steps:
 
-1. 先在 GPU `0` 启动本地 Gemma 12B judge
-2. 再在 GPU `1` 启动 `analysis_grpo` 训练
+1. Start the local Gemma 12B judge on GPU `0`.
+2. Start `analysis_grpo` training on GPU `1`.
 
-标准启动顺序：
+Standard startup order:
 
 ```bash
 ./run/judge_chk2.sh
 ./run/chk2.sh
 ```
 
-judge 默认配置文件：
+Default judge configuration:
 
 ```bash
 configs/main/judge_chk2.yaml
 ```
 
-约定如下：
+Defaults:
 
-- judge 服务地址：`http://127.0.0.1:8000/v1/chat/completions`
-- judge 模型名：`models/gemma-3-12b-it`
-- judge 日志目录：`logs/judge/`
-- 训练日志目录：`logs/train/`
+- Judge endpoint: `http://127.0.0.1:8000/v1/chat/completions`
+- Judge model: `models/gemma-3-12b-it`
+- Judge logs: `logs/judge/`
+- Training logs: `logs/train/`
 
-检查 judge 是否起来：
+Check whether the judge is running:
 
 ```bash
 curl http://127.0.0.1:8000/v1/models
 ```
 
-直接 merge：
+Merge directly:
 
 ```bash
 python -m jobs.merge_model --config configs/main/analysis_sft.yaml
 ```
 
-或者手动指定路径：
+Alternatively, specify the paths manually:
 
 ```bash
 python -m jobs.merge_model \
@@ -245,11 +245,11 @@ python -m jobs.merge_model \
   --merged-path output/training/main/merged/analysis_sft
 ```
 
-## 评估 CLI
+## Evaluation CLI
 
-### 1. 生成 held-out minutes
+### 1. Generate held-out minutes
 
-推荐入口：
+Recommended entry point:
 
 ```bash
 python -m jobs.main.run_pipeline generate-minutes \
@@ -260,7 +260,7 @@ python -m jobs.main.run_pipeline generate-minutes \
   --end-index 10
 ```
 
-底层入口：
+Low-level entry point:
 
 ```bash
 python -m jobs.generation.synthetic_generation stage2-full \
@@ -271,9 +271,9 @@ python -m jobs.generation.synthetic_generation stage2-full \
   --end-index 10
 ```
 
-### 2. 文本相似度评估
+### 2. Text-similarity evaluation
 
-推荐入口：
+Recommended entry point:
 
 ```bash
 python -m jobs.main.run_pipeline eval-text-similarity \
@@ -281,7 +281,7 @@ python -m jobs.main.run_pipeline eval-text-similarity \
   --aligned-file output/evaluation/main/generated_minutes/run_b.jsonl
 ```
 
-底层入口：
+Low-level entry point:
 
 ```bash
 python -m jobs.main.eval_text_similarity \
@@ -292,9 +292,79 @@ python -m jobs.main.eval_text_similarity \
   --output-json output/evaluation/main/text_similarity.json
 ```
 
-### 3. leave-one-out masking
+### 3. Leave-one-out masking
 
-先按 split 过滤 prompt：
+The primary metric is the paired signed delta:
+
+```text
+delta = cos(full_output, target) - cos(masked_output, target)
+      = masked_distance - full_distance
+```
+
+The new generation-only canonical workflow neither trains nor merges models. It
+uses the API-key-free ALFRED Graph CSV endpoint to freeze one previous-day
+information set for each meeting:
+
+```text
+information_as_of_date = requested_vintage_date
+                       = meeting_date - 1 calendar day
+observation_date <= information_as_of_date
+```
+
+All same-day data are excluded; the workflow does not distinguish among 08:30,
+13:59, and 14:00 releases. “Previous-day data” means the historical vintage
+snapshot available as of D−1; it does not require every observation to have
+occurred exactly on D−1. The source registry, raw CSV files, request parameters
+and hashes, the `13 × 26 = 338`-row ledger, generation artifacts, and final
+release manifest form a replayable provenance chain. The complete background
+entry point is:
+
+```bash
+./run/generate_loo_end_to_end.sh all
+```
+
+By default, this script starts in the background with `nohup` and immediately
+prints the PID, log path, and workflow directory. Replace `all` with `pilot` or
+`formal` as needed, or set `LOO_FOREGROUND=1` for debugging. Before launch, it
+checks PyTorch, Transformers, vLLM, and visible CUDA GPUs. On the current host,
+if `LOO_PYTHON` is unset, it uses the available
+`~/.conda/envs/llama_factory` environment to avoid the incomplete PyTorch
+namespace in the base Python installation.
+
+The workflow neither reads nor requires `FRED_API_KEY`. Network concurrency is
+limited to 1–2 requests. The 26 vintages are fetched per series in
+`12 + 12 + 2` request batches, with strict validation of response headers,
+vintage dates, the cutoff date for non-null values, and raw-file hashes. The
+legacy `synthetic_text` analysis contains material whose D−1 availability
+cannot be established; it is used only for source mapping, and none of its
+values or text are reused. See
+`docs/summary/20260728T091012Z/canonical_loo_generation_implementation.md`
+for the complete input schemas, populations, seeds, directories, and claim
+boundaries. After all four generation cells finish, the launcher validates
+every file, requires the same-seed full baselines from the deletion and neutral
+arms to match exactly, and only then writes the population and workflow release
+manifests.
+
+The input directory must contain `None_masked_*.jsonl` files (full prompts) and
+indicator-specific `*_masked_*.jsonl` files for the same sample set. Each row
+should retain `sample_id`; legacy files must at least provide `meeting_date`,
+`section_name`, and a non-overwritten `source_index/index`. Canonical generation
+also requires a frozen intervention roster. The default
+`configs/main/leave_one_out_roster.json` defines the 26 indicators and the
+`after_2009` context used in the historical experiment. Before rebuilding
+prompts, confirm that this universe still matches the current research design.
+
+The generator requires each masked prompt to be derivable from its matching full
+prompt through exactly one contiguous block deletion, and all
+indicator × context cells must have identical sample-key sets. The roster's
+`indicator_markers` also verify that the first semantic line of the deleted
+block identifies the corresponding indicator. Deletion boundaries must cover
+complete lines or blocks, indicator deletion spans must not overlap, and two
+indicators must not produce the same masked prompt for a sample. This repository
+does not retain the historical masking prompts or
+`dataset/processed/main/manifests/analysis_minutes_split.json`; therefore, run
+the following filter command only after both the prompts and frozen split
+manifest have been recovered or rebuilt:
 
 ```bash
 python -m jobs.main.run_pipeline filter-mask-prompts \
@@ -303,57 +373,203 @@ python -m jobs.main.run_pipeline filter-mask-prompts \
   --split test
 ```
 
-再生成 masking 输出：
+Then generate the masking outputs:
 
 ```bash
 python -m jobs.main.run_pipeline generate-masking \
   --model output/training/main/merged/minutes_alignment_sft \
   --input-folder dataset/processed/main/evaluation_inputs/mask_prompts_test \
   --output-dir output/evaluation/main/leave_one_out_masking/generated \
-  --simulation-step 5
+  --roster-file configs/main/leave_one_out_roster.json \
+  --simulation-step 1 \
+  --seed 20260728 \
+  --temperature 0 \
+  --top-p 1
 ```
 
-等价底层入口：
+Equivalent low-level entry point:
 
 ```bash
 python -m jobs.generation.mask_generation \
   --input-folder dataset/processed/main/evaluation_inputs/mask_prompts_test \
   --model output/training/main/merged/minutes_alignment_sft \
-  --simulation-step 5 \
+  --roster-file configs/main/leave_one_out_roster.json \
+  --simulation-step 1 \
+  --seed 20260728 \
+  --temperature 0 \
+  --top-p 1 \
   --output-dir output/evaluation/main/leave_one_out_masking/generated
 ```
 
-计算 synthetic target：
+New output files record `replicate_id`; a per-row seed derived from
+`replicate_seed + sample_id` and independent of batch, order, and indicator;
+model path; decoding parameters; original `source_index`; generation position;
+input-file SHA-256; and expected row count. They also produce
+`intervention_manifest.json` and `generation_manifest.json`. The former stores
+the frozen indicator/context universe, per-row full and masked prompt hashes,
+the deleted-block hash, indicator markers, and block-boundary evidence. The
+latter references and validates the intervention manifest while inventorying
+the complete generation output.
+
+The generation model must be a locally readable file or directory. The
+generator computes a SHA-256 inventory over the complete checkpoint, tokenizer,
+and configuration tree. Every output row also stores its source-prompt hash;
+resume and evaluation operations bind `row key + prompt + meeting + section`
+back to the intervention manifest row by row. Existing files are reused only
+when the input hashes, complete row set, model, tokenizer, batch size, all
+decoding parameters, and masking strategy match. Partial or stale outputs are
+never silently treated as complete.
+
+The evaluator validates these artifacts against the generation manifest, but
+the Chapter 2 release manifest must itself record the manifest's SHA-256 to
+provide an external frozen anchor. For stochastic-decoding robustness analysis,
+increase `--simulation-step` and set `--temperature` explicitly. Full and
+masked files must share the same replicate, row seed, generation position, and
+decoding configuration. A shared seed is reproducibility metadata; by itself,
+it does not prove that the underlying inference engine used an identical random
+number stream for two different prompts.
+
+To measure internal output sensitivity, use the paired full output as the
+target:
 
 ```bash
 python -m jobs.main.run_pipeline eval-masking synthetic \
   --input-folder output/evaluation/main/leave_one_out_masking/generated \
-  --output-file output/evaluation/main/leave_one_out_masking/synthetic_target.jsonl
+  --output-file output/evaluation/main/leave_one_out_masking/internal_summary.jsonl \
+  --embedding-model-path models/all-mpnet-base-v2-pinned
 ```
 
-计算 actual target：
+To measure the external alignment contribution, use the same frozen actual
+Minutes as the target:
 
 ```bash
 python -m jobs.main.run_pipeline eval-masking actual \
   --input-folder output/evaluation/main/leave_one_out_masking/generated \
-  --output-file output/evaluation/main/leave_one_out_masking/actual_target.jsonl
+  --reference-file path/to/frozen_actual_minutes.jsonl \
+  --reference-text-field response \
+  --output-file output/evaluation/main/leave_one_out_masking/external_summary.jsonl \
+  --embedding-model-path models/all-mpnet-base-v2-pinned
 ```
 
-对应底层入口：
+By default, actual-Minutes records are uniquely matched on `meeting_date` and
+`section_name`. If the fields differ, pass `--reference-key` multiple times. If
+a section is intentionally split across multiple rows, explicitly use
+`--reference-duplicate-policy concatenate`. The retained historical candidate
+file
+`archive/data/dataset_20260421/raw_data/archive/synthetic_text_20250518.jsonl`
+uses the `reference` field. A read-only audit found exact agreement in meeting,
+section, and actual-Minutes text for all 3,481 observed records shared with
+`../synthetic_text/synthetic_text/output/synthetic_text_reason/`
+`synthetic_text_20250520_reason.jsonl`. The candidate contains 697 source
+records, whereas the legacy file covers 696, omits source index `153`, and
+duplicates replicate ID `0-1`. The candidate may therefore serve as the
+actual-Minutes reference for a new experiment, but it cannot be described as
+the byte-identical frozen input to the legacy LOO run. Before using it in the
+main chapter, record its path, SHA-256
+`0edc4c44ce13870933a461d3507cc24c40e792667e54bda97a0150b1ebc3ac06`,
+schema, and 697-row universe in the Chapter 2 release manifest, and pass
+`--reference-text-field reference`.
+
+The corresponding low-level entry point is:
 
 ```bash
-python -m jobs.eval.eval_mask test3 \
+python -m jobs.eval.eval_leave_one_out \
   --input-folder output/evaluation/main/leave_one_out_masking/generated \
-  --output-file output/evaluation/main/leave_one_out_masking/synthetic_target.jsonl
-
-python -m jobs.eval.eval_mask test4 \
-  --input-folder output/evaluation/main/leave_one_out_masking/generated \
-  --output-file output/evaluation/main/leave_one_out_masking/actual_target.jsonl
+  --target-mode actual-minutes \
+  --reference-file archive/data/dataset_20260421/raw_data/archive/synthetic_text_20250518.jsonl \
+  --reference-text-field reference \
+  --output-file output/evaluation/main/leave_one_out_masking/external_summary.jsonl \
+  --embedding-model-path models/all-mpnet-base-v2-pinned
 ```
 
-### 4. decision baseline 评估
+In addition to the summary, the evaluator automatically writes `.rows.jsonl`,
+`.exclusions.jsonl`, and `.audit.json`. Canonical runs require and validate the
+generation manifest's file set, row counts, and SHA-256 hashes by default. Use
+`--allow-missing-generation-manifest` only for explicit audits of legacy files.
+Statistical summaries first average samples within `meeting × replicate`, then
+give replicates equal weight when aggregating to the meeting level. They use
+meetings as clusters for bootstrap inference and report Holm-adjusted p-values
+over all indicator–section–context cells in one run. The historical
+`jobs.eval.eval_mask test1`–`test4` commands are legacy-only rescoring or
+aggregation entry points and must not be used for new canonical LOO results.
 
-推荐入口：
+The embedding model must also be stored as a local immutable snapshot. The
+evaluator computes an inventory SHA-256 over the complete model directory and
+records it in every scored row and audit. Optionally use
+`--embedding-model-sha256 <expected-sha256>` to verify the expected hash. A
+mutable Hub alias, such as a model name without a pinned revision or snapshot,
+is not admissible for canonical evaluation.
+
+The paper's historical descriptive tables can be mechanically reconstructed
+from the retained aggregate workbooks:
+
+```bash
+python -m jobs.eval.recover_legacy_loo \
+  --input-xlsx archive/code/reformat_shapley_result/shapley_result_with_diff.xlsx \
+  --output-csv docs/Chapter2/Chapter2Results/loo_external_legacy_descriptive.csv \
+  --output-tex docs/Chapter2/Chapter2Results/loo_external_legacy_descriptive.tex \
+  --internal-input-xlsx archive/code/reformat_shapley_result/shapley_filter.xlsx \
+  --internal-output-csv docs/Chapter2/Chapter2Results/loo_internal_legacy_descriptive.csv \
+  --internal-output-tex docs/Chapter2/Chapter2Results/loo_internal_legacy_descriptive.tex
+```
+
+The sibling repository `../synthetic_text/synthetic_text` retains 2,660
+row-level full/masked pairs from `ft_20250330`, but this is only a seven-indicator
+pilot and cannot replace the chapter's 25/26-indicator results. The legacy
+script used stochastic decoding without a seed and also rewrote the prompt
+template during masking. None of the 2,660 generated pairs satisfies the
+canonical intervention requirement that the masked prompt differ from the full
+prompt only by deletion of one contiguous indicator block. For Outlook and
+Policy Action samples, all seven indicators even use identical masked prompts.
+The stored `cos` value is only `cos(full_output, masked_output)`.
+
+These rows may be used only in a separately labeled legacy prompt-perturbation
+diagnostic or provenance audit. They must not be combined with the main chapter
+table or used for formal significance inference. For complete file-level
+findings and hashes, see
+`docs/summary/20260728T091012Z/leave_one_out_output_reuse_audit.md`
+and its machine-readable inventory.
+
+For an actual-Minutes target-relative rescore of this seven-indicator pilot,
+reuse the existing full and masked outputs; no text regeneration is required.
+The background entry point is:
+
+```bash
+./run/eval_legacy_7_indicator_pilot.sh
+```
+
+This task always computes
+`delta = cos(full_output, target) - cos(masked_output, target)`. The historical
+generation actually used the `output` field from
+`../synthetic_text/synthetic_text/data/training/input_qa.json` as the target.
+`input_qa_tagged.json` is used only to recover meeting and section metadata and
+cannot replace the scoring target. By default, rescoring uses the local
+`models/DeepSeek-R1-Distill-Llama-8B` as a newly frozen encoder, with
+`embedding batch size=1` and no truncation. Override these settings with
+`EMBEDDING_MODEL_PATH`, `EMBEDDING_BATCH_SIZE`,
+`LEGACY_7_INDICATOR_MAX_TOKENS`, and `CUDA_VISIBLE_DEVICES`.
+
+The script prints its PID and writes logs under `logs/eval/`. Results are saved
+to
+`output/evaluation/main/legacy_7_indicator_pilot/actual_minutes_rescore/`.
+Row-level results, indicator summaries, indicator-section summaries,
+meeting-level results, five truncation exclusions, and the complete audit are
+stored separately as CSV or JSONL files; `results.md` provides a directly
+readable result table. Treat the files as a complete result set only when
+`run_status.json` reports `mode=full_rescore` and `status=complete`. A rerun
+invalidates the previous completion marker and score artifacts before starting.
+Embeddings are cached by unique text, model fingerprint, and explicit scoring
+implementation version, so an interrupted task can resume with the same
+command. To validate only the inputs before launch:
+
+```bash
+LEGACY_7_INDICATOR_VALIDATE_ONLY=1 \
+  ./run/eval_legacy_7_indicator_pilot.sh
+```
+
+### 4. Decision-baseline evaluation
+
+Recommended entry point:
 
 ```bash
 python -m jobs.main.run_pipeline eval-decision-baselines \
@@ -361,7 +577,7 @@ python -m jobs.main.run_pipeline eval-decision-baselines \
   --prediction-file output/evaluation/main/decision/decision_grpo_predictions.jsonl
 ```
 
-底层入口：
+Low-level entry point:
 
 ```bash
 python -m jobs.main.eval_decision_baselines \
@@ -372,7 +588,7 @@ python -m jobs.main.eval_decision_baselines \
   --output-json output/evaluation/main/decision_baselines.json
 ```
 
-### 5. 单独评估 decision 生成结果
+### 5. Evaluate decision-generation results separately
 
 ```bash
 python -m jobs.eval.eval_decision \
@@ -381,7 +597,7 @@ python -m jobs.eval.eval_decision \
   --rate-change-map dataset/processed/main/input_sources/rate_change_map.json
 ```
 
-### 6. 市场基线标准化
+### 6. Normalize the market baseline
 
 ```bash
 python -m jobs.main.fetch_market_baseline \
@@ -391,21 +607,21 @@ python -m jobs.main.fetch_market_baseline \
   --reference-file dataset/processed/main/datasets/decision_grpo/test.jsonl
 ```
 
-## 清理 CLI
+## Cleanup CLI
 
-查看 inventory：
+Inspect the inventory:
 
 ```bash
 python -m jobs.main.cleanup_generated --inventory metadata/main/legacy_artifact_inventory.json
 ```
 
-真正执行清理：
+Execute the cleanup:
 
 ```bash
 python -m jobs.main.run_pipeline cleanup-generated --execute
 ```
 
-或者直接调用：
+Or invoke the lower-level command directly:
 
 ```bash
 python -m jobs.main.cleanup_generated \
@@ -413,7 +629,7 @@ python -m jobs.main.cleanup_generated \
   --execute
 ```
 
-## 常见帮助命令
+## Common Help Commands
 
 ```bash
 python -m jobs.main.run_pipeline --help
@@ -432,15 +648,15 @@ python -m process_fomc_report.build_qa_master --help
 python -m process_fomc_report.generate_prompt_and_response.run_generate_prompt_pipeline --help
 ```
 
-## Archive 说明
+## Archive
 
-- `archive/code/`：旧代码
-- `archive/data/`：历史数据和历史输出
-- `archive/configs/`：旧配置
-- `archive/scripts/`：旧 shell 入口
-- `archive/docs/`：旧规划和旧说明文档
+- `archive/code/`: legacy code
+- `archive/data/`: historical data and outputs
+- `archive/configs/`: legacy configuration
+- `archive/scripts/`: legacy shell entry points
+- `archive/docs/`: historical plans and documentation
 
-活跃流程不要再写入 `archive/`。
+Active workflows must not write to `archive/`.
 
 
 
@@ -460,7 +676,7 @@ pip install flash-attn==2.5.6 --no-build-isolation
 ```
 
 
-## setup for judge model (GRPO)
+## Setup for the Judge Model (GRPO)
 ```bash
 conda create -n vllm_env python=3.10
 # for mac and windows
@@ -475,7 +691,7 @@ pip install vllm
 ```
 
 
-## run training
+## Run Training
 ```bash
 # SFT
 ./run/train_llama/chk1.sh
@@ -497,8 +713,9 @@ SFT configs: configs/sft/sft_*.yaml
 GRPO configs: configs/grpo/grpo_*.yaml
 
 
-## merged model
+## Merged Model
 
 # save model
 ```
-source activate 
+source activate
+```

@@ -150,16 +150,22 @@ In this section, we evaluate the fine-tuned LLM's outputs with a focus on reliab
 
 
 
-LLM evaluation can be broadly classified as reference-based or reference-free. Firstly, reference-based evaluation compared the model's outputs with the target outputs under the same prompts. Scores are used to quantitatively measure the difference, for instance, F1 Score measures the accuracy for classification tasks, BLEU(\cite{papineni2002bleu}) measures string match accuracy and BERTScore (\cite{zhang2019bertscore}) measures the token embeddings' similarity. Noticeably, reference outputs are required for reference-based evaluation. For reference-free evaluation, no reference is needed for this method. The evaluation is usually model-based, such as regression-based validation result between the input prompts and the outputs, LLM-as-Judge scoring, and human assessment.
-
-
 LLM evaluation can be broadly classified into reference-based and reference-free evaluation. First, reference-based evaluation compares the model’s outputs with target outputs generated under the same prompts. Scores are then used to quantitatively measure the differences between them. For example, the F1 score measures classification accuracy, BLEU \cite{papineni2002bleu} measures string-level overlap, and BERTScore \cite{zhang2019bertscore} measures semantic similarity based on token embeddings. Notably, reference outputs are required for reference-based evaluation. By contrast, reference-free evaluation does not require predefined target outputs. It is usually model-based or judgement-based, including regression-based validation between input prompts and outputs, LLM-as-Judge scoring, and human assessment.
 
 
-Because high-quality reference answers are available in this study, we primarily use reference-based evaluation. More specifically, we will evaluate the fine-tuned model across four key dimensions:  1) the \textbf{textual similarity} of generated outputs, 2) the \textbf{sufficiency of information} contained in the outputs, 3) the \textbf{statistical significance} of synthetic text, 4) the \textbf{accuracy of simulated decision-making}. 
+Because high-quality reference answers are available in this study, we
+primarily use reference-based evaluation. More specifically, we evaluate four
+dimensions: (1) the \textbf{textual similarity} of generated outputs, (2)
+\textbf{target-relative indicator sensitivity} under leave-one-out masking,
+(3) exploratory \textbf{economic relevance} of synthetic text, and (4) the
+\textbf{accuracy of policy-decision inference}.
 
 
-The first two dimensions target detecting the faithfulness hallucination of the model. Both the textual similarity and the prompts contribution can provide quantitative measures of the overlap of key facts between the generated texts and the given texts. In contrast, the third and fourth dimensions focus on the model’s simulation capabilities, more specifically, its ability to replicate realistic policy analysis and accurately predict Federal Reserve decisions.
+The first dimension measures closeness to a reference text, while the second
+measures local sensitivity to the conditioning inputs; neither alone
+establishes factual grounding. The third and fourth dimensions provide
+downstream checks on whether the generated text preserves economically
+meaningful signals and supports inference of Federal Reserve decisions.
 
 
 
@@ -289,13 +295,25 @@ where subscripts $FT$ and $Base$ denote the fine-tuned and baseline models. The 
 %%%%% end of text similarity
 
 
-\subsubsection*{Sufficient Information}
-% Shapley Value
+\subsubsection*{Target-relative Indicator Sensitivity}
+% Indicator-level leave-one-out sensitivity
 
 Apart from textual similarity, we also require the generated output to reflect information supplied by the input indicators rather than relying solely on unsupported completion. The question in this subsection is therefore not only whether the generated section resembles the target text, but also whether removing a given indicator materially changes that resemblance.
 
 
-To study this issue, our second metric evaluates the marginal informational contribution of each indicator prompt to the generated output. Shapley-style attribution methods provide the relevant conceptual background because they quantify how much each input contributes to an observed output. Originating in cooperative game theory, the Shapley Value (\cite{shapley1953value}) measures the expected marginal contribution of one player to a coalition. This idea has since been adapted to model interpretation, including Shapley Regression Value (\cite{lipovetsky2001analysis}), Shapley Sampling Value (\cite{vstrumbelj2014explaining}), Quantitative Input Influence (\cite{datta2016algorithmic}), Shapley Additive Explanations (\cite{lundberg2017unified}), and token-level attribution methods such as TokenShapley (\cite{liu2023prompt}; \cite{mohammadi2024wait}; \cite{goldshmidt2024tokenshap}).
+To study this issue, our second metric evaluates how sensitive the generated
+output's target alignment is to removing one complete indicator block.
+Shapley-style attribution methods provide relevant conceptual background
+because they formalize marginal contributions to an output. Originating in
+cooperative game theory, the Shapley Value (\cite{shapley1953value}) measures
+the expected marginal contribution of one player to a coalition. This idea
+has since been adapted to model interpretation, including Shapley Regression
+Value (\cite{lipovetsky2001analysis}), Shapley Sampling Value
+(\cite{vstrumbelj2014explaining}), Quantitative Input Influence
+(\cite{datta2016algorithmic}), Shapley Additive Explanations
+(\cite{lundberg2017unified}), and token-level attribution methods such as
+TokenShapley (\cite{liu2023prompt}; \cite{mohammadi2024wait};
+\cite{goldshmidt2024tokenshap}).
 
 
 
@@ -303,23 +321,49 @@ To study this issue, our second metric evaluates the marginal informational cont
 As literature background, the original Shapley Value ($\mathcal{SV}$) represents the expected marginal contribution of a feature ($p_i$) to a model output $f(\cdot)$:
 
 \begin{equation*}
-  \mathcal{SV}_i(f) = \sum_{\mathcal{S} \subset \mathcal{P}\setminus p_i} \frac{\left|\mathcal{S}\right|! (n - \left|\mathcal{S}\right| - 1)!}{n!} \left(f(\mathcal{S}\cup p_i) - f(\mathcal{S})\right)
+  \mathcal{SV}_i(f) = \sum_{\mathcal{S} \subseteq \mathcal{P}\setminus\{p_i\}} \frac{\left|\mathcal{S}\right|! (n - \left|\mathcal{S}\right| - 1)!}{n!} \left(f(\mathcal{S}\cup\{p_i\}) - f(\mathcal{S})\right)
 \end{equation*}
 
-where $\mathcal{P}=\{p_1, p_2, \cdots, p_n\}$ is the set of prompts, $\mathcal{S}$ is a coalition (subset) of prompts, and $f(\cdot)$ is a utility function. The term $f(\mathcal{S}\cup p_i)-f(\mathcal{S})$ denotes the marginal contribution of feature $p_i$ to coalition $\mathcal{S}$.
+where $\mathcal{P}=\{p_1, p_2, \cdots, p_n\}$ is the set of prompts, $\mathcal{S}$ is a coalition (subset) of prompts, and $f(\cdot)$ is a utility function. The term $f(\mathcal{S}\cup\{p_i\})-f(\mathcal{S})$ denotes the marginal contribution of feature $p_i$ to coalition $\mathcal{S}$.
 
 
-In this research, however, we do not estimate the full Shapley Value across all possible coalitions. Instead, we adopt a \textbf{Shapley-inspired, indicator-level leave-one-out masking test} (Leave-one-out test hereafter). The purpose is the same in spirit: to measure how much each indicator matters for the generated section. The implementation is narrower than standard TokenShapley, because we remove one complete indicator block at a time while holding all remaining prompt content fixed. Accordingly, the test should be interpreted as a local diagnostic of relative alignment contribution under a specific masking intervention, rather than as a full Shapley attribution or a sufficient proof of grounding. Let $\mathcal{P}=\{p_1,\ldots,p_n\}$ denote the full set of indicator prompts, let $o(\mathcal{P})$ denote the generated section under prompt set $\mathcal{P}$, and define the utility function as $U(o(\cdot),o_{target}) = Cos(o(\cdot),o_{target})$, where $Cos(\cdot)$ is cosine similarity computed on sentence embeddings and $o_{target}$ is the target section text used for evaluation.
+In this research, however, we do not estimate the full Shapley Value across all possible coalitions. Instead, we use an \textbf{indicator-level leave-one-out masking test} (Leave-one-out test hereafter). We remove one complete indicator block at a time while holding the remaining prompt content fixed. This is a local sensitivity diagnostic under a specified masking intervention, not a Shapley Value and not by itself proof of grounding. Let $\mathcal{P}=\{p_1,\ldots,p_n\}$ denote the full indicator set, $o(\mathcal{P})$ the full-prompt output, $o(\mathcal{P}\setminus\{p_i\})$ the output after masking indicator $i$, and $y$ a target that is held fixed within the pair. With sentence-embedding cosine similarity, define
+
+\begin{align}
+ s_{\mathrm{full}} &= \operatorname{Cos}\!\left(o(\mathcal{P}),y\right), \nonumber\\
+ s_{\mathrm{masked},i} &= \operatorname{Cos}\!\left(o(\mathcal{P}\setminus\{p_i\}),y\right), \nonumber\\
+ \Delta_i &= s_{\mathrm{full}}-s_{\mathrm{masked},i}.
+ \label{eq:ch2:loo_delta}
+\end{align}
+
+Equivalently, if cosine distance is $d=1-s$, then
+$\Delta_i=d_{\mathrm{masked},i}-d_{\mathrm{full}}$. Thus,
+$1-s_{\mathrm{masked},i}$ alone is the masked output's target-relative cosine
+distance and is not the LOO contribution because it still contains the full
+output's baseline distance. A positive $\Delta_i$ means that masking indicator $i$ reduces
+target alignment; a negative value means that masking improves alignment.
+Negative values are retained rather than truncated.
+
+For the external-alignment analysis, $y$ is the corresponding historical
+Minutes section. For the internal-sensitivity analysis, $y=o(\mathcal{P})$,
+so $s_{\mathrm{full}}=1$ and
+$\Delta_i=1-\operatorname{Cos}(o(\mathcal{P}\setminus\{p_i\}),o(\mathcal{P}))$.
+The latter therefore measures change relative to the model's own unmasked
+output, not agreement with historical Minutes. In a new canonical run, full
+and masked generations will be paired by meeting, section, indicator, and
+generation replicate, and both component scores and the signed delta will be
+retained. Rows will first be averaged within each meeting--replicate cell,
+replicates will then receive equal weight in the meeting mean, confidence
+intervals will resample meetings, and one global Holm family will cover all
+reported indicator--section--context cells in the run. The intervention
+manifest will bind every generated row to its prompt hash, verify that the
+deleted complete block begins with a roster-declared marker for the named
+indicator, reject overlapping deletion spans and duplicate masked prompts
+across indicators, and fingerprint both the generation checkpoint and
+embedding model.
 
 
-\begin{equation}\label{eq:ch2:shapley}
-    \Delta_i = U(o(\mathcal{P}), o_{target}) - U(o(\mathcal{P}\setminus\{p_i\}), o_{target})
-\end{equation}
-
-Operationally, we generate one section using the full prompt set $\mathcal{P}$ and a second section after removing indicator $p_i$, while keeping all other settings fixed. A positive $\Delta_i$ implies that removing $p_i$ lowers similarity to the selected target text, so retaining the indicator improves relative alignment to that target under this Leave-one-out diagnostic. A negative $\Delta_i$ implies that similarity increases after the indicator is removed, suggesting that the indicator may be redundant, noisy, or imperfectly aligned with the target expression in that setting. Values close to zero indicate limited marginal influence. Therefore, the resulting scores are interpreted as partial evidence of indicator relevance and alignment contribution, rather than as definitive grounding scores. This interpretation is used consistently in the results below.
-
-
-%%%% end of shapley
+%%%% end of leave-one-out definition
 
 \subsubsection*{Statistical Significance using Synthetic Texts}
 
@@ -581,7 +625,7 @@ To sum up, these loss metrics suggest that the model successfully absorbed knowl
 
 \subsection*{Model Evaluation Results}
 
-This subsection reports evaluation results for the two downstream branches separately. The \textit{textual similarity} test directly compares \textit{Model chk-3} with \textit{Model chk-0}. The \textit{sufficient information} (Leave-one-out) test instead evaluates outputs generated by \textit{Model chk-3} and is therefore not framed as a direct checkpoint comparison. The \textit{statistical significance} test likewise uses synthetic Minutes generated by \textit{Model chk-3}, with the corresponding \textit{Model chk-0} series reported as a baseline benchmark. By contrast, the \textit{decision prediction} tests are carried out on the task-specific decision-making branch (\textit{Model chk-4}) and are reported relative to \textit{Model chk-0} under both original-Minutes and synthetic-Minutes inputs.
+This subsection reports evaluation results for the two downstream branches separately. The \textit{textual similarity} test directly compares \textit{Model chk-3} with \textit{Model chk-0}. For the historical \textit{target-relative indicator-sensitivity} (Leave-one-out) results, the surviving workbooks do not retain enough checkpoint or split provenance to assign the aggregates to a verified model checkpoint; the canonical rerun must pin both identities explicitly. The \textit{statistical significance} test uses synthetic Minutes generated by \textit{Model chk-3}, with the corresponding \textit{Model chk-0} series reported as a baseline benchmark. By contrast, the \textit{decision prediction} tests are carried out on the task-specific decision-making branch (\textit{Model chk-4}) and are reported relative to \textit{Model chk-0} under both original-Minutes and synthetic-Minutes inputs.
 
 
 \subsubsection*{Textual Similarity Performance}
@@ -683,182 +727,110 @@ In summary, relative to \textit{Model chk-0}, \textit{Model chk-3} more effectiv
 
 %%%% end of textual similarity result
 
-\subsubsection*{Sufficient Information Results}
+\subsubsection*{Target-relative Indicator Sensitivity Results}
 
-In this section, we evaluate whether the generated sections contain sufficient information linked to the input indicators using the Leave-one-out test defined in Eq.~\ref{eq:ch2:shapley}. Two complementary target choices are considered. When the target is the synthetic Minutes generated under the unmasked prompt, the test is best interpreted as an internal reliance or self-consistency check. When the target is the actual FOMC Minutes, the test is better interpreted as a diagnostic of external alignment against the official text. In both cases, indicator contribution is evaluated by comparing the full-prompt output with the masked output under the Leave-one-out test.
-
-
-
-Concretely, for each indicator $p_i$, we generate the section once with the full prompt $\mathcal{P}$ and once with $p_i$ removed. We then compute $\Delta_i$ as the change in cosine similarity to the target text. A statistically significant positive $\Delta_i$ indicates that the indicator improves relative alignment to the selected target under this diagnostic, while negative values imply that the masked version is more aligned with the selected target.
-
-We first use the synthetic Minutes generated from the unmasked prompt as the target output ($o_{target}$) in the cosine calculation. Because this target is itself model-generated, the resulting scores primarily describe internal reliance on the indicator set rather than external validation against the historical Minutes. Table~\ref{tab:ch2:shapley_result} reports these results across the three main sections, evaluated using 25 key macroeconomic and financial indicators.
-
-\begin{table}[htbp]
-\centering
-\scriptsize
-\begin{threeparttable}
-\begin{tabular}{p{3.6cm} p{4.3cm} p{3.1cm} p{3.1cm}}
-\toprule
-\textbf{Key Indicator} &
-\textbf{Participants’ Views on Current Conditions and the Economic Outlook} &
-\textbf{Staff Review of the Economic Situation} &
-\textbf{Staff Review of the Financial Situation} \\
-\midrule
-Bank-Capital & $0.2164^{***}$ & $0.2054^{***}$ & $0.2168^{***}$ \\
-Bank-Credit-to-Private-Sector & $0.2067^{***}$ & $0.2119^{***}$ & $0.2183^{***}$ \\
-Business-Investment & $0.2121^{***}$ & $0.2162^{***}$ & $0.2094^{***}$ \\
-Commodity-Prices & $0.2093^{***}$ & $0.2121^{***}$ & $0.2194^{***}$ \\
-Consumer-Confidence-Index & $0.1567^{***}$ & $0.1646^{***}$ & $0.1669^{***}$ \\
-Consumer-Price-Index (CPI) & $0.2081^{***}$ & $0.2153^{***}$ & $0.2152^{***}$ \\
-Equity-Market-Indices & $0.2102^{***}$ & $0.2088^{***}$ & $0.2137^{***}$ \\
-Exchange-Rate & $0.2079^{***}$ & $0.2119^{***}$ & $0.2173^{***}$ \\
-Federal-Funds-Rate & $0.2063^{***}$ & $0.2144^{***}$ & $0.2176^{***}$ \\
-Federal-Reserve-Balance-Sheet & $0.2096^{***}$ & $0.2120^{***}$ & $0.2198^{***}$ \\
-GDP-Growth & $0.2093^{***}$ & $0.2100^{***}$ & $0.2131^{***}$ \\
-Government-Purchases & $0.2103^{***}$ & $0.2081^{***}$ & $0.2096^{***}$ \\
-Home-Prices & $0.2063^{***}$ & $0.2143^{***}$ & $0.2178^{***}$ \\
-Housing-Starts & $0.2043^{***}$ & $0.2054^{***}$ & $0.2133^{***}$ \\
-Industrial-Production & $0.2110^{***}$ & $0.2132^{***}$ & $0.2212^{***}$ \\
-International-Equity-Markets & $0.2080^{***}$ & $0.2091^{***}$ & $0.2136^{***}$ \\
-Labour-Market & $0.2323^{***}$ & $0.2336^{***}$ & $0.2380^{***}$ \\
-Market-Volatility (VIX) & $0.2067^{***}$ & $0.2082^{***}$ & $0.2236^{***}$ \\
-Money-Supply & $0.1990^{***}$ & $0.2066^{***}$ & $0.2045^{***}$ \\
-Mortgage-Rates & $0.2039^{***}$ & $0.2074^{***}$ & $0.2080^{***}$ \\
-Overnight-Rate & $0.2057^{***}$ & $0.2082^{***}$ & $0.2094^{***}$ \\
-Personal-Consumption-Expenditures (PCE) & $0.2097^{***}$ & $0.2084^{***}$ & $0.2154^{***}$ \\
-Trade-Balance & $0.2070^{***}$ & $0.2065^{***}$ & $0.2136^{***}$ \\
-Treasury-Yields & $0.2058^{***}$ & $0.2136^{***}$ & $0.2145^{***}$ \\
-Unemployment-Rate & $0.2045^{***}$ & $0.2098^{***}$ & $0.2125^{***}$ \\
-\bottomrule
-\end{tabular}
-\begin{tablenotes}[flushleft]
-\footnotesize
-\item \textit{Notes:} This table reports indicator contribution scores from the Leave-one-out test ($\Delta_i$; Eq.~\ref{eq:ch2:shapley}) across three major FOMC sections, using the synthetic Minutes generated under the unmasked prompt as the target output. Because the target is model-generated, these scores are best interpreted as diagnostics of internal reliance or self-consistency rather than as external grounding scores. 
-$^{***}$ denotes statistical significance at the 1\% level.
-\end{tablenotes}
-\caption{Indicator Contribution Scores across Sections under the Leave-one-out Test (Target: Synthetic Minutes; Internal-Reliance Diagnostic)}
-\label{tab:ch2:shapley_result}
-\end{threeparttable}
-\end{table}
+In this section, we evaluate target-relative indicator sensitivity using the
+Leave-one-out test defined in Eq.~\ref{eq:ch2:loo_delta}. Two complementary
+targets are considered. When the target is the unmasked generated Minutes,
+the result is an internal output-sensitivity diagnostic. When the target is
+the actual FOMC Minutes, the result is an external-alignment diagnostic. In
+both cases the estimand is the paired, signed difference between full-prompt
+and masked-prompt target similarity.
 
 
-We also employ the actual FOMC Minutes as the target output ($o_{target}$). This second comparison is closer to an external alignment diagnostic because the benchmark text is the historical official Minutes rather than the model's own unmasked output. Because the unmasked-prompt similarity to real Minutes is generally below one, we report the baseline cosine similarity under the full prompt (``Unmasked'') and the cosine similarity under the Leave-one-out test for each indicator. The implied marginal contribution of an indicator is interpreted relative to this unmasked baseline. Importantly, the evidence in this comparison is mixed: for several indicators, the masked cosine similarity is higher than the unmasked baseline, which implies that not every indicator block improves alignment to the actual Minutes in a stable way. Results are presented in Table~\ref{tab:ch2:shapley_by_raw_result}.
+
+In the canonical design, for each indicator $p_i$, we generate the section
+once with the full prompt $\mathcal{P}$ and once with $p_i$ removed, pairing
+the same generation replicate. The historical aggregates below do not retain
+row-level seeds, so this pairing cannot be re-audited. For the unmasked-output
+target, a positive $\Delta_i$ measures displacement from the full output and
+does not imply improvement. For the actual-Minutes target, a positive
+$\Delta_i$ means that removal reduces alignment to the historical Minutes,
+whereas a negative value means that the masked output is more aligned.
+
+We first use the synthetic Minutes generated from the unmasked prompt as the
+target. Because this target is model-generated, the resulting scores describe
+internal output sensitivity rather than validation against the historical
+Minutes. The surviving workbook permits recovery of the historical aggregate
+point estimates, reported in
+Table~\ref{tab:ch2:loo_internal_legacy}. The original row-level generations,
+meeting identifiers, and seed metadata for this 25-indicator experiment are
+unavailable; consequently, the historical significance stars are not
+retained and no clustered inferential claim is made from this table. A
+separate seven-indicator pilot survives at row level, but its indicator and
+section populations do not match this table, its decoding was unseeded, and
+its masking operation also rewrote the prompt template. It is therefore
+excluded from the Chapter 2 results.
 
 \begin{table}[htbp]
 \centering
 \scriptsize
 \begin{threeparttable}
-\begin{tabular}{p{3.6cm} p{4.3cm} p{3.1cm} p{3.1cm}}
-\toprule
-\textbf{Indicator} & 
-\textbf{Participants' Views on Current Conditions and the Economic Outlook} & 
-\textbf{Staff Review of the Economic Situation} & 
-\textbf{Staff Review of the Financial Situation} \\
-\midrule
-Unmasked & $0.2401^{***}$ & $0.2195^{***}$ & $0.2091^{***}$ \\
-\midrule
-Bank-Capital & $0.2424^{***}$ & $0.2194^{***}$ & $0.2091^{***}$ \\
-Bank-Credit-to-Private-Sector & $0.2419^{***}$ & $0.2210^{***}$ & $0.2282^{***}$ \\
-Business-Investment & $0.2451^{***}$ & $0.2284^{***}$ & $0.2122^{***}$ \\
-Commodity-Prices & $0.2372^{***}$ & $0.2201^{***}$ & $0.2117^{***}$ \\
-Consumer-Confidence-Index & $0.2412^{***}$ & $0.2210^{***}$ & $0.2113^{***}$ \\
-Consumer-Price-Index (CPI) & $0.2424^{***}$ & $0.2256^{***}$ & $0.2114^{***}$ \\
-Corporate-Bond-Yields & $0.2407^{***}$ & $0.2198^{***}$ & $0.2085^{***}$ \\
-Equity-Market-Indices & $0.2417^{***}$ & $0.2211^{***}$ & $0.2085^{***}$ \\
-Exchange-Rate & $0.2419^{***}$ & $0.2238^{***}$ & $0.2104^{***}$ \\
-Federal-Funds-Rate & $0.2443^{***}$ & $0.2206^{***}$ & $0.2099^{***}$ \\
-Federal-Reserve-Balance-Sheet & $0.2393^{***}$ & $0.2212^{***}$ & $0.2111^{***}$ \\
-GDP-Growth & $0.2487^{***}$ & $0.2289^{***}$ & $0.2120^{***}$ \\
-Government-Purchases & $0.2388^{***}$ & $0.2187^{***}$ & $0.2106^{***}$ \\
-Home-Prices & $0.2426^{***}$ & $0.2193^{***}$ & $0.2116^{***}$ \\
-Housing-Starts & $0.2438^{***}$ & $0.2190^{***}$ & $0.2112^{***}$ \\
-Industrial-Production & $0.2430^{***}$ & $0.2206^{***}$ & $0.2108^{***}$ \\
-International-Equity-Markets & $0.2436^{***}$ & $0.2196^{***}$ & $0.2096^{***}$ \\
-Labour-Market & $0.2631^{***}$ & $0.2451^{***}$ & $0.2353^{***}$ \\
-Market-Volatility (VIX) & $0.2398^{***}$ & $0.2225^{***}$ & $0.2086^{***}$ \\
-Money-Supply & $0.2408^{***}$ & $0.2199^{***}$ & $0.2092^{***}$ \\
-Mortgage-Rates & $0.2418^{***}$ & $0.2203^{***}$ & $0.2130^{***}$ \\
-Overnight-Rate & $0.2410^{***}$ & $0.2230^{***}$ & $0.2089^{***}$ \\
-Personal-Consumption-Expenditures (PCE) & $0.2314^{***}$ & $0.2220^{***}$ & $0.2121^{***}$ \\
-Trade-Balance & $0.2424^{***}$ & $0.2255^{***}$ & $0.2115^{***}$ \\
-Treasury-Yields & $0.2412^{***}$ & $0.2212^{***}$ & $0.2106^{***}$ \\
-Unemployment-Rate & $0.2434^{***}$ & $0.2217^{***}$ & $0.2101^{***}$ \\
-\bottomrule
-\end{tabular}
+\input{Chapter2/Chapter2Results/loo_internal_legacy_descriptive.tex}
 \begin{tablenotes}[flushleft]
 \footnotesize
-
-\item \textit{Notes:} This table reports cosine similarity to the actual FOMC Minutes under the unmasked prompt (baseline) and under the Leave-one-out test for each indicator. Indicator contribution is interpreted via the change relative to the unmasked baseline, so the values should be read as external alignment diagnostics rather than definitive grounding scores. 
-$^{***}$ denotes statistical significance at the 1\% level.
+\item \textit{Notes:} Entries are historical descriptive means of
+$\Delta_i=1-\operatorname{Cos}(o_{\mathrm{masked},i},o_{\mathrm{full}})$.
+They measure internal output sensitivity. The table is regenerated from the
+surviving aggregate workbook; significance markers are omitted because
+meeting-clustered uncertainty cannot be reconstructed without row-level data.
+The surviving internal workbook contains 25 indicators and omits
+Corporate Bond Yields; historical cell sizes vary from 897 to 1,337 pairs.
 \end{tablenotes}
-
-\caption{Cosine Similarity to Actual Minutes under the Leave-one-out Test (External-Alignment Diagnostic)}
-\label{tab:ch2:shapley_by_raw_result}
+\caption{Legacy Descriptive Leave-One-Out Output Sensitivity (Target: Unmasked Generated Minutes)}
+\label{tab:ch2:loo_internal_legacy}
 \end{threeparttable}
 \end{table}
 
 
-%% TODO: regression here
-Finally, for the second test, we use the ``Unmasked'' baseline values from Table~\ref{tab:ch2:shapley_by_raw_result} to compute the relative percentage change in cosine similarity under the Leave-one-out test across sections. This analysis assesses whether specific indicators exhibit stronger relevance for particular Minutes sections. For example, equity-related indicators are expected to matter more for ``Staff Review of the Financial Situation'' than for ``Staff Review of the Economic Situation''. At the same time, the percentage-change results again indicate mixed external evidence: some indicators produce only small gains, some produce negative changes, and the sign of the contribution is not uniform across sections. The results are presented in Table~\ref{tab:ch2:shapley_diff_by_raw_result}.
+We next use the corresponding historical FOMC Minutes section as the fixed
+target. The primary quantity is the raw signed delta in
+Eq.~\ref{eq:ch2:loo_delta}, not the masked output's absolute distance and not a
+percentage of that distance. The surviving aggregate workbook stores
+indicator-specific paired means, so its point estimate can be recovered
+algebraically as
+$\bar{\Delta}_i=\bar{d}_{\mathrm{masked},i}-\bar{d}_{\mathrm{full},i}$.
+Table~\ref{tab:ch2:loo_external_legacy} reports this descriptive recovery.
+The underlying row-level generations for this 26-indicator experiment no
+longer survive, so the historical standard errors cannot be re-clustered by
+meeting; the table intentionally contains no significance stars or
+inferential claims.
 
 \begin{table}[htbp]
 \centering
 \scriptsize
 \begin{threeparttable}
-\begin{tabular}{p{3.6cm} p{4.3cm} p{3.1cm} p{3.1cm}}
-\toprule
-\textbf{Indicator} & 
-\textbf{Participants' Views on Current Conditions and the Economic Outlook} & 
-\textbf{Staff Review of the Economic Situation} & 
-\textbf{Staff Review of the Financial Situation} \\
-\midrule
-Bank-Capital & $1.0003$ & $-0.0138$ & $-0.0138$ \\
-Bank-Credit-to-Private-Sector & $0.8737$ & $0.6401$ & $\mathbf{8.9746^{***}}$ \\
-Business-Investment & $2.5514^{*}$ & $\mathbf{3.7643^{**}}$ & $1.4490^{\cdot}$ \\
-Commodity-Prices & $-1.0619$ & $0.2888$ & $1.2553$ \\
-Consumer-Confidence-Index & $0.4444$ & $0.6876$ & $1.0231$ \\
-Consumer-Price-Index (CPI) & $1.3992$ & $\mathbf{2.6931^{*}}$ & $1.0456$ \\
-Corporate-Bond-Yields & $0.2440$ & $0.1597$ & $-0.3511$ \\
-Equity-Market-Indices & $0.7524$ & $0.6013$ & $-0.3112$ \\
-Exchange-Rate & $0.7344$ & $\mathbf{1.9603^{*}}$ & $0.5481$ \\
-Federal-Funds-Rate & $1.8543$ & $0.3812$ & $0.3018$ \\
-Federal-Reserve-Balance-Sheet & $-0.1974$ & $0.7834$ & $0.9588$ \\
-GDP-Growth & $\mathbf{3.8937^{***}}$ & $\mathbf{3.9467^{**}}$ & $1.3159$ \\
-Government-Purchases & $-0.0611$ & $-0.6966$ & $0.6479$ \\
-Home-Prices & $1.1099$ & $-0.0818$ & $1.1658$ \\
-Housing-Starts & $1.6854$ & $-0.5030$ & $0.9880$ \\
-Industrial-Production & $1.3603$ & $0.1469$ & $0.7985$ \\
-International-Equity-Markets & $1.4565$ & $0.0483$ & $0.1888$ \\
-Labour-Market & $\mathbf{10.0625^{***}}$ & $\mathbf{11.3390^{***}}$ & $\mathbf{12.5217^{***}}$ \\
-Market-Volatility (VIX) & $-0.1548$ & $1.2944$ & $-0.2475$ \\
-Money-Supply & $0.2915$ & $0.1889$ & $0.0125$ \\
-Mortgage-Rates & $0.7044$ & $0.3880$ & $\mathbf{1.8339^{\cdot}}$ \\
-Overnight-Rate & $0.3765$ & $1.6018$ & $-0.1633$ \\
-Personal-Consumption-Expenditures (PCE) & $\mathbf{-3.3180^{**}}$ & $0.8978$ & $1.4151$ \\
-Trade-Balance & $0.9183$ & $\mathbf{2.4729^{*}}$ & $1.1277$ \\
-Treasury-Yields & $0.6058$ & $0.6652$ & $0.6901$ \\
-Unemployment-Rate & $1.6550$ & $0.8989$ & $0.4222$ \\
-\bottomrule
-\end{tabular}
+\input{Chapter2/Chapter2Results/loo_external_legacy_descriptive.tex}
 \begin{tablenotes}[flushleft]
 \footnotesize
-% \item \textit{Notes:} This table reports the percentage change of the Shapley Value results for 25 macroeconomic and financial indicators across three major FOMC sections using the unmasked prompt's output as baseline. 
-% [Codex 修改版] 2026-02-26
-% \item \textit{Notes:} This table reports percentage changes in the leave-one-out indicator contribution score $\Delta_i$ relative to the unmasked-prompt baseline, across three major FOMC sections. 
-% [Codex 修改版] 2026-02-26
-\item \textit{Notes:} This table reports percentage changes in cosine similarity to the actual Minutes under the Leave-one-out test, relative to the unmasked-prompt baseline, across three major FOMC sections. These relative changes are best interpreted as section-specific external alignment diagnostics rather than as direct measures of grounding strength. 
-$^{***}$ denotes statistical significance at the 1\% level.
+\item \textit{Notes:} Entries are signed raw cosine-similarity deltas,
+$\bar{\Delta}_i=\bar{s}_{\mathrm{full}}-\bar{s}_{\mathrm{masked},i}$.
+Positive values mean that masking reduces alignment with the historical
+Minutes; negative values mean that masking improves alignment. Values are
+descriptive recoveries from the surviving paired aggregate workbook.
+Row-level outputs, meeting clusters, and seed metadata are unavailable, so
+confidence intervals and significance stars are deliberately omitted.
+The surviving external workbook contains 26 indicators, and historical cell
+sizes vary from 897 to 1,337 pairs; comparisons across cells are therefore
+descriptive rather than estimates on a common balanced sample.
 \end{tablenotes}
-% \caption{Percentage differences in Shapley Value means relative to the raw Minutes for each indicator.}
-% [Codex 修改版] 2026-02-26
-% \caption{Percentage Differences in Leave-one-out Contribution Scores Relative to the Baseline}
-% [Codex 修改版] 2026-02-26
-\caption{Percentage Differences in Cosine Similarity under the Leave-one-out Test (Relative to Baseline; External-Alignment Diagnostic)}
-\label{tab:ch2:shapley_diff_by_raw_result}
+\caption{Legacy Descriptive Signed Leave-One-Out Delta against Actual FOMC Minutes}
+\label{tab:ch2:loo_external_legacy}
 \end{threeparttable}
 \end{table}
 
-Taken together, the Leave-one-out results provide partial and section-dependent evidence of indicator reliance. The synthetic-target exercise supports internal reliance or self-consistency, while the comparison against actual Minutes yields mixed external evidence rather than a uniformly positive grounding result. In particular, the presence of masked outputs that outperform the unmasked baseline, together with negative contributions such as the PCE result in Table~\ref{tab:ch2:shapley_diff_by_raw_result}, indicates that indicator relevance is heterogeneous across sections and not every prompt block improves alignment to the historical Minutes.
+Taken descriptively, the recovered results are heterogeneous and
+section-dependent. Labour-market masking produces the largest positive delta
+in all three sections (approximately 0.024--0.026), whereas several cells are
+near zero or negative; for example, PCE has a negative delta in Participants'
+Views. These patterns are consistent with indicator-specific sensitivity, but
+they are not promoted to current statistical evidence. The canonical paired
+pipeline must be rerun from reconstructed prompts and a newly versioned,
+hash-frozen actual-Minutes reference before meeting-clustered confidence
+intervals or adjusted significance are reported. The target-text source
+family has been recovered and cross-validated against 3,481 surviving
+records, but the exact historical row manifest and full/masked generations
+remain unavailable.
 
 
 
@@ -1069,12 +1041,31 @@ The compact comparison highlights three points. First, Panel A and Panel B achie
 In conclusion, this chapter develops a fine-tuned LLM framework for generating structured synthetic policy text from macro-financial indicators. The strongest empirical evidence comes from the synthetic Minutes generation task, where \textit{Model chk-3} consistently outperforms \textit{Model chk-0} on textual similarity measures, indicating stronger Minutes-style alignment and higher textual fidelity. This result suggests that the downstream SFT stage is effective in adapting the model to the stylistic and structural conventions of FOMC Minutes.
 
 
-Beyond similarity, however, the remaining evidence is more qualified. The Leave-one-out results provide only partial and section-dependent evidence of indicator reliance, the synthetic-target exercise supports internal reliance or self-consistency, while alignment against actual Minutes remains mixed rather than uniformly positive. Likewise, the econometric validation should be interpreted as exploratory, since it provides preliminary rather than conclusive evidence that synthetic Minutes retain policy-relevant signal. 
+Beyond similarity, however, the remaining evidence is more qualified. The
+surviving Leave-one-out aggregates provide descriptive, section-dependent
+evidence of output sensitivity, with mixed signed alignment deltas against
+actual Minutes. Because the row-level generations and meeting clusters for
+the manuscript's 25/26-indicator experiments are unavailable, these
+recovered LOO tables do not support current inferential claims; valid
+confidence intervals require a rerun of the paired pipeline. A surviving
+seven-indicator pilot has a different intervention and sample and is not used
+to fill this gap. Likewise, the econometric validation should be interpreted
+as exploratory, since it provides preliminary rather than conclusive
+evidence that synthetic Minutes retain policy-relevant signal.
 
 In the downstream decision task, \textit{Model chk-4} improves policy decision prediction relative to \textit{Model chk-0}, which suggests that task-specific post-training enhances decision-relevant inference from policy discussion. Taken together, these findings support the promise of LLM-based policy-text simulation for macro-financial analysis.
 
 
-Several avenues for future research therefore remain open. First, beyond consistency, the model should also ensure \textit{sufficiency}: generated sections should incorporate the relevant economic and financial information contained in the prompts. In this chapter, we quantify indicator reliance using a Leave-one-out diagnostic, but future work should extend this analysis toward more comprehensive Shapley-style attribution methods, such as token-level approximations, that can better capture interaction effects across indicators. Stronger external alignment tests and more systematic expert validation would also help distinguish stylistic resemblance from genuine evidence use.
+Several avenues for future research therefore remain open. First, beyond
+consistency, the model should also ensure \textit{sufficiency}: generated
+sections should incorporate the relevant economic and financial information
+contained in the prompts. The immediate priority is to rerun the signed,
+paired Leave-one-out design with frozen targets, stable sample IDs, matched
+generation seeds, and meeting-clustered inference. Subsequent work can extend
+the analysis to coalition-sampled Shapley attribution to capture interactions
+across indicators. Factual entailment, numerical consistency, and systematic
+expert validation are also needed to distinguish stylistic resemblance and
+target-relative sensitivity from genuine evidence use.
 
 
 Second, the framework should be evaluated under more demanding robustness conditions. This includes stricter out-of-sample and distribution-shift tests, stronger benchmark comparisons for policy decision prediction, and further validation of standardized prompt templates and downstream scenario designs. Advancing these directions would improve the reliability of synthetic policy communication and clarify its practical value for macro-financial analysis, scenario design, and risk-management applications.

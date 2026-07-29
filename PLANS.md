@@ -77,8 +77,7 @@ The most defensible result in `docs/Chapter2` is that Minutes-style adaptation i
 Decision results are not yet publication-ready:
 
 - `docs/Chapter2` reports `chk-4` at 78.89% versus `chk-0` at 67.42%, but the models are evaluated on different denominators.
-- `docs/report` evaluates a common deduplicated set of 237 meetings and reports Checkpoint-4 accuracy of 0.6034 versus Backbone-0 at 0.5190. A lag-1 action baseline reaches 0.7384.
-- The same textual-similarity values are attributed to different model comparators in the two manuscript trees.
+- Per the author's scope decision, `docs/report` is excluded from the manuscript review and maintenance path; values found only there are not evidence for this chapter.
 
 Until the underlying row-level artifacts and checkpoint identities are reconciled, these values are historical draft evidence, not canonical claims.
 
@@ -91,7 +90,7 @@ Authority depends on the type of information:
 1. **Research intent and author-approved exposition:** `docs/Chapter2` is the provisional manuscript because it is the source directory identified by the author.
 2. **Executable behavior:** active `src/`, `jobs/`, `configs/main/`, and `run/` define what the current code attempts to execute.
 3. **Numerical evidence:** only a frozen result artifact linked to row IDs, split manifest, exact checkpoint, command, config hash, code commit, and model revision is authoritative.
-4. **`docs/report`:** treat this as a reconciliation candidate. Its more cautious evidence boundaries and common-sample decision analysis may be reused, but it must not silently replace `docs/Chapter2`.
+4. **`docs/report`:** out of scope by author instruction. Do not use it as manuscript evidence, reconcile it into Chapter 2, or modify it unless the author explicitly reactivates it.
 5. **`docs/Chapter2/archive/` and root `archive/`:** provenance only. They are read-only and must not be active runtime dependencies.
 6. **README and comments:** explanatory aids, not evidence. They must be updated when the executable contract changes.
 
@@ -488,6 +487,76 @@ Update this table before changing the associated implementation.
 - [ ] Extend leave-one-out analysis to interaction-aware subset sampling if calling the result Shapley-like.
 - [ ] Add factual entailment, numerical consistency, and expert/human review.
 
+Implementation note (2026-07-28): the LOO code path now supports seeded,
+replicate-aware generation with input/output hashes and completeness-checked
+manifests. A tracked roster freezes the expected indicator and context
+universe; pre-generation validation requires identical row-key coverage and
+proves that every masked prompt differs from its paired full prompt by one
+exact contiguous deletion. The frozen roster supplies indicator markers;
+validation additionally requires complete line/block boundaries and distinct
+masked prompts across indicators. The named marker must appear in the
+removed block's first semantic line, and deletion spans must be pairwise
+non-overlapping within a sample, preventing one intervention from absorbing a
+second indicator block. Generated rows are bound back to the attested prompt
+hash and row identity. Both the generation checkpoint tree
+and local embedding-model tree receive immutable inventory fingerprints. The
+canonical paired evaluator verifies non-empty meeting/section identity,
+generation position, context, model/decoding provenance, and matched seeds;
+it writes per-row
+`similarity_full`, `similarity_masked`, signed `delta`, exclusion, and audit
+records. Summaries average within meeting--replicate before equal-weighting
+replicates at the meeting level, keep evaluation contexts separate, and use a
+predeclared global Holm family.
+
+The sibling `synthetic_text` audit recovers a seven-indicator row-level pilot,
+but its unseeded stochastic generation, unbalanced random sampling, changed
+prompt template, and nonmatching indicator/section population exclude it from
+the canonical Chapter 2 analysis. It is retained only for a separately
+labelled legacy prompt-perturbation diagnostic or provenance checks. A
+dedicated re-scorer (`jobs.eval.eval_legacy_7_indicator_pilot`) and detached
+launcher (`run/eval_legacy_7_indicator_pilot.sh`) recover the 2,655 complete
+triplets, cache unique-text embeddings, and emit both target-similarity
+components plus the signed delta. They use
+`data/training/input_qa.json` as the historical scoring target and the
+index-aligned tagged QA file only for meeting/section metadata; substituting
+the cleaned tagged output would change the target text. The same audit
+validates the actual-Minutes content in the 697-row
+`synthetic_text_20250518.jsonl` candidate against all 3,481 observed rows of
+the 2025-05-20 reason file. The candidate must still be frozen as a new
+versioned reference; it is not evidence of byte identity with the missing
+historical input.
+
+Generation-only follow-up (2026-07-28): the repository now freezes separate
+13-meeting pilot-eval and formal-test populations and constructs each
+population's 338-row (`13 meetings × 26 indicators`) input ledger from keyless
+ALFRED historical-vintage CSV responses. The only information cutoff is the
+previous calendar day: the requested vintage and availability-as-of date both
+equal `meeting_date - 1 day`, every included observation is dated no later
+than that day, and all meeting-day data are forbidden. The tracked source
+registry includes explicit source metadata, disabled-source reasons, license
+controls, and a 102-file legacy crosswalk; legacy and `synthetic_text` values
+are mapping-only. Raw request bytes, aligned 12/12/2 vintage batches, hashes,
+exclusions, source evidence, coverage, and both ledger manifests are
+independently replay-validated.
+
+The generation stage emits three section families with exact-deletion and
+tokenizer-length-matched neutral interventions. The downstream wrapper derives
+every row seed from only `replicate_seed` and `sample_id`, performs exact
+chat-template context preflight, rejects prompt-token drift and length-limited
+completions, and binds outputs to sealed model, tokenizer, source, ledger, and
+snapshot specifications. `run/generate_loo_end_to_end.sh all` is the primary
+background entrypoint; it performs no training or model merge and does not
+require `FRED_API_KEY`. The P2.3 checklist remains open until both population
+generation release manifests and the enclosing workflow release manifest have
+completed successfully.
+
+The checklist remains open until the missing masking prompts and fixed split
+manifest are restored or reconstructed, the validated actual-Minutes
+candidate is frozen in a release manifest, a new run is completed, and its
+model/data revisions and generation/intervention manifest hashes are pinned
+in the Chapter 2 release manifest. The historical aggregate workbook is
+retained only for descriptive recovery.
+
 #### P2.4 Decision evaluation
 
 - [ ] Define separate pre-meeting, same-meeting, and ex-post information sets.
@@ -507,7 +576,7 @@ Update this table before changing the associated implementation.
 
 ### P3 — Manuscript, release, and long-term stewardship
 
-- [ ] Reconcile `docs/Chapter2` and `docs/report`; archive the non-canonical tree only after preserving provenance.
+- [ ] Keep `docs/report` outside the active thesis workflow unless the author explicitly reactivates it; maintain `docs/Chapter2` as the sole manuscript source.
 - [ ] Add the full thesis root, bibliography, and a documented LaTeX build.
 - [ ] Generate chapter tables and figures from frozen result files.
 - [ ] Resolve remaining count, comparator, reward, QLoRA, learning-rate, and epoch inconsistencies.
@@ -596,7 +665,10 @@ Training does not imply merge. Before each stage:
 
 ### 11.5 Evaluation and chapter generation
 
-Evaluation must consume a release manifest, not ad-hoc paths. A future canonical command should:
+Evaluation must consume a release manifest, not ad-hoc paths. The paired LOO
+evaluator now implements the row-alignment, audit, and clustered-summary
+parts of this interface; other evaluation branches and release-manifest
+enforcement remain open. A complete canonical command should:
 
 1. generate or load frozen per-row predictions;
 2. validate exact row-ID alignment;

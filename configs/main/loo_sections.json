@@ -1,0 +1,18 @@
+{
+  "schema_version": "loo-section-roster-v1",
+  "roster_id": "chapter2-core-minutes-sections-v1",
+  "sections": [
+    {
+      "section_family": "Participants' Views on Current Conditions and the Economic Outlook",
+      "instruction": "Draft only the Minutes-style section summarizing participants' discussion of current economic conditions and the outlook."
+    },
+    {
+      "section_family": "Staff Review of the Economic Situation",
+      "instruction": "Draft only the Minutes-style staff review of the domestic and international economic situation."
+    },
+    {
+      "section_family": "Staff Review of the Financial Situation",
+      "instruction": "Draft only the Minutes-style staff review of financial-market developments and financial conditions."
+    }
+  ]
+}
