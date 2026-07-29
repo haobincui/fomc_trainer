@@ -1,10 +1,10 @@
 
 from open_r1.generation_model.model import Model
 
-_SYSTEM_PROMPT = """
-  You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses. 
-  You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer. 
-  The reasoning process MUST BE enclosed within <think> and </think> tags. The answer MUST BE enclosed within <answer> and </answer> tags.
+_SYSTEM_PROMPT = """<|think|>
+You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses.
+Think carefully as internal reasoning before answering.
+Use the model's native thought-channel output format and do not emit legacy XML wrapper tags.
 """
 
 _MODEL = None
@@ -49,9 +49,6 @@ def generate_responses(prompts, model_path, **kwargs):
     responses = model.batch_chat_completion(messages)
 
     return responses
-
-
-
 
 
 

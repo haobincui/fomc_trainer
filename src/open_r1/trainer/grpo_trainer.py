@@ -15,14 +15,15 @@ import os
 from collections.abc import Callable
 from typing import List
 
-from trl import GRPOTrainer, ModelConfig
-
 from open_r1.configs import LoraArguments, GRPOConfig, GRPOScriptArguments
 from open_r1.trainer.rewards.reward_register import get_reward_funcs
 from open_r1.trainer.trainer import Trainer
+from open_r1.utils.trl_compat import import_trl_grpo_symbols
 
 
 from open_r1.utils.plot_loss import plot_reward_curve
+
+GRPOTrainer, ModelConfig = import_trl_grpo_symbols()
 
 
 class GrpoTrainer(Trainer):
@@ -46,7 +47,7 @@ class GrpoTrainer(Trainer):
 
     def load_reward_funcs(self) -> List[Callable]:
         self.logger.info("*** Loading reward functions ***")
-        reward_funcs = get_reward_funcs(self.script_args)
+        reward_funcs = get_reward_funcs(self.script_args, self.training_args)
         return reward_funcs
 
 
@@ -55,15 +56,9 @@ class GrpoTrainer(Trainer):
         self.logger.info("*** 🚀 Loading trainer ***")
         s = time.time()
 
-        reward_kwargs = {}
-        if self.script_args.save_reward:
-            reward_kwargs["save_path"] = f"{self.training_args.output_dir}/reward.jsonl"
-
-
         trainer = GRPOTrainer(
             model=self.model, # type: ignore
             reward_funcs=self.reward_funcs, # type: ignore
-            # reward_kwargs=reward_kwargs,
             args=self.training_args,
             train_dataset=self.dataset[self.script_args.dataset_train_split],
             eval_dataset=(
@@ -87,5 +82,3 @@ class GrpoTrainer(Trainer):
             self.logger.info("📈 Plotting reward curve...")
             plot_reward_curve(reward_jsonl, save_plot)
             self.logger.info(f"✅ Reward curve saved to {save_plot}")
-
-

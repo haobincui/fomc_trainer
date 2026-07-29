@@ -2,17 +2,20 @@ import logging
 import os
 import sys
 from abc import ABC, abstractmethod
+from dataclasses import asdict, is_dataclass
 from typing import Union
 
 import datasets
 import transformers
+import torch
 from transformers.trainer_utils import get_last_checkpoint
-from trl import ModelConfig
+from trl import get_quantization_config
 from trl import ScriptArguments
-from peft import LoraConfig, PeftModel
+from peft import LoraConfig
 
-from open_r1.configs import GRPOConfig, LoraArguments, SFTConfig
+from open_r1.configs import GRPOConfig, LoraArguments, ModelConfig, SFTConfig
 from open_r1.data_loader import load_train_eval_datasets
+from open_r1.trainer.rewards.reward_funcs.online_reward import get_online_reward_settings
 from open_r1.utils import get_model, get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
 from open_r1.utils.plot_loss import plot_training_curve
@@ -161,6 +164,8 @@ class Trainer(ABC):
     def load_model(self):
         self.logger.info("*** Loading model ***")
         model = get_model(self.model_args, self.training_args)
+        if get_quantization_config(self.model_args) is not None:
+            model = self.patch_model_and_tokenizer(model, self.tokenizer)
         return model
 
     def load_peft_config(self):
@@ -175,17 +180,15 @@ class Trainer(ABC):
                         )
         return peft_config
     
-    def patch_model_and_tokenizer(self):
+    def patch_model_and_tokenizer(self, model, tokenizer):
         from peft import prepare_model_for_kbit_training
 
         self.logger.info("*** Patching model for 4-bit + gradient checkpointing ***")
 
-        # ✅ 必须在 tokenizer 设置后同步 pad_token_id 到 model.config
-        self.model.config.pad_token_id = self.tokenizer.pad_token_id
+        model.config.pad_token_id = tokenizer.pad_token_id
 
-        # ✅ 使用 PEFT 的官方函数做 checkpointing 安全封装
-        self.model = prepare_model_for_kbit_training(
-            self.model,
+        return prepare_model_for_kbit_training(
+            model,
             use_gradient_checkpointing=self.training_args.gradient_checkpointing
         )
 
@@ -208,9 +211,109 @@ class Trainer(ABC):
             callbacks = None
         return callbacks
 
+    def _runtime_config_path(self) -> str:
+        return os.path.join(self.training_args.output_dir, "resolved_runtime_config.json")
+
+    def _serialize_args(self, args):
+        if is_dataclass(args):
+            return asdict(args)
+        if hasattr(args, "__dict__"):
+            return dict(vars(args))
+        return str(args)
+
+    def _build_runtime_config(self) -> dict:
+        quantization_config = get_quantization_config(self.model_args)
+        reward_funcs = list(getattr(self.script_args, "reward_funcs", []))
+        reward_weights = getattr(self.training_args, "reward_weights", None)
+
+        runtime_config = {
+            "model": {
+                "model_name_or_path": self.model_args.model_name_or_path,
+                "model_revision": getattr(self.model_args, "model_revision", None),
+                "torch_dtype": getattr(self.model_args, "torch_dtype", getattr(self.model_args, "dtype", None)),
+                "dtype": getattr(self.model_args, "dtype", getattr(self.model_args, "torch_dtype", None)),
+                "attn_implementation": getattr(self.model_args, "attn_implementation", None),
+                "quantization": {
+                    "enabled": quantization_config is not None,
+                    "config": repr(quantization_config) if quantization_config is not None else None,
+                    "prepared_for_kbit_training": quantization_config is not None,
+                },
+            },
+            "dataset": {
+                "name": getattr(self.script_args, "dataset_name", None),
+                "prompt_column": getattr(self.script_args, "dataset_prompt_column", None),
+                "train_split": getattr(self.script_args, "dataset_train_split", None),
+                "eval_split": getattr(self.script_args, "dataset_test_split", None),
+            },
+            "training": {
+                "output_dir": self.training_args.output_dir,
+                "learning_rate": getattr(self.training_args, "learning_rate", None),
+                "num_train_epochs": getattr(self.training_args, "num_train_epochs", None),
+                "max_steps": getattr(self.training_args, "max_steps", None),
+                "optimizer": getattr(self.training_args, "optim", None),
+                "lr_scheduler_type": getattr(self.training_args, "lr_scheduler_type", None),
+                "warmup_ratio": getattr(self.training_args, "warmup_ratio", None),
+                "gradient_accumulation_steps": getattr(self.training_args, "gradient_accumulation_steps", None),
+                "gradient_checkpointing": getattr(self.training_args, "gradient_checkpointing", None),
+                "per_device_train_batch_size": getattr(self.training_args, "per_device_train_batch_size", None),
+                "per_device_eval_batch_size": getattr(self.training_args, "per_device_eval_batch_size", None),
+                "seed": getattr(self.training_args, "seed", None),
+                "bf16": getattr(self.training_args, "bf16", None),
+            },
+            "generation": {
+                "max_prompt_length": getattr(self.training_args, "max_prompt_length", None),
+                "max_completion_length": getattr(self.training_args, "max_completion_length", None),
+                "num_generations": getattr(self.training_args, "num_generations", None),
+                "temperature": getattr(self.training_args, "temperature", None),
+                "top_p": getattr(self.training_args, "top_p", None),
+            },
+            "peft": {
+                "merged_model_path": getattr(self.peft_args, "peft_merged_model_path", None),
+                "r": getattr(self.peft_args, "peft_r", None),
+                "lora_alpha": getattr(self.peft_args, "peft_lora_alpha", None),
+                "lora_dropout": getattr(self.peft_args, "peft_lora_dropout", None),
+                "target_modules": getattr(self.peft_args, "peft_target_modules", None),
+            },
+            "rewards": {
+                "reward_funcs": reward_funcs,
+                "reward_weights": reward_weights,
+            },
+            "environment": {
+                "device": str(getattr(self.training_args, "device", "")),
+                "n_gpu": getattr(self.training_args, "n_gpu", None),
+                "world_size": getattr(self.training_args, "world_size", None),
+                "cuda_available": torch.cuda.is_available(),
+                "cuda_device_count": torch.cuda.device_count(),
+                "cuda_device_names": [torch.cuda.get_device_name(idx) for idx in range(torch.cuda.device_count())],
+            },
+        }
+
+        if {"answer", "reasoning", "online"} & set(reward_funcs):
+            runtime_config["judge"] = get_online_reward_settings(
+                url=getattr(self.script_args, "judge_url", None),
+                model=getattr(self.script_args, "judge_model", None),
+                timeout=getattr(self.script_args, "judge_timeout", None),
+                verbose=getattr(self.script_args, "judge_verbose", None),
+                sleep_seconds=getattr(self.script_args, "judge_sleep_seconds", None),
+                api_key_env=getattr(self.script_args, "judge_api_key_env", None),
+            )
+
+        return runtime_config
+
+    def save_runtime_config(self):
+        runtime_config = self._build_runtime_config()
+        os.makedirs(self.training_args.output_dir, exist_ok=True)
+        with open(self._runtime_config_path(), "w", encoding="utf-8") as f:
+            import json
+
+            json.dump(runtime_config, f, indent=2, ensure_ascii=False)
+        self.logger.info("✅ Runtime configuration saved to %s", self._runtime_config_path())
+
 
     def start_train(self):
+        os.makedirs(self.training_args.output_dir, exist_ok=True)
         last_checkpoint = self.load_checkpoint(self.training_args.output_dir)
+        self.save_runtime_config()
 
         self.logger.info("*** 🚀 Start Training ***")
         checkpoint = None
@@ -287,9 +390,6 @@ class Trainer(ABC):
         model.save_pretrained(self.peft_args.peft_merged_model_path)
 
         self.logger.info(f"✅ Merged model saved to {self.peft_args.peft_merged_model_path}")
-
-
-
 
 
 

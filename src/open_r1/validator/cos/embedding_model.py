@@ -1,5 +1,7 @@
 # Ref: SemScore: Automated Evaluation of Instruction-Tuned LLMs based on Semantic Textual Similarity: [https://github.com/geronimi73/semscore]
 
+from functools import lru_cache
+
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -53,6 +55,7 @@ class EmbeddingModel:
         self.model, self.tokenizer = self.load_model(model_path)
         self.bs = bs
         self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+        self.device = next(self.model.parameters()).device
 
     def load_model(self, model_path):
         """
@@ -78,7 +81,7 @@ class EmbeddingModel:
         """
         model = AutoModel.from_pretrained(
             model_path,
-            device_map = "cuda",
+            device_map="auto" if torch.cuda.is_available() else None,
             torch_dtype=torch.bfloat16
         )
         model.eval()
@@ -127,7 +130,7 @@ class EmbeddingModel:
         - Embeddings are moved to GPU (`cuda`) for faster similarity computation.
         - Outputs are concatenated along the first dimension.
         """
-        embeddings = torch.tensor([], device="cuda")
+        embeddings = []
 
         if self.bs is None:
             batches = [sentences]
@@ -135,25 +138,14 @@ class EmbeddingModel:
             batches = [sentences[i:i + self.bs] for i in range(0, len(sentences), self.bs)]
 
         for batch in batches:
-            print(f"Model input: {batch}")
             encoded_input = self.tokenizer(batch, padding=True, truncation=True, return_tensors='pt')
-            encoded_input.to("cuda" if torch.cuda.is_available() else "cpu")
+            encoded_input = encoded_input.to(self.device)
             with torch.no_grad():
                 model_output = self.model(**encoded_input)
-                
-            print(f"Model encoded input: {encoded_input}")
-            print(f"Model output: {model_output}")
-            pkv = model_output.past_key_values
+            batch_embeddings = self.emb_mean_pooling(model_output, encoded_input['attention_mask']).to(self.device)
+            embeddings.append(batch_embeddings)
 
-            print("=== Past Key Values ===")
-            for i, layer in enumerate(pkv):
-                key, value = layer
-                print(f"Layer {i}: key={key}, key_shap={key.shape} value={value},value_shape={value.shape}")
-            print("==========================")
-            batch_embeddings = self.emb_mean_pooling(model_output, encoded_input['attention_mask']).cuda()
-            embeddings = torch.cat((embeddings, batch_embeddings), dim=0).cuda()
-
-        return embeddings
+        return torch.cat(embeddings, dim=0)
 
     def get_similarities(self, x, y=None):
         """
@@ -187,3 +179,8 @@ class EmbeddingModel:
             return similarities
         else:
             return self.cos(x, y).tolist()
+
+
+@lru_cache(maxsize=4)
+def get_cached_embedding_model(model_path: str, bs: int | None = None) -> EmbeddingModel:
+    return EmbeddingModel(model_path=model_path, bs=bs)

@@ -78,6 +78,8 @@ def shapley_value_calc(subset_with_p: list | str, subset: list | str, utility_fu
     0.1
     """
 
+    kwargs = kwargs or {}
+
     # Compute the utility with and without feature p_i
     try:
         # f_with = 1

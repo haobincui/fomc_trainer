@@ -1,0 +1,1080 @@
+% !TEX root = ../thesis.tex
+\graphicspath{{Chapter2/Chapter2Figs/}{Chapter2/Chapter2Figs/}}
+ 
+% \chapter{Use a Fine-Tuned Large Language Model to Generate Consistent and Sufficient Synthetic Texts}\label{ch:chapter:2}
+\chapter{Synthetic Texts Generation with a Fine-tuned Large Language Model}\label{ch:chapter:2}
+
+
+
+\input{Chapter2/sections/intro.tex}
+
+
+\input{Chapter2/sections/literature_review.tex}
+
+
+
+\section{Training Plan}\label{ch2:sec:2-step-training}
+
+
+\subsection*{2-Step Training for Base Model}
+To develop a model that can (i) conduct macro-financial analysis from structured indicators and (ii) generate institutionally styled FOMC-Minutes text, we adopt a two-step post-training pipeline: Supervised Fine-Tuning (SFT) followed by Reinforcement Learning (RL) using Group Relative Policy Optimization (GRPO). SFT provides a stable, reference-guided signal for domain adaptation, while GRPO further shapes the model's reasoning behavior using reward feedback. After these two steps, we apply the trained model to downstream generation and simulation tasks and evaluate it using both text-based and economics-based criteria.
+
+
+In Step 1 (SFT), we focus on enhancing the model's analytical capability in economics and finance. Although modern LLMs are pre-trained on broad public corpora of publicly available texts, they often lack the domain-specific knowledge required for specialized tasks such as financial data interpretation and monetary policy decision-making. Therefore, SFT focuses on training the model to map macroeconomic and financial inputs to structured analytical outputs consistent with the narrative style of FOMC materials.
+
+
+On the other hand, SFT improves controllability and adherence to a target format, but it may still leave gaps in multi-step reasoning and in consistent use of numerical evidence. To address this, we complement SFT with a second step reinforcement learning which can explicitly rewards coherent reasoning and data-consistent conclusions.
+
+
+In Step 2 (GRPO), we use reinforcement learning with domain-specific rewards to refine reasoning quality and reduce unsupported generation. In our setting, rewards are designed to encourage both correct output structure (reasoning process and final answer) and  high-quality economic analysis as judged against clear evaluation criteria. This step is intended to improve logical consistency and the model's ability to emulate deliberative, policy-style reasoning.
+
+
+Overall, we expect the two-step post-training pipeline (SFT + GRPO) to produce a model that is not only stylistically aligned with FOMC-Minutes language but also better able to reason from macro-financial evidence. The SFT step provides the foundation for domain adaptation and structured generation, while the GRPO step further improves the quality, consistency, and policy relevance of the model’s analytical outputs. 
+
+
+\subsection*{Further Fine-tuning for Downstream Tasks}
+After the two-step post-training described above, the model has acquired the basic capability to perform structured macro-financial analysis. We then further adapt it for downstream tasks. In this research, we focus on two downstream objectives: synthetic FOMC Minutes generation and monetary-policy decision making.
+
+For the first task, the objective is to rewrite model-generated analysis into institutionally styled FOMC-Minutes text. The input is an analytical paragraph or summary derived from macroeconomic and financial indicators, together with the target section title and meeting date, while the target output is the corresponding section text from the official Minutes. Because this task mainly concerns stylistic alignment, section consistency, and controlled rewriting, we apply an additional SFT stage to train the model on paired summary-to-Minutes examples.
+
+For the second task, the model must infer the most likely Federal Funds Rate decision from meeting-related analysis and map that conclusion to a standardized set of vote outcomes. Compared with the rewriting task, this objective places greater weight on multi-signal aggregation, policy reasoning, and consistency between the analysis and the final decision. Accordingly, we further use GRPO with task-specific rewards to strengthen the model's decision-oriented reasoning and output control.
+
+
+
+\subsection*{Summary for Training Plan}
+In summary, the training plan is organized around five named checkpoints. The core post-training pipeline produces \texttt{chk-0}, \texttt{chk-1}, and \texttt{chk-2}, corresponding to the base reasoning model, the SFT-adapted analytical model, and the GRPO-refined analytical model. From \texttt{chk-2}, we further branch into two downstream task-specific checkpoints: \texttt{chk-3} for synthetic text generation and \texttt{chk-4} for monetary-policy decision making. This organization makes it possible to separate the contributions of domain adaptation, reward-guided reasoning refinement, and downstream task alignment. Table~\ref{tab:ch2:model_checkpoints} summarizes the role of each checkpoint.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{@{}p{0.13\textwidth}p{0.22\textwidth}XXX@{}}
+        \toprule
+        \textbf{Model} & \textbf{Training status} & \textbf{Training objective} & \textbf{Main learning signal} & \textbf{Role in this chapter} \\
+        \midrule
+        \textbf{\textit{Model chk-0}} & Base reasoning model. & The starting point and baseline for evaluating domain adaptation. & Pre-trained and distilled reasoning capability from the selected base model; no additional chapter-specific fine-tuning. & Baseline model for comparison with post-trained checkpoints. \\
+        \textbf{\textit{Model chk-1}} & Model after Step 1 SFT. & Learns to map macro-financial inputs to structured analytical outputs in the target style. & Supervised Q\&A pairs with reasoning trajectories and final answers. & Domain-adapted analytical model and initialization checkpoint for GRPO. \\
+        \hline
+        \textbf{\textit{Model chk-2}} & Model after Step 2 GRPO. & Improves analytical and reasoning ability. & Reward feedback based on format compliance, analytical quality, and reasoning coherence. & Final two-step post-trained model used for downstream tasks. \\
+        \hline
+        \textbf{\textit{Model chk-3}} & Task-specific SFT branch from \textit{chk-2}. & Learns to rewrite analytical summaries into section-consistent FOMC-Minutes text. & Supervised summary-to-Minutes pairs conditioned on section title and meeting date. & Synthetic text generation model used for Minutes-style rewriting and text-similarity evaluation. \\
+        \hline
+        \textbf{\textit{Model chk-4}} & Task-specific GRPO branch from \textit{chk-2}. & Improves policy-decision inference and standardized vote selection from meeting-related analysis. & Reward feedback based on vote accuracy and vote format for structured decision outputs. & Decision-making model used for FFR prediction and policy-inference evaluation. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Comparison of Model Checkpoints in the Full Training Pipeline}
+    \label{tab:ch2:model_checkpoints}
+\end{table}
+
+
+
+\input{Chapter2/sections/dataset_construction.tex}
+
+
+
+\section{The Base Model}\label{ch2:sec:base_model}
+
+
+
+\subsection*{LLaMA 3 Architecture}
+We started with the \textbf{LLaMA 3-8B-Instruct} (\cite{meta2024llama3}). Within the LLaMA 3 family (8B, 70B, and 405B), the 8B model is the smallest and can be deployed on a single 24 GB GPU. The Instruct variant is optimized for human-like conversations. Noticeably, the maximum context length supported by the model is 128,000 tokens, which is sufficient for Minutes-related writing.
+
+
+Furthermore, compared with the original Transformer architecture (\cite{vaswani-etal2018}), LLaMA 3 includes several modifications for stability and generation quality.
+
+First of all, the model adopted Grouped-Query Attention (GQA, \cite{ainslie2023gqa}) in place of Multi-Query Attention (MQA) and Multi-Head Attention (MHA). While MHA can produce high-quality outputs, it demands significant memory capacity. Conversely, MQA significantly reduces memory usage but at the cost of lower generation quality. However, GQA can generate outputs comparable to MHA with similar memory requirements to MQA, making it suitable for processing long contexts.
+
+% SwiGLU
+Additionally, the model uses Swish Gated Linear Unit (SwiGLU, Eq. \eqref{eq:ch2:swiglu}, \cite{shazeer2020glu}) rather than the Rectified Linear Unit (ReLU, Eq. \eqref{eq:ch2:relu}, \cite{glorot2011deep}) in the activation function. Extra gate layers are introduced in the model to enhance performance, particularly in managing long contexts.
+
+
+
+\begin{equation}\label{eq:ch2:relu}
+    ReLU (\mathbf {x} )=\max(0,\mathbf {x} '\mathbf{W} + \mathbf{b})
+\end{equation}
+
+
+\begin{equation}\label{eq:ch2:swiglu}
+    \begin{split}
+        Swish_{\beta}(\mathbf{y}) &= \mathbf{y} \cdot sigmoid(\mathbf{y}' \mathbf{\beta}) = \frac{\mathbf{y}}{1 + exp(-\mathbf{y}' \mathbf{\beta})} \\
+        SwiGLU(\mathbf{x}, \mathbf{W_1}, \mathbf{W_2}, \mathbf{b}, \mathbf{c}) &= Swish_{1}(\mathbf{x}' \mathbf{W_1} + \mathbf{b}) \otimes (\mathbf{x}' \mathbf{W_2} + \mathbf{c})
+    \end{split}
+\end{equation}
+
+
+where $\mathbf{x} \in \mathbb{R}^{n \times m}$ is the output from previous layer, $\mathbf{W_1} \in \mathbb{R}^{k \times m \times n}$, $\mathbf{W_2} \in \mathbb{R}^{k \times m \times n}$, $\mathbf{b} \in \mathbb{R}^{n}$, and $\mathbf{c} \in \mathbb{R}^{n}$ are trainable parameters, with $\mathbf{W_1}$ and $\mathbf{W_2}$ are weights, $\mathbf{b}$ and $\mathbf{c}$ are bias terms. $\mathbf{W_2}$ and $\mathbf{c}$ serve as parameters for the gate layer.
+
+% where $\mathbf{x}\in\mathbb{R}^{n\times m}$ is the previous-layer output; $\mathbf{W_1}$, $\mathbf{W_2}$, $\mathbf{b}$, and $\mathbf{c}$ are trainable parameters; and $\mathbf{W_2}$ with $\mathbf{c}$ parameterizes the gating branch.
+
+
+
+
+% \cite{su2024roformer}
+% rotary positional embeddings (RoPE)
+
+Finally, the model incorporates Rotary Positional Embeddings (RoPE, \cite{su2024roformer}), which encodes both absolute and relative token-position information though a rotation matrix, unlike the original Transformer with a sinusoidal function designed to encode absolute position only.
+
+
+Overall, the combined use of GQA, SwiGLU, and RoPE significantly improves efficiency and long-context performance, making the LLaMA architecture a comparable model among leading large language models and a strong base for domain-specific fine-tuning.
+
+
+\subsection*{From Chat Model to Reasoning Model: DeepSeek-R1-Distill-Llama-8B}
+
+
+Prompt engineering is important for eliciting the reliable response from language models. There are three ways in prompting the model, zero-shot direct prompting, zero-shot Chain-of-Though prompting (zero-shot CoT; \cite{kojima2022large}), and few-shot Chain-of-Though prompting (few-shot CoT; \cite{wei2022chain}).
+
+%
+First of all, the zero-shot direct prompting involves instructing the model to generate the output directly in response to an input prompt. The generated results will be fully replied on the knowledge that the model learned. This approach is effective for straightforward tasks, where the model can do the predict without additional guidance and context. And it shows the model's ability to apply the learned concepts in new scenarios. However, for complex reasoning tasks, such as solving mathematical problems or creating an article with interconnected subsections, the Chain of Though (CoT) method yield provide more precise outcomes. CoT prompting necessitates the inclusion of guiding instructions within the prompt to aid the model in generating outputs that are more coherent and rational, broken down into manageable steps. For instance, for logical reasoning, few-shot CoT prompting requires a series of interaction between user and the model, dividing the task into several sub-tasks, and addressing each sub-task at each talk.
+
+
+However, creating logical and coherent CoT prompts is challenging due to requirements for multi-step reasoning, consistency across intermediate steps, and domain-specific expertise. A well-constructed CoT must not only segment the problem into intermediate steps but also ensure that each step is logically sound and contributes meaningfully toward the final solution. Recently developed Reasoning Large Language Models (RLLMs), such as ChatGPT-o1 (\cite{jaech2024openai}) and DeepSeek-R1 (\cite{shao2024deepseekmath}), mitigate this challenge by pre-training on dedicated CoT datasets, teaching the model to approach questions step by step prior to producing the final answer. These models generate extensive intermediate reasoning processes, explicitly marked as reasoning chains, resulting in improved analytical and problem-solving performance, even with relatively small model sizes. This design motivates our choice of a reasoning-capable distilled base model.
+
+
+Therefore, we selected the \textit{DeepSeek-R1 Distilled} variant of \textit{LLaMA 3-8B} (known as \textbf{DeepSeek-R1-Distill-Llama-8B}) (Base Model or Model ``chk-0'' hereafter) as our base model. This model was further fine-tuned on a high-quality reasoning dataset distilled from DeepSeek-R1, a powerful 671-billion-parameter reasoning model. Consistent with other RLLMs, \textbf{DeepSeek-R1-Distill-Llama-8B} is capable of generating a coherent, step-by-step reasoning process before providing its final response.
+
+
+
+
+% section for model training
+\input{Chapter2/sections/model_training}
+
+
+
+
+\section{Model Evaluation Methods}\label{ch2:sec:application}
+
+
+In this section, we evaluate the fine-tuned LLM's outputs with a focus on reliability. Given that LLMs are probabilistic generators, which selects the next token based on the highest probability, a critical issue encountered is the phenomenon known as hallucination. Hallucination refers to instances where the content generated by the model is unsupported by or conflicts with factual information. \cite{huang2025survey} have identified two primary forms of hallucination in LLMs: factuality hallucination and faithfulness hallucination. Factuality hallucination occurs when generated content contradicts real-world facts, whereas faithfulness hallucination arises when the generated content does not align consistently with the provided input. Consequently, tests designed to detect hallucinations are essential for evaluating the reliability of LLMs.
+
+
+
+
+LLM evaluation can be broadly classified as reference-based or reference-free. Firstly, reference-based evaluation compared the model's outputs with the target outputs under the same prompts. Scores are used to quantitatively measure the difference, for instance, F1 Score measures the accuracy for classification tasks, BLEU(\cite{papineni2002bleu}) measures string match accuracy and BERTScore (\cite{zhang2019bertscore}) measures the token embeddings' similarity. Noticeably, reference outputs are required for reference-based evaluation. For reference-free evaluation, no reference is needed for this method. The evaluation is usually model-based, such as regression-based validation result between the input prompts and the outputs, LLM-as-Judge scoring, and human assessment.
+
+
+LLM evaluation can be broadly classified into reference-based and reference-free evaluation. First, reference-based evaluation compares the model’s outputs with target outputs generated under the same prompts. Scores are then used to quantitatively measure the differences between them. For example, the F1 score measures classification accuracy, BLEU \cite{papineni2002bleu} measures string-level overlap, and BERTScore \cite{zhang2019bertscore} measures semantic similarity based on token embeddings. Notably, reference outputs are required for reference-based evaluation. By contrast, reference-free evaluation does not require predefined target outputs. It is usually model-based or judgement-based, including regression-based validation between input prompts and outputs, LLM-as-Judge scoring, and human assessment.
+
+
+Because high-quality reference answers are available in this study, we primarily use reference-based evaluation. More specifically, we will evaluate the fine-tuned model across four key dimensions:  1) the \textbf{textual similarity} of generated outputs, 2) the \textbf{sufficiency of information} contained in the outputs, 3) the \textbf{statistical significance} of synthetic text, 4) the \textbf{accuracy of simulated decision-making}. 
+
+
+The first two dimensions target detecting the faithfulness hallucination of the model. Both the textual similarity and the prompts contribution can provide quantitative measures of the overlap of key facts between the generated texts and the given texts. In contrast, the third and fourth dimensions focus on the model’s simulation capabilities, more specifically, its ability to replicate realistic policy analysis and accurately predict Federal Reserve decisions.
+
+
+
+\subsection*{Evaluation Methods}
+
+
+\subsubsection*{Textual Similarity}
+
+% Cosine Similarity
+To start with, the textual similarity targets comparing the similarity between the target output and the generated output using mathematical distance, such as the Levenshtein Similarity Ratio (\cite{levenshtein1966binary}) and Cosine Similarity (\cite{tanguy2016natural}). The Levenshtein Similarity Ratio replies on the Levenshtein Distance to measure the minimum number of strings that need to be edited from the generated output to the required output. Furthermore, some other metrics driven from the idea of ``n-grams'', such as the Recall-Oriented Understudy for Gisting Evaluation score (ROGUE score, \cite{lin2004rouge}), provide an grammatical-level measurement than the word-level Levenshtein Similarity Ratio. These methods are useful at the age of ``Bag-Of-Word (BOG)''.
+
+However, with the development of LLM, researchers can take advantage of the embeddings from the LLM rather than the one-hot key of ``BOG''. The embeddings can convert the ``word'' into tokens that encoded more semantic information than the one-hot key. Therefore, the Cosine Similarity provides a more accurate estimation of the semantic similarity between two texts. Here, we will use the \textit{sentence-level} \textbf{Cosine Similarity} as our first metric to evaluate the text similarity of outputs. Cosine Similarity ranges from 0 to 1, where a value of 1 indicates a perfect similarity between the two texts, while a value of 0 signifies that the texts are highly different from each other.
+
+The metric helps in determining how well the generated text aligns with the expected content in terms of both meaning and context. For example, \cite{aynetdinov2024semscore}, \cite{kim2024comparison}, and \cite{yauney2023data} used the Cosine Similarity as a benchmark when evaluating the LLM's performance.
+
+Cosine similarity is estimated by the cosine of the angle between two non-zero vectors. It is defined as the dot product of the two vectors divided by the product of their magnitudes. This mathematical operation helps in quantifying how closely the generated text aligns with the target text in terms of meaning and content. We utilize the ``tokenizer'' and the ``hidden layers'' from the LLAMA3 model to convert the response texts into vector representations, denoted as $Y$ for the target text and $\hat{Y}$ for the generated text.
+
+
+%%% text embedding calculation
+
+% tokens = [2, 1, 3]
+% text_embedding = [[0.111, 0.232131, 0.41414, 0.2412424, 0.1424, 0.444, 0.99]
+%                     [0.5151, 0.52215, 0.232132, 0.223232, 0.535151, 0.23231, 0.515151]
+%                     [0.2155252, 0.2223, 0.54331, 0.321313, 0.14222, 0.421555, 0.535252]]
+% mean pooling = [0.23131, 0.222, 0.23213, 0.325325, 0.532555, 0.535325, 0.23232, 0.424141]
+
+% | 模型          | hidden_size | num_hidden_layers |
+% | ----------- | ----------- | ----------------- |
+% | BERT-base   | 768         | 12                |
+% | Llama-7B    | 4096        | 32                |
+% | GPT-3 small | 12288       | 96                |
+
+% google-bert 768, [https://huggingface.co/google-bert/bert-base-uncased/blob/main/config.json]
+% gemini3-27b 5376,, [https://huggingface.co/google/gemma-3-27b-it/blob/main/config.json]
+% Deepseek-r1 7168,[https://huggingface.co/deepseek-ai/DeepSeek-R1/blob/main/config.json]
+% llama3.1-70b  8192,
+
+
+
+
+Compared with the ``one-hot encoding'' used in the ``Bag-of-Words'' model, the text embeddings employed in large language models (LLMs) offer two significant advantages. On the one hand, text embeddings employ a tokenizer to map the input text into a sequence of dense vectors, $\mathbf{h}_i \in \mathbb{R}^{m\times 1}$, where $i = 1, 2, ..., n$ corresponds to each token in the text, and $m$ denotes the hidden-layer dimension, rather than high-dimensional binary representations. On the other hand, the hidden layers within the LLM transform each token vector into a contextualized embedding by encoding both semantic meaning and positional information.
+
+Noticeably, the hidden layer size ($m$) is different for different models. Generally, a larger hidden dimension allows the model to capture more fine-grained semantic information. For example, Google BERT (110M parameters) has a hidden size of 768 \cite{googlebert}, Gemini 3-27B has a hidden size of 5,376 \cite{googlegemini3}, and LLaMA 3.1-70B uses a hidden size of 8,192 \cite{metallama3}.
+
+
+Furthermore, after the encoding stage, there is a pooling stage aimed at adjusting the dimension of text embedding matrix ($\mathbf{H} \in \mathbb{R}^{M\times N} = [\mathbf{h_1}, \mathbf{h_2}, ..., \mathbf{h_N}]$) to 1 ($\mathbf{H'} \in {\mathbb{R}^{M\times 1}}$). Then, this adjusted text embedding is a vector representation of the input text. Common pooling strategies include mean pooling, max pooling, and weighted-sum pooling. 
+
+% During the pooling stage, token embeddings are aggregated—typically by averaging across all tokens—to produce a single fixed-length vector representing the entire input text. Common pooling strategies include mean pooling, max pooling, and weighted-sum pooling. 
+
+% First, mean pooling computes the average embedding across all tokens:
+
+% \begin{equation}\label{eq:ch2:mean_pooling}
+%     h'_{j} = \frac{1}{N} \sum_{i=1}^{N} h_{ij}
+% \end{equation}
+
+% where $h_{ij}$ denotes the j-th dimension of the i-th token embedding.
+
+% Second, max pooling selects the maximum value across all tokens for each embedding dimension:
+
+% \begin{equation}\label{eq:ch2:max_pooling}
+%     h'_{j} = Max(h_{1j}, h_{2j}, ..., h_{Nj})
+% \end{equation}
+
+
+% Finally, weighted-sum pooling computes a weighted average of token embeddings:
+
+% \begin{equation}\label{eq:ch2:weight_sum_pooling}
+%         h'_{j} = \frac{1}{N} \sum_{i=1}^{N} w_{i,j}h_{ij} 
+% \end{equation}
+% where $w_{ij}$ are non-negative weights satisfying $\sum_{i=1}^{N} w_{ij} = 1$ . In practice, attention weights from a pre-trained transformer are often used as $w_{ij}$.
+ 
+To balance the effect of all the tokens, in this study, we adopt mean pooling. Max pooling tends to overemphasize a small number of highly activated tokens, while weighted-sum pooling can be dominated by tokens with disproportionately large attention weights. Mean pooling provides a more stable and balanced representation across the entire text. Appendix \ref{app:text_embedding} provides a detailed illustration and example for the text embedding generation process. 
+
+
+Therefore, the cosine similarity score, denoted as $Cos_{Y, \hat{Y}}$, is then calculated as follows:
+
+
+\begin{equation*}
+    Cos_{Y, \hat{Y}} = \frac{Y \cdot \hat{Y}}{\|Y\|_2 \|\hat{Y}\|_2}
+\end{equation*}
+
+
+where $Y$ and $\hat{Y}$ are sentence embeddings for the reference and generated texts, and $\|\cdot\|_2$ denotes the Euclidean norm (e.g., $\|Y\|_2=\sqrt{y_1^2+y_2^2+\cdots+y_N^2}$).
+
+
+% According to the distribution theory, 
+Finally, drawing from distributional semantics theory (\cite{firth1957linguistics}, \cite{sahlgren2008distributional}), words with similar meanings tend to occur in similar contexts and thus have similar distributions in the vector space. Therefore, we hypothesize that texts with higher semantic likeness will exhibit a greater cosine similarity. 
+
+
+% BERTScore 
+
+On the other hand, in addition to Cosine Similarity, which serves as a \textit{sentence-level} metric, we also employ \textbf{BERTScore} (\cite{zhang2019bertscore}), a metric designed to capture \textit{token-level} semantic similarity using cosine similarity as its underlying distance measure.
+
+More specifically, for each token $\hat{y}_j$ in the target (reference) output $\hat{Y}$, BERTScore identifies the maximum cosine similarity with respect to all candidate tokens $y_i$ in the generated response $Y$. These maximal token-level similarities are then aggregated to construct three complementary evaluation metrics: \textit{Recall} ($BertScore^{Recall}$), \textit{Precision} ($BertScore^{Precision}$), and the harmonic mean of the two, the \textit{F1 score} ($BertScore^{F1}$).
+
+
+Let $Y=\{y_i\}$ denote the set of token embeddings in the generated response and $\hat{Y}=\{\hat{y}_j\}$ denote the set of token embeddings in the reference (target) text. BERTScore computes \textit{Precision} by matching each candidate token to its most similar reference token, and \textit{Recall} by matching each reference token to its most similar candidate token. Finally, the F1 Score (Eq.(\ref{eq:ch2:bert_f1})) is calculated as the harmonic mean of precision and recall, thereby providing a balanced measure of semantic alignment between the generated and reference texts:
+
+\begin{equation}\label{eq:ch2:bert_precision}
+    BERTScore^{Precision} = \frac{1}{\|Y\|}\sum_{y_i \in Y} \max_{\hat{y}_j \in \hat{Y}} y_i^{\text{T}}\hat{y}_j
+\end{equation}
+
+\begin{equation}\label{eq:ch2:bert_recall}
+    BERTScore^{Recall} = \frac{1}{\|\hat{Y}\|}\sum_{\hat{y}_j \in \hat{Y}} \max_{y_i \in Y} \hat{y}_j^{\text{T}}y_i
+\end{equation}
+
+\begin{equation}\label{eq:ch2:bert_f1}
+    BERTScore^{F1} = \frac{2\cdot BERTScore^{Precision}\cdot BERTScore^{Recall}}{BERTScore^{Precision}+BERTScore^{Recall}}
+\end{equation}
+
+
+Overall, we propose the following hypotheses for cosine similarity and BERTScore:
+
+\begin{equation*}
+    \begin{split}
+        &Cos_{FT} - Cos_{Base} > 0 \\
+        &BERTScore^{Recall}_{FT} - BERTScore^{Recall}_{Base} > 0 \\
+        &BERTScore^{Precision}_{FT} - BERTScore^{Precision}_{Base} > 0\\
+        &BERTScore^{F1}_{FT} - BERTScore^{F1}_{Base} > 0
+    \end{split}
+\end{equation*}
+
+
+where subscripts $FT$ and $Base$ denote the fine-tuned and baseline models. The hypothesis is that fine-tuning increases semantic alignment with the target text. A statistically significant result would indicate that the fine-tuned model has effectively learned additional semantic and contextual information through the fine-tuning process.
+
+
+%%%%% end of text similarity
+
+
+\subsubsection*{Sufficient Information}
+% Shapley Value
+
+Apart from textual similarity, we also require the generated output to reflect information supplied by the input indicators rather than relying solely on unsupported completion. The question in this subsection is therefore not only whether the generated section resembles the target text, but also whether removing a given indicator materially changes that resemblance.
+
+
+To study this issue, our second metric evaluates the marginal informational contribution of each indicator prompt to the generated output. Shapley-style attribution methods provide the relevant conceptual background because they quantify how much each input contributes to an observed output. Originating in cooperative game theory, the Shapley Value (\cite{shapley1953value}) measures the expected marginal contribution of one player to a coalition. This idea has since been adapted to model interpretation, including Shapley Regression Value (\cite{lipovetsky2001analysis}), Shapley Sampling Value (\cite{vstrumbelj2014explaining}), Quantitative Input Influence (\cite{datta2016algorithmic}), Shapley Additive Explanations (\cite{lundberg2017unified}), and token-level attribution methods such as TokenShapley (\cite{liu2023prompt}; \cite{mohammadi2024wait}; \cite{goldshmidt2024tokenshap}).
+
+
+
+
+As literature background, the original Shapley Value ($\mathcal{SV}$) represents the expected marginal contribution of a feature ($p_i$) to a model output $f(\cdot)$:
+
+\begin{equation*}
+  \mathcal{SV}_i(f) = \sum_{\mathcal{S} \subset \mathcal{P}\setminus p_i} \frac{\left|\mathcal{S}\right|! (n - \left|\mathcal{S}\right| - 1)!}{n!} \left(f(\mathcal{S}\cup p_i) - f(\mathcal{S})\right)
+\end{equation*}
+
+where $\mathcal{P}=\{p_1, p_2, \cdots, p_n\}$ is the set of prompts, $\mathcal{S}$ is a coalition (subset) of prompts, and $f(\cdot)$ is a utility function. The term $f(\mathcal{S}\cup p_i)-f(\mathcal{S})$ denotes the marginal contribution of feature $p_i$ to coalition $\mathcal{S}$.
+
+
+In this research, however, we do not estimate the full Shapley Value across all possible coalitions. Instead, we adopt a \textbf{Shapley-inspired, indicator-level leave-one-out masking test} (Leave-one-out test hereafter). The purpose is the same in spirit: to measure how much each indicator matters for the generated section. The implementation is narrower than standard TokenShapley, because we remove one complete indicator block at a time while holding all remaining prompt content fixed. Accordingly, the test should be interpreted as a local diagnostic of relative alignment contribution under a specific masking intervention, rather than as a full Shapley attribution or a sufficient proof of grounding. Let $\mathcal{P}=\{p_1,\ldots,p_n\}$ denote the full set of indicator prompts, let $o(\mathcal{P})$ denote the generated section under prompt set $\mathcal{P}$, and define the utility function as $U(o(\cdot),o_{target}) = Cos(o(\cdot),o_{target})$, where $Cos(\cdot)$ is cosine similarity computed on sentence embeddings and $o_{target}$ is the target section text used for evaluation.
+
+
+\begin{equation}\label{eq:ch2:shapley}
+    \Delta_i = U(o(\mathcal{P}), o_{target}) - U(o(\mathcal{P}\setminus\{p_i\}), o_{target})
+\end{equation}
+
+Operationally, we generate one section using the full prompt set $\mathcal{P}$ and a second section after removing indicator $p_i$, while keeping all other settings fixed. A positive $\Delta_i$ implies that removing $p_i$ lowers similarity to the selected target text, so retaining the indicator improves relative alignment to that target under this Leave-one-out diagnostic. A negative $\Delta_i$ implies that similarity increases after the indicator is removed, suggesting that the indicator may be redundant, noisy, or imperfectly aligned with the target expression in that setting. Values close to zero indicate limited marginal influence. Therefore, the resulting scores are interpreted as partial evidence of indicator relevance and alignment contribution, rather than as definitive grounding scores. This interpretation is used consistently in the results below.
+
+
+%%%% end of shapley
+
+\subsubsection*{Statistical Significance using Synthetic Texts}
+
+
+This test evaluates the model’s simulation capacity by conducting empirical analyses on the synthetic text it generates. The current literature has confirmed the impact of the release of FOMC Minutes on the financial market, for instance, \cite{rosa2013financial} found that the release of the Minutes significantly increases the volatility of the U.S. asset prices, including treasury rate, equity market index and the exchange rate. \cite{rosa2011high} found that both the statements and the policy decisions have significant effects on the exchange rate market. \cite{huang2021economic} applied an adaptive Bayesian text mining approach, and confirmed the predictive power of the sentiments of FOMC's text in important economic variables. \cite{tadle2022fomc} confirmed the sentiments contained in the Minutes have significantly impacts on the fed funds futures rate and U.S. dollars exchange rate. 
+
+
+Building on these evidences, we test whether the synthetic Minutes generated by our fine-tuned LLM exhibit comparable market relevance. Specifically, a statistically significant relationship between the synthetic text and corresponding financial indicators would indicate that the model is capable of producing realistic, policy-relevant content that mirrors the economic impact of actual FOMC communications.
+
+
+
+We follow the empirical design in \cite{tadle2022fomc}, which examines how FOMC Minutes influence market expectations regarding monetary policy. Specifically, first of all, we apply the main regression model (Eq.\ref{eq:ch2:sentiment_reg})from their study, which investigates the relationship between sentiment scores derived from FOMC communications and movements in interest and exchange rates. In our case, we use the same regression framework to test whether sentiment extracted from our synthetic minutes yields similar effects on financial market variables.
+
+
+
+\begin{equation}\label{eq:ch2:sentiment_reg}
+    p^f_t = \lambda p^f_{t-1} + \alpha + \beta_{Z_t^M} Z_t^M+ \beta_{Z_{t-1}^M} Z_{t-1}^M + \beta_{Z_t^S} {Z_t}^S + \beta_{VIX_t}VIX_t + \beta_{Y_t}Y_t + \phi_t 
+\end{equation}
+
+
+
+where $p^f_t$ is the price for the Federal Fund Rate Future contract $f$ at time $t$. $VIX_t$ is the log change of the Volatility Index (VIX), $Z_t^M$ and $Z_t^S$ are the sentiment scores extracted from the Minutes and Statements, $Y_t$ is the monthly time effect, and $\phi_t$ is the error term.
+
+Following the empirical test, we conduct a bootstrap procedure to estimate the distribution of the $\beta$ coefficients. Statistically significant $\beta$ values would indicate that our synthetic text exhibits similar properties to the original FOMC Minutes in text-mining-based analyses, thereby validating its effectiveness in capturing the underlying informational content.
+
+
+
+%%%% end of statistical significant
+
+
+
+\subsubsection*{Decision-making Accuracy}
+Finally, at each Federal Open Market Committee (FOMC) meeting, the Committee votes on monetary policy decisions—most notably the target range of the Federal Funds Rate (FFR), also referred to as the Federal Funds Target Rate. Once the target rate is established, the Federal Reserve employs a range of monetary policy instruments to steer the effective FFR toward the desired level by adjusting the supply of reserves within the banking system. These instruments include open market operations (purchasing and selling U.S. government securities), the Interest on Reserve Balances (IOR), and the Overnight Reverse Repurchase Agreement (ON RRP) facility. Consequently, FOMC decisions exert a direct influence on the interest rate market, with subsequent spillover effects on exchange rates and equity markets.
+
+The final stage of our empirical evaluation assesses the model’s simulation ability to predict monetary policy decisions, specifically changes in the Federal Funds Rate, based on macroeconomic and financial indicators. In this context, each FOMC meeting represents a decision-making instance in which the Committee determines the appropriate policy stance in response to evolving economic conditions and market developments.
+
+
+A substantial body of literature has confirmed the significant impact of FOMC decisions on financial markets. For example, \cite{lucca2015pre} documented notable pre-announcement returns in the S\&P 500 Index since 1994, suggesting market anticipation of FOMC actions. \cite{cieslak2019stock} showed that unexpected policy decisions led to a pronounced decline in the equity premium between 1994 and 2016. Similarly, \cite{madeira2019effect} found that stock prices respond significantly to policy announcements. Further, \cite{bodilsen2021asset} and \cite{liu2022recovering} established a positive relationship between the equity risk premium and portfolio beta around FOMC announcements.
+
+
+Furthermore, the Federal Funds Futures market plays a pivotal role in the broader financial system. For example, as of May 23, 2025, the 30-Day Federal Funds Futures contract accounted for approximately 5.97\% of total open interest in the U.S. derivatives market—representing a 37.9\% year-over-year increase amid rising economic uncertainty.
+
+Given that our fine-tuned model is capable of emulating the analytical style of the FOMC, it can also infer monetary policy actions based on meeting discussions. Therefore, we further evaluate the model’s decision-making accuracy in predicting changes to the Federal Funds Rate (FFR). This evaluation aims to provide insights into the model’s decision-making capabilities and further explore its potential to simulate realistic monetary policy behavior.
+
+
+To this end, we first extracted historical FFR changes from the Federal Reserve Bank of New York spanning 2000 to 2025 (Table~\ref{tab:ch2:ffr_changes}). The changes mainly ranged between increases and decreases of 75 basis points (bps). Based on this historical distribution, we constructed a list of potential FFR changes (Table~\ref{tab:ch2:vote_choice}) and prompted the model to select the most appropriate option using the format outlined in Table~\ref{tab:ch2:prompt_for_decision_prediction}, where the \texttt{current\_analysis} represents the other sections from the FOMC minutes. Finally, we assessed the model’s decision-making performance by comparing its predictions to the actual FOMC outcomes, thereby evaluating its accuracy in replicating historical monetary policy decisions.
+
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \begin{tabular}{c c}
+            \toprule
+            Rate Change (bps) & Frequency \\
+            \midrule
+            0    & 6,177 \\
+            25   & 31 \\
+            -50  & 15 \\
+            -25  & 12 \\
+            75   & 4 \\
+            50   & 2 \\
+            -75  & 2 \\
+            \bottomrule
+        \end{tabular}
+        \caption{Daily Federal Funds Rate Changes (in bps), January 1, 2000 to May 9, 2025}
+        \label{tab:ch2:ffr_changes}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \begin{tabular}{l}
+            \toprule
+            Target Vote Choices \\
+            \midrule
+            Raise by 100 basis points \\
+            Raise by 75 basis points \\
+            Raise by 50 basis points \\
+            Raise by 25 basis points \\
+            No change \\
+            Cut by 25 basis points \\
+            Cut by 50 basis points \\
+            Cut by 75 basis points \\
+            Cut by 100 basis points \\
+            \bottomrule
+        \end{tabular}
+        \caption{Choices for Target Vote}
+        \label{tab:ch2:vote_choice}
+    \end{minipage}
+\end{table}
+
+
+\begin{table}[htp]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{0.98\textwidth}}
+    \toprule
+    \textbf{Prompt for Government Decision Prediction} \\
+    \midrule
+You are a voting member of the Federal Open Market Committee (FOMC), responsible for setting U.S. monetary policy. 
+Below is an analysis of U.S. economic and financial conditions ahead of the FOMC meeting on \texttt{**\{meeting\_date\}**}.  \\
+The current Effective Federal Funds Rate is \texttt{**\{current\_rate\}\%**}. \\
+~\\
+Your assignment:  
+1. Review the analysis and summarize the key economic and financial factors influencing the decision.  
+2. Provide a step-by-step explanation of your policy recommendation for this meeting.  
+3. Conclude with your \textbf{vote}. Select only one of the following:  \\
+\texttt{... Voting Choices ...}
+~\\
+Guidelines:  \\
+- Stay professional, structured, and objective.  \\
+- Do not speculate beyond the information provided. \\  
+~\\
+\textbf{---} \\
+\textbf{Current Economic and Financial Market Analysis} \\
+\texttt{\{current\_analysis\}} \\
+\textbf{---} \\
+Please structure your response as follows:  \\
+\textbf{1. Summary of Key Economic Factors} (\(\leq 150\) words)  \\
+\textbf{2. Step-by-Step Policy Reasoning}  \\
+\hspace*{0.5cm} - Analyze the data  \\
+\hspace*{0.5cm} - Consider all policy alternatives  \\
+\hspace*{0.5cm} - Justify the your final choice \\
+~\\
+\textbf{3. Final Vote}  \\
+State your choice as: \texttt{**\textbackslash boxed\{\{your choice\}\}**} (e.g., \texttt{\textbackslash boxed\{\{No change\}\}}). \\
+    \bottomrule
+    \toprule
+\textbf{Target Output:} \\
+\midrule
+\texttt{\{Federal Funds Rate Change\}} \\
+\bottomrule
+    \end{tabular}
+    \caption{Prompt for Government Decision Prediction}
+    \label{tab:ch2:prompt_for_decision_prediction}
+\end{table}
+
+
+
+
+
+
+
+
+\section{Empirical Results}\label{ch2:sec:result}
+
+This section reports training and downstream evaluation results for FOMC-Minutes generation. We assess both optimization dynamics (loss/reward trajectories) and task performance under text-based and economics-based criteria.
+
+
+\subsection*{Model Training Results}
+
+\subsubsection*{Step 1: Supervised Fine-Tuning (SFT) Results (\textit{Model chk-1})}
+
+
+Step 1 fine-tunes the base model (\textit{Model chk-0}. We train 3,407,872 parameters out of 8,051,232,768 total parameters (trainable ratio: 0.0423\%).
+
+
+SFT is trained for 3 epochs (2,346 optimization steps). Each epoch covers 3,128 training samples, with gradient accumulation every 4 generations. Evaluation loss is logged every 20 steps. Figure~\ref{fig:ch2:stage1_sft_loss} reports training and evaluation loss.
+
+
+\begin{figure}[htbp]
+    \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage1_train/training_curve_sft_20250521.png}
+            \caption{Training Loss and Evaluation Loss for Step 1 SFT (\textit{Model chk-1})}
+            \label{fig:ch2:stage1_sft_loss}
+    \end{center}
+\end{figure}
+
+
+As shown in Figure~\ref{fig:ch2:stage1_sft_loss}, training loss declines from 2.1504 (step 20) to 0.6913 (step 2340). Evaluation loss decreases from 2.1193 to 0.7097 by step 1,560 and ends at 0.6984. After roughly step 1,340, training loss continues to fall while evaluation loss plateaus, which is consistent with mild overfitting risk.
+
+
+\subsubsection*{Step 2: Group Relative Policy Optimization (GRPO) Results (\textit{Model chk-2})}
+After SFT, in Step 2, we conduct Reinforcement Learning (RL) via Group Relative Policy Optimization (GRPO) to further enhance analytical and reasoning quality. Following Section~\ref{ch2:sec:model_train:rl}, we implement an \textit{accuracy reward} to evaluate the final analysis and a \textit{reasoning reward} to evaluate the reasoning trajectory. We assign equal weights to the two reward components, and Figure~\ref{fig:ch2:stage2_grpo_reward} plots the 20-step rolling average of the total training reward during GRPO with $\pm$1 standard deviation bands.
+
+
+
+\begin{figure}[htbp]
+    \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage1_train/trainer_state_grpo_stage1_20250517.png}
+            \caption{20-Step Rolling Average of Training Reward for Step 2 GRPO ((\textit{Model chk-2})), with $\pm$1-Standard Deviation Intervals}
+            \label{fig:ch2:stage2_grpo_reward}
+    \end{center}
+\end{figure}
+
+
+In this step, the model was trained for one epoch. The training log over 1,094 steps demonstrates increasing stability in the reward metrics, particularly in the \textit{Accuracy Reward}. The 20-step rolling average of the \textit{Total Reward} showed a steady rise from approximately 0.70 to around 0.78, before stabilizing with minor fluctuations near 0.756, with block-level averages ranging from 0.76 to 0.79. The \textit{Reasoning Reward} remained consistently high, averaging around 0.95 and only occasionally dipping to approximately 0.85, indicating a robust and reliable chain-of-thought generation. In contrast, the \textit{Accuracy Reward} improved from 0.44 in the early stages to above 0.70, before stabilizing in the 0.60-0.65 range—suggesting enhanced precision in final responses, though with some potential for further improvement.
+
+
+% Moreover, reward volatilities exhibited signs of convergence. The 200-step rolling standard deviation declined from 0.0641 to 0.0584 for the \textit{reasoning reward}, from 0.1331 to 0.1250 for the \textit{accuracy reward}, and from 0.1573 to 0.1449 for the \textit{total reward}. These reductions in variability further confirm the model’s improved analytical consistency following training.
+
+% 
+% To assess the effectiveness of the Group Relative Policy Optimization (GRPO) training in Stage 1, we analyze the evolution of reward signals logged throughout the training trajectory. The reward structure comprises two components: the reasoning reward, which captures the logical coherence of the model’s generated explanation, and the answer reward, which measures the factual correctness or format alignment of the final answer.
+
+
+% In this step, the model was trained for one epoch. The training log over 1,094 steps demonstrates increasing stability in the reward metrics. The 20-step rolling average of the \textit{Total Reward} showed a steady rise from approximately 0.70 to around 0.78, before stabilizing with minor fluctuations near 0.756
+
+% After more than 1,000 recorded training steps, the reasoning reward consistently remains high, frequently exceeding 0.9 and often approaching the upper bound of 1.0. This indicates that the fine-tuned language model (LLM) rapidly acquires and maintains strong performance in producing logically structured thought processes. By contrast, the answer reward exhibits greater variance, oscillating between 0.3 and 0.8. Such variability suggests that while the model’s reasoning may be sound, its ability to render syntactically or semantically precise answers remains an area for further refinement.
+
+% 
+
+
+In summary, with only 0.042\% trainable parameters, compared with \textit{Model chk-0} the two-step demonstrated measurable improvements following the two-step training process. SFT improves supervised fit, and GRPO improves reward-aligned reasoning stability. Overall, the combined approach of instruction tuning followed by reinforcement learning effectively improved both reasoning consistency and answer quality
+
+
+
+\subsubsection*{Synthetic Text SFT Results (\textit{Model chk-3})}
+
+In this section, we further fine-tuned the \textit{Model chk-2} for the task of synthetic FOMC Minutes generation. The training dataset consisted of 1,113 question-answer (Q\&A) pairs. The model was trained for 3 epochs with gradient accumulation every 2 steps and an effective batch size of 2. The total number of optimization steps was 1,668.
+
+Training began with an initial loss of 2.0127, while the evaluation loss at step 20 was 2.0589. As training progressed, the loss steadily decreased, reaching a value of 0.9494 at step 820, accompanied by an evaluation loss of 0.9895. Figure~\ref{fig:ch2:stage2_sft} illustrates the training and evaluation loss trajectories throughout the process. These results indicate that the model successfully converged to a stable performance level.
+
+
+\begin{figure}[htbp]
+    \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/training_curve_synthetic_20250526.png}
+            \caption{Training Loss and Evaluation Loss for Stage 2 Synthetic Text Supervised Fine-Tuning (\textit{Model chk-3})}
+            \label{fig:ch2:stage2_sft}
+    \end{center}
+\end{figure}
+
+
+
+\subsubsection*{Policy Prediction GRPO Results (\textit{Model chk-4})}
+
+In this section, we applied Group Relative Policy Optimization (GRPO) to fine-tune the \textit{Model chk-2} in predicting the monetary policy decision, specifically the vote for the change of the Federal Fund Rate (FFR). Here, we employed two reward functions for optimization, \textit{``Vote Accuracy Reward''} and \textit{``Vote Format Reward''}. The \textit{``Total Reward''} is summed of these two rewards. Figure~\ref{fig:ch2:stage2_grpo} illustrated the rolling average total rewards with a window of 20 steps after 1940-step training. 
+
+
+\begin{figure}[htbp]
+    \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage2_train/trainer_state_grpo_stage2_1900_20250527.png}
+            \caption{Rolling Average Rewards for Decision-Making GRPO (\textit{Model chk-4}) with $\pm$1-Standard Deviation Intervals}
+            \label{fig:ch2:stage2_grpo}
+    \end{center}
+\end{figure}
+
+
+
+% % 
+For this stage of training, we initiated the process with a total of 5 epochs and 1,940 training steps. Throughout the training trajectory, both the format reward and accuracy reward demonstrated consistent upward trends, indicative of effective early-stage learning and successful policy optimization. By step 1,200, the rolling standard deviations for each reward component had notably decreased, reflecting improved stability in model behavior and convergence toward higher-reward regions of the parameter space. This reduction in reward volatility underscores the model’s growing consistency and reliability in generating policy-aligned voting decisions.
+
+% Importantly, after step 1,200, the total reward plateaued, and no further significant upward trend was observed. To mitigate the risk of overfitting and ensure generalization, we selected the model checkpoint at step 1,200 (corresponding to epoch 2.0) as the final model for this training stage.
+
+
+
+
+
+
+\subsubsection*{Training Results Summary}
+
+To sum up, these loss metrics suggest that the model successfully absorbed knowledge from the training data. The observed reduction in both training and evaluation losses over the course of training indicates an improvement in the model's ability to generate required texts. It's worth noting that the model's capacity to reduce the training evaluation loss, despite being trained solely on the training dataset, is indicative of its improved understanding and extrapolation of the underlying patterns for the evaluation dataset.
+
+
+
+%%% end of decision making
+
+
+
+\subsection*{Model Evaluation Results}
+
+This subsection reports evaluation results for the two downstream branches separately. The \textit{textual similarity} test directly compares \textit{Model chk-3} with \textit{Model chk-0}. The \textit{sufficient information} (Leave-one-out) test instead evaluates outputs generated by \textit{Model chk-3} and is therefore not framed as a direct checkpoint comparison. The \textit{statistical significance} test likewise uses synthetic Minutes generated by \textit{Model chk-3}, with the corresponding \textit{Model chk-0} series reported as a baseline benchmark. By contrast, the \textit{decision prediction} tests are carried out on the task-specific decision-making branch (\textit{Model chk-4}) and are reported relative to \textit{Model chk-0} under both original-Minutes and synthetic-Minutes inputs.
+
+
+\subsubsection*{Textual Similarity Performance}
+
+To assess the effectiveness of Minutes-style alignment, we evaluate performance using sentence-level Cosine Similarity and token-level BERTScore. We report results for (i) the full generated text, (ii) the reasoning trajectory ($c_i$, marked as ``think''), and (iii) the final answer ($a_i$, marked as ``answer'').
+
+Table~\ref{tab:ch2:result_cos_stage2_synthetic} compares \textit{Model chk-3} against \textit{Model chk-0}. Figure~\ref{fig:ch2:stage2-cos} shows the distribution of Cosine Similarity scores, while Figures~\ref{fig:ch2:stage2-f1}, \ref{fig:ch2:stage2-precision}, and \ref{fig:ch2:stage2-recall} report BERTScore in terms of F1, Precision, and Recall. Since the primary objective is synthetic Minutes generation, we focus on the ``answer'' segment.
+
+
+All reported metrics improve for \textit{Model chk-3} relative to \textit{Model chk-0}, with the largest gains in the ``answer'' segment. For example, the cosine-similarity gain is 2.872\% for ``answer'' versus 0.7575\% for ``full'' text. The gain in $BERTScore_{answer}^{F1}$ is 1.5207\%, roughly twice the $BERTScore_{full}^{F1}$ gain (0.7673\%). These differences are statistically significant at the 0.1\% level.
+
+
+
+\begin{figure}[htp]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_Cosine-Similarity_distribution.png}
+        \caption{Textual Similarity Result for Cosine-Similarity}
+        \label{fig:ch2:stage2-cos}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-F1_distribution.png}
+        \caption{Textual Similarity Result for BERTScore-F1}
+        \label{fig:ch2:stage2-f1}
+    \end{minipage}
+\end{figure}
+
+\begin{figure}[htp]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-Precision_distribution.png}
+        \caption{Textual Similarity Result for BERTScore-Precision}
+        \label{fig:ch2:stage2-precision}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-Recall_distribution.png}
+        \caption{Textual Similarity Result for BERTScore-Recall}
+        \label{fig:ch2:stage2-recall}
+    \end{minipage}
+\end{figure}
+
+
+
+
+
+
+\begin{table}[htp]
+    \centering
+    \footnotesize
+    \begin{tabular}{l c c c}
+        \toprule
+        & \textit{Model chk-3}& \textit{Model chk-0}& Difference (in \%)\\
+        \hline
+        $Cos_{full}$&0.9357&0.9287&0.7575\\ 
+                    &$({2912.33}^{***})$&$({5742.71}^{***})$&$({19.49}^{***})$\\ 
+        $Cos_{think}$&0.9178&0.9033&1.617\\ 
+                    &$({5898.69}^{***})$&$({5396.43}^{***})$&$({62.87}^{***})$\\ 
+        $Cos_{answer}$&0.929&0.9031&\textbf{2.872}\\ 
+                    &$({2365.92}^{***})$&$({3488.41}^{***})$&$({53.63}^{***})$\\
+        \hline
+        $BERTScore_{full}^{Precision}$&0.8647&0.8575&0.8441\\ 
+                    &$({4224.71}^{***})$&$({4297.97}^{***})$&$({25.10}^{***})$\\ 
+        $BERTScore_{think}^{Precision}$&0.8653&0.8574&0.917\\ 
+                    &$({4266.65}^{***})$&$({4402.03}^{***})$&$({28.16}^{***})$\\ 
+        $BERTScore_{answer}^{Precision}$&0.8579&0.8441&\textbf{1.6387}\\ 
+                    &$({4049.85}^{***})$&$({4181.28}^{***})$&$({47.84}^{***})$\\ 
+
+        \hline
+        $BERTScore_{full}^{Recall}$&0.8728&0.8664&0.7372\\ 
+                    &$({7081.24}^{***})$&$({7889.06}^{***})$&$({37.86}^{***})$\\ 
+        $BERTScore_{think}^{Recall}$&0.8728&0.8681&0.5398\\ 
+                    &$({7361.39}^{***})$&$({7787.30}^{***})$&$({28.21}^{***})$\\ 
+        $BERTScore_{answer}^{Recall}$&0.8796&0.868&\textbf{1.3372}\\ 
+                    &$({6304.12}^{***})$&$({7364.94}^{***})$&$({63.64}^{***})$\\ 
+
+        \hline
+        $BERTScore_{full}^{F1}$&0.8686&0.862&0.7673\\ 
+                    &$({5207.58}^{***})$&$({5842.11}^{***})$&$({29.61}^{***})$\\ 
+        $BERTScore_{think}^{F1}$&0.8691&0.8628&0.735\\ 
+                    &$({5509.68}^{***})$&$({5800.15}^{***})$&$({29.43}^{***})$\\ 
+        $BERTScore_{answer}^{F1}$&0.8688&0.8558&1.5207\\ 
+                    &$({5245.30}^{***})$&$({5465.88}^{***})$&$({57.07}^{***})$\\ 
+        \bottomrule
+    \end{tabular}
+    \caption{Summary Textual Similarity Results for Cosine Similarity and BERTScore Tests}
+    \label{tab:ch2:result_cos_stage2_synthetic}
+\end{table}
+
+
+In summary, relative to \textit{Model chk-0}, \textit{Model chk-3} more effectively captures and reproduces the linguistic style, analytical reasoning, and structural coherence of authentic FOMC Minutes, demonstrating high fidelity at both the sentence and token levels.
+
+
+
+%%%% end of textual similarity result
+
+\subsubsection*{Sufficient Information Results}
+
+In this section, we evaluate whether the generated sections contain sufficient information linked to the input indicators using the Leave-one-out test defined in Eq.~\ref{eq:ch2:shapley}. Two complementary target choices are considered. When the target is the synthetic Minutes generated under the unmasked prompt, the test is best interpreted as an internal reliance or self-consistency check. When the target is the actual FOMC Minutes, the test is better interpreted as a diagnostic of external alignment against the official text. In both cases, indicator contribution is evaluated by comparing the full-prompt output with the masked output under the Leave-one-out test.
+
+
+
+Concretely, for each indicator $p_i$, we generate the section once with the full prompt $\mathcal{P}$ and once with $p_i$ removed. We then compute $\Delta_i$ as the change in cosine similarity to the target text. A statistically significant positive $\Delta_i$ indicates that the indicator improves relative alignment to the selected target under this diagnostic, while negative values imply that the masked version is more aligned with the selected target.
+
+We first use the synthetic Minutes generated from the unmasked prompt as the target output ($o_{target}$) in the cosine calculation. Because this target is itself model-generated, the resulting scores primarily describe internal reliance on the indicator set rather than external validation against the historical Minutes. Table~\ref{tab:ch2:shapley_result} reports these results across the three main sections, evaluated using 25 key macroeconomic and financial indicators.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{threeparttable}
+\begin{tabular}{p{3.6cm} p{4.3cm} p{3.1cm} p{3.1cm}}
+\toprule
+\textbf{Key Indicator} &
+\textbf{Participants’ Views on Current Conditions and the Economic Outlook} &
+\textbf{Staff Review of the Economic Situation} &
+\textbf{Staff Review of the Financial Situation} \\
+\midrule
+Bank-Capital & $0.2164^{***}$ & $0.2054^{***}$ & $0.2168^{***}$ \\
+Bank-Credit-to-Private-Sector & $0.2067^{***}$ & $0.2119^{***}$ & $0.2183^{***}$ \\
+Business-Investment & $0.2121^{***}$ & $0.2162^{***}$ & $0.2094^{***}$ \\
+Commodity-Prices & $0.2093^{***}$ & $0.2121^{***}$ & $0.2194^{***}$ \\
+Consumer-Confidence-Index & $0.1567^{***}$ & $0.1646^{***}$ & $0.1669^{***}$ \\
+Consumer-Price-Index (CPI) & $0.2081^{***}$ & $0.2153^{***}$ & $0.2152^{***}$ \\
+Equity-Market-Indices & $0.2102^{***}$ & $0.2088^{***}$ & $0.2137^{***}$ \\
+Exchange-Rate & $0.2079^{***}$ & $0.2119^{***}$ & $0.2173^{***}$ \\
+Federal-Funds-Rate & $0.2063^{***}$ & $0.2144^{***}$ & $0.2176^{***}$ \\
+Federal-Reserve-Balance-Sheet & $0.2096^{***}$ & $0.2120^{***}$ & $0.2198^{***}$ \\
+GDP-Growth & $0.2093^{***}$ & $0.2100^{***}$ & $0.2131^{***}$ \\
+Government-Purchases & $0.2103^{***}$ & $0.2081^{***}$ & $0.2096^{***}$ \\
+Home-Prices & $0.2063^{***}$ & $0.2143^{***}$ & $0.2178^{***}$ \\
+Housing-Starts & $0.2043^{***}$ & $0.2054^{***}$ & $0.2133^{***}$ \\
+Industrial-Production & $0.2110^{***}$ & $0.2132^{***}$ & $0.2212^{***}$ \\
+International-Equity-Markets & $0.2080^{***}$ & $0.2091^{***}$ & $0.2136^{***}$ \\
+Labour-Market & $0.2323^{***}$ & $0.2336^{***}$ & $0.2380^{***}$ \\
+Market-Volatility (VIX) & $0.2067^{***}$ & $0.2082^{***}$ & $0.2236^{***}$ \\
+Money-Supply & $0.1990^{***}$ & $0.2066^{***}$ & $0.2045^{***}$ \\
+Mortgage-Rates & $0.2039^{***}$ & $0.2074^{***}$ & $0.2080^{***}$ \\
+Overnight-Rate & $0.2057^{***}$ & $0.2082^{***}$ & $0.2094^{***}$ \\
+Personal-Consumption-Expenditures (PCE) & $0.2097^{***}$ & $0.2084^{***}$ & $0.2154^{***}$ \\
+Trade-Balance & $0.2070^{***}$ & $0.2065^{***}$ & $0.2136^{***}$ \\
+Treasury-Yields & $0.2058^{***}$ & $0.2136^{***}$ & $0.2145^{***}$ \\
+Unemployment-Rate & $0.2045^{***}$ & $0.2098^{***}$ & $0.2125^{***}$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\footnotesize
+\item \textit{Notes:} This table reports indicator contribution scores from the Leave-one-out test ($\Delta_i$; Eq.~\ref{eq:ch2:shapley}) across three major FOMC sections, using the synthetic Minutes generated under the unmasked prompt as the target output. Because the target is model-generated, these scores are best interpreted as diagnostics of internal reliance or self-consistency rather than as external grounding scores. 
+$^{***}$ denotes statistical significance at the 1\% level.
+\end{tablenotes}
+\caption{Indicator Contribution Scores across Sections under the Leave-one-out Test (Target: Synthetic Minutes; Internal-Reliance Diagnostic)}
+\label{tab:ch2:shapley_result}
+\end{threeparttable}
+\end{table}
+
+
+We also employ the actual FOMC Minutes as the target output ($o_{target}$). This second comparison is closer to an external alignment diagnostic because the benchmark text is the historical official Minutes rather than the model's own unmasked output. Because the unmasked-prompt similarity to real Minutes is generally below one, we report the baseline cosine similarity under the full prompt (``Unmasked'') and the cosine similarity under the Leave-one-out test for each indicator. The implied marginal contribution of an indicator is interpreted relative to this unmasked baseline. Importantly, the evidence in this comparison is mixed: for several indicators, the masked cosine similarity is higher than the unmasked baseline, which implies that not every indicator block improves alignment to the actual Minutes in a stable way. Results are presented in Table~\ref{tab:ch2:shapley_by_raw_result}.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{threeparttable}
+\begin{tabular}{p{3.6cm} p{4.3cm} p{3.1cm} p{3.1cm}}
+\toprule
+\textbf{Indicator} & 
+\textbf{Participants' Views on Current Conditions and the Economic Outlook} & 
+\textbf{Staff Review of the Economic Situation} & 
+\textbf{Staff Review of the Financial Situation} \\
+\midrule
+Unmasked & $0.2401^{***}$ & $0.2195^{***}$ & $0.2091^{***}$ \\
+\midrule
+Bank-Capital & $0.2424^{***}$ & $0.2194^{***}$ & $0.2091^{***}$ \\
+Bank-Credit-to-Private-Sector & $0.2419^{***}$ & $0.2210^{***}$ & $0.2282^{***}$ \\
+Business-Investment & $0.2451^{***}$ & $0.2284^{***}$ & $0.2122^{***}$ \\
+Commodity-Prices & $0.2372^{***}$ & $0.2201^{***}$ & $0.2117^{***}$ \\
+Consumer-Confidence-Index & $0.2412^{***}$ & $0.2210^{***}$ & $0.2113^{***}$ \\
+Consumer-Price-Index (CPI) & $0.2424^{***}$ & $0.2256^{***}$ & $0.2114^{***}$ \\
+Corporate-Bond-Yields & $0.2407^{***}$ & $0.2198^{***}$ & $0.2085^{***}$ \\
+Equity-Market-Indices & $0.2417^{***}$ & $0.2211^{***}$ & $0.2085^{***}$ \\
+Exchange-Rate & $0.2419^{***}$ & $0.2238^{***}$ & $0.2104^{***}$ \\
+Federal-Funds-Rate & $0.2443^{***}$ & $0.2206^{***}$ & $0.2099^{***}$ \\
+Federal-Reserve-Balance-Sheet & $0.2393^{***}$ & $0.2212^{***}$ & $0.2111^{***}$ \\
+GDP-Growth & $0.2487^{***}$ & $0.2289^{***}$ & $0.2120^{***}$ \\
+Government-Purchases & $0.2388^{***}$ & $0.2187^{***}$ & $0.2106^{***}$ \\
+Home-Prices & $0.2426^{***}$ & $0.2193^{***}$ & $0.2116^{***}$ \\
+Housing-Starts & $0.2438^{***}$ & $0.2190^{***}$ & $0.2112^{***}$ \\
+Industrial-Production & $0.2430^{***}$ & $0.2206^{***}$ & $0.2108^{***}$ \\
+International-Equity-Markets & $0.2436^{***}$ & $0.2196^{***}$ & $0.2096^{***}$ \\
+Labour-Market & $0.2631^{***}$ & $0.2451^{***}$ & $0.2353^{***}$ \\
+Market-Volatility (VIX) & $0.2398^{***}$ & $0.2225^{***}$ & $0.2086^{***}$ \\
+Money-Supply & $0.2408^{***}$ & $0.2199^{***}$ & $0.2092^{***}$ \\
+Mortgage-Rates & $0.2418^{***}$ & $0.2203^{***}$ & $0.2130^{***}$ \\
+Overnight-Rate & $0.2410^{***}$ & $0.2230^{***}$ & $0.2089^{***}$ \\
+Personal-Consumption-Expenditures (PCE) & $0.2314^{***}$ & $0.2220^{***}$ & $0.2121^{***}$ \\
+Trade-Balance & $0.2424^{***}$ & $0.2255^{***}$ & $0.2115^{***}$ \\
+Treasury-Yields & $0.2412^{***}$ & $0.2212^{***}$ & $0.2106^{***}$ \\
+Unemployment-Rate & $0.2434^{***}$ & $0.2217^{***}$ & $0.2101^{***}$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\footnotesize
+
+\item \textit{Notes:} This table reports cosine similarity to the actual FOMC Minutes under the unmasked prompt (baseline) and under the Leave-one-out test for each indicator. Indicator contribution is interpreted via the change relative to the unmasked baseline, so the values should be read as external alignment diagnostics rather than definitive grounding scores. 
+$^{***}$ denotes statistical significance at the 1\% level.
+\end{tablenotes}
+
+\caption{Cosine Similarity to Actual Minutes under the Leave-one-out Test (External-Alignment Diagnostic)}
+\label{tab:ch2:shapley_by_raw_result}
+\end{threeparttable}
+\end{table}
+
+
+%% TODO: regression here
+Finally, for the second test, we use the ``Unmasked'' baseline values from Table~\ref{tab:ch2:shapley_by_raw_result} to compute the relative percentage change in cosine similarity under the Leave-one-out test across sections. This analysis assesses whether specific indicators exhibit stronger relevance for particular Minutes sections. For example, equity-related indicators are expected to matter more for ``Staff Review of the Financial Situation'' than for ``Staff Review of the Economic Situation''. At the same time, the percentage-change results again indicate mixed external evidence: some indicators produce only small gains, some produce negative changes, and the sign of the contribution is not uniform across sections. The results are presented in Table~\ref{tab:ch2:shapley_diff_by_raw_result}.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{threeparttable}
+\begin{tabular}{p{3.6cm} p{4.3cm} p{3.1cm} p{3.1cm}}
+\toprule
+\textbf{Indicator} & 
+\textbf{Participants' Views on Current Conditions and the Economic Outlook} & 
+\textbf{Staff Review of the Economic Situation} & 
+\textbf{Staff Review of the Financial Situation} \\
+\midrule
+Bank-Capital & $1.0003$ & $-0.0138$ & $-0.0138$ \\
+Bank-Credit-to-Private-Sector & $0.8737$ & $0.6401$ & $\mathbf{8.9746^{***}}$ \\
+Business-Investment & $2.5514^{*}$ & $\mathbf{3.7643^{**}}$ & $1.4490^{\cdot}$ \\
+Commodity-Prices & $-1.0619$ & $0.2888$ & $1.2553$ \\
+Consumer-Confidence-Index & $0.4444$ & $0.6876$ & $1.0231$ \\
+Consumer-Price-Index (CPI) & $1.3992$ & $\mathbf{2.6931^{*}}$ & $1.0456$ \\
+Corporate-Bond-Yields & $0.2440$ & $0.1597$ & $-0.3511$ \\
+Equity-Market-Indices & $0.7524$ & $0.6013$ & $-0.3112$ \\
+Exchange-Rate & $0.7344$ & $\mathbf{1.9603^{*}}$ & $0.5481$ \\
+Federal-Funds-Rate & $1.8543$ & $0.3812$ & $0.3018$ \\
+Federal-Reserve-Balance-Sheet & $-0.1974$ & $0.7834$ & $0.9588$ \\
+GDP-Growth & $\mathbf{3.8937^{***}}$ & $\mathbf{3.9467^{**}}$ & $1.3159$ \\
+Government-Purchases & $-0.0611$ & $-0.6966$ & $0.6479$ \\
+Home-Prices & $1.1099$ & $-0.0818$ & $1.1658$ \\
+Housing-Starts & $1.6854$ & $-0.5030$ & $0.9880$ \\
+Industrial-Production & $1.3603$ & $0.1469$ & $0.7985$ \\
+International-Equity-Markets & $1.4565$ & $0.0483$ & $0.1888$ \\
+Labour-Market & $\mathbf{10.0625^{***}}$ & $\mathbf{11.3390^{***}}$ & $\mathbf{12.5217^{***}}$ \\
+Market-Volatility (VIX) & $-0.1548$ & $1.2944$ & $-0.2475$ \\
+Money-Supply & $0.2915$ & $0.1889$ & $0.0125$ \\
+Mortgage-Rates & $0.7044$ & $0.3880$ & $\mathbf{1.8339^{\cdot}}$ \\
+Overnight-Rate & $0.3765$ & $1.6018$ & $-0.1633$ \\
+Personal-Consumption-Expenditures (PCE) & $\mathbf{-3.3180^{**}}$ & $0.8978$ & $1.4151$ \\
+Trade-Balance & $0.9183$ & $\mathbf{2.4729^{*}}$ & $1.1277$ \\
+Treasury-Yields & $0.6058$ & $0.6652$ & $0.6901$ \\
+Unemployment-Rate & $1.6550$ & $0.8989$ & $0.4222$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}[flushleft]
+\footnotesize
+% \item \textit{Notes:} This table reports the percentage change of the Shapley Value results for 25 macroeconomic and financial indicators across three major FOMC sections using the unmasked prompt's output as baseline. 
+% [Codex 修改版] 2026-02-26
+% \item \textit{Notes:} This table reports percentage changes in the leave-one-out indicator contribution score $\Delta_i$ relative to the unmasked-prompt baseline, across three major FOMC sections. 
+% [Codex 修改版] 2026-02-26
+\item \textit{Notes:} This table reports percentage changes in cosine similarity to the actual Minutes under the Leave-one-out test, relative to the unmasked-prompt baseline, across three major FOMC sections. These relative changes are best interpreted as section-specific external alignment diagnostics rather than as direct measures of grounding strength. 
+$^{***}$ denotes statistical significance at the 1\% level.
+\end{tablenotes}
+% \caption{Percentage differences in Shapley Value means relative to the raw Minutes for each indicator.}
+% [Codex 修改版] 2026-02-26
+% \caption{Percentage Differences in Leave-one-out Contribution Scores Relative to the Baseline}
+% [Codex 修改版] 2026-02-26
+\caption{Percentage Differences in Cosine Similarity under the Leave-one-out Test (Relative to Baseline; External-Alignment Diagnostic)}
+\label{tab:ch2:shapley_diff_by_raw_result}
+\end{threeparttable}
+\end{table}
+
+Taken together, the Leave-one-out results provide partial and section-dependent evidence of indicator reliance. The synthetic-target exercise supports internal reliance or self-consistency, while the comparison against actual Minutes yields mixed external evidence rather than a uniformly positive grounding result. In particular, the presence of masked outputs that outperform the unmasked baseline, together with negative contributions such as the PCE result in Table~\ref{tab:ch2:shapley_diff_by_raw_result}, indicates that indicator relevance is heterogeneous across sections and not every prompt block improves alignment to the historical Minutes.
+
+
+
+
+
+
+
+
+\subsubsection*{Empirical Models Test Results}
+
+As a further validation step, we evaluate the \textit{simulation capability} of synthetic Minutes generated by \textit{Model chk-3} using the sentiment-return regression framework in Eq.~\ref{eq:ch2:sentiment_reg} (\citet{tadle2022fomc}). We test whether sentiment extracted from synthetic Minutes explains variation in financial-market variables (federal funds futures and USD exchange rates). This provides a robustness check on whether empirical relationships persist when text inputs are model-generated rather than historical. Figure~\ref{fig:ch2:bootstrap_ft_base} reports bootstrapped $\beta_{Z_m}$ and $t$-statistic distributions for \textit{Model chk-3} and \textit{Model chk-0}.
+
+
+\begin{figure}[htbp]
+    \centering
+    %----------------- FT -----------------%
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{simulation_figure/ft_betas.png}
+        \caption{\textit{Model chk-3}: coefficient distribution}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{simulation_figure/ft_tvalues.png}
+        \caption{\textit{Model chk-3}: t-statistics distribution}
+    \end{subfigure}
+    \vspace{0.8em}
+
+    %----------------- Base -----------------%
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{simulation_figure/base_betas.png}
+        \caption{\textit{Model chk-0}: coefficient distribution}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{simulation_figure/base_tvalues.png}
+        \caption{\textit{Model chk-0}: t-statistics distribution}
+    \end{subfigure}
+    \caption{Bootstrap distributions of $Z_{t}^{M}$ coefficients and t-statistics for \textit{Model chk-3} and \textit{Model chk-0}.}
+    \label{fig:ch2:bootstrap_ft_base}
+\end{figure}
+
+% coefficient
+% base: 0.0022399151956866616, ft:0.0027096296763361653
+% target: 0.005048811
+
+% t-statistics
+% base: 0.6168947613082458, ft: 0.7152094287360642
+% target: -0.289101766
+% 
+
+As an exploratory validation, we examine whether the synthetic text preserves the directional empirical signal in the benchmark regression. The bootstrap mean coefficient for $Z_t^m$ increases from 0.00224 for \textit{Model chk-0} to 0.00271 for \textit{Model chk-3}, narrowing the gap to the benchmark coefficient (0.00505) by 20.97\%. The corresponding $t$-statistic also rises from 0.6169 to 0.7152. Taken together, these results provide preliminary rather than conclusive evidence that \textit{Model chk-3} better retains the underlying policy-related signal.
+
+
+
+
+
+% decision making accuracy 
+
+\subsubsection*{Decision Prediction Performance}
+
+Finally, to assess factual grounding in a decision-relevant setting, we evaluate whether the model can infer the Committee’s voted action from the analytical context. Concretely, we compare model-predicted policy decisions with realized outcomes and report \textit{Decision-Making Accuracy} for \textit{Model chk-0} and \textit{Model chk-4}.
+
+
+For this assessment, we use the non-decision sections from the FOMC Minutes as input prompts. Notably, because ``Committee Policy Action'' text was excluded from the analysis-generation dataset used for core training, the models are not directly trained on realized decisions. This design enables a more meaningful test of inferential capability: the models must predict the policy action based on the analytical discussion alone. We also use the supplementary Minutes (1994--2008) as an out-of-sample test set. Table~\ref{tab:ch2:decision_acc} reports the resulting decision-prediction accuracy.
+
+
+\begin{table}[htp]
+    \centering
+    \footnotesize
+    \begin{tabular}{l l c c c}
+        \toprule
+        \textbf{Model} & \textbf{Actions} & \textbf{Total Minutes} & \textbf{After 2009} & \textbf{Before 2009} \\
+        \midrule
+        \multirow{4}{*}{\textit{Model chk-4}} 
+            & Overall     & 78.89\% (142/180) & 78.13\% (100/128) & 80.77\% (42/52) \\
+            & Cut         & 42.86\% (6/14)    & 28.57\% (2/7)     & 57.14\% (4/7) \\
+            & No Change   & 79.10\% (106/134) & 77.67\% (80/103)  & 83.87\% (26/31) \\
+            & Raise       & 93.75\% (30/32)   & 100.00\% (18/18)  & 85.71\% (12/14) \\
+        \midrule
+        \multirow{4}{*}{\textit{Model chk-0}} 
+            & Overall     & 67.42\% (120/178) & 66.41\% (87/131)  & 70.21\% (33/47) \\
+            & Cut         & 61.54\% (8/13)    & 42.86\% (3/7)     & 83.33\% (5/6) \\
+            & No Change   & 63.08\% (82/130)  & 63.46\% (66/104)  & 61.54\% (16/26) \\
+            & Raise       & 85.71\% (30/35)   & 90.00\% (18/20)   & 80.00\% (12/15) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Prediction Accuracy for Monetary Policy Decision-making}
+    \label{tab:ch2:decision_acc}
+\end{table}
+
+
+
+Table~\ref{tab:ch2:decision_acc} shows broadly comparable performance across periods. For \textit{Model chk-4}, overall accuracy is 78.13\% in the post-2009 sample and 80.77\% in the pre-2009 sample. For \textit{Model chk-0}, the corresponding values are 66.41\% and 70.21\%. Across all observations, \textit{Model chk-4} outperforms \textit{Model chk-0} (78.89\% vs.\ 67.42\%), indicating stronger inferential performance in both in-sample and out-of-sample settings.
+
+Notably, the most significant performance gain appears in cases where the Federal Funds Rate (FFR) is expected to rise. In the ``Raise'' category, \textit{Model chk-4} achieves an accuracy of 93.75\%, surpassing \textit{Model chk-0}'s 85.71\%. Similarly, for the ``No Change'' category, which represents the majority of cases, \textit{Model chk-4} reaches 79.10\% compared with 63.08\% for \textit{Model chk-0}. However, results in the “Cut” category should be interpreted with caution due to the limited sample size (14 observations), which may not provide sufficient statistical power.
+
+
+We next evaluate decisions inferred from synthetic sections generated by \textit{Model chk-2}. Using the same template, we replace original Minutes text with synthetic text and ask each model to select one policy action from Table~\ref{tab:ch2:vote_choice}.
+
+
+For this experiment, we generated 500 synthetic Minutes and then drew 20 random samples (sampling interval: 2,000). Decision-prediction accuracy based on synthetic Minutes is reported in Table~\ref{tab:ch2:decision_acc_synthetic}.
+
+
+\begin{table}[htbp]
+    \centering
+      \begin{tabular}{lcc}
+      \toprule
+      \textbf{Target Vote} & \textit{Model chk-0} & \textit{Model chk-4} \\
+      \midrule
+      Overall & 0.4601 & \textbf{0.7055}\\
+              & $({1555.63}^{***})$ & $({2707.50}^{***})$\\[0.3em]
+
+      Cut by 50 bp & 0.0504 & \textbf{0.0534}\\
+                   & $({32.76}^{***})$ & $({34.34}^{***})$\\[0.3em]
+
+      Cut by 25 bp & \textbf{0.2466} & 0.1534\\
+                   & $({208.86}^{***})$ & $({147.19}^{***})$\\[0.3em]
+
+      No change & 0.4567 & \textbf{0.7824}\\
+                & $({1396.12}^{***})$ & $({2721.95}^{***})$\\[0.3em]
+
+      Raise by 25 bp & \textbf{0.6212} & 0.5469\\
+                     & $({658.82}^{***})$ & $({664.30}^{***})$\\[0.3em]
+
+      Raise by 50 bp & \textbf{0.1588} & 0.1548\\
+                     & $({92.34}^{***})$ & $({89.65}^{***})$\\[0.3em]
+
+      Raise by 75 bp & 0.6077 & \textbf{0.6268}\\
+                     & $({361.37}^{***})$ & $({355.74}^{***})$\\
+      \bottomrule
+      \end{tabular}
+    \caption{Prediction Accuracy for Using Synthetic FOMC Minutes}
+    \label{tab:ch2:decision_acc_synthetic}
+\end{table}
+
+
+\textit{Model chk-4} achieves notably higher overall accuracy (0.7055) than \textit{Model chk-0} (0.4601), particularly in the “No Change” and “Raise by 75 bp” categories, demonstrating stronger alignment with realistic policy patterns.
+
+
+These results confirm that task-specific GRPO materially improves decision prediction when synthetic Minutes are used as the input representation. 
+
+To place the \textit{Model chk-4} results in a broader benchmark context, it is useful to compare the results with different benchmarks. Here, we selects three panels. Panel A uses only pre-meeting information, Panel B uses stripped same-meeting FOMC statements, and Panel C uses stripped FOMC Minutes released after the meeting. Accordingly, the table below reports one representative high-performing baseline from each panel together with \textit{Model chk-4}, and the rows should not be interpreted as a single unified leaderboard.
+
+
+Panel A is designed as a real-time forecasting benchmark. It combines pre-meeting market-implied signals and macro-discrete-choice models following the monetary-policy forecasting literature (\cite{kuttner2001monetary,hamiltonjorda2002target}). For the futures-based component, the current-month fed funds futures rate satisfies
+\begin{equation}
+r_t^{\mathrm{fut}}=\frac{d}{D}r_t^{\mathrm{current}}+\frac{D-d}{D}\mathbb{E}_t\left[r_t^{\mathrm{post}}\right],
+\end{equation}
+which implies
+\begin{equation}
+\mathbb{E}_t\left[r_t^{\mathrm{post}}\right]=\frac{D r_t^{\mathrm{fut}}-d r_t^{\mathrm{current}}}{D-d},
+\end{equation}
+where $D$ is the number of calendar days in the meeting month and $d$ is the meeting day. In parallel, ordered-response models map pre-meeting observables $x_t$ into a latent policy index,
+\begin{equation}
+y_t^*=x_t^\prime\beta+\rho g(y_{t-1})+\varepsilon_t,\qquad \varepsilon_t\sim\mathcal{N}(0,1),
+\end{equation}
+and classify decisions into cut, no-change, and raise states through threshold rules on $y_t^*$. The representative row reported in Table~\ref{tab:ch2:decision_acc_overview} is the persistence benchmark, which predicts the current decision from the previous target outcome.
+
+
+Panel B is a same-meeting text-inference benchmark based on stripped official statements. This design follows the central-bank communication literature, which extracts hawkish and dovish signals from FOMC statements and relates them to policy expectations (\cite{luccatrebbi2009communication,gurkaynak2005actions}). A simple lexical proxy is
+\begin{equation}
+\text{lex\_score}_t=\frac{\text{hawk\_count}_t-\text{dove\_count}_t}{\text{token\_count}_t},
+\end{equation}
+while text classifiers convert a feature vector $z_t$ into class probabilities through
+\begin{equation}
+p(y_t=k\mid z_t)=\mathrm{softmax}(Wz_t+b)_k,\qquad k\in\{\text{cut},\text{no change},\text{raise}\}.
+\end{equation}
+Here $z_t$ can be a TF-IDF representation of the stripped statement or a finance-domain embedding such as FinBERT \cite{araci2019finbert}. The representative baseline in the compact table is the TF-IDF multinomial logit benchmark.
+
+
+Panel C keeps the same prediction logic as Panel B but replaces the input text with stripped FOMC Minutes. This panel is motivated by evidence that Minutes carry policy-relevant information for financial markets and sentiment extraction (\cite{jubinski2013fomc,tadle2022fomc}). Letting $m_t$ denote the stripped Minutes text, the embedding-based specification used in the benchmark panel is
+\begin{equation}
+e_t=\mathrm{Encoder}(m_t),\qquad p(y_t=k\mid e_t)=\mathrm{softmax}(We_t+b)_k.
+\end{equation}
+Because Minutes are published after the meeting, Panel C is an ex post inference benchmark rather than a real-time forecasting exercise. The representative baseline reported below is the embedding-plus-linear-probe model.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \begin{tabular}{llcccc}
+        \toprule
+        \textbf{Information Set} & \textbf{Method} & \textbf{Cut} & \textbf{No change} & \textbf{Raise} & \textbf{Overall} \\
+        \midrule
+        Panel A & Persistence & 73.91\% & 94.92\% & 84.21\% & 91.78\% \\
+        Panel B & TFIDFLogit & 52.17\% & 93.82\% & 73.68\% & 87.73\% \\
+        Panel C & EmbeddingLinear & 22.22\% & 91.57\% & 42.11\% & 80.79\% \\
+        LLM & \textit{Model chk-4} & 42.86\% & 79.10\% & 93.75\% & 78.89\% \\
+        \bottomrule
+    \end{tabular}
+    \caption{Compact Comparison of Decision Prediction Accuracy across Information Sets}
+    \label{tab:ch2:decision_acc_overview}
+\end{table}
+
+The compact comparison highlights three points. First, Panel A and Panel B achieve higher overall and ``No change'' accuracy, which is unsurprising given their respective information sets and the dominance of no-change outcomes in the historical sample. Second, \textit{Model chk-4} delivers the strongest performance in the ``Raise'' category, reaching 93.75\%, which indicates a clear advantage in identifying tightening episodes from policy-relevant discussion. Third, relative to the minutes-based benchmark in Panel C, \textit{Model chk-4} improves cut, raise, and overall accuracy, although it remains below Panel C on the majority ``No change'' category. Taken together, these results suggest that the main gain from the LLM approach comes from decision-relevant synthesis of policy discussion rather than from simply reproducing the dominant no-change class.
+
+
+
+
+
+
+\section{Conclusion}\label{ch2:sec:conclusion}
+
+
+In conclusion, this chapter develops a fine-tuned LLM framework for generating structured synthetic policy text from macro-financial indicators. The strongest empirical evidence comes from the synthetic Minutes generation task, where \textit{Model chk-3} consistently outperforms \textit{Model chk-0} on textual similarity measures, indicating stronger Minutes-style alignment and higher textual fidelity. This result suggests that the downstream SFT stage is effective in adapting the model to the stylistic and structural conventions of FOMC Minutes.
+
+
+Beyond similarity, however, the remaining evidence is more qualified. The Leave-one-out results provide only partial and section-dependent evidence of indicator reliance, the synthetic-target exercise supports internal reliance or self-consistency, while alignment against actual Minutes remains mixed rather than uniformly positive. Likewise, the econometric validation should be interpreted as exploratory, since it provides preliminary rather than conclusive evidence that synthetic Minutes retain policy-relevant signal. 
+
+In the downstream decision task, \textit{Model chk-4} improves policy decision prediction relative to \textit{Model chk-0}, which suggests that task-specific post-training enhances decision-relevant inference from policy discussion. Taken together, these findings support the promise of LLM-based policy-text simulation for macro-financial analysis.
+
+
+Several avenues for future research therefore remain open. First, beyond consistency, the model should also ensure \textit{sufficiency}: generated sections should incorporate the relevant economic and financial information contained in the prompts. In this chapter, we quantify indicator reliance using a Leave-one-out diagnostic, but future work should extend this analysis toward more comprehensive Shapley-style attribution methods, such as token-level approximations, that can better capture interaction effects across indicators. Stronger external alignment tests and more systematic expert validation would also help distinguish stylistic resemblance from genuine evidence use.
+
+
+Second, the framework should be evaluated under more demanding robustness conditions. This includes stricter out-of-sample and distribution-shift tests, stronger benchmark comparisons for policy decision prediction, and further validation of standardized prompt templates and downstream scenario designs. Advancing these directions would improve the reliability of synthetic policy communication and clarify its practical value for macro-financial analysis, scenario design, and risk-management applications.

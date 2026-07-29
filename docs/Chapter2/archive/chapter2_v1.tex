@@ -1,0 +1,693 @@
+% !TEX root = ../thesis.tex
+\graphicspath{{Chapter3/Chapter3Figs/}{Chapter3/Chapter3Figs/}}
+ 
+\chapter{Use Fine-TunedLarge Language Model to Generate Consistent and Sufficient Synthetic Texts}\label{ch:chapter:3}
+
+\section{Introduction}\label{ch3:sec:introduction}  
+Government announcements shows significant impacts on the interest rate market (\cite{vergote2012}, \cite{rosa2013financial}, \cite{jubinski2013fomc}. ). Meanwhile, the U.S. government bond deviates, such as the 10-Year Treasury Note futures and options, are traded almost continuously, except for a one-hour halt from 4PM to 5PM Central Time (CT). This nearly continuous trading allows traders to react to the events and press releases at any time. 
+
+Current models for predicting the implied volatility surface (IVS),  built on the Efficiency Market Hypothesis (EMH, \cite{fama1970}), reply only on the quantitative data. For instance, parametric models, like the Heston Stochastic Volatility Model (\cite{Heston:1993}) and the Stochastic Alpha Beta Rho (SABR) Model (\cite{sabr2002}), need to be calibrated on the current shape of the surface. However, these model failed in accounting for qualitative data as a part of themselves. 
+
+Consequently, there is pressing need for forecasting models that integrate potential qualitative information. However, Unlike the quantitative data, qualitative data are  inherently discontinuous, making historical data insufficient for analyzing diverse scenarios. For instance, the Federal Reserve has only adjusted the Fed Fund Rate 130 times since 1990s. To address this challenge, we propose utilizing a fine-tuned large language model (LLM) to generate synthetic texts across various scenarios, thereby enhancing the volatility models' ability to handle qualitative inputs effectively.
+
+
+The exceptional predictive capabilities of the Artificial Neural Networks (ANNs) makes them ideal tools for synthesizing both quantitative and qualitative data. \cite{guo2024generative} conducted a comprehensive survey, describing the diverse applications of synthetic data across industries. This work addresses critical concerns such as confidentiality of data, and the augmentation of training datasets. \cite{potluru2023synthetic}, also referenced by \cite{assefa2020generating}, highlights the specific utility of the synthetic data in finance, notably its role in enhancing risk management practices within banking institutions.
+
+
+Synthetic data has been accepted by the financial researchers as a powerful tool in the robustness tests. For instance, \cite{cao2022synthetic} employed a synthetic limit order book to test the performance of different forecasting models, while \cite{carvajal2022synthetic} used synthetic stock prices to train a trading model. 
+
+
+Besides the time-series data, the financial industry manages a large volume of structured documents, such as the financial reports, the Minutes for the Monetary Policy Committee (MPC) meetings of the Bank of England, and the Minutes of the Federal Open Market Committee (FOMC) meetings of the Federal Reserve. 
+
+% Meanwhile, the significant developed Large Language Model (LLM) in the Natural Language Process (NLP) 
+Meanwhile, the recent remarkable developments in Neutral Networks (NNs), Large Language Models (LLMs) have been rapidly advanced and outstandingly perform in a broad range of Natural Language Processing (NLP) tasks. LLMs are pre-trained on a diverse array of texts, enabling them to generate high-quality, human-like text. Some models are fine-tuned with specific datasets for specialized tasks. The significant success of LLMs makes them ideal for generating variety of synthetic structured texts, such as labeled sentence pairs (\cite{schick2021generating}),  instruction-following data (\cite{peng2023instruction}), and news report (\cite{yu2024large}). However, generating synthetic documents remains a challengeable topic. There are limit researches have been made in finance, but several applications in other sectors, such as healthcare, where LLMs have been employed to create clinic notes (\cite{li2021synthetic}, \cite{meoni2024generating}). 
+
+Therefore, to the best of our knowledge, our research constitutes the pioneering try to fine-tune LLMs for the generation of  consistent structured texts specifically in financial domain. 
+
+
+% Additionally, sufficient information in the responses is also our concern. We employ Shapley Value ($\mathcal{SV}$) to calculate the marginal contribution of the prompts to the responses. Because we need the response to contain all the economic and financial information in the prompt. As the prompts increase, the marginal contribution should be non-negative. Therefore, the sufficient test will conduct under the null hypothesis:
+
+% \begin{equation*}
+%     H_0: \mathcal{SV} < 0
+% \end{equation*}
+
+
+Finally, our research aims to contribute to the exiting literature in the following aspects:
+\begin{itemize}
+    \item \textit{1. We introduce a novel approach for generating synthetic structured texts that span various scenarios. This innovation will assist researchers in conducting robustness tests for their models by providing almost unlimited data.}
+    \item \textit{2. Our research substantiates the generative capacity of LLMs for structured texts. Consequently, other researchers can leverage our methods to fine-tune LLMs with alternative structured texts, such as firm specific reports and legal required documents, fostering broader applicability.}
+    \item \textit{3. Our research translates discrete qualitative information into a continuous distribution, which offers fresh perspectives on risk management strategies within the financial sector}
+\end{itemize}
+
+
+Our chapter is structured as followings: Section \ref{ch3:sec:related work} will review the related works in synthetic data. Additionally, the current literature about LLM will be provided in Section \ref{ch3:sec:llm}. Following that, Section \ref{ch3:sec:the dataset} will talk about our dataset, Section \ref{ch3:sec:model finetuning} will detailed illustrate our method in model fine-tuning. Finally, Section \ref{ch3:sec:empirical results} is the empirical results of our model. 
+
+
+
+
+\section{Related Works on Synthetic Data}\label{ch3:sec:related work}
+Current literature on synthetic data generation has shown remarkable improvement with the significant advancement of the Generative Artificial Intelligence (AI) technologies. 
+
+The Royal Society defined Synthetic data as \textit{`` ... data that has been generated using a purpose-built mathematical model or algorithm, with the aim of solving a (set of) data science task(s) (\cite{jordon2022synthetic}).''}  Traditional ways generating synthetic data involve numerical processes based on some assumptions and random numbers drawn from normal or uniform distributions, such as the Autoregressive Moving Average model (ARMA, \cite{whittle1951hypothesis}) and the Generalized AutoRegressive Conditional Heteroskedasticity Model (GARCH, \cite{Bollerslev:1986}). However, the remarkable development in Artificial Neutral Network (ANN) provides novel approaches in generating synthetic data. These models are pre-trained on the exiting data, which can help the models capture various features of the data. 
+
+% distribution
+\cite{athey2021using} were among the first to introduce the Wasserstein Generative Adversarial Network (WGAN, \cite{arjovsky2017wasserstein} and \cite{goodfellow2020generative}) as a powerful tool for generating synthetic economic data with the similar distribution of the raw data. They utilized this technique to replace the conventional Monte Carlo Simulation in testing robustness of economic models. Subsequently, \cite{kaji2023adversarial} integrated structured models with the WGAN to effectively model complex distributions.  
+
+% time series
+Regarding time-series data, the Long Short-Term Memory (LSTM, \cite{hochreiter1997long}) has gained widespread popularity. For instance, \cite{carvajal2022synthetic} applied the LSTM to model stock price dynamics. \cite{fischer2018deep} used the model for forecasting the S\&P 500 index, while \cite{liu2019novel} employed it to predict the volatility of the S\&P 500 index. 
+
+% texts
+Finally, Large Language Models (LLMs) have recently been harnessed across a broad spectrum of Natural Language Processing (NLP) tasks. Current literature indicates LLMs serve as a formidable resource for generating human-like texts, significantly advancing the field of NLP. \cite{potluru2023synthetic}, \cite{assefa2020generating}, and \cite{guo2024generative} offer a survey listing applications and challenges associated with employing LLMs for synthesizing text data. 
+
+In the financial domain, documents, such as prospectus, credit reports, purchase orders, sustainability disclosures, and income statements, are presented in a range of required formats and encompass a diversity of semantics. Analyzing these documents can provide critical insights into risk management for firms, banks and governments. However, curating these documents presents significant challenges, especially when they are proprietary or subject by copyright and licensing restrictions. Synthetically generated documents provide a viable alternative and cheap way to the explicit collection of documents.
+
+
+\section{Large Language Models (LLM) for consistent texts}\label{ch3:sec:llm}
+A large number of researches in Natural Language Processing (NLP) involves forecasting the following words given some sequences. The main idea is to choose the words with the highest score given the current contexts:
+
+
+\begin{equation*}
+    w_{i+1}^* = \underset{w_{i+1}}{arg\,max}\,f(w_{i+1} | w_1, w_2, ...,w_i; Context)
+\end{equation*}
+
+where $\bm{w} = w_1, w_2, ..., w_{i}$ is a sequence of words, $f(\cdot)$ is a parameterized model. Therefore, the key in NLP is to find the ``right'' $w_{i+1}$ or the ``right'' quantitative measure of $w_{i+1}$. \cite{mikolov-etal2013} firstly proposed a ``Word2Vec'' model which can compute the vector representation of a word using a Neural Network. Moreover, considering that a single word may have different meanings in different contexts, \cite{peter-etal2018} enhances the word vector by incorporating linguistic contexts using Bi-directional LSTM. However, there two challenges with the traditional architectures, such as the CNN, RNN, and LSTM. Firstly, with the length of the sequences increasing, the earlier contexts may be lost. This is a common issue with neural networks where information accumulates exponentially. If the coefficient in $f(\cdot)$ is less than 1 and n becomes very large, the earlier information (e.g. $h_1(\cdot)$ in Fig. \ref{fig: ch0: rnn.png}) becomes too diluted to effectively influence the prediction. This diminishing effect of earlier data points is particularly problematic in long sentences, where critical contextual information may be lost. Additionally, eue to their reliance on sequential data, these models cannot process each word in parallel. This sequential dependency limits the speed of processing, as each word or piece of information must be processed one after the other, rather than simultaneously.
+
+To address these issues, \cite{bahdanau-etal2014} pioneered the use of ``attention" by integrating a weight into the word vector. The underlying concept is to assign a lower weight to less significant words, thereby enhancing the model's focus on more relevant information. Following this, \cite{cheng-etal2016} introduced a mechanism known as intra-attention (or self-attention) in machine reading. This approach generates attention weights based on the words within in the current sentence (or sequence), allowing for a nuanced understanding of text. \cite{vaswani-etal2018} introduced a framework named "Transformer", which distinguishes itself from previously mentioned models by being entirely based on the concept of self-attention, eschewing traditional architectures like CNNs, RNNs, or LSTMs. Because the self-attention mechanism allows us to calculate the weights for all the words in a sequence simultaneously, the computation in the Transformer can be parallelized This significantly reduces the time cost.
+
+The Transformer consists of two main components, Encoder and Decoder. The Encoder (Fig. \ref{fig: ch0: transformer_encoder}) is used to create accurate word vectors incorporating the position information and the context information. The Decoder (Fig. \ref{fig: ch0: transformer_decoder}) will predict the next words based on the input sequences.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chapter3/Chapter3Figs/encoder.png}
+    \caption{Transformer Encoder}\label{fig: ch0: transformer_encoder}
+\end{figure}
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chapter3/Chapter3Figs/decoder.png}
+    \caption{Transformer Decoder}\label{fig: ch0: transformer_decoder}
+\end{figure}
+
+
+There are two well known implementations of transformer are the Generative Pre-trained Transformer (GPT, \cite{gpt2018}) and the Bidirectional Encoder Representations from Transformer (BERT, \cite{bert2018}). The GPT which based on the Decoders of the transformer and pre-trained word vectors is used for generating text, such as the ChatGPT. On the other hand, the BERT is based on the Encoder of the transformer, used for understanding text, like the Google search. Moveover, the reduced computational cost makes a deeper and larger neural network available in text generation. For instance, the GPT-3 has 175 billion parameters and 96 layers (\cite{brown2020language}). The complexity and depth of the network allows the model to capture more features in the texts, which can be used to generate human-like outputs. 
+
+
+However, sometime, the pre-trained data may not be suitable for the user. Because the model is trained on a wide range of general public texts. But, users can re-train the model with their own dataset using a technic so called fine-tuning, even if the dataset size is small. There are two kinds of methods for fine-tuning, full parameter and partial parameter (see Fig. \ref{fig: ch0: transformer_finetuning}). Full parameter fine-tuning will update parameters in all the layers inside the model, while partial parameter fine-tuning will frozen part of the layers and only update particular layers or add extra layers. Fine-tuning can improve the performance of the model on a specific task. For instance, the Llama model, which serves as the base model for text generation, has been fine-tuned into two distinct models: Llama Chat, optimized for conversational purposes, and Llama Code, which is specialized for coding tasks (\cite{llama-recips}). Therefore, our research will utilize the remarkable generating ability of the LLM. We will try to fine-tune a LLM with our own dataset, aim to provide a consistent synthetic structured texts using the model.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Chapter3/Chapter3Figs/finetuning.png}
+    \caption{Transformer Fine-Tuning}\label{fig: ch0: transformer_finetuning}
+\end{figure}
+
+
+
+
+\section{The Dataset}\label{ch3:sec:the dataset}
+First of all, we downloaded the data from Jan 2009 to May 2024. For FOMC Minutes, there are 119 documents in total. We first separate the entire Minutes into sub-sections, ``Staff Review of the Economic Situation'', ``Staff Review of the Financial Situation'', ``Staff Economic Outlook'', ``Participants' Views on Current Conditions and Economic Outlook'', and ``Committee Policy Actions''. There are 595 sections in total. Although some other sections may be included in the Minutes, for instance, there is a ``Developments in Financial Markets and the Federal Reserve`s Balance Sheet'' in the 20090624 Minutes, these five sections are all included in the Minutes after 2009. We also downloaded the Minutes before 2009, but these documents do not contain all these five parts. Hence these documents are used as supplementary training materials.
+
+We further separate these sections into 475 (80\%) train data, 60 (10\%) validate data, and 60 (10\%) test data. The dataset size may not be big enough to conduct fine-tuning. Therefore, we downloaded extra texts as supplementary training materials, including the Transcripts, Green books, blue books. The FOMC Transcripts for the corresponding Minutes are the detailed record of the meetings. The FOMC Green books (from 1990 to 2010) contain the detailed analysis of the economic and financial data, and the Blue books (from 1990 to 2010) demonstrate the corresponding economic and financial backgrounds. 
+
+
+Additionally, we extracted the numerical data to assemble our input prompts. For economic analysis, we downloaded:  the monthly U.S. Macro Data (CPIs, Federal Fund Rates, GDPs, Unemployment Rates). For financial data, we downloaded the Daily S\&P 500 Index level and the daily U.S. Treasury Note yields (2-Year, 5-Year, and 10-Year), Then, we calculated the return for all these data:
+
+\begin{equation*}
+    R_{i, t} = \frac{Y_{i, t} - Y_{i, t-1}}{Y_{i, t-1}}
+\end{equation*}
+
+where $i$ is the corresponding data, $Y_{i, t-1}$ is the data level for the previous time. $Y_{i, t}$ is the current data level.
+
+
+
+\section{Model Fine-Tuning}\label{ch3:sec:model finetuning}
+To generate consistent texts using the LLM, we choose to fine-tune the pre-trained pre-trained model. We decided to use \textbf{LLAMA3-8B}, the most powerful open-sourced LLM developed by MetaAI (\cite{meta2024llama3}), as our base model. LLAMA3-8B is the smallest model in LLAMA3 family that can run on a single GPU with 24 GB of memory. 4 main steps involves in fine-tuning. Firstly, we need to prepare training dataset and convert the FOMC Minutes to the format of input for the model. Then, we need to design system and user prompts. Well-structured prompts can help the model generate logical outputs. After that, we employ quantization method, such as LoRA, for partial-parameter FT to reduce the computational costs. Finally, the the loss will be calculated by comparing the target response with the output generated by the model. The process will keep iterating until the convergence of the loss function. Fig. \ref{fig:ch3:ft_detail} illustrates the fine-tuning process:
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.3\textwidth]{Chapter3/Chapter3Figs/ft_detail.png}
+      \end{center}
+      \caption{Fine-Tune Process Flow Chart}
+      \label{fig:ch3:ft_detail}
+\end{figure}
+
+
+\subsection{Step 1: Prepare Training Dataset}
+Each LLM has its own required format of inputs. All the texts wil be converted to the form of Q\&A pairs. Fig. \ref{fig:ch3:qa_label} shows the labels for LLAMA3, where \textcolor{blue}{$<|$start\_header\_id$|>$} and \textcolor{blue}{$<|$end\_header\_id$|>$ $\setminus$n$\setminus$n} are indicators for the role of the following messages. \textcolor{blue}{$<|$begin\_of\_text$|>$} is the indicator of the start of the conversation. \textcolor{blue}{$<|$eot\_id$|>$} is the indicator of the end of the conversation. An example is provided in  Fig. \ref{fig:ch3:llama3_input_example}.
+
+\begin{figure}[htbp]
+\begin{minipage}[c]{0.48\textwidth}
+    \begin{center}
+    \includegraphics[width=\textwidth]{Chapter3/Chapter3Figs/llama3_template.png}
+    \caption{Q\&A Labels for LLAMA3}
+    \label{fig:ch3:qa_label}
+\end{center}
+\end{minipage}
+% \hfill
+\begin{minipage}[c]{0.48\textwidth}
+    \begin{center}
+    \includegraphics[width=\textwidth]{Chapter3/Chapter3Figs/fomc_example.png}
+    \caption{LLAMA3 Input Example}
+    \label{fig:ch3:llama3_input_example}
+\end{center}
+\end{minipage}
+\end{figure}
+  
+
+
+
+\subsection{Step 2: System and User Prompts Engineering}
+
+Prompt engineering plays a pivotal role in eliciting the desired format of text generation from language models. There are three ways in prompting the model, zero-shot standard prompting, zero-shot Chain-of-Though prompting (zero-shot CoT, \cite{kojima2022large}), and few-shot Chain-of-Though prompting (few-shot CoT, \cite{wei2022chain}). 
+
+First of all, the zero-shot standard prompting involves instructing the model to generate the output directly in response to an input prompt. This approach is effective for straightforward tasks, where the model can do the predict without additional guidance. However, for complex reasoning tasks, such as solving mathematical problems or creating an article with interconnected subsections, the Chain of Though (CoT) method yield provide more precise outcomes. 
+
+
+CoT prompting necessitates the inclusion of guiding instructions within the prompt to aid the model in generating outputs that are more coherent and rational, broken down into manageable steps. There are two ways of CoT, zero-shot CoT and few-shot CoT. Zero-shot CoT is particularly adept at handling mathematical calculations. This method only requires to add an extra sentence in the prompt: ``Answer the question step by step'', which can encourage the model dissect the question into sub-questions. However, for logical reasoning, few-shot CoT outperforms than other methods. Unlike Zero-shot CoT, Few-shot CoT prompting requires a series of interaction between user and the model, dividing the task into several sub-tasks, and addressing each sub-task at each talk. In the context of our research, instead of requiring the model to generate the entire chapters, we adapt a section-by-section approach by asking model to generate a section at each time.  Here we design a four-step process to assist the model in composing complete Minutes. Figure \ref{fig:ch3:cot_steps} illustrates the first three steps in the few-shot CoT.
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=\textwidth]{Chapter3/Chapter3Figs/cot_steps.png}
+        \caption{Few-shot Chain-of-Though Steps}
+        \label{fig:ch3:cot_steps}
+    \end{center}
+\end{figure}
+
+
+Due to constraints on the model's contextual understanding length, our approach involves asking the model to generate a summary of each section in the above three steps. Then, in the final step, a full section will be expanded from the summary. Once all sections are developed, they will be combined to form the  complete, synthesized FOMC Minutes.
+
+In the first step, the model is tasked to generate the summary of the ``Staff Review of the Economic Situation'' drawing upon provided macro-economic, and the ``Staff Review of the Financial Situation'' informed by financial data. These two sections are overviews of the current economic and financial conditions based on the statistics. Then, in step 2, the model utilizes these summaries to make some prediction about the future scenarios, drafting a summary of the ``Staff Economic Outlook'' and the ``Participants Views on Current Conditions and Economic Outlook'', which will affect the Committee's actions on the monetary policy. After that, in step 3, with a comprehensive understanding of the economic and financial contexts, along with predictive insights, the model crafts the "Committee Policy Actions." This section outlines the decisions made regarding monetary policy, informed by the previous summaries and forecasts. Finally, in step 4, the summaries created in the preceding steps are expanded into full-length sections, enriching the detail and context. This iterative process, facilitated through a dialogue-like structure, enables the model to benefit from the cumulative context of previous steps, enhancing the coherence and accuracy of the generated content. 
+
+By structuring the generation process into discrete steps and maintaining a conversational format, we maximize the model's ability to produce high-quality, contextually rich outputs that closely mirror the structure and substance of authentic FOMC Minutes. Example prompt are provided as following:
+
+
+% Additionally, we compared the performance of using standard prompting (Step \ref{standard prompt}) to fine-tune the model.
+
+
+
+\subsubsection*{CoT Step 1: Connection between ``data'' and ``Review'' }
+\textbf{System Prompt:}\\
+{\footnotesize
+\textit{``The Federal Open Market Committee (FOMC) holds meetings to determine the U.S. open market policies. The minutes of these FOMC meetings provide a summary, which is structured into five main sections: \\
+1. Staff Review of the Economic Situation: This section presents a summary of the current economic conditions.\\
+2. Staff Review of the Financial Situation: This section provides a summary of the current financial market conditions.\\
+3. Staff Economic Outlook: In this section, the staff forecasts the economy based on current data.\\
+4. Participants' Views on Current Conditions and Economic Outlook: This section includes forecasts about the economy based on current data, as provided by other participants.\\
+5. Committee Policy Actions: This section discusses actions related to open market policy, such as adjustments to the federal funds rate.
+''}} \\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{Please write a summary of section ``Staff Review of the Economic Situation'' based the given data: \\
+``Macroeconomic Data'': ``\textcolor{teal}{$<$Macro-economic data$>$}''\\
+``Financial Data'': ``\textcolor{teal}{$<$Financial data$>$}''
+}} 
+~\\
+\subsubsection*{CoT Step 2: From ``Reviews'' to ``Outlook''}
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{Please write a summary of ``Staff Economic Outlook'' based the given economic and financial situations: \\
+1. ``Staff Review of the Economic Situation'':  ``\textcolor{teal}{$<$The information available at the time of the April 30-May 1 meeting indicated that growth in U.S. real gross domestic product (GDP) stepped down  ... $>$}'' \\
+2. ``Staff Review of the Financial Situation'': ``\textcolor{teal}{$<$ Over the intermeeting period, the market-implied path for the federal funds rate through 2024 increased markedly, and federal funds futures rates suggested  ... $>$}''. 
+}} 
+~\\
+\subsubsection*{CoT Step 3: From ``Current Conditions'' to ``Actions''}
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{Please write a summary of  section ``Committee Policy Actions'' based the given other sections: \\
+1. ``Staff Review of the Economic Situation'':  ``\textcolor{teal}{$<$The information available at the time of d ... $>$}''\\
+2. ``Staff Review of the Financial Situation'': ``\textcolor{teal}{$<$The information available at the time of d ... $>$}''\\
+3. ``Staff Economic Outlook'': ``\textcolor{teal}{$<$The information available at the time of d ... $>$}''\\
+4. ``Participants' Views on Current Conditions and Economic Outlook'': ``\textcolor{teal}{$<$The information available at the time of d ... $>$}''\\
+}} 
+~\\
+\subsubsection*{CoT Step 4: From Summaries to Full Sections}
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+``Please write a full section of FOMC Minutes based on the following summaries:\\
+1. ``Staff Review of the Economic Situation'':  ``\textcolor{teal}{$<$U.S. real GDP growth slowed in the first quarter of 2024 but remained robust from the second half of 2023. Labor mark ... $>$}'' \\
+... ...\\
+5. ``Committee Policy Actions'': ``\textcolor{teal}{$<$U.S. real GDP growth slowed in the first quarter of 2024 but remained robust from the second half of 2023. Labor mark ... $>$}'' }
+}
+
+
+
+
+
+
+
+
+% \subsubsection*{Standard Prompt: Ask the model to generate the full Minutes directly}\label{standard prompt}
+% \textbf{System prompts}\\
+% {\footnotesize
+% \textit{``The Federal Open Market Committee (FOMC) holds meetings to determine the U.S. open market policies. The minutes of these FOMC meetings provide a summary, which is structured into five main sections: \\
+% 1. Staff Review of the Economic Situation: This section presents a summary of the current economic conditions.\\
+% 2. Staff Review of the Financial Situation: This section provides a summary of the current financial market conditions.\\
+% 3. Staff Economic Outlook: In this section, the staff forecasts the economy based on current data.\\
+% 4. Participants' Views on Current Conditions and Economic Outlook: This section includes forecasts about the economy based on current data, as provided by other participants.\\
+% 5. Committee Policy Actions: This section discusses actions related to open market policy, such as adjustments to the federal funds rate.
+% ''}}\\
+% ~\\
+% \textbf{User prompts}\\
+% {\footnotesize
+% \textit{``Please draft the Minutes for \textcolor{teal}{$<$date$>$} using the following data in the corresponding sections. \\
+% 1. Use ``Macroeconomic Data'':  \textcolor{teal}{$<$Macro-economic data$>$} in ``Staff Review of the Economic Situation''\\
+% 2. Use ``Financial Market Data'': \textcolor{teal}{$<$Financial Market data$>$} in ``Staff Review of the Financial Situation''\\
+% 3. Use ``Government Target Levels'': \textcolor{teal}{$<$Government target level$>$} in All the sections\\
+% 4. Use ``Current federal funds rate'' : \textcolor{teal}{$<$Current Federal Fund Rate$>$} in ``Committee Policy Actions''.''}}
+
+
+
+  
+
+\subsection{Step 3: Partial-Parameter Fine-Tuning}
+
+Fine-tuning (FT) models to enhance their performance on speicific taks is a common practice in the NLP. When conducting Full-parameter Fine-Tuning (FT), the entire base model will be updated, leading to enhanced capabilities in generating task-specific text. However, this comes at a significant computational cost.  Full-parameter fine-tune the model requires about 120GB of GPU memory even only for a 8 billion parameters' model. In contrast, Partial-parameter Fine-Tuning (FT) offers more economical alternative, significantly reducing GPU memory requirements by freezing certain layers of the model.
+
+
+To further optimize memory usage without compromising on performance, quantization techniques, such as LoRA (Low Rank Adaptation, \cite{hu2021lora}), Quantization Low Rank Adaptation (QLoRA, \cite{dettmers2024qlora}), and Gated Low-Rank Evolving (GaLoRE, \cite{zhao2024galore}), leverage lower precision formats (FP16, FP8, or FP4) to dramatically reduce memory consumption. For instance, LoRA, which has gained prominence for its efficiency in the fine-tuning literature, can decrease memory usage from 120GB to as low as 24GB.
+
+LoRA's mechanism involves introducing additional layers, referred to as Adapters, with a much smaller rank (typically 1 or 2) compared to the pre-trained weight matrices (such as 2048 in the LLaMA3 model). These Adapters are specifically designed for the task at hand and undergo training during the fine-tuning process. Upon completion of training, these adapted layers are merged back into the base model, effectively enhancing its capabilities for the target task while keeping the overall memory footprint minimal. This approach not only facilitates the fine-tuning of large models on resource-constrained environments but also allows for the integration of task-specific knowledge without the need to retrain the entire model from scratch. By strategically updating the parameters in the Adapters, LoRA and similar techniques enable efficient adaptation to new domains or tasks, making them powerful tools in the fine-tuning. For our research , we choose to use QLoRA, a technique combined the traditional LoRA and Quantization, that dramatically increase the fine-tuning efficiency by lower the precision formats to FP4. 
+
+
+
+\subsection{Step 4: Minimize the Loss Function}
+
+The refinement of the model through retraining employs stochastic gradient descent (SGD) to iteratively adjust the model parameters based on the \textit{loss function}. In partial fine-tuning (Partial FT), the update process selectively modifies certain layers while leaving others unchanged by zeroing out their gradients. This targeted approach enables the model to adapt to new tasks while preserving the knowledge learned during pre-training.
+
+During Supervised-Fine-tuning (Supervised-FT), the \textit{loss} is calculated as the discrepancy between the model's generated responses ($\bm{Q} \in R^{m\times n}$) and the target responses ($\bm{P} \in R^{m \times n}$). This discrepancy is quantified by the multi-class Cross Entropy Loss ($\mathcal{L}_{CE}$):
+
+\begin{equation*}
+  \mathcal{L}_{CE} = -\frac{1}{n}\sum_{i=1}^{n} P_{k,i}\log  Q_i(y_i|x_1, x_2, \dots,x_m, y_1, y_2, \dots, y_{i-1}; \theta)
+\end{equation*}
+
+where $P_{k,i} = [p_1, p_2, \cdots, p_k, \cdots,p_m]$ is a unit vector with $p_k = 1$ (also known as one-hot encoded vector), which represents the target ``word'', $Q_i(\cdot)$ denotes the probability distribution for the predicted``word'' given the input prompts $\bm(x)$ and previously generated words $\bm{y}$. Here, the $n$ is the total number of words in the generated response sequence. The objective of the training is to minimize $\mathcal{L}_{CE}$ by updating the model's weights $\theta$.  
+
+Notably, the term ``word'' in this context does not strictly refer to whole words. Instead, LLMs operate on ``sub-words'' or ``tokens'', which are components of words. For instance, ``Negative'' might be tokenized as ``Neg'' and ``agtive'' to reduce the size of the dictionary, which is known as token dictionary or tokenizer. Each LLM has its unique tokenizer. More powerful LLMs typically have larger tokenizers. For instance, ChatGPT-4's tokenizer contains 256,000 tokens, while LLAMA3's tokenizer includes 128,000 tokens. 
+
+
+The fine-tuning process for the model was configured with a learning rate set to 1.0e-4, batch size of 2, and total number of 3 epochs for training.he temperature parameter was fixed at 0.6, and the top\_p sampling strategy was employed with a value of 0.9. The choice of using just two data samples simultaneously in each iteration (batch size = 2) was aimed at mitigating the memory overhead, essential for accommodating the computational constraints of the system. Furthermore, the entire training dataset was cycled through three times (number of epochs = 3) to ensure thorough learning.
+
+Initial experiments with extended training periods revealed that the evaluation loss converge to approximately 1.70 after 80 steps of training (refer to Figure \ref{fig:ch3:training loss epochs4} and Figure \ref{fig:ch3:training eval loss epochs4} for a graphical representation of the training and evaluation loss trends when epochs = 4). Given these observations, to circumvent the risks associated with overfitting the model becoming too specialized to the training data and thus losing its generalization capability. Overfitting can degrade a model's utility outside the training environment. 
+
+Therefore, we was decided to terminate training after 80 steps, equivalent to 3 epochs to make a balance between model performance and its ability to generalize well to unseen data.
+
+
+\begin{figure}[htbp]
+    \begin{minipage}[c]{0.48\textwidth}
+        \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter3/Chapter3Figs/training_loss_epochs_4.png}
+            \caption{Training Loss for 130 steps (Epochs =4)}
+            \label{fig:ch3:training loss epochs4}
+    \end{center}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{0.48\textwidth}
+        \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter3/Chapter3Figs/training_eval_loss_epochs_4.png}
+            \caption{Training Evaluation Loss for 130 steps (Epochs =4)}
+            \label{fig:ch3:training eval loss epochs4}
+    \end{center}
+    \end{minipage}
+    \end{figure}
+      
+
+Finally, the number of total trainable parameters is 20,971,520 out of 8,051,232,768 total parameters with one adopter (only 0.2605 trainable rate). We trained the model with 80 steps, each step will use 80\% of the total data (475 sections) as train data, 10\% data (60 sections) for validation.  A separate 10\% portion (60 sections) was designated as the test set prior to initiating the training phase. 
+
+Figure \ref{fig:ch3:data training loss step1-3} and Figure \ref{fig:ch3:data training loss step4} illustrate the loss values recorded during the training for CoT steps 1 through 3 and step 4. Specifically, Figure  \ref{fig:ch3:data training loss step1-3} shows a convergence of the training loss to 1.5734, accompanied by an average evaluation loss of 1.7617. Meanwhile, Figure \ref{fig:ch3:data training loss step4} demonstrates a final training loss convergence to 1.4506, paired with an average evaluation loss of 1.3012. 
+
+Overall, these loss metrics suggest that the model successfully absorbed knowledge from the training data. The observed reduction in both training and evaluation losses over the course of training indicates an improvement in the model's ability to generate required texts. It's worth noting that the model's capacity to reduce the training evaluation loss, despite being trained solely on the training dataset, is indicative of its improved understanding and extrapolation of the underlying patterns for the evaluation dataset.
+
+\begin{figure}[htbp]
+\begin{minipage}[c]{0.48\textwidth}
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{Chapter3/Chapter3Figs/training_loss_data.png}
+        \caption{Training Loss for CoT Step 1-3}
+        \label{fig:ch3:data training loss step1-3}
+\end{center}
+\end{minipage}
+\hfill
+\begin{minipage}[c]{0.48\textwidth}
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{Chapter3/Chapter3Figs/training_loss.png}
+        \caption{Training Loss for CoT Step 4}
+        \label{fig:ch3:data training loss step4}
+\end{center}
+\end{minipage}
+\end{figure}
+  
+
+
+% \section{Shapley Value Test}
+
+% The prompts contain the sufficient information, we need the FT LLM to generate texts based on all these information. The Shapley Value ($\mathcal{SV}$) in LLM is suggested (\cite{liu2023prompt}, \cite{mohammadi2024wait}) to measure the expectation of marginal contribution of prompts to the generated response:
+
+%   \begin{equation*}
+%     \mathcal{SV}_i = \frac{1}{n}\sum_{\mathcal{S} \subset \mathcal{N}} \frac{\mathcal{U}(\mathcal{S} \cup p_{i}) - \mathcal{U}(\mathcal{S})}{\bigl(^{n-1}_{|\mathcal{S}|}\bigr)}
+%   \end{equation*}
+
+% where $\mathcal{N} = {p_1, p_2, \cdots, p_n}$ is the set of prompts. $\mathcal{S}$, also known as coalition, is a subset of $\mathcal{N}$. $\mathcal{U}(\mathcal{S})$ is a utility function to measure the quality of the output given the prompts $\mathcal{S}$.Then, the marginal contribution of prompt $p_i$ to the output is calculated by $\mathcal{U}(\mathcal{S} \cup p_{i}) - \mathcal{U}(\mathcal{S})$. 
+
+% As for the utility function $\mathcal{U}$, we suggest to employ the Recall-Oriented Understudy for Gisting Evaluation score (ROUGE, \cite{lin2004rouge}) as our utility function $\mathcal{U}(\cdot)$. The score measures whether the output contains sufficient information from the inputs. Based on the sufficient assumption of the prompts,as the prompts increase, the marginal contribution should be \textit{non-negative}. A negative Shapley Value indicates that the FT LLM failed to incorporate some information in the output. To conduct the test, we first need to mask our prompts. We then use the masked prompts and FT LLM to generate outputs. The Confidence Interval of $\mathcal{SV}$ will be calculated to evaluate the performance of the model.
+
+
+\section{Empirical Results}\label{ch3:sec:empirical results}
+
+In this section, a comparative analysis was conducted to evaluate the performance of our fine-tuned model (FT Model) against the unmodified model (Base Model) in the context of generating Federal Open Market Committee (FOMC) Minutes. This comparison aimed to highlight the improvements achieved through the fine-tuning process, specifically focusing on the model's ability to capture the nuances and complexities inherent in the FOMC Minutes' content and style.
+
+The results of this comparison provided insights into the effectiveness of our prompting and fine-tuning strategy, demonstrating the model's enhanced understanding and generation capabilities specifically tailored to the domain of FOMC Minutes. 
+
+\subsection{Generating Results}
+% In this section, some examples provided serve to illustrate the effectiveness of our strategy. According to our CoT prompting, we firstly ask the model to generate a summary of the FOMC Minutes based on some given macro-economic and financial data. 
+
+Firstly, Section \ref{target_text} is the target texts extracted from the 20191030 FOMC Minutes. Applying our CoT prompting, Section \ref{ft_model} demonstrates the results for Fine-tuned model, while Section \ref{base_model} shows the results for the base model. Finally, Section \ref{simualted ft} gives an example using the simulated data (here we use S\&P 500 index return) to generate the ``Staff Review of Financial Situation'' in the FOMC Minutes. A well-structured synthetic FOMC Minutes is provided in the Appendix \ref{app:fomc 20191030} (FOMC Minutes for 20191030), Appendix \ref{app:fomc simuated summary} (Summary FOMC Minutes with simulated equity data), and Appendix \ref{app:fomc simuated} (Full FOMC Minutes Chapter with simulated equity data)
+
+
+
+\subsection{Raw Model Results}
+## TODO: add FOMC generated by raw model
+
+
+
+
+
+\subsection{Fine-tuned Model Results}
+
+\subsubsection{Target Text: From Data to Staff Economic Outlook for FOMC Minutes 20191030}\label{target_text}
+
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Economic Situation" based the given data for 20091030: \\
+\textcolor{red}{'cpi growth rate for the year': -0.009779758,0.036015062,0.045381515,0.045116153,0.002961999,-0.003901354,0.027694514,0.01097724,0.018466153,0.033927388,}\\
+'fed\_funds\_rate for the month': 1.83, \\
+'Annualized GDP growth rate for the year': -0.048549963, -0.013766568, 0.018815073, 0.056022881, \\
+'mortgage\_rate for the month': 3.65, 3.57, 3.69, 3.75, 3.78, \\
+'unemployment rate for the year': 4,3.8,3.8,3.7,3.6,3.6,3.7,3.6,3.5,3.6}
+}\\
+\textbf{Target Text:}\\
+{\footnotesize
+\textit{
+    - **GDP Growth:** Revised down slightly for the second half of 2019. Real GDP forecasted to decelerate modestly over the medium term.\\
+    - \textcolor{red}{**Inflation:** Core PCE inflation forecasted to remain below 2\% through 2022.}\\
+    - **Risks:** Risks to GDP growth seen as tilted to the downside due to global trade tensions and weak business investment.
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Financial Situation" based the given data for 20091030: \\
+'10-year yield rate mines 2-year yield rate for the month': 0.09, 0.12, 0.15, 0.12, 0.1, 0.12, 0.12, 0.14,0.13, ., 0.16, 0.17, 0.16, 0.18, 0.18, 0.18,0.19, 0.19, 0.17, 0.21, 0.2, 0.17, 0.17, \\
+'S\&P 500 Index return': 0.33\%,-0.08\%,0.56\%,0.41\%,0.19\%,0.28\%,-0.36\%,0.69\%,-0.39\%,0.28\%,-0.20\%,1.00\%,-0.14\%,1.09\%,0.64\%,0.91\%,-1.56\%,-0.45\%,1.42\%,0.80\%,-1.79\%,-1.23\%.}
+}\\
+\textbf{Target Text:}\\
+{\footnotesize
+\textit{
+    - **Investor Sentiment:** Initially weakened but later strengthened on favorable trade and Brexit news. Equity prices and corporate bond spreads remained stable.\\
+    - **Short-term Funding:** Volatility in U.S. short-term funding markets was alleviated by the Desk's repo operations.\\
+    - **Global Markets:** Financial conditions improved after initial concerns; the dollar index declined slightly.\\
+    - **Corporate Financing:** Conditions remained generally accommodative, with mixed results in issuance and borrowing.\\
+    - **Housing Market:** Mortgage rates remained low, leading to stable home-purchase originations and increased refinancing activity.\\
+    - **Consumer Credit:** Financing conditions supportive of household spending, though tight for nonprime credit scores.\\
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+    Please write a summary of section "Staff-Economic-Outlook" based the above sections.
+}}\\
+\textbf{Target Text:}\\
+{\footnotesize
+\textit{
+    The staff revised down its GDP growth projections for 2019 to 2.1\% and 2.0\% for 2020 due to weaker-than-expected data. The unemployment rate was projected to remain low, \textcolor{red}{but inflation was expected to stay below the 2\% target}. The risks to the forecast were seen as balanced, with potential upside from fiscal policy and a strong labor market.
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{Generate the FOMC Minutes Staff-Economic-Outlook Section using the summary you just generated}}\\
+\textbf{Target Text:}\\
+{\footnotesize
+\textit{The projection for U.S. real GDP growth prepared by the staff for the October FOMC meeting was revised down a little for the second half of this year relative to the previous projection.  This revision reflected the estimated effects of the strike at General Motors along with some other small factors. \\
+... ...\\
+The unemployment rate was projected to be roughly flat through 2022 and to remain below the staff’s estimate of its longerrun natural rate. The staff’s forecast for core PCE price inflation this year was revised down a little in response to recent data.  Beyond this year, the projection for core inflation was unrevised, and the forecast for total inflation was a little lower in 2020 because of a downward revision in projected consumer energy prices.  Both total inflation and core inflation were forecast to move up slightly next year, as the low inflation readings early this year were viewed as transitory; \textcolor{red}{nevertheless, both inflation measures were forecast to continue to run somewhat below 2 percent through 2022.}  \\
+... ... \\
+The risks to the inflation projection were also viewed as  Federal Open Market Committee having a downward skew, in part because of the downside risks to the forecast for economic activity. }
+}
+
+\subsubsection{Fine-Tuned Model: From Data to Staff Economic Outlook for FOMC Minutes 20191030}\label{ft_model}
+
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Economic Situation" based the given data for 20091030: \\
+\textcolor{red}{'cpi growth rate for the year': -0.009779758,0.036015062,0.045381515,0.045116153,0.002961999,-0.003901354,0.027694514,0.01097724,0.018466153,0.033927388,} \\
+'fed\_funds\_rate for the month': 1.83, \\
+'Annualized GDP growth rate for the year': -0.048549963, -0.013766568, 0.018815073, 0.056022881, \\
+'mortgage\_rate for the month': 3.65, 3.57, 3.69, 3.75, 3.78, \\
+'unemployment rate for the year': 4,3.8,3.8,3.7,3.6,3.6,3.7,3.6,3.5,3.6}
+}\\
+\textbf{FT Model Response:}
+{\footnotesize
+\textit{
+    The U.S. economy continued to expand at a moderate pace. Labor market conditions improved with a strong increase in nonfarm payroll employment and a decrease in the unemployment rate to 3.7\%. Real GDP growth was projected to be moderate in the near term, supported by consumer and business spending. \textcolor{red}{Inflation was expected to stabilize around 2\% over the medium term}.
+}}
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Financial Situation" based the given data for 20091030: \\
+'10-year yield rate mines 2-year yield rate for the month': 0.09, 0.12, 0.15, 0.12, 0.1, 0.12, 0.12, 0.14,0.13, ., 0.16, 0.17, 0.16, 0.18, 0.18, 0.18,0.19, 0.19, 0.17, 0.21, 0.2, 0.17, 0.17, \\
+'S\&P 500 Index return': 0.33\%,-0.08\%,0.56\%,0.41\%,0.19\%,0.28\%,-0.36\%,0.69\%,-0.39\%,0.28\%,-0.20\%,1.00\%,-0.14\%,1.09\%,0.64\%,0.91\%,-1.56\%,-0.45\%,1.42\%,0.80\%,-1.79\%,-1.23\%.}
+}\\
+\textbf{FT Model Response:}\\
+{\footnotesize
+\textit{
+    - **Market Conditions:** Financial conditions were stable, with the federal funds rate remaining unchanged. Equity prices rose, corporate bond spreads narrowed, and interest rates on short-term debt decreased. \\
+    - **Monetary Policy Expectations:** Market participants anticipated a rate cut in September and additional cuts later in the year. The federal funds rate futures implied a higher probability of a rate cut in July and September. \\
+    - **Global Financial Conditions:** Global financial conditions were mixed, with increased concerns over trade tensions and economic growth in some countries. Financial conditions in emerging markets remained strained, particularly in Turkey and Argentina. \\
+    - **Consumer and Business Financing:** Consumer credit expanded at a solid pace, with increases in credit card and auto loans. Business financing conditions remained supportive, with solid credit quality.
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+    Please write a summary of section "Staff-Economic-Outlook" based the above sections.
+}}\\
+\textbf{FT Model Response:}\\
+{\footnotesize
+\textit{
+    The staff revised down its GDP growth projections for 2019 to 2.1\% and 2.0\% for 2020 due to weaker-than-expected data. The unemployment rate was projected to remain low, \textcolor{red}{but inflation was expected to stay below the 2\% target}. The risks to the forecast were seen as balanced, with potential upside from fiscal policy and a strong labor market.
+}}
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{Generate the FOMC Minutes Staff-Economic-Outlook Section using the summary you just generated}}\\
+\textbf{FT Model Response:}\\
+{\footnotesize
+\textit{
+In the economic forecast prepared for the September FOMC meeting, the staff revised down its projection for real GDP growth in the second half of 2019.  The staff’s forecast for the second half of the year was based on a number of factors, including a more negative assessment of foreign economic growth and a slightly weaker outlook for the U.S. business sector.  The staff’s projection for real GDP growth over the medium term was little changed.  The staff continued to project that real GDP would decelerate modestly over the medium term, reflecting the expected gradual decline in fiscal policy stimulus and the staff’s assumption that the effects of monetary policy on the economy would become less accommodative.  The staff continued to forecast that the unemployment rate would decline further and that the labor market would tighten further, although at a slower pace than in recent years. \\
+... ... \\
+\textcolor{red}{The staff’s forecast for the unemployment rate over the medium term was little changed.  The staff’s projection for core PCE inflation was little changed, as the staff continued to expect that inflation would remain below 2 percent through 2022.}  The staff’s projection for total PCE price inflation was also little changed, as the staff continued to expect that gasoline prices would be volatile and that inflation would run a bit below core inflation.}
+}
+
+\subsubsection{Base Model Response: From Data to Staff Economic Outlook for FOMC Minutes 20191030}\label{base_model}
+
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Economic Situation" based the given data for 20091030: \\
+\textcolor{red}{'cpi growth rate for the year': -0.009779758,0.036015062,0.045381515,0.045116153,0.002961999,-0.003901354,0.027694514,0.01097724,0.018466153,0.033927388,} \\
+'fed\_funds\_rate for the month': 1.83, \\
+'Annualized GDP growth rate for the year': -0.048549963, -0.013766568, 0.018815073, 0.056022881, \\
+'mortgage\_rate for the month': 3.65, 3.57, 3.69, 3.75, 3.78, \\
+'unemployment rate for the year': 4,3.8,3.8,3.7,3.6,3.6,3.7,3.6,3.5,3.6}
+}\\
+~\\
+\textbf{Base Model Response:}\\
+{\footnotesize
+\textit{
+    Based on the provided data, here is a summary of the "Staff Review of the Economic Situation":\\
+    The data appears to be a review of the economic situation for the year ending 20091030. The review includes several key economic indicators:\\
+    * CPI growth rate: \textcolor{red}{The Consumer Price Index (CPI) growth rate for the year was -0.0098, -0.0360, 0.0454, 0.0451, and 0.0029, indicating a decline in inflation in the early part of the year, followed by a slight increase later on.}\\
+    ... ...\\
+    Overall, the review suggests that the economy experienced a decline in inflation and economic growth in the early part of the year, followed by a slight increase later on. Mortgage rates and unemployment rates also showed some fluctuations over the year.
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Financial Situation" based the given data for 20091030: \\
+'10-year yield rate mines 2-year yield rate for the month': 0.09, 0.12, 0.15, 0.12, 0.1, 0.12, 0.12, 0.14,0.13, ., 0.16, 0.17, 0.16, 0.18, 0.18, 0.18,0.19, 0.19, 0.17, 0.21, 0.2, 0.17, 0.17, \\
+'S\&P 500 Index return': 0.33\%,-0.08\%,0.56\%,0.41\%,0.19\%,0.28\%,-0.36\%,0.69\%,-0.39\%,0.28\%,-0.20\%,1.00\%,-0.14\%,1.09\%,0.64\%,0.91\%,-1.56\%,-0.45\%,1.42\%,0.80\%,-1.79\%,-1.23\%.}
+}\\
+\textbf{Base Model Response:}\\
+{\footnotesize
+\textit{
+    Based on the provided data, here is a summary of the "Staff Review of the Financial Situation":\\
+    The data appears to be a review of the financial situation for the year ending 20091030. The review includes several key financial indicators:\\
+    * 10-year yield rate vs. 2-year yield rate: The spread between the 10-year yield rate and the 2-year yield rate was 0.09, 0.12, 0.15, 0.12, 0.1, 0.12, 0.12, 0.14, 0.13, and so on, indicating a fluctuation in the yield curve over the year.\\
+    ... ...\\
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+    Please write a summary of section "Staff-Economic-Outlook" based the above sections.
+}}\\
+\textbf{Base Model Response:}\\
+{\footnotesize
+\textit{
+    Based on the provided data, here is a summary of the "Staff-Economic-Outlook":\\
+    The "Staff-Economic-Outlook" section appears to be a summary of the economic outlook based on the previous sections. Here are the key points:\\
+    * Economic growth: The outlook suggests that the economy experienced a decline in economic growth in the early part of the year, followed by a slight increase later on. The annualized GDP growth rate was -0.0485, -0.0138, and 0.0188, indicating a decline in economic growth in the early part of the year, followed by a slight increase later on.\\
+    * Inflation: The outlook suggests that inflation was declining in the early part of the year, but then increased slightly later on. \textcolor{red}{The CPI growth rate was -0.0098, -0.0360, 0.0454, 0.0451, and 0.0029, indicating a decline in inflation in the early part of the year, followed by a slight increase later on.}\\
+    ... ...
+}}\\
+~\\
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{Generate the FOMC Minutes Staff-Economic-Outlook Section using the summary you just generated}}\\
+\textbf{Base Model Response:}\\
+{\footnotesize
+\textit{
+    *Staff-Economic-Outlook**\\
+The staff's economic outlook is characterized by a slow recovery in the early part of the year, followed by a slight increase in economic growth and inflation later on. The annualized GDP growth rate has declined in the early part of the year, but has since stabilized and shown signs of improvement. \textcolor{red}{The CPI growth rate has also declined in the early part of the year, but has since edged up slightly.} \\
+... ... 
+}}\\
+~\\
+
+
+
+Compared with the based model, the fine-tuned model capitalizes on the enriched training dataset, which specialized in economic and financial analysis. Consequently, the fine-tuned model not only excels in mirroring the format of the target texts more accurately but also demonstrates an enhanced capability to synthesize and analyze data meaningfully within the generated content. In contrast, the base model primarily focuses on recounting the provided data, lacking the nuance and analytical depth that the fine-tuned variant exhibits. For instance, in the evidence of the model's treatment of inflation rates, as measured by Consumer Price Indices (CPIs), the fine-tuned model adeptly captures the dynamics of rising inflation, predicting that the Federal Reserve will try to maintain the inflation rate at a relatively subdued level, targeting around 2\%.
+
+The qualitative comparison in performance from the base model to the fine-tuned model is indicative of the latter's readiness for practical applications in generating FOMC Minutes. The fine-tuned model's outperforming in replicating the style, structure, and analytical content of official documents positions it as a valuable tool in simulating or analyzing potential outcomes of FOMC deliberations. 
+
+
+\subsubsection{Fine-tuned Model Response: Simluated Data to Staff Review of Financial Situation for FOMC Minutes 20191030}\label{simualted ft}
+\textbf{User Prompt:}\\
+{\footnotesize
+\textit{
+Please write a summary of section "Staff Review of the Financial Situation" based the given data for 20191030: \\
+'Daily S\&P 500 Index return for the month': 'S\&P 500 Index return':'0.05\%', '-1.09\%', '-0.67\%', '1.18\%', '0.06\%', '-0.06\%', '0.22\%', '0.81\%', '0.44\%', '-0.16\%', '0.94\%', '-0.35\%', '0.67\%', '0.70\%', '\textcolor{red}{-0.11\%', '0.13\%', '0.17\%', '0.70\%', '0.40\%', '0.64\%', '0.83\%'}}
+}\\
+\textbf{FT Model Response:}\\
+{\footnotesize
+\textit{
+    - **Financial Markets:** Financial conditions remained generally accommodative despite some fluctuations. Stock prices rose, and concerns over the trade tensions eased slightly.
+    - **Short-Term Funding Markets:** Market participants reported stable short-term funding conditions, with an increase in overnight repo usage.
+    - **Equity and Credit Markets:** \textcolor{red}{Equity prices rose,} and credit conditions for nonfinancial firms remained favorable. Corporate bond issuance remained robust, with strong demand for high-yield bonds.
+    - **Global Financial Conditions:** \textcolor{red}{Global financial conditions remained generally supportive of growth}. The U.S. dollar depreciated against most major currencies, and emerging market equity prices increased.
+}}\\
+~\\
+\textbf{Base Model Response:}\\
+{\footnotesize
+\textit{
+The staff review of the financial situation highlighted that the financial markets experienced a mixed performance in the past month. \textcolor{red}{The staff noted that the index experienced a series of small gains and losses, with no clear trend emerging.} Overall, the financial markets were characterized by a lack of direction and volatility in the past month.
+}}\\
+
+
+
+In this example, we employed a simulated upward sloping curve for the S\&P 500 index returns. The fine-tuned model exhibited a commendable ability to discern and reflect this trend accurately in its generated text. Conversely, the base model fell short in recognizing and articulating the upward trajectory, which highlights the disparity in analytical prowess between the two models. 
+
+Our initial findings indicated that while the model could produce outputs that resemble the intended format and style. However, the overall quality and accuracy of the responses were yet to reach optimal levels. As mentioned before, our training loss is still reducing, which has not been converged to a stable level. This gap in performance underscores the need for further refinements in our fine-tuning approach.
+
+
+
+The performance of the fine-tuned model is contingent upon the quality and relevance of the training dataset. To address these shortcomings and elevate the model's capabilities, we propose a two ways to resolve the problem. Enhanced text cleaning, firstly, is a more rigorous preprocessing phase will be implemented to ensure that the target texts are free from noise and inconsistencies. This step is pivotal in enabling the model to learn from clean, structured data, thereby improving its comprehension and generation abilities. Additionally, We try to employ Semantic Labeling to facilitate a deeper understanding of the interplay between economic data and the corresponding narrative. More specifically, we plan to annotate key terms and phrases within the target texts. This labeling process will assist the model in establishing connections between quantitative data and qualitative descriptions, thereby enhancing its capacity to weave data-driven insights into coherent narratives.
+
+However,  the quality of the responses is still not good enough. Therefore, we suggest to two ways to resolve the problem. Firstly, we will conduct a deeper clean in the target texts. Additionally, we will label the important words in the target text to help the model create a connection between the ``data'' and the ``writing''. Futhermore, we will use our supplementary texts, including the Green books an the Blue books, to help the model learning the way of writing. Moreover, we intend to leverage supplementary materials, notably the Green Books and Blue Books, which are integral resources in the Federal Reserve's decision-making process. These documents contain detailed analyses and forecasts, and incorporating them into our training regimen will provide the model with additional context and depth. By learning from these comprehensive texts, the model will gain a richer understanding of the economic landscape and the nuances of crafting authoritative financial reports, ultimately refining its ability to generate high-quality FOMC Minutes.
+
+
+In summary, by implementing these strategies—enhancing data preprocessing, annotating critical information, and integrating supplementary educational materials, we aim to significantly enhance the fine-tuned model's performance, moving closer to realizing our objective of automating the generation of FOMC Minutes with precision and accuracy.
+
+
+% Please write a summary of section "Staff Review of the Financial Situation" for FOMC Minutes based the given financial data:'Daily S\&P 500 Index return for the month':'0.05%', '-1.09%', '-0.67%', '1.18%', '0.06%', '-0.06%', '0.22%', '0.81%', '0.44%', '-0.16%', '0.94%', '-0.35%', '0.67%', '0.70%', '-0.11%', '0.13%', '0.17%', '0.70%', '0.40%', '0.64%', '0.83%'
+
+
+
+% Please write a summary of section "Staff Review of the Economic Situation" based the given data for 2009-10-30: 'cpi growth rate for the year': -0.009779758,0.036015062,0.045381515,0.045116153,0.002961999,-0.003901354,0.027694514,0.01097724,0.018466153,0.033927388, 'fed\_funds\_rate for the month': 1.83, 'Annualized GDP growth rate for the year': -0.048549963, -0.013766568, 0.018815073, 0.056022881, 'mortgage\_rate for the month': 3.65, 3.57, 3.69, 3.75, 3.78, 'unemployment rate for the year': 4,3.8,3.8,3.7,3.6,3.6,3.7,3.6,3.5,3.6
+
+
+
+% Please write a summary of section "Staff-Review-of-the-Financial-Situation" based the given data: {'cpi': array([257.155]), 'fed_funds_rate': array([1.83]), 'GDP': array([21902.39]), 'mortgage_rate': array([3.65, 3.57, 3.69, 3.75, 3.78]), 'yield_curve': array(['0.09', '0.12', '0.15', '0.12', '0.1', '0.12', '0.12', '0.14','0.13', '.', '0.16', '0.17', '0.16', '0.18', '0.18', '0.18','0.19', '0.19', '0.17', '0.21', '0.2', '0.17', '0.17'],dtype=object), 'unemployment_rate': array([], dtype=float64)}
+
+
+
+
+\subsection{Similarity between Responses generated by the Fine-tuned LLM and the Original LLM}
+
+In this section, we conduct a detailed quantitative investigation to compare the outputs produced by the original LLAMA3-8B model (the base model) and its fine-tuned counterpart, the Fine-Tuned LLAMA3-8B model. Our aim is to assess the consistency of the responses generated by these models relative to our predefined target texts. To achieve this, we calculate the semantic similarity between the generated responses and the target texts using cosine similarity, a widely accepted method for measuring the semantic likeness between texts in a vector space.
+
+
+Cosine similarity is a metric that evaluates the cosine of the angle between two non-zero vectors. It is defined as the dot product of the two vectors divided by the product of their magnitudes. This mathematical operation helps in quantifying how closely the generated text aligns with the target text in terms of meaning and content. We utilize the ``tokenizer'' feature intrinsic to the LLAMA3 model to convert the response texts into vector representations, denoted as $Y_{target}$ for the target text and $Y_{generated}$ for the generated text. The cosine similarity score, denoted as $S_{Y_{target}, Y_{generated}}$, is then calculated as follows:
+
+\begin{equation*}
+    S_{Y_{target}, Y_{generated}} = \frac{Y_{target} \cdot Y_{generated}}{|Y_{target}| |Y_{generated}|}
+\end{equation*}
+
+% According to the distribution theory, 
+Drawing from distributional semantics theory, which posits that words with similar meanings tend to occur in similar contexts and thus have similar distributions in the vector space, we hypothesize that texts with higher semantic likeness will exhibit a greater cosine similarity. This theory, first proposed by \cite{firth1957linguistics} and later expanded upon in the context of distributional semantics by \cite{sahlgren2008distributional}, suggests that words can be represented as real-valued vectors that encapsulate their linguistic meanings. Consequently, we formulate our hypothesis as follows:
+
+\begin{equation*}
+    Cos_{FT} > Cos_{Base}
+\end{equation*}
+This hypothesis asserts that the cosine similarity score ($Cos_{FT}$) between the target text  and the response generated by the fine-tuned model will be higher than the cosine similarity score ($Cos_{Base}$) between the target text and the response generated by the base model. This expectation is drawn from the assumption that the fine-tuned model, having been specifically optimized for the task at hand, will produce responses that are semantically closer to the target texts compared to the base model.
+
+
+% The distributional hypothesis transforms the information extraction form a linguistic problem to a math problem. 
+
+
+We calculate the similarity separately for each section for the fine-tuned mode and the base model. Additionally, we employ the bootstrapping method by randomly selecting samples from the input. Then we calculate the mean similarity for each sample, and create the Empirical Confidence Interval to evaluate the performance of the models. More specifically, we choose 10 responses out of 60 from the test dataset. Then we calculate the mean of the cosine similarity for these 10 sample responses. We keep repeating selecting the sample from the dataset with replacement for 200 times. We calculate and plot the Confidence Interval for the finally results in Table \ref{tab:ch3:cos_ci} and Figure \ref{fig:ch3:cos_ci}.
+
+\begin{table}[h]
+    \scriptsize
+    \centering
+    \begin{tabular}{c  c c c}
+      \toprule
+        &Mean & Lower 95\% CI& Upper 95\% CI \\
+        \hline
+       FT Model& 0.2749& 0.2295& 0.3229\\
+        &$(130.79)^{***}$& $(109.20)^{***}$& $(153.63)^{***}$\\
+       Base Model& 0.1506& 0.1181& 0.1862\\
+        & $(104.92)^{***}$& $(82.28)^{***}$& $(129.76)^{***}$\\
+       \bottomrule
+    \end{tabular}
+    \caption{Confidence Intervals for Cosine Similarity for FT Model and Base Model}
+    \label{tab:ch3:cos_ci}
+\end{table}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Chapter3/Chapter3Figs/cos_ci.png}
+    \caption{Cosine Similarity for FT Model and Base Model}
+    \label{fig:ch3:cos_ci}
+\end{figure}
+
+The reported Cosine Similarity for the fine-tuned model (mean 0.2749 and significant at 99\% level) is much larger than that of the base model (mean 0.1506 and significant at 99\% level). Thus, it can be concluded that our fine-tuning process has been successful in enhancing the model's ability to generate responses that are more consistent and contextually relevant to the input texts. This outcome highlights the effectiveness of the fine-tuning strategy in tailoring the model's output to better suit specific tasks or domains, thereby improving its overall utility and performance.
+
+
+
+\section{Conclusion and Future Work}\label{ch3:sec:conclusion}
+
+In conclusion, our research provide a novel approach generating structured synthetic texts data. More specifically, we confirmed that the fine-tuned LLM can be used to generate the Federal Open Market Committee Minutes. The empirical results shows that the fine-tuned model can generate a more similar responses than the base model. Additionally, our results suggest that the fine-tuned model can capture the way of analysis the data. The model can re-write the Minutes with the simulated input data. The result provide new insights for risk management about government announcements in financial industry.
+
+However, there are still some future researches left. Firstly, we expect the model can generate not only consistent but also sufficient text. Therefore, We suggest to employ Shapley Value ($\mathcal{SV}$) to calculate the marginal contribution of the prompts to the responses. Because we need the response to contain all the economic and financial information in the prompt. As the prompts increase, the marginal contribution should be non-negative. Furthermore, the standard prompt serve as an efficient way generate results. User does not need to guide the model in different steps to get the target responses. Therefore, we will test the generative capability of the standard prompt to the model. 
+
+In conclusion, our research introduces a novel methodology for generating structured synthetic text data. More specifically, we have established that a fine-tuned Large Language Model (LLM) can effectively produce simulations of the Federal Open Market Committee (FOMC) Minutes. Empirical evidence demonstrates that the fine-tuned model outperforms the base model in generating responses that are similar to structured texts. Moreover, our findings indicate that the fine-tuned model possesses the capability to analyze data in a manner reflective of the FOMC's approach. This enables the model to rewrite the Minutes using simulated input data, offering fresh perspectives for risk management professionals concerning the impact of government announcements on the financial sector.
+
+Nonetheless, several avenues for future research remain open. Primarily, there is a need for the model to not only ensure consistency in its output but also sufficiency, ensuring that all pertinent economic and financial information from the prompts is included in the responses. To this end, employing the Shapley Value ($\mathcal{SV}$) to assess the marginal contribution of each prompt to the response could prove insightful. Given that the inclusion of additional prompts should ideally yield non-decreasing informational content, monitoring the Shapley Value could help in optimizing the model's responsiveness to new information.
+
+Additionally, the use of standardized prompts presents an efficient pathway for generating results, eliminating the necessity for users to guide the model through multiple steps to achieve desired outcomes. Therefore, an upcoming focus will be to rigorously evaluate the generative capacity of such standardized prompts, ensuring they elicit responses that are both informative and contextually appropriate. Through these endeavors, we aim to refine our model further, enhancing its utility in the financial domain and beyond.
+
+By addressing these research gaps, we anticipate advancing the capabilities of our fine-tuned model, making it an even more powerful tool for simulating complex textual data, particularly in scenarios requiring nuanced understanding and detailed analysis, such as in financial risk assessment.
+
+
+
+
+
+
+

@@ -13,9 +13,9 @@
 # limitations under the License.
 
 
-from trl import SFTTrainer, ModelConfig
+from trl import SFTTrainer
 
-from open_r1.configs import LoraArguments, SFTConfig, SFTScriptArguments
+from open_r1.configs import LoraArguments, ModelConfig, SFTConfig, SFTScriptArguments
 from open_r1.trainer.trainer import Trainer
 from open_r1.utils.callbacks import get_callbacks
 
@@ -37,7 +37,13 @@ class SftTrainer(Trainer):
 
         def convert_chat(example):
             if isinstance(example["prompt"], list):
-                return {"prompt": self.tokenizer.apply_chat_template(example["prompt"], tokenize=False)}
+                return {
+                    "prompt": self.tokenizer.apply_chat_template(
+                        example["prompt"],
+                        tokenize=False,
+                        add_generation_prompt=True,
+                    )
+                }
             return example
 
         dataset = self.dataset.map(convert_chat).rename_column("response", "completion")
@@ -62,5 +68,3 @@ class SftTrainer(Trainer):
     
     def plot_customized_curve(self):
         pass
-
-

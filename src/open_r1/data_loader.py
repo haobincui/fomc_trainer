@@ -1,6 +1,34 @@
 import glob
+import logging
 import os
 from datasets import load_dataset, DatasetDict
+
+
+logger = logging.getLogger(__name__)
+
+
+def _find_split_file(data_path: str, patterns: list[str], split_name: str) -> str:
+    matches: list[str] = []
+    for pattern in patterns:
+        matches.extend(glob.glob(os.path.join(data_path, pattern)))
+
+    unique_matches = sorted(set(matches))
+    if not unique_matches:
+        joined_patterns = ", ".join(patterns)
+        raise FileNotFoundError(
+            f"No file matching [{joined_patterns}] found for split '{split_name}' in {data_path}"
+        )
+
+    if len(unique_matches) > 1:
+        logger.warning(
+            "Multiple files found for split '%s' in %s; using the first deterministic match: %s",
+            split_name,
+            data_path,
+            unique_matches[0],
+        )
+
+    return unique_matches[0]
+
 
 def load_train_eval_datasets(data_path) -> DatasetDict:
     """
@@ -13,24 +41,24 @@ def load_train_eval_datasets(data_path) -> DatasetDict:
     Returns:
         A DatasetDict with "train" and "validation" splits.
     """
-    train_files = glob.glob(os.path.join(data_path, "*train.jsonl"))
-    eval_files = glob.glob(os.path.join(data_path, "*eval.jsonl"))
+    train_file = _find_split_file(data_path, ["*train.jsonl"], "train")
+    eval_file = _find_split_file(
+        data_path,
+        ["*eval.jsonl", "*validation.jsonl", "*val.jsonl"],
+        "validation",
+    )
 
-    if not train_files:
-        raise FileNotFoundError(f"No file ending with 'train.jsonl' found in {data_path}")
-    if not eval_files:
-        raise FileNotFoundError(f"No file ending with 'val.jsonl' found in {data_path}")
-
-    train_file = train_files[0]
-    eval_file = eval_files[0]
-
-    print(f"✅ Found train file: {train_file}")
-    print(f"✅ Found val file: {eval_file}")
+    logger.info("✅ Found train file: %s", train_file)
+    logger.info("✅ Found validation file: %s", eval_file)
     dataset = load_dataset("json", data_files={
         "train": train_file,
         "validation": eval_file
     })
 
-    print(f"✅ Loaded dataset: {dataset}")
-    print(f"Train size: {len(dataset['train'])}, Eval size: {len(dataset['validation'])}")
+    logger.info("✅ Loaded dataset: %s", dataset)
+    logger.info(
+        "Train size: %s, Eval size: %s",
+        len(dataset["train"]),
+        len(dataset["validation"]),
+    )
     return dataset

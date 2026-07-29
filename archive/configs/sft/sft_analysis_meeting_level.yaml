@@ -1,0 +1,105 @@
+# ====================
+# Model Arguments
+# ====================
+model_name_or_path: "models/DeepSeek-R1-Distill-Llama-8B"
+model_revision: "20250515"
+
+torch_dtype: "bfloat16"
+attn_implementation: "flash_attention_2"
+
+# ====================
+# Data Arguments
+# ====================
+dataset_name: "dataset/raw_data/generate_prompt/chapter2_qa/analysis_sft"
+dataset_prompt_column: "prompt"
+system_prompt: |
+  You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses.
+  You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer.
+  The reasoning process MUST BE enclosed within <think> and </think> tags. The answer MUST BE enclosed within <answer> and </answer> tags.
+
+# ====================
+# Trainer (SFT) Arguments
+# ====================
+bf16: true
+
+# quantization
+load_in_4bit: false
+torch_dtype: bfloat16
+
+# Optimization
+gradient_accumulation_steps: 2
+gradient_checkpointing: false
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 1.0e-05
+lr_scheduler_type: cosine_with_min_lr
+lr_scheduler_kwargs:
+  min_lr_rate: 0.1
+warmup_ratio: 0.1
+packing: false
+
+# ====================
+# Evaluation
+# ====================
+do_eval: true
+eval_strategy: "steps"
+eval_steps: 20
+
+# ====================
+# Training Steps
+# ====================
+max_steps: -1
+num_train_epochs: 3
+
+# ====================
+# Generation Settings
+# ====================
+top_p: 0.9
+temperature: 0.6
+max_prompt_length: 16384
+max_completion_length: 8192
+
+# ====================
+# Batch Sizes
+# ====================
+per_device_train_batch_size: 2
+per_device_eval_batch_size: 4
+
+# ====================
+# PEFT LoRA Configuration
+# ====================
+peft_merged_model_path: output/merged/chapter2_analysis_sft_meeting_level
+peft_r: 8
+peft_lora_alpha: 16
+peft_lora_dropout: 0.05
+peft_bias: "none"
+peft_task_type: "CAUSAL_LM"
+peft_target_modules:
+  - q_proj
+  - v_proj
+
+# ====================
+# Output & Saving
+# ====================
+output_dir: output/adapters/chapter2_analysis_sft_meeting_level
+overwrite_output_dir: true
+save_strategy: "steps"
+save_steps: 500
+save_total_limit: 1
+callbacks:
+  - loss_log
+
+# ====================
+# Logging
+# ====================
+log_level: "info"
+logging_strategy: "steps"
+logging_steps: 20
+
+# ====================
+# Miscellaneous
+# ====================
+push_to_hub: false
+report_to: []
+seed: 42
+use_liger_kernel: true

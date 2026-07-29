@@ -5,12 +5,14 @@ import requests
 import time
 from pathlib import Path
 
-# _URL = "http://localhost:8000/v1/chat/completions"
-# _MODEL = "models/Qwen3-14B-unsloth-bnb-4bit"
-_API_KEY = None
+from open_r1.trainer.rewards.reward_funcs.structured_response import (
+    extract_answer,
+    extract_reasoning_and_answer,
+)
 
-_URL = "http://localhost:11432/api/chat/"
-_MODEL = "gemma3:12b"
+DEFAULT_JUDGE_URL = "http://127.0.0.1:8000/v1/chat/completions"
+DEFAULT_JUDGE_MODEL = "models/gemma-3-12b-it"
+DEFAULT_API_KEY_ENV = "OPEN_R1_JUDGE_API_KEY"
 
 
 
@@ -26,13 +28,14 @@ _COMBINED_PROMPT = (Path(__file__).parent / "online_reward_prompt/online_combine
 # )
 
 _SYSTEM_PROMPT = """
-You are an instruction-following assistant that generates structured analytical outputs in two stages:
+You are an instruction-following evaluator for economic policy analysis outputs.
 
-1. First, you must enclose your reasoning process within `<think>...</think>` tags.
-   - This section should reflect your internal thought process, including any analysis, logic, or intermediate steps.
+You may receive model outputs that were originally produced in either of these response styles:
 
-2. Then, provide your final conclusion or answer wrapped inside `<answer>...</answer>` tags.
-   - This should be a concise summary, recommendation, or final judgment derived from your reasoning.
+1. Legacy XML style with `<think>...</think>` and `<answer>...</answer>`
+2. Gemini/Gemma thought-channel style with `<|channel>thought ... <channel|>final answer`
+
+Your job is not to preserve or imitate the input response format. You only need to evaluate the supplied content and return a score plus concise justification.
 
 At the end of your response, you must include a total score using the **exact** format:
 
@@ -43,10 +46,9 @@ Where `XX` is the integer score from 1 to 35.
 ---
 
 Format Enforcement Rules:
-- Do **not** include any explanation outside the `<think>` or `<answer>` blocks.
-- Do **not** include headings, bullet points, or free text before or after the tags.
+- Do **not** include XML tags, channel tags, or any other wrapper structure.
+- Do **not** include headings or free text before the score and short justification.
 - Output must always end with the `**Total Score**: \\boxed{{XX}}` line.
-- Ensure only **one** `<think>` and **one** `<answer>` block per response.
 
 Follow these formatting instructions strictly.
 """
@@ -75,54 +77,88 @@ def _parse_score(text: str) -> float:
 #     return (match.group(1).strip(), match.group(2).strip()) if match else ("", "")
 
 def _parse_reasoning_and_answer(text: str) -> tuple[str, str]:
-    if "</think>" in text:
-        think, answer = text.split("</think>", 1)
-        return think.strip(), answer.strip()
-    else:
-        return "", text.strip()
+    return extract_reasoning_and_answer(text, allow_plain_answer_fallback=True)
+
+
+def get_online_reward_settings(
+    url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
+    verbose: bool | None = None,
+    sleep_seconds: float | None = None,
+    api_key_env: str | None = DEFAULT_API_KEY_ENV,
+) -> dict:
+    resolved_api_key_env = api_key_env or DEFAULT_API_KEY_ENV
+    env_verbose = os.environ.get("OPEN_R1_JUDGE_VERBOSE")
+    env_timeout = os.environ.get("OPEN_R1_JUDGE_TIMEOUT")
+    env_sleep = os.environ.get("OPEN_R1_JUDGE_SLEEP_SECONDS")
+    env_api_key = os.environ.get(resolved_api_key_env) if resolved_api_key_env else None
+
+    return {
+        "url": url or os.environ.get("OPEN_R1_JUDGE_URL", DEFAULT_JUDGE_URL),
+        "model": model or os.environ.get("OPEN_R1_JUDGE_MODEL", DEFAULT_JUDGE_MODEL),
+        "timeout": int(timeout if timeout is not None else env_timeout or 180),
+        "verbose": bool(
+            verbose if verbose is not None else env_verbose in {"1", "true", "TRUE", "yes", "YES"}
+        ),
+        "sleep_seconds": float(sleep_seconds if sleep_seconds is not None else env_sleep or 0.0),
+        "api_key_env": resolved_api_key_env,
+        "api_key": env_api_key,
+    }
 
 
 
-def _send_eval_request(prompt: str, url: str) -> float:
+def _send_eval_request(
+    prompt: str,
+    *,
+    url: str,
+    model: str,
+    timeout: int,
+    api_key: str | None,
+    verbose: bool,
+    api_key_env: str | None = None,
+    sleep_seconds: float | None = None,
+) -> float:
     headers = {
         "Content-Type": "application/json",
     }
-    if _API_KEY:
-        headers["Authorization"] = f"Bearer {_API_KEY}"
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
 
     body = {
-        "model": _MODEL,
+        "model": model,
         "messages": [
             {"role": "system", "content": _SYSTEM_PROMPT},
             {"role": "user", "content": prompt}
         ],
         "stream": False,
-        "keep_alive": -1,
         "temperature": 0.3,
-        "max_tokens": 2048,
+        "max_tokens": 3072,
         "top_p": 0.9,
     }
+    if not url.rstrip("/").endswith("/v1/chat/completions"):
+        body["keep_alive"] = -1
 
     try:
-        resp = requests.post(url,headers=headers, json=body, timeout=180)
+        resp = requests.post(url, headers=headers, json=body, timeout=timeout)
         resp.raise_for_status()
-        result_text = resp.json().get("message", {}).get("content", "") # ollama
-        # result_text = resp.json()["choices"][0]["message"]["content"] # vllm
-        print("\n=============\n")
-        print(result_text)
-        print("\n=============\n")
+        payload = resp.json()
+        result_text = (
+            payload.get("message", {}).get("content", "")
+            or payload.get("choices", [{}])[0].get("message", {}).get("content", "")
+        )
+        if verbose:
+            print("\n=============\n")
+            print(result_text)
+            print("\n=============\n")
         return _parse_score(result_text)
     except Exception as e:
-        print(f"❌ Error during reward call: {e}")
+        if verbose:
+            print(f"❌ Error during reward call: {e}")
         return 0.0
 
 def _parse_answer(text: str):
-    pattern = r"<answer>(.*?)</answer>"
-    match = re.search(pattern, text, flags=re.DOTALL)
-    if match:
-        return match.group(1).strip()
-    else:
-        return ""
+    return extract_answer(text)
 
 
 def answer_reward(
@@ -130,19 +166,34 @@ def answer_reward(
     response: list[str],
     provided_data: list[str],
     save_path: str = None,
+    url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
+    verbose: bool | None = None,
+    sleep_seconds: float | None = None,
+    api_key_env: str | None = DEFAULT_API_KEY_ENV,
     **kwargs
 ) -> list[float]:
     """Reward based on model answer quality."""
+    settings = get_online_reward_settings(
+        url=url,
+        model=model,
+        timeout=timeout,
+        verbose=verbose,
+        sleep_seconds=sleep_seconds,
+        api_key_env=api_key_env,
+    )
     rewards = []
     idx = 0
     for completion, reference, pdata in zip(completions, response, provided_data):
         content = completion[0]["content"]
         _, model_answer = _parse_reasoning_and_answer(content)
         prompt = _ANSWER_PROMPT.format(provided_data = pdata, reference_analysis=_parse_answer(reference), model_analysis=model_answer)
-        score = _send_eval_request(prompt, _URL) / 35
+        score = _send_eval_request(prompt, **settings) / 35
         rewards.append(score)
         idx += 1
-        time.sleep(0.5)
+        if settings["sleep_seconds"] > 0:
+            time.sleep(settings["sleep_seconds"])
         if save_path:
             save_judge_record(save_path, {
                 "type": "answer",
@@ -161,19 +212,34 @@ def reasoning_reward(
     completions: list[list[dict[str, str]]],
     response: list[str],
     save_path: str = None,
+    url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
+    verbose: bool | None = None,
+    sleep_seconds: float | None = None,
+    api_key_env: str | None = DEFAULT_API_KEY_ENV,
     **kwargs
 ) -> list[float]:
     """Reward based on model reasoning quality."""
+    settings = get_online_reward_settings(
+        url=url,
+        model=model,
+        timeout=timeout,
+        verbose=verbose,
+        sleep_seconds=sleep_seconds,
+        api_key_env=api_key_env,
+    )
     rewards = []
     idx = 0
     for completion, reference in zip(completions, response):
         content = completion[0]["content"]
         model_reasoning, model_analysis = _parse_reasoning_and_answer(content)
         prompt = _REASONING_PROMPT.format(model_analysis=model_analysis, model_reasoning=model_reasoning)
-        score = _send_eval_request(prompt, _URL) / 5
+        score = _send_eval_request(prompt, **settings) / 5
         rewards.append(score)
         idx += 1
-        time.sleep(0.5)
+        if settings["sleep_seconds"] > 0:
+            time.sleep(settings["sleep_seconds"])
         if save_path:
             save_judge_record(save_path, {
                 "type": "reasoning",
@@ -193,8 +259,22 @@ def combined_reward(
     response: list[str],
     provided_data: list[str],
     save_path: str = None,
+    url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
+    verbose: bool | None = None,
+    sleep_seconds: float | None = None,
+    api_key_env: str | None = DEFAULT_API_KEY_ENV,
     **kwargs
 ) -> list[float]:
+    settings = get_online_reward_settings(
+        url=url,
+        model=model,
+        timeout=timeout,
+        verbose=verbose,
+        sleep_seconds=sleep_seconds,
+        api_key_env=api_key_env,
+    )
     rewards = []
     idx = 0
     for completion, reference, pdata in zip(completions, response, provided_data):
@@ -207,10 +287,11 @@ def combined_reward(
             reference_analysis=reference_analysis,
             model_analysis=model_analysis,
             model_reasoning=model_reasoning)
-        score = _send_eval_request(prompt, _URL)
+        score = _send_eval_request(prompt, **settings)
         rewards.append(score)
         idx += 1
-        time.sleep(0.5)
+        if settings["sleep_seconds"] > 0:
+            time.sleep(settings["sleep_seconds"])
         if save_path:
             save_judge_record(save_path, {
                 "type": "combined",
@@ -224,4 +305,3 @@ def combined_reward(
                 "score": score
             })
     return rewards
-
