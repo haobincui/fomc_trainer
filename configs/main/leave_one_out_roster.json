@@ -1,0 +1,121 @@
+{
+  "schema_version": "loo-intervention-roster-v1",
+  "roster_id": "chapter2-historical-26-indicators-after-2009-v1",
+  "baseline_indicator": "None",
+  "contexts": [
+    "after_2009"
+  ],
+  "indicators": [
+    "Bank-Capital",
+    "Bank-Credit-to-Private-Sector",
+    "Business-Investment",
+    "Commodity-Prices",
+    "Consumer-Confidence-Index",
+    "Consumer-Price-Index-(CPI)",
+    "Corporate-Bond-Yields",
+    "Equity-Market-Indices",
+    "Exchange-Rate",
+    "Federal-Funds-Rate",
+    "Federal-Reserve-Balance-Sheet",
+    "GDP-Growth",
+    "Government-Purchases",
+    "Home-Prices",
+    "Housing-Starts",
+    "Industrial-Production",
+    "International-Equity-Markets",
+    "Labour-Market",
+    "Market-Volatility-(VIX)",
+    "Money-Supply",
+    "Mortgage-Rates",
+    "Overnight-Rate",
+    "Personal-Consumption-Expenditures-(PCE)",
+    "Trade-Balance",
+    "Treasury-Yields",
+    "Unemployment-Rate"
+  ],
+  "indicator_markers": {
+    "Bank-Capital": [
+      "Bank Capital"
+    ],
+    "Bank-Credit-to-Private-Sector": [
+      "Bank Credit to Private Sector"
+    ],
+    "Business-Investment": [
+      "Business Investment"
+    ],
+    "Commodity-Prices": [
+      "Commodity Prices"
+    ],
+    "Consumer-Confidence-Index": [
+      "Consumer Confidence Index"
+    ],
+    "Consumer-Price-Index-(CPI)": [
+      "Consumer Price Index",
+      "CPI"
+    ],
+    "Corporate-Bond-Yields": [
+      "Corporate Bond Yields"
+    ],
+    "Equity-Market-Indices": [
+      "Equity Market Indices",
+      "Equity Market Index"
+    ],
+    "Exchange-Rate": [
+      "Exchange Rate"
+    ],
+    "Federal-Funds-Rate": [
+      "Federal Funds Rate"
+    ],
+    "Federal-Reserve-Balance-Sheet": [
+      "Federal Reserve Balance Sheet"
+    ],
+    "GDP-Growth": [
+      "GDP Growth"
+    ],
+    "Government-Purchases": [
+      "Government Purchases"
+    ],
+    "Home-Prices": [
+      "Home Prices"
+    ],
+    "Housing-Starts": [
+      "Housing Starts"
+    ],
+    "Industrial-Production": [
+      "Industrial Production"
+    ],
+    "International-Equity-Markets": [
+      "International Equity Markets"
+    ],
+    "Labour-Market": [
+      "Labour Market",
+      "Labor Market"
+    ],
+    "Market-Volatility-(VIX)": [
+      "Market Volatility",
+      "VIX"
+    ],
+    "Money-Supply": [
+      "Money Supply"
+    ],
+    "Mortgage-Rates": [
+      "Mortgage Rates"
+    ],
+    "Overnight-Rate": [
+      "Overnight Rate"
+    ],
+    "Personal-Consumption-Expenditures-(PCE)": [
+      "Personal Consumption Expenditures",
+      "PCE"
+    ],
+    "Trade-Balance": [
+      "Trade Balance"
+    ],
+    "Treasury-Yields": [
+      "Treasury Yields"
+    ],
+    "Unemployment-Rate": [
+      "Unemployment Rate"
+    ]
+  }
+}

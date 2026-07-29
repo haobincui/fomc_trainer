@@ -1,0 +1,129 @@
+{
+  "schema_version": "canonical-loo-generation-config-v1",
+  "generation_only": true,
+  "training_performed": false,
+  "claim_boundary": "Prompt intervention on frozen models and prespecified chronological populations; checkpoint lineage must be audited separately before describing either population as held out.",
+  "artifacts": {
+    "analysis_model": "../fomc_trainer_back/fomc_trainer/output/merged/llama_grpo_20250515",
+    "analysis_tokenizer": "models/DeepSeek-R1-Distill-Llama-8B",
+    "minutes_model": "../fomc_trainer_back/fomc_trainer/output/merged/llama_sft_synthetic_20250526",
+    "minutes_tokenizer": "../fomc_trainer_back/fomc_trainer/output/merged/llama_sft_synthetic_20250526",
+    "indicator_roster": "configs/main/leave_one_out_roster.json",
+    "indicator_source_registry": "configs/main/loo_indicator_sources.json"
+  },
+  "information_cutoff": {
+    "policy": "previous-calendar-day-v1",
+    "meeting_day_data": "forbidden",
+    "vintage_provider": "ALFRED",
+    "source_interface": "alfred-graph-csv-v1",
+    "authentication": "none",
+    "vintage_date_rule": "meeting_date - 1 calendar day",
+    "observation_date_rule": "observation_date <= information_as_of_date",
+    "availability_rule": "availability_as_of_date <= information_as_of_date",
+    "release_timestamp_required": false
+  },
+  "sections": [
+    {
+      "section_id": "participants_views",
+      "section_name": "Participants' Views on Current Conditions and the Economic Outlook"
+    },
+    {
+      "section_id": "economic_situation",
+      "section_name": "Staff Review of the Economic Situation"
+    },
+    {
+      "section_id": "financial_situation",
+      "section_name": "Staff Review of the Financial Situation"
+    }
+  ],
+  "populations": {
+    "pilot_eval_13": {
+      "phase": "pilot",
+      "split_label": "eval",
+      "meeting_dates": [
+        "2021-12-15",
+        "2022-01-26",
+        "2022-03-16",
+        "2022-05-04",
+        "2022-06-15",
+        "2022-07-27",
+        "2022-09-21",
+        "2022-11-02",
+        "2022-12-14",
+        "2023-02-01",
+        "2023-03-22",
+        "2023-05-03",
+        "2023-06-14"
+      ]
+    },
+    "formal_test_13": {
+      "phase": "formal",
+      "split_label": "test",
+      "meeting_dates": [
+        "2023-07-26",
+        "2023-09-20",
+        "2023-11-01",
+        "2023-12-13",
+        "2024-01-31",
+        "2024-03-20",
+        "2024-05-01",
+        "2024-06-12",
+        "2024-07-31",
+        "2024-09-18",
+        "2024-11-07",
+        "2024-12-18",
+        "2025-01-29"
+      ]
+    }
+  },
+  "interventions": [
+    "indicator_block_deletion",
+    "indicator_block_neutral_replacement"
+  ],
+  "decoding": {
+    "indicator_analysis": {
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "max_new_tokens": 256,
+      "max_model_len": 16384,
+      "replicate_seeds": [
+        20260728
+      ]
+    },
+    "minutes_primary": {
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "max_new_tokens": 8192,
+      "max_model_len": 16384,
+      "replicate_seeds": [
+        20260728
+      ]
+    },
+    "minutes_stochastic_robustness": {
+      "temperature": 0.6,
+      "top_p": 0.9,
+      "max_new_tokens": 8192,
+      "max_model_len": 16384,
+      "replicate_seeds": [
+        20260729,
+        21260729,
+        22260729,
+        23260729,
+        24260729
+      ]
+    }
+  },
+  "invariants": {
+    "indicator_count_per_meeting": 26,
+    "section_count_per_meeting": 3,
+    "row_seed_inputs": [
+      "replicate_seed",
+      "sample_id"
+    ],
+    "input_truncation": "forbidden",
+    "token_limit_finish": "forbidden",
+    "source_information_cutoff": "requested_vintage_date == information_as_of_date == meeting_date - 1 calendar day",
+    "source_observation_cutoff": "observation_date <= information_as_of_date",
+    "meeting_day_data": "forbidden"
+  }
+}

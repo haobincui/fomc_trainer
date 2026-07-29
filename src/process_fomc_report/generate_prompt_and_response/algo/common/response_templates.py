@@ -57,6 +57,17 @@ def parse_response_text(text: str | None) -> ParsedResponse:
             raw_text=raw_text,
         )
 
+    if raw_text.lower().startswith("<answer>"):
+        answer_text = raw_text[len("<answer>") :].strip()
+        if answer_text.lower().endswith("</answer>"):
+            answer_text = answer_text[: -len("</answer>")].strip()
+        return ParsedResponse(
+            format_name=LEGACY_XML_TEMPLATE,
+            reasoning="",
+            answer=answer_text,
+            raw_text=raw_text,
+        )
+
     gemma_match = _GEMMA4_THOUGHT_PATTERN.match(raw_text)
     if gemma_match:
         return ParsedResponse(

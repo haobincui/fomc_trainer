@@ -1,0 +1,187 @@
+{
+  "schema_version": "synthetic-text-loo-reuse-audit-v1",
+  "audit_date": "2026-07-28",
+  "source_root": "../synthetic_text/synthetic_text",
+  "source_access": "read_only",
+  "classification": {
+    "chapter2_canonical_result": false,
+    "legacy_exploratory_pilot": true,
+    "actual_minutes_target_cross_validation": true
+  },
+  "legacy_masked_run": {
+    "model_tag": "ft_20250330",
+    "model_path_recorded_in_script": "./models/llama3_qlora_20250330_pt",
+    "generation_parameters_recorded_in_script": {
+      "max_new_tokens": 4096,
+      "do_sample": true,
+      "temperature": 0.6,
+      "top_p": 0.9,
+      "seed": null
+    },
+    "indicators": [
+      "fed_rate",
+      "gdp",
+      "inflation_rate",
+      "sp500",
+      "unemployment_rate",
+      "us_t10",
+      "yield_curve"
+    ],
+    "indicator_count": 7,
+    "batches": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "masked_workbook_count": 133,
+    "rows_per_workbook": 20,
+    "full_masked_pair_count": 2660,
+    "full_generation_unit_count": 380,
+    "qa_universe_rows": 486,
+    "qa_universe_meetings": 123,
+    "covered_source_rows": 256,
+    "covered_meetings": 114,
+    "source_row_occurrence_min": 1,
+    "source_row_occurrence_max": 5,
+    "date_min": "2009-01-28",
+    "date_max": "2024-05-01",
+    "section_types": [
+      "Committee-Policy-Action",
+      "Staff-Economic-Outlook",
+      "Staff-Review-of-the-Economic-and-Financial-Situation",
+      "Staff-Review-of-the-Economic-Situation",
+      "Staff-Review-of-the-Financial-Situation"
+    ],
+    "stored_metric": "cos(full_output, masked_output)",
+    "tagged_cosine_file": {
+      "relative_path": "output/archive/cosine/mask/ft_20250330/tagged_cos_ft_20250330.xlsx",
+      "sha256": "002472ae93530b9ba1d35ea70e75ef9fc8a1c24a00027b40fbb73a6ad2558ec8",
+      "row_count": 2660,
+      "cosine_min": 0.2641680836677551,
+      "cosine_max": 0.9937393665313721
+    },
+    "masked_workbook_inventory_sha256": "4dd5dff569381e356b8a769ad694d919234aa35c1991c70f6d707c56c1bb4a5b",
+    "masked_workbook_inventory_sha256_algorithm": "sha256 of UTF-8 sorted lines '<filename>\\t<file_sha256>\\n'",
+    "prompt_intervention_audit": {
+      "exact_single_contiguous_deletions": 0,
+      "masked_prompt_not_shorter": 2571,
+      "other_non_deletion_mismatches": 89,
+      "full_qa_indicator_prompt_pairs": 3402,
+      "full_qa_indicator_prompt_pairs_preserving_the_full_template": 0,
+      "staff_economic_outlook_masked_variants_per_sample": 1,
+      "committee_policy_action_masked_variants_per_sample": 1,
+      "staff_economic_situation_masked_variants_per_sample": 5,
+      "staff_financial_situation_masked_variants_per_sample": 4
+    },
+    "qa_target_recovery": {
+      "qa_file": "output/archive/qa_json/input_qa_tagged.json",
+      "qa_file_sha256": "e204d7dad881364545d8b6cd44a86d4429cb44404cff23d3bc8823931c2c0c61",
+      "qa_file_role": "meeting_and_section_metadata_only",
+      "qa_rows": 486,
+      "exact_unique_section_file_matches": 486,
+      "complete_target_file": "data/training/input_qa.json",
+      "complete_target_file_sha256": "3c2b1a94c31c4328328725764e8471a49b062af7ea67d67756ebe5bee7249c3a",
+      "complete_target_file_role": "historical_scoring_target",
+      "training_and_tagged_instruction_exact_matches": 486,
+      "training_and_tagged_output_exact_matches": 82,
+      "workbook_targets_exact": 334,
+      "workbook_targets_truncated_but_uniquely_recoverable_as_prefix": 46
+    },
+    "response_integrity": {
+      "full_responses_nonempty": 380,
+      "masked_responses_parseable": 2655,
+      "masked_responses_truncated_at_excel_cell_limit": 5,
+      "required_exclusions": [
+        {
+          "indicator": "fed_rate",
+          "batch": 6,
+          "source_index": 128
+        },
+        {
+          "indicator": "gdp",
+          "batch": 6,
+          "source_index": 21
+        },
+        {
+          "indicator": "gdp",
+          "batch": 11,
+          "source_index": 5
+        },
+        {
+          "indicator": "unemployment_rate",
+          "batch": 7,
+          "source_index": 81
+        },
+        {
+          "indicator": "us_t10",
+          "batch": 6,
+          "source_index": 303
+        }
+      ]
+    },
+    "recommended_stable_key": "meeting_date::section_name::qa_index::legacy_batch",
+    "legacy_batch_semantics": "unseeded_random_draw_occurrence_not_generation_replicate",
+    "decision": "legacy_prompt_perturbation_sensitivity_or_provenance_only",
+    "canonical_exclusion_reasons": [
+      "seven_indicator_taxonomy_does_not_match_chapter2_25_or_26_indicator_taxonomy",
+      "sample_and_section_population_does_not_match_chapter2_workbooks",
+      "unseeded_stochastic_generation",
+      "unbalanced_random_batch_sampling",
+      "checkpoint_artifact_missing",
+      "no_split_or_generation_manifest",
+      "masking_changes_template_and_is_not_exact_block_deletion",
+      "some_sections_do_not_remove_different_indicators",
+      "stored_cosine_is_internal_full_vs_masked_similarity_only",
+      "five_masked_outputs_are_excel_truncated",
+      "training_set_overlap_cannot_be_ruled_out"
+    ]
+  },
+  "actual_minutes_target_validation": {
+    "historical_reason_file": {
+      "relative_path": "output/synthetic_text_reason/synthetic_text_20250520_reason.jsonl",
+      "sha256": "5d4bcb4b0724b122f291a7470c76d6b10aae067e18bf47f700a751c6f6f31164",
+      "row_count": 3481,
+      "meeting_count": 128,
+      "meeting_section_key_count": 696,
+      "section_name_count": 67,
+      "unique_index_count": 3480,
+      "duplicate_index": "0-1"
+    },
+    "candidate_reference_file": {
+      "path_from_fomc_trainer": "archive/data/dataset_20260421/raw_data/archive/synthetic_text_20250518.jsonl",
+      "sha256": "0edc4c44ce13870933a461d3507cc24c40e792667e54bda97a0150b1ebc3ac06",
+      "row_count": 697,
+      "meeting_count": 128,
+      "meeting_section_key_count": 697,
+      "reference_text_field": "reference"
+    },
+    "exact_reason_to_candidate_matches": 3481,
+    "candidate_keys_covered": 696,
+    "candidate_keys_total": 697,
+    "candidate_source_index_missing_from_reason_file": 153,
+    "section_name_universe_matches_external_workbook": true,
+    "decision": "freeze_candidate_as_a_new_versioned_reference_not_as_a_byte_identical_historical_manifest"
+  },
+  "retired_run": {
+    "model_tag": "ft_20250313",
+    "masked_workbook_count": 116,
+    "decision": "retire_as_incomplete",
+    "reason": "GDP has one batch and indicator coverage is unbalanced"
+  }
+}

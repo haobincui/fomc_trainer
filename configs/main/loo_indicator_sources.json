@@ -1,0 +1,4027 @@
+{
+  "schema_version": "loo-indicator-source-registry-v1",
+  "registry_id": "chapter2-canonical-loo-keyless-d1-v1",
+  "roster_id": "chapter2-historical-26-indicators-after-2009-v1",
+  "policy": {
+    "network_mode": "keyless",
+    "meeting_timezone": "America/New_York",
+    "vintage_lag_calendar_days": 1,
+    "same_meeting_day_data": "excluded",
+    "unknown_availability": "fail_closed",
+    "runtime_fallback": "forbidden",
+    "local_legacy_values": "mapping_only",
+    "synthetic_text_values": "mapping_only",
+    "access_interface": "alfred-graph-csv-v1",
+    "request_url_template": "https://alfred.stlouisfed.org/graph/alfredgraph.csv?id={series_id}&vintage_date={vintage_date}",
+    "availability_evidence_type": "alfred_vintage_snapshot",
+    "expected_http_status": 200,
+    "raw_response_required": true,
+    "raw_response_sha256_required": true,
+    "restricted_artifacts_git_policy": "gitignored",
+    "ledger_git_policy": "gitignored"
+  },
+  "series_defaults": {
+    "provider": "ALFRED",
+    "access_interface": "alfred-graph-csv-v1",
+    "date_column": "observation_date",
+    "value_column_template": "{series_id}_{vintage_date_yyyymmdd}",
+    "lookback": {
+      "unit": "months",
+      "value": 24
+    },
+    "selection": {
+      "method": "period_end_plus_latest",
+      "period": "month",
+      "max_points": 25
+    },
+    "transformation": {
+      "method": "identity"
+    },
+    "enabled": true
+  },
+  "sources": {
+    "alfred__TLAACBW027SBOG": {
+      "source_id": "alfred:TLAACBW027SBOG",
+      "artifact_id": "alfred__TLAACBW027SBOG",
+      "series_id": "TLAACBW027SBOG",
+      "label": "Total Assets, All Commercial Banks",
+      "frequency": "weekly",
+      "units": "Billions of U.S. Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Total Assets, All Commercial Banks",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__BOGZ1FL010000026Q": {
+      "source_id": "alfred:BOGZ1FL010000026Q",
+      "artifact_id": "alfred__BOGZ1FL010000026Q",
+      "series_id": "BOGZ1FL010000026Q",
+      "label": "Regulatory Tier 1 Capital as a Percent of Average Assets",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Regulatory Tier 1 Capital as a Percent of Average Assets",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__TOTALSL": {
+      "source_id": "alfred:TOTALSL",
+      "artifact_id": "alfred__TOTALSL",
+      "series_id": "TOTALSL",
+      "label": "Total Consumer Credit Owned and Securitized",
+      "frequency": "monthly",
+      "units": "Millions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Total Consumer Credit Owned and Securitized",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DRTSCILM": {
+      "source_id": "alfred:DRTSCILM",
+      "artifact_id": "alfred__DRTSCILM",
+      "series_id": "DRTSCILM",
+      "label": "Banks Tightening C&I Standards for Large and Middle-Market Firms",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Banks Tightening C&I Standards for Large and Middle-Market Firms",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DRTSCLCC": {
+      "source_id": "alfred:DRTSCLCC",
+      "artifact_id": "alfred__DRTSCLCC",
+      "series_id": "DRTSCLCC",
+      "label": "Banks Tightening Standards for Credit Card Loans",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Banks Tightening Standards for Credit Card Loans",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__STDSAUTO": {
+      "source_id": "alfred:STDSAUTO",
+      "artifact_id": "alfred__STDSAUTO",
+      "series_id": "STDSAUTO",
+      "label": "Banks Tightening Standards for Auto Loans",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Banks Tightening Standards for Auto Loans",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__COMPOUT": {
+      "source_id": "alfred:COMPOUT",
+      "artifact_id": "alfred__COMPOUT",
+      "series_id": "COMPOUT",
+      "label": "Commercial Paper Outstanding",
+      "frequency": "weekly",
+      "units": "Billions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Commercial Paper Outstanding",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__OB000336Q": {
+      "source_id": "alfred:OB000336Q",
+      "artifact_id": "alfred__OB000336Q",
+      "series_id": "OB000336Q",
+      "label": "Real Private Nonresidential Fixed Investment",
+      "frequency": "quarterly",
+      "units": "Billions of Chained 2017 Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Real Private Nonresidential Fixed Investment",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DCOILWTICO": {
+      "source_id": "alfred:DCOILWTICO",
+      "artifact_id": "alfred__DCOILWTICO",
+      "series_id": "DCOILWTICO",
+      "label": "West Texas Intermediate Crude Oil Price",
+      "frequency": "daily",
+      "units": "Dollars per Barrel",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "West Texas Intermediate Crude Oil Price",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__PPIACO": {
+      "source_id": "alfred:PPIACO",
+      "artifact_id": "alfred__PPIACO",
+      "series_id": "PPIACO",
+      "label": "Producer Price Index: All Commodities",
+      "frequency": "monthly",
+      "units": "Index 1982=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Producer Price Index: All Commodities",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__UMCSENT": {
+      "source_id": "alfred:UMCSENT",
+      "artifact_id": "alfred__UMCSENT",
+      "series_id": "UMCSENT",
+      "label": "University of Michigan Consumer Sentiment",
+      "frequency": "monthly",
+      "units": "Index 1966Q1=100",
+      "license_class": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "University of Michigan Consumer Sentiment",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_restricted",
+      "enabled": true
+    },
+    "alfred__RSAFS": {
+      "source_id": "alfred:RSAFS",
+      "artifact_id": "alfred__RSAFS",
+      "series_id": "RSAFS",
+      "label": "Advance Retail and Food Services Sales",
+      "frequency": "monthly",
+      "units": "Millions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Advance Retail and Food Services Sales",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__CPIAUCSL": {
+      "source_id": "alfred:CPIAUCSL",
+      "artifact_id": "alfred__CPIAUCSL",
+      "series_id": "CPIAUCSL",
+      "label": "Consumer Price Index for All Urban Consumers: All Items",
+      "frequency": "monthly",
+      "units": "Index 1982-1984=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Consumer Price Index for All Urban Consumers: All Items",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__AAA": {
+      "source_id": "alfred:AAA",
+      "artifact_id": "alfred__AAA",
+      "series_id": "AAA",
+      "label": "Moody's Seasoned Aaa Corporate Bond Yield",
+      "frequency": "monthly",
+      "units": "Percent",
+      "license_class": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Moody's Seasoned Aaa Corporate Bond Yield",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_restricted",
+      "enabled": true
+    },
+    "alfred__DBAA": {
+      "source_id": "alfred:DBAA",
+      "artifact_id": "alfred__DBAA",
+      "series_id": "DBAA",
+      "label": "Moody's Seasoned Baa Corporate Bond Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Moody's Seasoned Baa Corporate Bond Yield",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_restricted",
+      "enabled": true
+    },
+    "alfred__NFCICREDIT": {
+      "source_id": "alfred:NFCICREDIT",
+      "artifact_id": "alfred__NFCICREDIT",
+      "series_id": "NFCICREDIT",
+      "label": "Chicago Fed NFCI Credit Subindex",
+      "frequency": "weekly",
+      "units": "Index",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Chicago Fed NFCI Credit Subindex",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__NASDAQCOM": {
+      "source_id": "alfred:NASDAQCOM",
+      "artifact_id": "alfred__NASDAQCOM",
+      "series_id": "NASDAQCOM",
+      "label": "NASDAQ Composite",
+      "frequency": "daily",
+      "units": "Index",
+      "license_class": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "NASDAQ Composite",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_restricted",
+      "enabled": true
+    },
+    "alfred__DTWEXBGS": {
+      "source_id": "alfred:DTWEXBGS",
+      "artifact_id": "alfred__DTWEXBGS",
+      "series_id": "DTWEXBGS",
+      "label": "Nominal Broad U.S. Dollar Index",
+      "frequency": "daily",
+      "units": "Index January 2006=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Nominal Broad U.S. Dollar Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DEXUSEU": {
+      "source_id": "alfred:DEXUSEU",
+      "artifact_id": "alfred__DEXUSEU",
+      "series_id": "DEXUSEU",
+      "label": "U.S. Dollars to Euro Spot Exchange Rate",
+      "frequency": "daily",
+      "units": "U.S. Dollars per Euro",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "U.S. Dollars to Euro Spot Exchange Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DFF": {
+      "source_id": "alfred:DFF",
+      "artifact_id": "alfred__DFF",
+      "series_id": "DFF",
+      "label": "Federal Funds Effective Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Federal Funds Effective Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DFEDTARU": {
+      "source_id": "alfred:DFEDTARU",
+      "artifact_id": "alfred__DFEDTARU",
+      "series_id": "DFEDTARU",
+      "label": "Federal Funds Target Range Upper Limit",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Federal Funds Target Range Upper Limit",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__WALCL": {
+      "source_id": "alfred:WALCL",
+      "artifact_id": "alfred__WALCL",
+      "series_id": "WALCL",
+      "label": "Federal Reserve Total Assets",
+      "frequency": "weekly",
+      "units": "Millions of U.S. Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Federal Reserve Total Assets",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__WSHOMCB": {
+      "source_id": "alfred:WSHOMCB",
+      "artifact_id": "alfred__WSHOMCB",
+      "series_id": "WSHOMCB",
+      "label": "Federal Reserve Mortgage-Backed Securities Held Outright",
+      "frequency": "weekly",
+      "units": "Millions of U.S. Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Federal Reserve Mortgage-Backed Securities Held Outright",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__WRESBAL": {
+      "source_id": "alfred:WRESBAL",
+      "artifact_id": "alfred__WRESBAL",
+      "series_id": "WRESBAL",
+      "label": "Reserve Balances with Federal Reserve Banks",
+      "frequency": "weekly",
+      "units": "Billions of U.S. Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Reserve Balances with Federal Reserve Banks",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__GDP": {
+      "source_id": "alfred:GDP",
+      "artifact_id": "alfred__GDP",
+      "series_id": "GDP",
+      "label": "Gross Domestic Product",
+      "frequency": "quarterly",
+      "units": "Billions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Gross Domestic Product",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__A191RL1Q225SBEA": {
+      "source_id": "alfred:A191RL1Q225SBEA",
+      "artifact_id": "alfred__A191RL1Q225SBEA",
+      "series_id": "A191RL1Q225SBEA",
+      "label": "Real Gross Domestic Product Growth",
+      "frequency": "quarterly",
+      "units": "Percent Change at Annual Rate",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Real Gross Domestic Product Growth",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__GCEC1": {
+      "source_id": "alfred:GCEC1",
+      "artifact_id": "alfred__GCEC1",
+      "series_id": "GCEC1",
+      "label": "Real Government Consumption Expenditures and Gross Investment",
+      "frequency": "quarterly",
+      "units": "Billions of Chained 2017 Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Real Government Consumption Expenditures and Gross Investment",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__FGEXPND": {
+      "source_id": "alfred:FGEXPND",
+      "artifact_id": "alfred__FGEXPND",
+      "series_id": "FGEXPND",
+      "label": "Federal Government Current Expenditures",
+      "frequency": "quarterly",
+      "units": "Billions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Federal Government Current Expenditures",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__USSTHPI": {
+      "source_id": "alfred:USSTHPI",
+      "artifact_id": "alfred__USSTHPI",
+      "series_id": "USSTHPI",
+      "label": "All-Transactions House Price Index for the United States",
+      "frequency": "quarterly",
+      "units": "Index 1980Q1=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "All-Transactions House Price Index for the United States",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__RRVRUSQ156N": {
+      "source_id": "alfred:RRVRUSQ156N",
+      "artifact_id": "alfred__RRVRUSQ156N",
+      "series_id": "RRVRUSQ156N",
+      "label": "Rental Vacancy Rate in the United States",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Rental Vacancy Rate in the United States",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__HOUST": {
+      "source_id": "alfred:HOUST",
+      "artifact_id": "alfred__HOUST",
+      "series_id": "HOUST",
+      "label": "Housing Starts",
+      "frequency": "monthly",
+      "units": "Thousands of Units at Annual Rate",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Housing Starts",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__PERMIT": {
+      "source_id": "alfred:PERMIT",
+      "artifact_id": "alfred__PERMIT",
+      "series_id": "PERMIT",
+      "label": "New Private Housing Units Authorized by Building Permits",
+      "frequency": "monthly",
+      "units": "Thousands of Units at Annual Rate",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "New Private Housing Units Authorized by Building Permits",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__INDPRO": {
+      "source_id": "alfred:INDPRO",
+      "artifact_id": "alfred__INDPRO",
+      "series_id": "INDPRO",
+      "label": "Industrial Production: Total Index",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Industrial Production: Total Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__IPMAN": {
+      "source_id": "alfred:IPMAN",
+      "artifact_id": "alfred__IPMAN",
+      "series_id": "IPMAN",
+      "label": "Industrial Production: Manufacturing",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Industrial Production: Manufacturing",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__IPMINE": {
+      "source_id": "alfred:IPMINE",
+      "artifact_id": "alfred__IPMINE",
+      "series_id": "IPMINE",
+      "label": "Industrial Production: Mining",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Industrial Production: Mining",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__SPASTT01JPM661N": {
+      "source_id": "alfred:SPASTT01JPM661N",
+      "artifact_id": "alfred__SPASTT01JPM661N",
+      "series_id": "SPASTT01JPM661N",
+      "label": "OECD Share Prices: Japan",
+      "frequency": "monthly",
+      "units": "Index 2015=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "OECD Share Prices: Japan",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__SPASTT01EZM661N": {
+      "source_id": "alfred:SPASTT01EZM661N",
+      "artifact_id": "alfred__SPASTT01EZM661N",
+      "series_id": "SPASTT01EZM661N",
+      "label": "OECD Share Prices: Euro Area",
+      "frequency": "monthly",
+      "units": "Index 2015=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "OECD Share Prices: Euro Area",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__SPASTT01GBM661N": {
+      "source_id": "alfred:SPASTT01GBM661N",
+      "artifact_id": "alfred__SPASTT01GBM661N",
+      "series_id": "SPASTT01GBM661N",
+      "label": "OECD Share Prices: United Kingdom",
+      "frequency": "monthly",
+      "units": "Index 2015=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "OECD Share Prices: United Kingdom",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__PAYEMS": {
+      "source_id": "alfred:PAYEMS",
+      "artifact_id": "alfred__PAYEMS",
+      "series_id": "PAYEMS",
+      "label": "All Employees, Total Nonfarm",
+      "frequency": "monthly",
+      "units": "Thousands of Persons",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "All Employees, Total Nonfarm",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__JTSJOL": {
+      "source_id": "alfred:JTSJOL",
+      "artifact_id": "alfred__JTSJOL",
+      "series_id": "JTSJOL",
+      "label": "Job Openings, Total Nonfarm",
+      "frequency": "monthly",
+      "units": "Thousands",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Job Openings, Total Nonfarm",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__CIVPART": {
+      "source_id": "alfred:CIVPART",
+      "artifact_id": "alfred__CIVPART",
+      "series_id": "CIVPART",
+      "label": "Labor Force Participation Rate",
+      "frequency": "monthly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Labor Force Participation Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__USPRIV": {
+      "source_id": "alfred:USPRIV",
+      "artifact_id": "alfred__USPRIV",
+      "series_id": "USPRIV",
+      "label": "All Employees, Total Private",
+      "frequency": "monthly",
+      "units": "Thousands of Persons",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "All Employees, Total Private",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__VIXCLS": {
+      "source_id": "alfred:VIXCLS",
+      "artifact_id": "alfred__VIXCLS",
+      "series_id": "VIXCLS",
+      "label": "CBOE Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "license_class": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "CBOE Volatility Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_restricted",
+      "enabled": true
+    },
+    "alfred__M2SL": {
+      "source_id": "alfred:M2SL",
+      "artifact_id": "alfred__M2SL",
+      "series_id": "M2SL",
+      "label": "M2 Money Stock",
+      "frequency": "monthly",
+      "units": "Billions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "M2 Money Stock",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__BOGMBASE": {
+      "source_id": "alfred:BOGMBASE",
+      "artifact_id": "alfred__BOGMBASE",
+      "series_id": "BOGMBASE",
+      "label": "Monetary Base: Total",
+      "frequency": "monthly",
+      "units": "Billions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Monetary Base: Total",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__MORTGAGE15US": {
+      "source_id": "alfred:MORTGAGE15US",
+      "artifact_id": "alfred__MORTGAGE15US",
+      "series_id": "MORTGAGE15US",
+      "label": "15-Year Fixed Rate Mortgage Average",
+      "frequency": "weekly",
+      "units": "Percent",
+      "license_class": "third_party_citation_required",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "15-Year Fixed Rate Mortgage Average",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_citation_required",
+      "enabled": true
+    },
+    "alfred__MORTGAGE30US": {
+      "source_id": "alfred:MORTGAGE30US",
+      "artifact_id": "alfred__MORTGAGE30US",
+      "series_id": "MORTGAGE30US",
+      "label": "30-Year Fixed Rate Mortgage Average",
+      "frequency": "weekly",
+      "units": "Percent",
+      "license_class": "third_party_citation_required",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "30-Year Fixed Rate Mortgage Average",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "third_party_citation_required",
+      "enabled": true
+    },
+    "alfred__SOFR": {
+      "source_id": "alfred:SOFR",
+      "artifact_id": "alfred__SOFR",
+      "series_id": "SOFR",
+      "label": "Secured Overnight Financing Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Secured Overnight Financing Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__PCEPI": {
+      "source_id": "alfred:PCEPI",
+      "artifact_id": "alfred__PCEPI",
+      "series_id": "PCEPI",
+      "label": "Personal Consumption Expenditures Price Index",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Personal Consumption Expenditures Price Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__PCEPILFE": {
+      "source_id": "alfred:PCEPILFE",
+      "artifact_id": "alfred__PCEPILFE",
+      "series_id": "PCEPILFE",
+      "label": "Personal Consumption Expenditures Excluding Food and Energy",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Personal Consumption Expenditures Excluding Food and Energy",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DPCERL1Q225SBEA": {
+      "source_id": "alfred:DPCERL1Q225SBEA",
+      "artifact_id": "alfred__DPCERL1Q225SBEA",
+      "series_id": "DPCERL1Q225SBEA",
+      "label": "Real Personal Consumption Expenditures Growth",
+      "frequency": "quarterly",
+      "units": "Percent Change at Annual Rate",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Real Personal Consumption Expenditures Growth",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__NETEXP": {
+      "source_id": "alfred:NETEXP",
+      "artifact_id": "alfred__NETEXP",
+      "series_id": "NETEXP",
+      "label": "Net Exports of Goods and Services",
+      "frequency": "quarterly",
+      "units": "Billions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Net Exports of Goods and Services",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__BOPGSTB": {
+      "source_id": "alfred:BOPGSTB",
+      "artifact_id": "alfred__BOPGSTB",
+      "series_id": "BOPGSTB",
+      "label": "Trade Balance: Goods and Services",
+      "frequency": "monthly",
+      "units": "Millions of Dollars",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Trade Balance: Goods and Services",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DGS3MO": {
+      "source_id": "alfred:DGS3MO",
+      "artifact_id": "alfred__DGS3MO",
+      "series_id": "DGS3MO",
+      "label": "3-Month Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "3-Month Treasury Constant Maturity Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DGS2": {
+      "source_id": "alfred:DGS2",
+      "artifact_id": "alfred__DGS2",
+      "series_id": "DGS2",
+      "label": "2-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "2-Year Treasury Constant Maturity Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DGS10": {
+      "source_id": "alfred:DGS10",
+      "artifact_id": "alfred__DGS10",
+      "series_id": "DGS10",
+      "label": "10-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "10-Year Treasury Constant Maturity Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__DGS30": {
+      "source_id": "alfred:DGS30",
+      "artifact_id": "alfred__DGS30",
+      "series_id": "DGS30",
+      "label": "30-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "30-Year Treasury Constant Maturity Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__UNRATE": {
+      "source_id": "alfred:UNRATE",
+      "artifact_id": "alfred__UNRATE",
+      "series_id": "UNRATE",
+      "label": "Unemployment Rate",
+      "frequency": "monthly",
+      "units": "Percent",
+      "license_class": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "title": "Unemployment Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license": "public_with_attribution",
+      "enabled": true
+    },
+    "alfred__TOTALSLAR": {
+      "source_id": "alfred:TOTALSLAR",
+      "artifact_id": "alfred__TOTALSLAR",
+      "series_id": "TOTALSLAR",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Percent Change of Total Consumer Credit",
+      "title": "Percent Change of Total Consumer Credit",
+      "frequency": "monthly",
+      "units": "Percent Change at Annual Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__PSAVERT": {
+      "source_id": "alfred:PSAVERT",
+      "artifact_id": "alfred__PSAVERT",
+      "series_id": "PSAVERT",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Personal Saving Rate",
+      "title": "Personal Saving Rate",
+      "frequency": "monthly",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DRIWCIL": {
+      "source_id": "alfred:DRIWCIL",
+      "artifact_id": "alfred__DRIWCIL",
+      "series_id": "DRIWCIL",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Banks Reporting Increased Willingness to Make Consumer Installment Loans",
+      "title": "Banks Reporting Increased Willingness to Make Consumer Installment Loans",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__SUBLPDRCSC": {
+      "source_id": "alfred:SUBLPDRCSC",
+      "artifact_id": "alfred__SUBLPDRCSC",
+      "series_id": "SUBLPDRCSC",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Banks Tightening Standards for Construction and Land Development Loans",
+      "title": "Banks Tightening Standards for Construction and Land Development Loans",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DRTSCIS": {
+      "source_id": "alfred:DRTSCIS",
+      "artifact_id": "alfred__DRTSCIS",
+      "series_id": "DRTSCIS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Banks Tightening C&I Standards for Small Firms",
+      "title": "Banks Tightening C&I Standards for Small Firms",
+      "frequency": "quarterly",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__A006RL1Q225SBEA": {
+      "source_id": "alfred:A006RL1Q225SBEA",
+      "artifact_id": "alfred__A006RL1Q225SBEA",
+      "series_id": "A006RL1Q225SBEA",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Real Gross Private Domestic Investment Growth",
+      "title": "Real Gross Private Domestic Investment Growth",
+      "frequency": "quarterly",
+      "units": "Percent Change at Annual Rate",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DCOILBRENTEU": {
+      "source_id": "alfred:DCOILBRENTEU",
+      "artifact_id": "alfred__DCOILBRENTEU",
+      "series_id": "DCOILBRENTEU",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Brent Crude Oil Price",
+      "title": "Brent Crude Oil Price",
+      "frequency": "daily",
+      "units": "Dollars per Barrel",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__WPU01": {
+      "source_id": "alfred:WPU01",
+      "artifact_id": "alfred__WPU01",
+      "series_id": "WPU01",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Producer Price Index: Farm Products",
+      "title": "Producer Price Index: Farm Products",
+      "frequency": "monthly",
+      "units": "Index 1982=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__PPIENG": {
+      "source_id": "alfred:PPIENG",
+      "artifact_id": "alfred__PPIENG",
+      "series_id": "PPIENG",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Producer Price Index: Fuels and Related Products and Power",
+      "title": "Producer Price Index: Fuels and Related Products and Power",
+      "frequency": "monthly",
+      "units": "Index 1982=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__WPU10": {
+      "source_id": "alfred:WPU10",
+      "artifact_id": "alfred__WPU10",
+      "series_id": "WPU10",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Producer Price Index: Metals and Metal Products",
+      "title": "Producer Price Index: Metals and Metal Products",
+      "frequency": "monthly",
+      "units": "Index 1982=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DEXCHUS": {
+      "source_id": "alfred:DEXCHUS",
+      "artifact_id": "alfred__DEXCHUS",
+      "series_id": "DEXCHUS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate",
+      "title": "Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate",
+      "frequency": "daily",
+      "units": "Chinese Yuan per U.S. Dollar",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DEXJPUS": {
+      "source_id": "alfred:DEXJPUS",
+      "artifact_id": "alfred__DEXJPUS",
+      "series_id": "DEXJPUS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Japanese Yen to U.S. Dollar Spot Exchange Rate",
+      "title": "Japanese Yen to U.S. Dollar Spot Exchange Rate",
+      "frequency": "daily",
+      "units": "Japanese Yen per U.S. Dollar",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DEXUSUK": {
+      "source_id": "alfred:DEXUSUK",
+      "artifact_id": "alfred__DEXUSUK",
+      "series_id": "DEXUSUK",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate",
+      "title": "U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate",
+      "frequency": "daily",
+      "units": "U.S. Dollars per Pound",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__FEDFUNDS": {
+      "source_id": "alfred:FEDFUNDS",
+      "artifact_id": "alfred__FEDFUNDS",
+      "series_id": "FEDFUNDS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Federal Funds Effective Rate",
+      "title": "Federal Funds Effective Rate",
+      "frequency": "monthly",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__TREAST": {
+      "source_id": "alfred:TREAST",
+      "artifact_id": "alfred__TREAST",
+      "series_id": "TREAST",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Federal Reserve Treasury Securities Held Outright",
+      "title": "Federal Reserve Treasury Securities Held Outright",
+      "frequency": "weekly",
+      "units": "Millions of U.S. Dollars",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__G160461A027NBEA": {
+      "source_id": "alfred:G160461A027NBEA",
+      "artifact_id": "alfred__G160461A027NBEA",
+      "series_id": "G160461A027NBEA",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Government Current Expenditures: National Defense",
+      "title": "Government Current Expenditures: National Defense",
+      "frequency": "annual",
+      "units": "Billions of Dollars",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__IPG3344S": {
+      "source_id": "alfred:IPG3344S",
+      "artifact_id": "alfred__IPG3344S",
+      "series_id": "IPG3344S",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Industrial Production: Semiconductor and Other Electronic Components",
+      "title": "Industrial Production: Semiconductor and Other Electronic Components",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__IPG311A2S": {
+      "source_id": "alfred:IPG311A2S",
+      "artifact_id": "alfred__IPG311A2S",
+      "series_id": "IPG311A2S",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Industrial Production: Food, Beverage, and Tobacco",
+      "title": "Industrial Production: Food, Beverage, and Tobacco",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__IPG2211A2N": {
+      "source_id": "alfred:IPG2211A2N",
+      "artifact_id": "alfred__IPG2211A2N",
+      "series_id": "IPG2211A2N",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Industrial Production: Electric and Gas Utilities",
+      "title": "Industrial Production: Electric and Gas Utilities",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__IPG3361T3S": {
+      "source_id": "alfred:IPG3361T3S",
+      "artifact_id": "alfred__IPG3361T3S",
+      "series_id": "IPG3361T3S",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Industrial Production: Motor Vehicles and Parts",
+      "title": "Industrial Production: Motor Vehicles and Parts",
+      "frequency": "monthly",
+      "units": "Index 2017=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS1MO": {
+      "source_id": "alfred:DGS1MO",
+      "artifact_id": "alfred__DGS1MO",
+      "series_id": "DGS1MO",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "1-Month Treasury Constant Maturity Rate",
+      "title": "1-Month Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS6MO": {
+      "source_id": "alfred:DGS6MO",
+      "artifact_id": "alfred__DGS6MO",
+      "series_id": "DGS6MO",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "6-Month Treasury Constant Maturity Rate",
+      "title": "6-Month Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS1": {
+      "source_id": "alfred:DGS1",
+      "artifact_id": "alfred__DGS1",
+      "series_id": "DGS1",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "1-Year Treasury Constant Maturity Rate",
+      "title": "1-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS3": {
+      "source_id": "alfred:DGS3",
+      "artifact_id": "alfred__DGS3",
+      "series_id": "DGS3",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "3-Year Treasury Constant Maturity Rate",
+      "title": "3-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS5": {
+      "source_id": "alfred:DGS5",
+      "artifact_id": "alfred__DGS5",
+      "series_id": "DGS5",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "5-Year Treasury Constant Maturity Rate",
+      "title": "5-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS7": {
+      "source_id": "alfred:DGS7",
+      "artifact_id": "alfred__DGS7",
+      "series_id": "DGS7",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "7-Year Treasury Constant Maturity Rate",
+      "title": "7-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__DGS20": {
+      "source_id": "alfred:DGS20",
+      "artifact_id": "alfred__DGS20",
+      "series_id": "DGS20",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "20-Year Treasury Constant Maturity Rate",
+      "title": "20-Year Treasury Constant Maturity Rate",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__SPASTT01USM661N": {
+      "source_id": "alfred:SPASTT01USM661N",
+      "artifact_id": "alfred__SPASTT01USM661N",
+      "series_id": "SPASTT01USM661N",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "OECD Share Prices: United States",
+      "title": "OECD Share Prices: United States",
+      "frequency": "monthly",
+      "units": "Index 2015=100",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "enabled": true
+    },
+    "alfred__NFCIRISK": {
+      "source_id": "alfred:NFCIRISK",
+      "artifact_id": "alfred__NFCIRISK",
+      "series_id": "NFCIRISK",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Chicago Fed NFCI Risk Subindex",
+      "title": "Chicago Fed NFCI Risk Subindex",
+      "frequency": "weekly",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "public_with_attribution",
+      "license": "public_with_attribution",
+      "redistribution_allowed": true,
+      "proxy": true,
+      "enabled": true
+    },
+    "alfred__VXNCLS": {
+      "source_id": "alfred:VXNCLS",
+      "artifact_id": "alfred__VXNCLS",
+      "series_id": "VXNCLS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "CBOE NASDAQ 100 Volatility Index",
+      "title": "CBOE NASDAQ 100 Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__VXDCLS": {
+      "source_id": "alfred:VXDCLS",
+      "artifact_id": "alfred__VXDCLS",
+      "series_id": "VXDCLS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "CBOE DJIA Volatility Index",
+      "title": "CBOE DJIA Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__RVXCLS": {
+      "source_id": "alfred:RVXCLS",
+      "artifact_id": "alfred__RVXCLS",
+      "series_id": "RVXCLS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "CBOE Russell 2000 Volatility Index",
+      "title": "CBOE Russell 2000 Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__VXVCLS": {
+      "source_id": "alfred:VXVCLS",
+      "artifact_id": "alfred__VXVCLS",
+      "series_id": "VXVCLS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "CBOE S&P 500 3-Month Volatility Index",
+      "title": "CBOE S&P 500 3-Month Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__OVXCLS": {
+      "source_id": "alfred:OVXCLS",
+      "artifact_id": "alfred__OVXCLS",
+      "series_id": "OVXCLS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "CBOE Crude Oil ETF Volatility Index",
+      "title": "CBOE Crude Oil ETF Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__GVZCLS": {
+      "source_id": "alfred:GVZCLS",
+      "artifact_id": "alfred__GVZCLS",
+      "series_id": "GVZCLS",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "CBOE Gold ETF Volatility Index",
+      "title": "CBOE Gold ETF Volatility Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": true
+    },
+    "alfred__SP500": {
+      "source_id": "alfred:SP500",
+      "artifact_id": "alfred__SP500",
+      "series_id": "SP500",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "S&P 500 Index",
+      "title": "S&P 500 Index",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__DJIA": {
+      "source_id": "alfred:DJIA",
+      "artifact_id": "alfred__DJIA",
+      "series_id": "DJIA",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "Dow Jones Industrial Average",
+      "title": "Dow Jones Industrial Average",
+      "frequency": "daily",
+      "units": "Index",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__ADPWNUSNERSA": {
+      "source_id": "alfred:ADPWNUSNERSA",
+      "artifact_id": "alfred__ADPWNUSNERSA",
+      "series_id": "ADPWNUSNERSA",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ADP Total Nonfarm Private Payroll Employment",
+      "title": "ADP Total Nonfarm Private Payroll Employment",
+      "frequency": "weekly",
+      "units": "Persons",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC1A0C13YEY": {
+      "source_id": "alfred:BAMLC1A0C13YEY",
+      "artifact_id": "alfred__BAMLC1A0C13YEY",
+      "series_id": "BAMLC1A0C13YEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA 1-3 Year U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA 1-3 Year U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC7A0C1015YEY": {
+      "source_id": "alfred:BAMLC7A0C1015YEY",
+      "artifact_id": "alfred__BAMLC7A0C1015YEY",
+      "series_id": "BAMLC7A0C1015YEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA 10-15 Year U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA 10-15 Year U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC8A0C15PYEY": {
+      "source_id": "alfred:BAMLC8A0C15PYEY",
+      "artifact_id": "alfred__BAMLC8A0C15PYEY",
+      "series_id": "BAMLC8A0C15PYEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA 15+ Year U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA 15+ Year U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC2A0C35YEY": {
+      "source_id": "alfred:BAMLC2A0C35YEY",
+      "artifact_id": "alfred__BAMLC2A0C35YEY",
+      "series_id": "BAMLC2A0C35YEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA 3-5 Year U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA 3-5 Year U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC3A0C57YEY": {
+      "source_id": "alfred:BAMLC3A0C57YEY",
+      "artifact_id": "alfred__BAMLC3A0C57YEY",
+      "series_id": "BAMLC3A0C57YEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA 5-7 Year U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA 5-7 Year U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC4A0C710YEY": {
+      "source_id": "alfred:BAMLC4A0C710YEY",
+      "artifact_id": "alfred__BAMLC4A0C710YEY",
+      "series_id": "BAMLC4A0C710YEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA 7-10 Year U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA 7-10 Year U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC0A2CAAEY": {
+      "source_id": "alfred:BAMLC0A2CAAEY",
+      "artifact_id": "alfred__BAMLC0A2CAAEY",
+      "series_id": "BAMLC0A2CAAEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA AA U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA AA U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC0A1CAAAEY": {
+      "source_id": "alfred:BAMLC0A1CAAAEY",
+      "artifact_id": "alfred__BAMLC0A1CAAAEY",
+      "series_id": "BAMLC0A1CAAAEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA AAA U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA AAA U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLEM4RBLLCRPIUSEY": {
+      "source_id": "alfred:BAMLEM4RBLLCRPIUSEY",
+      "artifact_id": "alfred__BAMLEM4RBLLCRPIUSEY",
+      "series_id": "BAMLEM4RBLLCRPIUSEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA B and Lower Emerging Markets Corporate Yield",
+      "title": "ICE BofA B and Lower Emerging Markets Corporate Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLH0A1HYBBEY": {
+      "source_id": "alfred:BAMLH0A1HYBBEY",
+      "artifact_id": "alfred__BAMLH0A1HYBBEY",
+      "series_id": "BAMLH0A1HYBBEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA BB U.S. High Yield Index Effective Yield",
+      "title": "ICE BofA BB U.S. High Yield Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLC0A4CBBBEY": {
+      "source_id": "alfred:BAMLC0A4CBBBEY",
+      "artifact_id": "alfred__BAMLC0A4CBBBEY",
+      "series_id": "BAMLC0A4CBBBEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA BBB U.S. Corporate Index Effective Yield",
+      "title": "ICE BofA BBB U.S. Corporate Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    },
+    "alfred__BAMLH0A3HYCEY": {
+      "source_id": "alfred:BAMLH0A3HYCEY",
+      "artifact_id": "alfred__BAMLH0A3HYCEY",
+      "series_id": "BAMLH0A3HYCEY",
+      "provider": "ALFRED",
+      "access_interface": "alfred-graph-csv-v1",
+      "label": "ICE BofA CCC and Lower U.S. High Yield Index Effective Yield",
+      "title": "ICE BofA CCC and Lower U.S. High Yield Index Effective Yield",
+      "frequency": "daily",
+      "units": "Percent",
+      "seasonal_adjustment": "as_published",
+      "lookback_years": 2,
+      "lookback": {
+        "unit": "months",
+        "value": 24
+      },
+      "transformation": {
+        "method": "identity"
+      },
+      "license_class": "third_party_restricted",
+      "license": "third_party_restricted",
+      "redistribution_allowed": false,
+      "proxy": false,
+      "enabled": false,
+      "disabled_reason": "keyless_alfred_vintage_http_404"
+    }
+  },
+  "indicators": {
+    "Bank-Capital": {
+      "source_keys": [
+        "alfred__TLAACBW027SBOG",
+        "alfred__BOGZ1FL010000026Q"
+      ]
+    },
+    "Bank-Credit-to-Private-Sector": {
+      "source_keys": [
+        "alfred__TOTALSL",
+        "alfred__TOTALSLAR",
+        "alfred__PSAVERT",
+        "alfred__DRIWCIL",
+        "alfred__STDSAUTO",
+        "alfred__SUBLPDRCSC",
+        "alfred__DRTSCILM",
+        "alfred__DRTSCIS",
+        "alfred__DRTSCLCC"
+      ]
+    },
+    "Business-Investment": {
+      "source_keys": [
+        "alfred__COMPOUT",
+        "alfred__A006RL1Q225SBEA",
+        "alfred__OB000336Q"
+      ]
+    },
+    "Commodity-Prices": {
+      "source_keys": [
+        "alfred__DCOILBRENTEU",
+        "alfred__DCOILWTICO",
+        "alfred__PPIACO",
+        "alfred__WPU01",
+        "alfred__PPIENG",
+        "alfred__WPU10"
+      ]
+    },
+    "Consumer-Confidence-Index": {
+      "source_keys": [
+        "alfred__UMCSENT",
+        "alfred__RSAFS"
+      ]
+    },
+    "Consumer-Price-Index-(CPI)": {
+      "source_keys": [
+        "alfred__CPIAUCSL"
+      ]
+    },
+    "Corporate-Bond-Yields": {
+      "source_keys": [
+        "alfred__BAMLC1A0C13YEY",
+        "alfred__BAMLC7A0C1015YEY",
+        "alfred__BAMLC8A0C15PYEY",
+        "alfred__BAMLC2A0C35YEY",
+        "alfred__BAMLC3A0C57YEY",
+        "alfred__BAMLC4A0C710YEY",
+        "alfred__BAMLC0A2CAAEY",
+        "alfred__BAMLC0A1CAAAEY",
+        "alfred__BAMLEM4RBLLCRPIUSEY",
+        "alfred__BAMLH0A1HYBBEY",
+        "alfred__BAMLC0A4CBBBEY",
+        "alfred__BAMLH0A3HYCEY",
+        "alfred__AAA",
+        "alfred__DBAA",
+        "alfred__NFCICREDIT"
+      ]
+    },
+    "Equity-Market-Indices": {
+      "source_keys": [
+        "alfred__SP500",
+        "alfred__DJIA",
+        "alfred__NASDAQCOM",
+        "alfred__SPASTT01USM661N"
+      ]
+    },
+    "Exchange-Rate": {
+      "source_keys": [
+        "alfred__DEXCHUS",
+        "alfred__DEXJPUS",
+        "alfred__DTWEXBGS",
+        "alfred__DEXUSEU",
+        "alfred__DEXUSUK"
+      ]
+    },
+    "Federal-Funds-Rate": {
+      "source_keys": [
+        "alfred__DFF",
+        "alfred__FEDFUNDS",
+        "alfred__DFEDTARU"
+      ]
+    },
+    "Federal-Reserve-Balance-Sheet": {
+      "source_keys": [
+        "alfred__WALCL",
+        "alfred__WSHOMCB",
+        "alfred__WRESBAL",
+        "alfred__TREAST"
+      ]
+    },
+    "GDP-Growth": {
+      "source_keys": [
+        "alfred__GDP",
+        "alfred__A191RL1Q225SBEA"
+      ]
+    },
+    "Government-Purchases": {
+      "source_keys": [
+        "alfred__FGEXPND",
+        "alfred__G160461A027NBEA",
+        "alfred__GCEC1"
+      ]
+    },
+    "Home-Prices": {
+      "source_keys": [
+        "alfred__USSTHPI",
+        "alfred__RRVRUSQ156N"
+      ]
+    },
+    "Housing-Starts": {
+      "source_keys": [
+        "alfred__HOUST",
+        "alfred__PERMIT"
+      ]
+    },
+    "Industrial-Production": {
+      "source_keys": [
+        "alfred__IPG3344S",
+        "alfred__IPG311A2S",
+        "alfred__IPMINE",
+        "alfred__IPG2211A2N",
+        "alfred__IPG3361T3S",
+        "alfred__IPMAN",
+        "alfred__INDPRO"
+      ]
+    },
+    "International-Equity-Markets": {
+      "source_keys": [
+        "alfred__SPASTT01JPM661N",
+        "alfred__SPASTT01EZM661N",
+        "alfred__SPASTT01GBM661N"
+      ]
+    },
+    "Labour-Market": {
+      "source_keys": [
+        "alfred__PAYEMS",
+        "alfred__JTSJOL",
+        "alfred__CIVPART",
+        "alfred__ADPWNUSNERSA",
+        "alfred__USPRIV"
+      ]
+    },
+    "Market-Volatility-(VIX)": {
+      "source_keys": [
+        "alfred__OVXCLS",
+        "alfred__VXDCLS",
+        "alfred__GVZCLS",
+        "alfred__VXNCLS",
+        "alfred__RVXCLS",
+        "alfred__VXVCLS",
+        "alfred__VIXCLS",
+        "alfred__NFCIRISK"
+      ]
+    },
+    "Money-Supply": {
+      "source_keys": [
+        "alfred__M2SL",
+        "alfred__BOGMBASE"
+      ]
+    },
+    "Mortgage-Rates": {
+      "source_keys": [
+        "alfred__MORTGAGE15US",
+        "alfred__MORTGAGE30US"
+      ]
+    },
+    "Overnight-Rate": {
+      "source_keys": [
+        "alfred__SOFR"
+      ]
+    },
+    "Personal-Consumption-Expenditures-(PCE)": {
+      "source_keys": [
+        "alfred__PCEPI",
+        "alfred__PCEPILFE",
+        "alfred__DPCERL1Q225SBEA"
+      ]
+    },
+    "Trade-Balance": {
+      "source_keys": [
+        "alfred__NETEXP",
+        "alfred__BOPGSTB"
+      ]
+    },
+    "Treasury-Yields": {
+      "source_keys": [
+        "alfred__DGS1MO",
+        "alfred__DGS3MO",
+        "alfred__DGS6MO",
+        "alfred__DGS1",
+        "alfred__DGS2",
+        "alfred__DGS3",
+        "alfred__DGS5",
+        "alfred__DGS7",
+        "alfred__DGS10",
+        "alfred__DGS20",
+        "alfred__DGS30"
+      ]
+    },
+    "Unemployment-Rate": {
+      "source_keys": [
+        "alfred__UNRATE"
+      ]
+    }
+  },
+  "legacy_crosswalk": {
+    "root": "dataset/raw_data/input_data/us_data",
+    "expected_file_count": 102,
+    "files": [
+      {
+        "path": "Bank Capital/Bank Capital to Total Assets for United States(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Capital",
+        "legacy_source_id": "DDSI03USA156NWDB",
+        "disposition": "replaced_by_timely_public_proxy",
+        "reason": "legacy annual series ends in 2020 and is not timely for the frozen populations",
+        "source_keys": [
+          "alfred__BOGZ1FL010000026Q"
+        ]
+      },
+      {
+        "path": "Bank Capital/Bank Total Assets, All Commercial Banks(Billions of U.S. Dollars, Seasonally Adjusted).csv",
+        "indicator": "Bank-Capital",
+        "legacy_source_id": "TLAACBW027SBOG",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__TLAACBW027SBOG"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/KBW Nasdaq Bank Index.csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": null,
+        "disposition": "replaced_or_guarded_by_keyless_market_proxy",
+        "reason": "legacy market CSV has no verifiable source URL or historical-vintage manifest",
+        "source_keys": [
+          "alfred__TOTALSL",
+          "alfred__DRTSCILM",
+          "alfred__DRTSCLCC",
+          "alfred__STDSAUTO"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/Percent Change of Total Consumer Credit(Percent Change at Annual Rate, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "TOTALSLAR",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__TOTALSLAR"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/Personal Saving Rate(Percent, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "PSAVERT",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__PSAVERT"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/SLOOS, Net Percentage of Domestic Banks Reporting Increased Willingness to Make Consumer Installment Loans(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "DRIWCIL",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DRIWCIL"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/SLOOS, Net Percentage of Domestic Banks Tightening Standards for Auto Loans(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "STDSAUTO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__STDSAUTO"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/SLOOS, Net Percentage of Domestic Banks Tightening Standards for Commercial Real Estate Loans with Construction and Land Development Purposes(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "SUBLPDRCSC",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__SUBLPDRCSC"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "DRTSCILM",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DRTSCILM"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Small Firms(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "DRTSCIS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DRTSCIS"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/SLOOS,Net Percentage of Domestic Banks Tightening Standards for Credit Card Loans(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "DRTSCLCC",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DRTSCLCC"
+        ]
+      },
+      {
+        "path": "Bank Credit to Private Sector/Total Consumer Credit Owned and Securitized(Millions of Dollars, Seasonally Adjusted).csv",
+        "indicator": "Bank-Credit-to-Private-Sector",
+        "legacy_source_id": "TOTALSL",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__TOTALSL"
+        ]
+      },
+      {
+        "path": "Business Investment/Commercial Paper Outstanding(Billions of Dollars, Seasonally Adjusted).csv",
+        "indicator": "Business-Investment",
+        "legacy_source_id": "COMPOUT",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__COMPOUT"
+        ]
+      },
+      {
+        "path": "Business Investment/Real Gross Private Domestic Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Business-Investment",
+        "legacy_source_id": "A006RL1Q225SBEA",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__A006RL1Q225SBEA"
+        ]
+      },
+      {
+        "path": "Business Investment/Real Private Nonresidential Fixed Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Business-Investment",
+        "legacy_source_id": "OB000336Q",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__OB000336Q"
+        ]
+      },
+      {
+        "path": "Commodity Prices/Crude Oil Prices(Brent,Dollars per Barrel, Not Seasonally Adjusted).csv",
+        "indicator": "Commodity-Prices",
+        "legacy_source_id": "DCOILBRENTEU",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DCOILBRENTEU"
+        ]
+      },
+      {
+        "path": "Commodity Prices/Crude Oil Prices(West Texas Intermediate, Dollars per Barrel, Not Seasonally Adjusted).csv",
+        "indicator": "Commodity-Prices",
+        "legacy_source_id": "DCOILWTICO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DCOILWTICO"
+        ]
+      },
+      {
+        "path": "Commodity Prices/Producer Price Index by Commodity, All Commodities(Index 1982=100, Not Seasonally Adjusted).csv",
+        "indicator": "Commodity-Prices",
+        "legacy_source_id": "PPIACO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__PPIACO"
+        ]
+      },
+      {
+        "path": "Commodity Prices/Producer Price Index by Commodity, Farm Products(Index 1982=100, Not Seasonally Adjusted).csv",
+        "indicator": "Commodity-Prices",
+        "legacy_source_id": "WPU01",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__WPU01"
+        ]
+      },
+      {
+        "path": "Commodity Prices/Producer Price Index by Commodity, Fuels and Related Products and Power (Index 1982=100, Not Seasonally Adjusted).csv",
+        "indicator": "Commodity-Prices",
+        "legacy_source_id": "PPIENG",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__PPIENG"
+        ]
+      },
+      {
+        "path": "Commodity Prices/Producer Price Index by Commodity, Metals and Metal Products(Index 1982=100, Not Seasonally Adjusted).csv",
+        "indicator": "Commodity-Prices",
+        "legacy_source_id": "WPU10",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__WPU10"
+        ]
+      },
+      {
+        "path": "Consumer Confidence Index/Advance Monthly Sales for Retail and Food Services(Seasonally Adjusted Sales - Monthly [Millions of Dollars]).xlsx",
+        "indicator": "Consumer-Confidence-Index",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__RSAFS"
+        ]
+      },
+      {
+        "path": "Consumer Confidence Index/Consumer Sentiment(Index 1966Q1=100, Not Seasonally Adjusted).csv",
+        "indicator": "Consumer-Confidence-Index",
+        "legacy_source_id": "UMCSENT",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__UMCSENT"
+        ]
+      },
+      {
+        "path": "Consumer Price Index (CPI)/Consumer Price Index for All Urban Consumers (CPI-U, seasonal adjusted).csv",
+        "indicator": "Consumer-Price-Index-(CPI)",
+        "legacy_source_id": "CUSR0000SA0",
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__CPIAUCSL"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA 1-3 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC1A0C13YEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC1A0C13YEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA 10-15 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC7A0C1015YEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC7A0C1015YEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA 15+ Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC8A0C15PYEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC8A0C15PYEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA 3-5 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC2A0C35YEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC2A0C35YEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA 5-7 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC3A0C57YEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC3A0C57YEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA 7-10 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC4A0C710YEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC4A0C710YEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA AA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC0A2CAAEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC0A2CAAEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA AAA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC0A1CAAAEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC0A1CAAAEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA B & Lower US Emerging Markets Liquid Corporate Plus Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLEM4RBLLCRPIUSEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLEM4RBLLCRPIUSEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA BB US High Yield Index Effective Yield (Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLH0A1HYBBEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLH0A1HYBBEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA BBB US Corporate Index Effective Yield (Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLC0A4CBBBEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLC0A4CBBBEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/ICE BofA CCC & Lower US High Yield Index Effective Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "BAMLH0A3HYCEY",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__BAMLH0A3HYCEY",
+          "alfred__NFCICREDIT"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/Moody's Seasoned Aaa Corporate Bond Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "AAA",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__AAA"
+        ]
+      },
+      {
+        "path": "Corporate Bond Yields/Moody's Seasoned Baa Corporate Bond Yield(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Corporate-Bond-Yields",
+        "legacy_source_id": "DBAA",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DBAA"
+        ]
+      },
+      {
+        "path": "Equity Market Indices/Dow Jones Industrial Average.csv",
+        "indicator": "Equity-Market-Indices",
+        "legacy_source_id": null,
+        "disposition": "replaced_or_guarded_by_keyless_market_proxy",
+        "reason": "legacy market CSV has no verifiable source URL or historical-vintage manifest",
+        "source_keys": [
+          "alfred__DJIA",
+          "alfred__SPASTT01USM661N"
+        ]
+      },
+      {
+        "path": "Equity Market Indices/NASDAQ Composite Index.csv",
+        "indicator": "Equity-Market-Indices",
+        "legacy_source_id": null,
+        "disposition": "replaced_or_guarded_by_keyless_market_proxy",
+        "reason": "legacy market CSV has no verifiable source URL or historical-vintage manifest",
+        "source_keys": [
+          "alfred__NASDAQCOM"
+        ]
+      },
+      {
+        "path": "Equity Market Indices/S&P 500 Index.csv",
+        "indicator": "Equity-Market-Indices",
+        "legacy_source_id": null,
+        "disposition": "replaced_or_guarded_by_keyless_market_proxy",
+        "reason": "legacy market CSV has no verifiable source URL or historical-vintage manifest",
+        "source_keys": [
+          "alfred__SP500",
+          "alfred__SPASTT01USM661N"
+        ]
+      },
+      {
+        "path": "Exchange Rate/Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate(Chinese Yuan Renminbi to One U.S. Dollar, Not Seasonally Adjusted).csv",
+        "indicator": "Exchange-Rate",
+        "legacy_source_id": "DEXCHUS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DEXCHUS"
+        ]
+      },
+      {
+        "path": "Exchange Rate/Japanese Yen to U.S. Dollar Spot Exchange Rate(Japanese Yen to One U.S. Dollar, Not Seasonally Adjusted).csv",
+        "indicator": "Exchange-Rate",
+        "legacy_source_id": "DEXJPUS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DEXJPUS"
+        ]
+      },
+      {
+        "path": "Exchange Rate/Nominal Broad U.S. Dollar Index(Index Jan 2006=100, Not Seasonally Adjusted).csv",
+        "indicator": "Exchange-Rate",
+        "legacy_source_id": "DTWEXBGS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DTWEXBGS"
+        ]
+      },
+      {
+        "path": "Exchange Rate/U.S. Dollars to Euro Spot Exchange Rate(U.S. Dollars to One Euro, Not Seasonally Adjusted).csv",
+        "indicator": "Exchange-Rate",
+        "legacy_source_id": "DEXUSEU",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DEXUSEU"
+        ]
+      },
+      {
+        "path": "Exchange Rate/U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate(U.S. Dollars to One U.K. Pound Sterling, Not Seasonally Adjusted).csv",
+        "indicator": "Exchange-Rate",
+        "legacy_source_id": "DEXUSUK",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DEXUSUK"
+        ]
+      },
+      {
+        "path": "Federal Funds Rate/Federal Funds Effective Rate(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Federal-Funds-Rate",
+        "legacy_source_id": "FEDFUNDS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__FEDFUNDS"
+        ]
+      },
+      {
+        "path": "Federal Funds Rate/Federal Funds Target Range - Upper Limit (Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Federal-Funds-Rate",
+        "legacy_source_id": "DFEDTARU",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DFEDTARU"
+        ]
+      },
+      {
+        "path": "Federal Reserve Balance Sheet/Balance Sheet, Mortgage-Backed Securities(Millions of U.S. Dollars, Not Seasonally Adjusted).csv",
+        "indicator": "Federal-Reserve-Balance-Sheet",
+        "legacy_source_id": "QBPBSTASSCMRTSEC",
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__WSHOMCB"
+        ]
+      },
+      {
+        "path": "Federal Reserve Balance Sheet/Balance Sheet,Total Assets(Millions of U.S. Dollars, Not Seasonally Adjusted).csv",
+        "indicator": "Federal-Reserve-Balance-Sheet",
+        "legacy_source_id": "QBPBSTAS",
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__WALCL"
+        ]
+      },
+      {
+        "path": "Federal Reserve Balance Sheet/Reserve Balances with Federal Reserve Banks(Billions of U.S. Dollars, Not Seasonally Adjusted).csv",
+        "indicator": "Federal-Reserve-Balance-Sheet",
+        "legacy_source_id": "WRESBAL",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__WRESBAL"
+        ]
+      },
+      {
+        "path": "Federal Reserve Balance Sheet/Summary Of SOMA holdings.csv",
+        "indicator": "Federal-Reserve-Balance-Sheet",
+        "legacy_source_id": "NYFED:SOMA",
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__TREAST",
+          "alfred__WSHOMCB"
+        ]
+      },
+      {
+        "path": "GDP Growth/    Gross domestic product ([Millions of dollars] Seasonally adjusted at annual rates).xlsx",
+        "indicator": "GDP-Growth",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__GDP",
+          "alfred__A191RL1Q225SBEA"
+        ]
+      },
+      {
+        "path": "Government Purchases/Federal Government,Current Expenditures(Billions of Dollars, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Government-Purchases",
+        "legacy_source_id": "FGEXPND",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__FGEXPND"
+        ]
+      },
+      {
+        "path": "Government Purchases/Government current expenditures, National defense(Billions of Dollars, Not Seasonally Adjusted).csv",
+        "indicator": "Government-Purchases",
+        "legacy_source_id": "G160461A027NBEA",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__G160461A027NBEA"
+        ]
+      },
+      {
+        "path": "Government Purchases/Real Government Consumption Expenditures and Gross Investment (Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Government-Purchases",
+        "legacy_source_id": "GCEC1",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__GCEC1"
+        ]
+      },
+      {
+        "path": "Home Prices/All-Transactions House Price Index for the United States( Index 1980Q1=100, Not Seasonally Adjusted).csv",
+        "indicator": "Home-Prices",
+        "legacy_source_id": "USSTHPI",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__USSTHPI"
+        ]
+      },
+      {
+        "path": "Home Prices/Rental Vacancy Rate in the United States(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Home-Prices",
+        "legacy_source_id": "RRVRUSQ156N",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__RRVRUSQ156N"
+        ]
+      },
+      {
+        "path": "Home Prices/S&P CoreLogic Case-Shiller U.S. National Home Price Index (Index Jan 2000=100, Seasonally Adjusted).csv",
+        "indicator": "Home-Prices",
+        "legacy_source_id": "CSUSHPINSA",
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__USSTHPI"
+        ]
+      },
+      {
+        "path": "Housing Starts/Annual Rate for Housing Units Authorized in Permit-Issuing Places in United States (Seasonally Adjusted Total Units [Thousands of Units]).xlsx",
+        "indicator": "Housing-Starts",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__PERMIT"
+        ]
+      },
+      {
+        "path": "Housing Starts/New Privately-Owned Housing Units Started, Total Units(Thousands of Units, Seasonally Adjusted Annual Rate).csv",
+        "indicator": "Housing-Starts",
+        "legacy_source_id": "HOUST",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__HOUST"
+        ]
+      },
+      {
+        "path": "Industrial Production/Industrial Production( Manufacturing, Durable Goods, Semiconductor and Other Electronic Component ).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "IPG3344S",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__IPG3344S"
+        ]
+      },
+      {
+        "path": "Industrial Production/Industrial Production( Manufacturing, Nondurable Goods, Food, Beverage, and Tobacco).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "IPG311A2S",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__IPG311A2S"
+        ]
+      },
+      {
+        "path": "Industrial Production/Industrial Production( Mining).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "IPMINE",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__IPMINE"
+        ]
+      },
+      {
+        "path": "Industrial Production/Industrial Production( Utilities, Electric and Gas Utilities).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "IPG2211A2N",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__IPG2211A2N"
+        ]
+      },
+      {
+        "path": "Industrial Production/Industrial Production(Manufacturing, Durable Goods,  Motor Vehicles and Parts).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "IPG3361T3S",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__IPG3361T3S"
+        ]
+      },
+      {
+        "path": "Industrial Production/industrial_production(total manufacturing, Index 2017=100, Seasonally Adjusted).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "IPMAN",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__IPMAN"
+        ]
+      },
+      {
+        "path": "Industrial Production/industrial_production(total_index, Index 2017=100, Seasonally Adjusted).csv",
+        "indicator": "Industrial-Production",
+        "legacy_source_id": "INDPRO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__INDPRO"
+        ]
+      },
+      {
+        "path": "International Equity Markets/MSCI Emerging Markets Index(future).csv",
+        "indicator": "International-Equity-Markets",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__SPASTT01JPM661N",
+          "alfred__SPASTT01EZM661N",
+          "alfred__SPASTT01GBM661N"
+        ]
+      },
+      {
+        "path": "International Equity Markets/MSCI WORLD.csv",
+        "indicator": "International-Equity-Markets",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__SPASTT01JPM661N",
+          "alfred__SPASTT01EZM661N",
+          "alfred__SPASTT01GBM661N"
+        ]
+      },
+      {
+        "path": "Labour Market/All Employees, Total Nonfarm (Thousands of Persons, Seasonally Adjusted).csv",
+        "indicator": "Labour-Market",
+        "legacy_source_id": "PAYEMS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__PAYEMS"
+        ]
+      },
+      {
+        "path": "Labour Market/Job Openings, Total Nonfarm(Level in Thousands, Seasonally Adjusted).csv",
+        "indicator": "Labour-Market",
+        "legacy_source_id": "JTSJOL",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__JTSJOL"
+        ]
+      },
+      {
+        "path": "Labour Market/Labor Force Participation Rate(Percent, Seasonally Adjusted).csv",
+        "indicator": "Labour-Market",
+        "legacy_source_id": "CIVPART",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__CIVPART"
+        ]
+      },
+      {
+        "path": "Labour Market/Total Nonfarm Private Payroll Employment(Persons, Seasonally Adjusted).csv",
+        "indicator": "Labour-Market",
+        "legacy_source_id": "ADPWNUSNERSA",
+        "disposition": "disabled_keyless_vintage_unavailable_with_proxy",
+        "reason": "keyless_alfred_vintage_http_404",
+        "source_keys": [
+          "alfred__ADPWNUSNERSA",
+          "alfred__USPRIV"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE Crude Oil ETF Volatility Index(Index, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "OVXCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__OVXCLS"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE DJIA Volatility Index (Index, Daily, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "VXDCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__VXDCLS"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE Gold ETF Volatility Index(Index, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "GVZCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__GVZCLS"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE NASDAQ 100 Volatility Index(Index, Daily, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "VXNCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__VXNCLS"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE Russell 2000 Volatility Index(Index, Daily, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "RVXCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__RVXCLS"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE S&P 500 3-Month Volatility Index(Index, Daily, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "VXVCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__VXVCLS"
+        ]
+      },
+      {
+        "path": "Market Volatility (VIX)/CBOE Volatility Index(Index, Not Seasonally Adjusted).csv",
+        "indicator": "Market-Volatility-(VIX)",
+        "legacy_source_id": "VIXCLS",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__VIXCLS"
+        ]
+      },
+      {
+        "path": "Money Supply/M2SL(Billions of Dollars, Seasonally Adjusted).csv",
+        "indicator": "Money-Supply",
+        "legacy_source_id": "M2SL",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__M2SL"
+        ]
+      },
+      {
+        "path": "Money Supply/Total Monetary Base( currency in circulation plus reserve balances, Billions of Dollars, Not Seasonally Adjusted).csv",
+        "indicator": "Money-Supply",
+        "legacy_source_id": "BOGMBASE",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__BOGMBASE"
+        ]
+      },
+      {
+        "path": "Mortgage Rates/15-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Mortgage-Rates",
+        "legacy_source_id": "MORTGAGE15US",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__MORTGAGE15US"
+        ]
+      },
+      {
+        "path": "Mortgage Rates/30-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted, Weekly, Ending Thursday).csv",
+        "indicator": "Mortgage-Rates",
+        "legacy_source_id": "MORTGAGE30US",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__MORTGAGE30US"
+        ]
+      },
+      {
+        "path": "Overnight Rate/Secured Overnight Financing Rate (Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Overnight-Rate",
+        "legacy_source_id": "SOFR",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__SOFR"
+        ]
+      },
+      {
+        "path": "Personal Consumption Expenditures (PCE)/Personal Consumption Expenditures Index(Index 2017=100, Seasonally Adjusted).csv",
+        "indicator": "Personal-Consumption-Expenditures-(PCE)",
+        "legacy_source_id": "PCEPI",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__PCEPI"
+        ]
+      },
+      {
+        "path": "Personal Consumption Expenditures (PCE)/Personal consumption expenditures by major function (Index numbers, 2017=100; quarters and months are seasonally adjusted).xlsx",
+        "indicator": "Personal-Consumption-Expenditures-(PCE)",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__PCEPI",
+          "alfred__PCEPILFE"
+        ]
+      },
+      {
+        "path": "Personal Consumption Expenditures (PCE)/Personal consumption expenditures by major function(Millions of dollars; quarters and months are seasonally adjusted at annual rates).xlsx",
+        "indicator": "Personal-Consumption-Expenditures-(PCE)",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__DPCERL1Q225SBEA"
+        ]
+      },
+      {
+        "path": "Trade Balance/Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates).xlsx",
+        "indicator": "Trade-Balance",
+        "legacy_source_id": null,
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__NETEXP",
+          "alfred__BOPGSTB"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 1-Month Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS1MO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS1MO"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS1",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS1"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS10",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS10"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS2",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS2"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS20",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS20"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 3-Month Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS3MO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS3MO"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 3-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS3",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS3"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS30",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS30"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS5",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS5"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 6-Month Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS6MO",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS6MO"
+        ]
+      },
+      {
+        "path": "Treasury Yields/Market Yield on U.S. Treasury Securities at 7-Year Constant Maturity(Percent, Not Seasonally Adjusted).csv",
+        "indicator": "Treasury-Yields",
+        "legacy_source_id": "DGS7",
+        "disposition": "retained_via_keyless_alfred_d1_vintage",
+        "reason": "series has a keyless ALFRED historical-vintage source",
+        "source_keys": [
+          "alfred__DGS7"
+        ]
+      },
+      {
+        "path": "Unemployment Rate/Unemployment Rate (Seasonal adjusted).csv",
+        "indicator": "Unemployment-Rate",
+        "legacy_source_id": "LNS14000000",
+        "disposition": "replaced_by_release_vintage_equivalent",
+        "reason": "legacy file is a current-revision snapshot or lacks a point-in-time source manifest",
+        "source_keys": [
+          "alfred__UNRATE"
+        ]
+      }
+    ],
+    "value_reuse_allowed": false,
+    "mapping_reuse_allowed": true
+  }
+}
