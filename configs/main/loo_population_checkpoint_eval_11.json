@@ -1,0 +1,19 @@
+{
+  "schema_version": "loo-population-v1",
+  "population_id": "checkpoint_eval_11",
+  "phase": "evaluation",
+  "split_label": "post_artifact_common_test",
+  "meeting_dates": [
+    "2025-03-19",
+    "2025-05-07",
+    "2025-06-18",
+    "2025-07-30",
+    "2025-09-17",
+    "2025-10-29",
+    "2025-12-10",
+    "2026-01-28",
+    "2026-03-18",
+    "2026-04-29",
+    "2026-06-17"
+  ]
+}

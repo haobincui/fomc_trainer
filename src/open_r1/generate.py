@@ -1,4 +1,3 @@
-
 _SYSTEM_PROMPT = """<|think|>
 You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses.
 Think carefully as internal reasoning before answering.
@@ -55,11 +54,14 @@ def load_model(
 
 def generate_response(prompt, model_path, **kwargs):
     seed = kwargs.pop("seed", None)
+    system_prompt = kwargs.pop("system_prompt", None) or _SYSTEM_PROMPT
     model = load_model(model_path, **kwargs)
 
-    message = [{"role": "system", "content": _SYSTEM_PROMPT},
-               {"role": "user", "content": prompt}]
-    
+    message = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": prompt},
+    ]
+
     return model.chat_completion(message, seed=seed)
 
 
@@ -67,11 +69,14 @@ def generate_responses(prompts, model_path, **kwargs):
     seed = kwargs.pop("seed", None)
     row_seeds = kwargs.pop("row_seeds", None)
     return_metadata = bool(kwargs.pop("return_metadata", False))
+    system_prompt = kwargs.pop("system_prompt", None) or _SYSTEM_PROMPT
     model = kwargs.pop("model", None) or load_model(model_path, **kwargs)
     messages = []
     for prompt in prompts:
-        message = [{"role": "system", "content": _SYSTEM_PROMPT},
-                   {"role": "user", "content": prompt}]
+        message = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ]
         messages.append(message)
     responses = model.batch_chat_completion(
         messages,

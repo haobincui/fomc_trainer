@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Any, List
 from vllm import LLM, SamplingParams
 
@@ -36,12 +37,20 @@ class Model:
         )
 
     def _load_model(self) -> LLM:
+        gpu_memory_utilization = float(
+            os.environ.get("OPEN_R1_GENERATION_GPU_MEMORY_UTILIZATION", "0.95")
+        )
+        if not 0.0 < gpu_memory_utilization <= 1.0:
+            raise ValueError(
+                "OPEN_R1_GENERATION_GPU_MEMORY_UTILIZATION must be in (0, 1]"
+            )
         return LLM(
             model=self.model_path,
             tokenizer=self.tokenizer_path or self.model_path,
             dtype="bfloat16",
             max_model_len=self.max_model_len,
-            gpu_memory_utilization=0.95,
+            gpu_memory_utilization=gpu_memory_utilization,
+            tensor_parallel_size=1,
             trust_remote_code=True,
         )
 

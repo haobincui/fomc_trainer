@@ -1,0 +1,77 @@
+{
+  "schema_version": "checkpoint-generation-eval-config-v1",
+  "evaluation_id": "chapter2-clean-checkpoint-comparison-11",
+  "claim_boundary": "Common-sample comparison of provenance-verified archived artifacts. The archived artifacts do not instantiate the intended chk-0 -> chk-1 -> chk-2 -> chk-3 lineage, so results are not stagewise incremental effects.",
+  "training_performed": false,
+  "population": {
+    "population_id": "checkpoint_eval_11",
+    "meeting_dates": [
+      "2025-03-19",
+      "2025-05-07",
+      "2025-06-18",
+      "2025-07-30",
+      "2025-09-17",
+      "2025-10-29",
+      "2025-12-10",
+      "2026-01-28",
+      "2026-03-18",
+      "2026-04-29",
+      "2026-06-17"
+    ],
+    "prospective_only_meeting_dates": [
+      "2025-06-18",
+      "2025-07-30",
+      "2025-09-17",
+      "2025-10-29",
+      "2025-12-10",
+      "2026-01-28",
+      "2026-03-18",
+      "2026-04-29",
+      "2026-06-17"
+    ]
+  },
+  "sections": [
+    {
+      "section_id": "participants_views",
+      "section_name": "Participants' Views on Current Conditions and the Economic Outlook",
+      "instruction": "Draft only the Minutes-style section summarizing participants' discussion of current economic conditions and the outlook."
+    },
+    {
+      "section_id": "economic_situation",
+      "section_name": "Staff Review of the Economic Situation",
+      "instruction": "Draft only the Minutes-style staff review of the domestic and international economic situation."
+    },
+    {
+      "section_id": "financial_situation",
+      "section_name": "Staff Review of the Financial Situation",
+      "instruction": "Draft only the Minutes-style staff review of financial-market developments and financial conditions."
+    }
+  ],
+  "information_cutoff": {
+    "policy": "previous-calendar-day-v1",
+    "meeting_day_data": "forbidden",
+    "reference_in_prompt": false,
+    "secondary_llm_summary": false
+  },
+  "generation": {
+    "system_prompt": "You are drafting one section of historical FOMC Minutes from a frozen D-1 macro-financial evidence packet. Use only the supplied evidence. Do not invent numerical values, dates, policy decisions, or participant views. Return the requested section body only.",
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "base_seed": 20260729,
+    "seed_policy": "sample-id-sha256-v1",
+    "max_new_tokens": 8192,
+    "max_model_len": 24576,
+    "input_truncation": "forbidden",
+    "token_limit_finish": "invalid"
+  },
+  "evaluation": {
+    "bertscore_model": "roberta-large",
+    "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+    "bootstrap_iterations": 10000,
+    "bootstrap_seed": 20260729,
+    "long_text_policy": "sentence-boundary-chunk-weighted-v1",
+    "score_final_answer_only": true,
+    "llm_judge": false,
+    "human_rating": false
+  }
+}

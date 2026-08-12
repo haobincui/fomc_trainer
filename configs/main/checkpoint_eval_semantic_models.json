@@ -1,0 +1,26 @@
+{
+  "schema_version": "checkpoint-eval-semantic-model-manifest-v1",
+  "created_for_evaluation_id": "chapter2-clean-checkpoint-comparison-11",
+  "network_at_scoring_time": false,
+  "directory_hash_algorithm": "sha256(sorted records: uint64_be(relative_path_utf8_length), relative_path_utf8, uint64_be(file_size), raw_file_bytes)",
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "37a6896c388f965a572d3a3e99c2668a913513f2ac0883a0660634c807130445"
+  },
+  "models": {
+    "bertscore": {
+      "repo_id": "FacebookAI/roberta-large",
+      "resolved_revision": "722cf37b1afa9454edce342e7895e588b6ff1d59",
+      "local_path": "models/evaluation/roberta-large",
+      "directory_sha256": "b970a47c99ab5d994a7bcd689ad86b48fb709076c5d309f6a39d5763478eab88",
+      "num_layers": 17
+    },
+    "embedding_cosine": {
+      "repo_id": "sentence-transformers/all-mpnet-base-v2",
+      "resolved_revision": "e8c3b32edf5434bc2275fc9bab85f82640a19130",
+      "local_path": "models/evaluation/all-mpnet-base-v2",
+      "directory_sha256": "1c8bfc2c3cb29e484b3ac3585c5166de44389c32cbfdc33d1f2b51634e37403f",
+      "independent_from_training_reward": true
+    }
+  }
+}

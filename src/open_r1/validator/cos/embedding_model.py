@@ -40,7 +40,13 @@ class EmbeddingModel:
         Compute cosine similarity between embedding vectors.
     """
 
-    def __init__(self, model_path=None, bs=None):
+    def __init__(
+        self,
+        model_path=None,
+        bs=None,
+        max_tokens: int | None = None,
+        long_text_policy: str = "model-default",
+    ):
         """
         Initialize the EmbeddingModel with a pre-trained transformer model.
 
@@ -54,6 +60,16 @@ class EmbeddingModel:
         """
         self.model, self.tokenizer = self.load_model(model_path)
         self.bs = bs
+        if max_tokens is not None and max_tokens < 3:
+            raise ValueError("max_tokens must be at least 3 when provided")
+        if long_text_policy not in {"model-default", "error", "truncate", "chunk-mean"}:
+            raise ValueError(f"Unsupported long_text_policy={long_text_policy!r}")
+        if long_text_policy != "model-default" and max_tokens is None:
+            raise ValueError(
+                "max_tokens is required when long_text_policy is not model-default"
+            )
+        self.max_tokens = max_tokens
+        self.long_text_policy = long_text_policy
         self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
         self.device = next(self.model.parameters()).device
 
@@ -130,6 +146,9 @@ class EmbeddingModel:
         - Embeddings are moved to GPU (`cuda`) for faster similarity computation.
         - Outputs are concatenated along the first dimension.
         """
+        if self.long_text_policy == "chunk-mean":
+            return self._get_chunk_mean_embeddings(sentences)
+
         embeddings = []
 
         if self.bs is None:
@@ -138,7 +157,31 @@ class EmbeddingModel:
             batches = [sentences[i:i + self.bs] for i in range(0, len(sentences), self.bs)]
 
         for batch in batches:
-            encoded_input = self.tokenizer(batch, padding=True, truncation=True, return_tensors='pt')
+            tokenizer_kwargs = {
+                "padding": True,
+                "truncation": True,
+                "return_tensors": "pt",
+            }
+            if self.max_tokens is not None:
+                tokenizer_kwargs["max_length"] = self.max_tokens
+                if self.long_text_policy == "error":
+                    lengths = [
+                        len(
+                            self.tokenizer.encode(
+                                sentence,
+                                add_special_tokens=True,
+                                truncation=False,
+                            )
+                        )
+                        for sentence in batch
+                    ]
+                    if any(length > self.max_tokens for length in lengths):
+                        raise ValueError(
+                            "Embedding input exceeds max_tokens under the error "
+                            f"policy: max_observed={max(lengths)}, "
+                            f"max_tokens={self.max_tokens}"
+                        )
+            encoded_input = self.tokenizer(batch, **tokenizer_kwargs)
             encoded_input = encoded_input.to(self.device)
             with torch.no_grad():
                 model_output = self.model(**encoded_input)
@@ -146,6 +189,102 @@ class EmbeddingModel:
             embeddings.append(batch_embeddings)
 
         return torch.cat(embeddings, dim=0)
+
+    def _get_chunk_mean_embeddings(self, sentences):
+        """Encode every token using bounded contiguous chunks.
+
+        Each chunk is contextualized independently.  Special tokens remain in
+        the model input but are excluded from pooling; chunk vectors are then
+        weighted by their content-token counts.  This avoids silent truncation
+        while bounding activation memory for long document comparisons.
+        """
+
+        if self.max_tokens is None:
+            raise ValueError("chunk-mean requires max_tokens")
+        special_token_count = self.tokenizer.num_special_tokens_to_add(pair=False)
+        payload_capacity = self.max_tokens - special_token_count
+        if payload_capacity < 1:
+            raise ValueError(
+                "max_tokens leaves no room for content after tokenizer special tokens"
+            )
+
+        document_embeddings = []
+        for sentence in sentences:
+            token_ids = self.tokenizer.encode(
+                sentence,
+                add_special_tokens=False,
+                truncation=False,
+            )
+            if not token_ids:
+                raise ValueError("Cannot embed an empty token sequence")
+
+            weighted_sum = None
+            total_content_tokens = 0
+            for start in range(0, len(token_ids), payload_capacity):
+                payload = token_ids[start : start + payload_capacity]
+                build_with_special_tokens = getattr(
+                    self.tokenizer,
+                    "build_inputs_with_special_tokens",
+                    None,
+                )
+                if callable(build_with_special_tokens):
+                    input_ids = build_with_special_tokens(payload)
+                    special_mask = self.tokenizer.get_special_tokens_mask(
+                        payload,
+                        already_has_special_tokens=False,
+                    )
+                elif special_token_count == 0:
+                    # Some tokenizer classes (including the pinned DeepSeek
+                    # Llama tokenizer) declare that no special tokens are
+                    # added but do not expose build_inputs_with_special_tokens.
+                    input_ids = list(payload)
+                    special_mask = [0] * len(payload)
+                else:
+                    raise ValueError(
+                        "Tokenizer cannot construct chunk inputs with its "
+                        "declared special tokens"
+                    )
+                if len(input_ids) != len(special_mask):
+                    raise ValueError(
+                        "Tokenizer returned inconsistent input and special-token masks"
+                    )
+                encoded_input = {
+                    "input_ids": torch.tensor(
+                        [input_ids],
+                        dtype=torch.long,
+                        device=self.device,
+                    ),
+                    "attention_mask": torch.ones(
+                        (1, len(input_ids)),
+                        dtype=torch.long,
+                        device=self.device,
+                    ),
+                }
+                pooling_mask = torch.tensor(
+                    [[0 if value else 1 for value in special_mask]],
+                    dtype=torch.long,
+                    device=self.device,
+                )
+                with torch.no_grad():
+                    model_output = self.model(**encoded_input)
+                chunk_embedding = self.emb_mean_pooling(
+                    model_output,
+                    pooling_mask,
+                )
+                content_tokens = int(pooling_mask.sum().item())
+                weighted_chunk = chunk_embedding * content_tokens
+                weighted_sum = (
+                    weighted_chunk
+                    if weighted_sum is None
+                    else weighted_sum + weighted_chunk
+                )
+                total_content_tokens += content_tokens
+
+            if weighted_sum is None or total_content_tokens < 1:
+                raise ValueError("No content tokens remained after chunking")
+            document_embeddings.append(weighted_sum / total_content_tokens)
+
+        return torch.cat(document_embeddings, dim=0)
 
     def get_similarities(self, x, y=None):
         """
@@ -182,5 +321,15 @@ class EmbeddingModel:
 
 
 @lru_cache(maxsize=4)
-def get_cached_embedding_model(model_path: str, bs: int | None = None) -> EmbeddingModel:
-    return EmbeddingModel(model_path=model_path, bs=bs)
+def get_cached_embedding_model(
+    model_path: str,
+    bs: int | None = None,
+    max_tokens: int | None = None,
+    long_text_policy: str = "model-default",
+) -> EmbeddingModel:
+    return EmbeddingModel(
+        model_path=model_path,
+        bs=bs,
+        max_tokens=max_tokens,
+        long_text_policy=long_text_policy,
+    )
