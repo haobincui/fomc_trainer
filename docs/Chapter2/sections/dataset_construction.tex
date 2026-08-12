@@ -154,18 +154,43 @@ backfill and was therefore excluded.  The resulting canonical main corpus
 contains 4,887 records from 128 meetings between January 28, 2009 and January
 29, 2025.
 
-The value 3,890 denotes the training partition of this canonical corpus rather
-than the number of raw paragraphs or standardized-label occurrences.  To avoid
-cross-meeting leakage, the 128 meeting dates were ordered chronologically and
-partitioned at the meeting level.  The first 102 meetings, spanning January 28,
-2009 through November 3, 2021, contribute 3,890 records to training; the next
-13 meetings contribute 535 validation records; and the final 13 meetings
-contribute 462 test records.  Thus,
+The value 3,890 denotes the row-level training partition of this reconciled
+corpus.  To avoid cross-meeting leakage, the 128 meeting dates were ordered
+chronologically and partitioned at the meeting level.  The first 102 meetings,
+spanning January 28, 2009 through November 3, 2021, contribute 3,890 rows to
+training; the next 13 meetings contribute 535 validation rows; and the final
+13 meetings contribute 462 test rows.  Thus,
 \(3{,}890+535+462=4{,}887\).  The row counts are not proportional to the number
-of meetings because the number of retained meeting--section--topic records
-varies across meetings.  Table~\ref{tab:ch2:indicator_count} instead summarizes
-upstream reference-label occurrences and should not be interpreted as the
-training, validation, and test sample counts used in the completed experiment.
+of meetings because each meeting contains a different number of retained
+section--topic records.
+
+The subsequent canonicalization changes the observational unit from a legacy
+row to a meeting--atomic-topic pair.  Because a legacy row may carry multiple
+comma-separated topic labels, splitting the 4,887 rows at top-level commas
+produces 5,343 atomic-topic occurrences.  Seventeen non-analytical occurrences
+(``Non-Core'' \(=10\), ``Other'' \(=5\), and ``Delete'' \(=2\)) are then
+excluded, leaving 5,326 admissible occurrences within the frozen 26-topic
+vocabulary.  Multiple paragraphs or sections from the same meeting can refer
+to the same atomic topic.  Under the canonical key \((D_m,k)\), where \(D_m\)
+denotes the meeting date and \(k\) the atomic topic, 3,039 duplicate-key
+occurrences are collapsed, yielding 2,287 unique meeting--atomic-topic
+observations across the 128 meetings.  The contributing legacy sample
+identifiers, source-row indices, and section names are retained as lineage
+rather than discarded.
+
+Consequently, 2,287 is not obtained from the 3,890 training rows alone.  Within
+the training partition, the corresponding sequence is
+\(3{,}890 \rightarrow 4{,}263 \rightarrow 4{,}248 \rightarrow 1{,}885\):
+topic atomization creates 4,263 occurrences, removal of 15 non-analytical
+occurrences leaves 4,248, and canonical-key deduplication yields 1,885 training
+observations.  The validation and test partitions yield 205 and 197 canonical
+observations, respectively, so that
+\(1{,}885+205+197=2{,}287\).  The 2,287 observations form the pre-evidence
+canonical roster; the later point-in-time availability gate determines which
+of these observations can be prepared for model training and evaluation.
+Table~\ref{tab:ch2:indicator_count} instead summarizes upstream
+reference-label occurrences and should not be interpreted as the sample counts
+used in these processing stages.
 
 
 
