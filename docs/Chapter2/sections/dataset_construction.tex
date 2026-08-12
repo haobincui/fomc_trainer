@@ -178,6 +178,20 @@ observations across the 128 meetings.  The contributing legacy sample
 identifiers, source-row indices, and section names are retained as lineage
 rather than discarded.
 
+For example, source rows 2,564 and 2,584 both correspond to the January 28,
+2009 meeting and carry the atomic topic \textit{Bank Credit to Private Sector}.
+The former was extracted from \textit{System Liquidity Programs and Balance
+Sheet}, whereas the latter was extracted from \textit{Staff Review of the
+Economic and Financial Situation}.  Although the rows originate from different
+sections, both have the canonical meeting date 2009-01-28 and the canonical
+topic \textit{Bank Credit to Private Sector}; they therefore form one canonical
+observation.  Their two legacy sample identifiers, source indices, and section
+names remain attached to that observation as lineage.  In this example, two
+admissible occurrences become one canonical observation, so one duplicate
+occurrence is collapsed.  The reported 3,039 is the aggregate number of such
+excess occurrences beyond the first occurrence for each canonical key; it is
+not the number of distinct duplicated keys.
+
 Consequently, 2,287 is not obtained from the 3,890 training rows alone.  Within
 the training partition, the corresponding sequence is
 \(3{,}890 \rightarrow 4{,}263 \rightarrow 4{,}248 \rightarrow 1{,}885\):
