@@ -146,7 +146,26 @@ We then manually standardized the raw labels into 26 \textit{reference-label} ca
 
 
 
-Finally, we extracted 4,889 analytical paragraphs with a total of 5,781 corresponding standardized labels for our \textbf{main dataset}. We applied the same cleaning process to our \textbf{supplementary dataset}, resulting in 4,464 analytical paragraphs associated with 44,178 standardized labels. Table~\ref{tab:ch2:indicator_count} summarizes the frequency distribution of the reference labels for both datasets. Notably, the supplementary dataset contains significantly more labels than the main dataset. This discrepancy arises because the FOMC Minutes prior to 2009 were less structured, often referencing multiple indicators within a single paragraph. Consequently, for these earlier Minutes, we instructed the model to assign all relevant labels to each paragraph. In contrast, Minutes published after 2009 typically focused on one indicator per paragraph. Thus, we asked the model to assign only the single most relevant label in these cases.
+Following controlled relabeling and prompt construction, 4,888 candidate
+question--answer records were aligned by their source-row indices.  Three of
+these records had empty archived responses.  Two responses were recovered from
+the existing raw-data backfill, whereas the remaining record had no admissible
+backfill and was therefore excluded.  The resulting canonical main corpus
+contains 4,887 records from 128 meetings between January 28, 2009 and January
+29, 2025.
+
+The value 3,890 denotes the training partition of this canonical corpus rather
+than the number of raw paragraphs or standardized-label occurrences.  To avoid
+cross-meeting leakage, the 128 meeting dates were ordered chronologically and
+partitioned at the meeting level.  The first 102 meetings, spanning January 28,
+2009 through November 3, 2021, contribute 3,890 records to training; the next
+13 meetings contribute 535 validation records; and the final 13 meetings
+contribute 462 test records.  Thus,
+\(3{,}890+535+462=4{,}887\).  The row counts are not proportional to the number
+of meetings because the number of retained meeting--section--topic records
+varies across meetings.  Table~\ref{tab:ch2:indicator_count} instead summarizes
+upstream reference-label occurrences and should not be interpreted as the
+training, validation, and test sample counts used in the completed experiment.
 
 
 
