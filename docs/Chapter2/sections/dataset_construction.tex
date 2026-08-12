@@ -4,49 +4,88 @@
 
 \section{Dataset Construction}\label{ch2:sec:the-dataset}
 
-This section describes the construction of the training corpus. The raw text comes from Federal Open Market Committee (FOMC) Minutes and is paired with macroeconomic and financial indicators. We then process these sources into structured samples for model training and evaluation.
+This section describes the two source layers used in the completed experiment.
+Official Federal Open Market Committee (FOMC) Minutes supply a training-only
+style abstraction, whereas point-in-time macroeconomic observations supply the
+factual model input.  The two layers are linked through a controlled topic
+taxonomy, but the contemporaneous Minutes text is not paired with an indicator
+card as a supervised answer target.
 
 
 \subsection*{FOMC Minutes and Indicators}\label{ch2:sec:raw_data}
 
 
-The Federal Open Market Committee (FOMC) meetings have been recorded since the committee's formation under the Banking Act of 1935 (\cite{todd2016corollary}). Initially, from 1936 to 1967, the minutes were released only once a year in these early years. Between 1967 and 1992, the minutes were named as ``the Minutes of Actions''. combined with ``the Record of Policy Actions'', these documents provided detailed insights not only into the policies but also the reasoning and proceedings behind them. Starting in 1993, a timely record of all policy issues and decisions made by the Committee was published after each meeting, although the documentation lacked a structured format. After 2009, the minutes were organized into distinct sections, including "Economic Situation," "Financial Situation," "Economic Outlook," and "Committee Policy Action," and the Committee has continued to use this structure to the present day. 
+\paragraph*{Document corpus and meeting roster.}
+The implemented roster contains 128 FOMC meetings from January 28, 2009
+through January 29, 2025.  Meetings, rather than individual paragraphs, are the
+unit used for temporal partitioning: 102 meetings are assigned to training, 13
+to validation, and 13 to the held-out test partition.  All observations
+associated with a meeting remain in the same partition.
 
-Because early records were less frequent and less standardized, while post-2009 Minutes adopted a relatively stable section structure and section-level consistency is essential for supervised alignment, we use post-2009 Minutes as the primary source corpus.
+Post-2009 Minutes are used only to construct the institutional style guide for
+the analysis task.  The style source contains 3,890 extracted training rows
+from the 102 training meetings and produces 58 section-style entries.  The
+abstraction retains discourse properties such as neutral narration, evidence
+ordering, restrained contrast, and uncertainty calibration.  It does not pass
+the underlying excerpt, numerical values, dates, named individuals,
+meeting-specific events, or policy outcomes to the model.  Validation- and
+test-period Minutes are not used to estimate this guide.  Consequently, the
+same-meeting Minutes never serve as factual input or as the supervised response
+target for \textit{Model chk-1}.
 
+Minutes from 1993 through 2008 are retained as a supplementary archive because
+their formatting and section structure differ from the post-2009 corpus.  They
+are not pooled into the completed \textit{Model chk-0}--\textit{Model chk-1}
+training corpus or the main \textit{Model chk-1}--\textit{Model chk-3}
+comparison reported in this chapter.
 
+\paragraph*{Point-in-time indicator evidence.}
+The factual source for the completed analysis experiment is a set of sealed
+ALFRED vintage snapshots organized under the 26-topic controlled vocabulary.
+The initial roster contains 2,287 unique meeting--atomic-topic pairs.  Applying
+the \(D-1\) availability rule removes 170 pairs for which no admissible vintage
+can be established, leaving 2,117 prepared fact cards.  These cards contain
+16,722 evidence items in total; an individual card contains between 3 and 18
+items, with a mean of 7.90.  Every item is bound to an evidence identifier,
+series identifier, observation date, unit, value, availability basis, and
+source hash.  Later revisions and meeting-day observations are excluded.
 
-
-We downloaded Minutes from January 2009 to January 2025 from the Federal Reserve website as the \textbf{main text corpus}. Given the stable section structure after 2009, we parsed major sections ( ``Staff Review of the Economic Situation'', ``Staff Review of the Financial Situation'', ``Staff Economic Outlook'', ``Participants' Views on Current Conditions and Economic Outlook'', and ``Committee Policy Actions'') when available, yielding 486 section-level samples. We also collected Minutes from February 1993 to December 2008 as a \textbf{supplementary corpus}. Because these earlier files lack stable section headings, they require additional processing described below.
-
-Table~\ref{tab:ch2:summary_statis} reports token-level summary statistics for both full Minutes and extracted sections under the tokenizer used in our experiments. Across the sample, Minutes length ranges from roughly 8,000 to 25,000 tokens, while most individual analytical sections fall below 4,096 tokens.
-
-
-In this chapter, ``word'' does not necessarily mean a full lexical word. LLMs operate on tokens (often sub-word units). For example, ``Negative'' may be split into smaller units such as ``Neg'' and ``ative''. This tokenization is controlled by the model-specific tokenizer. Larger models often use larger vocabularies; for example, GPT-4 class models use larger token vocabularies, while LLaMA 3 uses a 128,000-token vocabulary. Table~\ref{tab:ch2:summary_statis} reports token-level summary statistics.
+Table~\ref{tab:ch2:summary_statis} distinguishes the source artifacts by grain
+and role.  This distinction is necessary because a Minutes row, a meeting, a
+meeting--topic pair, and an evidence item are different observational units and
+their counts are not directly interchangeable.
 
 
 \begin{table}[htbp]
-    \scriptsize
     \centering
-    \begin{tabular}{p{3.8cm}cccccccc}
+    \footnotesize
+    \begin{tabular}{p{3.0cm}p{2.3cm}p{3.0cm}rp{4.2cm}}
         \toprule
-        Names&                                                Count&	    Mean&	    Std&	 Min&	   25\%&	  50\%&	   75\%&	Max \\
-        \hline
-        Total Minutes&	                                        123&	15119.50&	5136.89&	8144&	  10545&	 13117&	  20234&	25106 \\
-        Total Sections&	                                        486&	 2883.71&	2921.00&	 294&	 1391.5&	1729.5&	3014.75&	13621\\
-        Staff Economic Outlook&	                                123&	 3002.20&	 779.20&	 294&	   2556&	  3076&	   3481&	5080 \\
-        Staff Review of the Economic Situation&	                120&	 1348.81&	 314.13&	 653&	1178.25&	  1356&	   1490&	2929 \\
-        Staff Review of the Financial Situation&	            119&	 1491.61&	 291.48&	 903&	   1293&	  1479&	 1643.5&	2461 \\
-        Committee Policy Action&	                            122&	 5625.28&	4646.81&	1262&	   1770&	2448.5&	  11118&	13621 \\
-        Staff Review of the Economic and Financial Situation&	  2&	    3286&	 200.82&	3144&	   3215&	  3286&	   3357&	3428 \\
+        Artifact & Grain & Coverage & Count & Role \\
+        \midrule
+        FOMC meeting roster & Meeting & 2009-01-28--2025-01-29
+        & 128 & Temporal grouping and split assignment \\
+        Minutes style source & Extracted text row & Training partition only
+        & 3,890 & Construction of 58 fact-free style entries \\
+        Canonical topic roster & Meeting--topic pair & All 128 meetings
+        & 2,287 & Population before the \(D-1\) evidence gate \\
+        Prepared fact cards & Meeting--topic pair & All 128 meetings
+        & 2,117 & Model-visible point-in-time factual inputs \\
+        Fact-card evidence & Evidence item & Prepared fact cards
+        & 16,722 & Numerical observations and source bindings \\
         \bottomrule
     \end{tabular}
-    \caption{Summary Statistics for Tokens of Different Sections and Minutes}
+    \caption{Source Artifacts, Observational Grain, and Roles in the Completed
+    Point-in-Time Experiment}
     \label{tab:ch2:summary_statis}
 \end{table}
 
-
-Because most major sections are shorter than 4,096 tokens (except ``Committee Policy Action''), we cap the assistant output length at 4,096 tokens to control memory usage.
+Token budgets are evaluated on the rendered model inputs with the frozen
+\texttt{DeepSeek-R1-Distill-Llama-8B} tokenizer; they are not inferred from the
+length distribution of full Minutes or legacy section extracts.  No prepared
+fact-card prompt is truncated.  After reasoning compression and deterministic
+repair, the longest complete prompt--response sequence contains 4,019 tokens,
+below the 4,608-token validation gate applied to the final SFT candidate.
 
 
 
