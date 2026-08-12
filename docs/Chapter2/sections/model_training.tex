@@ -2,61 +2,26 @@
 
 \section{Model Training Details}\label{ch2:sec:training}
 
-\subsection*{2-Step Training for Base Model and Further Fine-tuning for Downstream Tasks}
+\subsection*{Implemented Supervised Fine-tuning Sequence}
 
-\subsubsection*{2-Step Training for Base Model}
-To improve macro-financial analytical performance, we define an intended two-step fine-tuning pipeline on the Base Model (denoted as ``Model chk-0''): Supervised Fine-Tuning (SFT) followed by Reinforcement Learning (RL) with Group Relative Policy Optimization (GRPO).
-
-\paragraph*{Model chk-1}
-In Step 1 (``Model chk-1''), SFT uses high-quality Question-Answer (Q\&A) data to align model outputs with reference analyses. Because the base model is pre-trained on general-domain corpora, SFT provides domain adaptation toward structured reasoning in economic and financial domain. SFT also benefits from a clearly defined supervised loss function, which facilitates stable convergence and efficient training.
-
-However, this approach has limitations. There is a risk of overfitting, the model may memorize specific phrasing or stylistic patterns from the training data, thereby limiting its generalize beyond the dataset. To mitigate these risks, we trained the model for only a few epochs during the SFT phase, and employ RL training after that. 
-
-\paragraph*{Model chk-2}
-In the intended Step 2 (``Model chk-2''), GRPO follows SFT and further fine-tunes \textit{Model chk-1} through reinforcement learning. GRPO is an on-policy RL method that allows the model to optimize against defined reward functions. Unlike SFT, RL supports flexible reward structures that can shape model behavior toward specified objectives, such as model-based ``LLM-as-Judge'' scoring (\cite{zheng2024judging}). To manage the computational and stability challenges of policy-gradient training, the design adopts GRPO (\cite{shao2024deepseekmath}), which avoids the separately trained value model used in approaches such as Proximal Policy Optimization (PPO; \cite{schulman2017proximal}). The planned GRPO stage is limited to one epoch.
-
-
-After this intended two-step training, the model is expected to produce stronger data-grounded macro-financial analysis and more coherent policy-relevant reasoning from structured inputs. Figure~\ref{fig:ch2:training_stage1} summarizes the planned \texttt{chk-0} $\rightarrow$ \texttt{chk-1} $\rightarrow$ \texttt{chk-2} workflow. The archived-artifact audit in Section~\ref{ch2:sec:2-step-training} shows that the surviving historical GRPO artifact instead branches directly from \texttt{chk-0}; the figure should therefore be read as the design, not as the recovered artifact graph.
-
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\textwidth]{train/stage1.png}
-    \caption{Overview of Two-step Training Process}
-    \label{fig:ch2:training_stage1}
-\end{figure}
-
-
-
-
-\subsubsection*{Further Training for Downstream Tasks}
-
-Under the intended design, we apply \textit{Model chk-2} to two downstream tasks: (1) synthetic FOMC Minutes generation and (2) Federal Funds Rate (FFR) decision inference. For the first task, SFT aligns the model for Minutes rewriting (\textit{Model chk-3}). For the second task, GRPO adapts the model for standardized rate-decision inference (\textit{Model chk-4}). Figure~\ref{fig:ch2:training_stage2} illustrates this planned workflow; the archived branches differ as described in Section~\ref{ch2:sec:2-step-training}.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\textwidth]{train/stage2.png}
-    \caption{Overview of Downstream Tasks}
-    \label{fig:ch2:training_stage2}
-\end{figure}
-
-
-
-
-
+The completed experiment contains two supervised adaptation stages.  First,
+the pretrained base model (\textit{Model chk-0}) is fine-tuned on point-in-time
+evidence-to-analysis pairs.  This stage produces \textit{Model chk-1}, with
+checkpoint 200 selected as the experimental baseline.  Second, the selected
+\textit{Model chk-1} checkpoint is fine-tuned on analysis-to-Minutes rewriting
+pairs.  This stage produces \textit{Model chk-3}, with checkpoint 318 retained
+for task-aligned evaluation.  Both stages use completion-only QLoRA and
+supervised token-level objectives.  The resulting implemented sequence is
+\texttt{chk-0}$\rightarrow$\texttt{chk-1}$\rightarrow$\texttt{chk-3}.
 
 \subsection*{Model Input}
 
-\subsubsection*{Input for 2-step Training}
-We first reformat the dataset into task-specific templates for SFT and GRPO.
+\subsubsection*{Input for Analysis SFT}
+We first reformat the point-in-time analysis dataset into the model's
+task-specific chat template.
 
 \paragraph*{SFT (\textit{Model chk-1})} 
 For SFT , each input consists of three parts (denoted as $input^{SFT}_i = (q_i, o^{SFT}_i)$, $o^{SFT}_i = (c_i, a_i)$): Question ($q_i$), reasoning process ($c_i$), and final answer ($a_i$). The reasoning process and final answer are combined as the target output, after which the sample is reformatted into a Q\&A pair. During SFT, the model predicts $o_i^* = (c_i^*, a_i^*)$ from question $q_i$, and training minimizes the supervised loss $\mathcal{L}^{SFT}$ between predicted and target outputs.
-
-
-\paragraph*{GRPO (\textit{Model chk-2})} 
-For RL training, we use only the question as input ($input_i^{RL}=q_i$). The model generates $o_i^{RL}=(c_i,a_i)$, and updates are driven by the reward functions $\mathcal{R}$ rather than token-level targets.
-
 
 
 Moreover, each LLM requires a model-specific message format, because tokenizers encode role boundaries differently. Explicit role labels are used specifically to distinguish the sections: the ``\texttt{System Prompt}'', ``\texttt{User Prompt}'', and ``\texttt{Assistant Response}''. Table. \ref{tab:ch2:input_template_for_llama3} presents the labels used by LLAMA3, where ``\prompttag{start\_header\_id}'' and ``\prompttag{end\_header\_id}'' wrap around the role labels indicating the message type. The label ``\prompttag{begin\_of\_text}'' signals the start of the conversation, while ``\prompttag{end\_id}'' denotes its end.
@@ -88,17 +53,25 @@ Moreover, each LLM requires a model-specific message format, because tokenizers 
 
 \paragraph*{Incorporate Reasoning Process}
 
-Compared with traditional LLMs, fine-tuning Reasoning Large Language Models (RLLMs) requires explicit supervision of intermediate reasoning and final answers. Recent literature commonly uses special markers, such as ``\texttt{<think>}'' and ``\texttt{</think>}'', to denote the intermediate reasoning trajectory, and ``\texttt{<answer>}'' and ``\texttt{</answer>}'' to clearly indicate the final response. Therefore, our target output ($o_i$) comprises a reasoning trajectory ($c_i$) and a final response ($a_i$), structured as follows:
+The implemented SFT experiments represent each target response as a generated
+rationale followed by a final answer.  The chat template opens the assistant
+turn with \texttt{<think>}; the supervised completion contains the rationale,
+one closing \texttt{</think>} delimiter, and a plain-text answer.  An additional
+\texttt{<answer>} wrapper is not used.  Thus, the target response is
 
 
 
 \begin{equation*}
-    o_i = \text{\texttt{<think>}}c_i\text{\texttt{</think>}}\text{\texttt{<answer>}}a_i\text{\texttt{</answer>}}
+    o_i = \text{\texttt{<think>}}c_i\text{\texttt{</think>}}a_i.
 \end{equation*}
 
 
 
-Additionally, to reinforce adherence to this structured format, we employed a dedicated \textbf{System Prompt}, illustrated in Table~\ref{tab:ch2:system_prompt}. The \textbf{System Prompt} typically contains instructions or guidelines that establish a clear framework for guiding the model to generate relevant and structured responses. For instance, Claude Opus 4 (\cite{claude42025}) utilizes system prompts to convey essential metadata, such as the current date, knowledge cutoff, model identification, and user guidance.
+Here, \(c_i\) is an externally generated rationale used as a supervision signal
+and for consistency checks.  It should not be interpreted as a direct or
+necessarily faithful representation of the model's latent computation.  The
+system prompt in Table~\ref{tab:ch2:system_prompt} defines the evidentiary
+boundary for the analysis-SFT task.
 
 
 \begin{table}[h]
@@ -108,12 +81,10 @@ Additionally, to reinforce adherence to this structured format, we employed a de
     \toprule
     \textbf{System Prompt:} \\
     \midrule
-      You are a helpful AI Assistant, designed to provide well-reasoned and detailed responses. \\
-  You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer.  \\
-  The reasoning process \textbf{MUST BE} enclosed within \texttt{<think>} and \texttt{</think>} tags. The answer MUST BE enclosed within \texttt{<answer>} and \texttt{</answer>} tags. \\
+      Analyze only the supplied point-in-time FOMC evidence. Do not infer facts from later releases or from the target meeting's Minutes. Use the model's native reasoning boundary, then provide a concise, evidence-grounded final analysis. \\
     \bottomrule
     \end{tabular}
-    \caption{System Prompt for LLAMA3}
+    \caption{System Prompt Used for Analysis SFT}
     \label{tab:ch2:system_prompt}
 \end{table}
 
@@ -122,25 +93,37 @@ Additionally, to reinforce adherence to this structured format, we employed a de
 \subsubsection*{Input for Downstream Tasks}
 
 \paragraph*{Synthetic FOMC Minutes Generation (\textit{Model chk-3})}
-For the synthetic FOMC Minutes task, we aim to explore the simulation capacity of the LLM. 
+The synthetic Minutes experiment examines whether task-specific SFT can
+transform an indicator-based analysis into institutionally styled policy prose
+without altering the information contained in the source analysis.
 
-The objective is to rewrite indicator-based analysis into structured FOMC-Minutes-style text. The input is not the official Minutes and is no longer the raw indicator table used in Step 1; it is the generated analysis or summary, paired with the target Minutes section name and meeting date. Formally, $input_i^{minutes}=(a_i,s_i,d_i)$, where $a_i$ is the analysis or summary generated by the intended \textit{Model chk-2}, $s_i$ is the target section, and $d_i$ is the meeting date. The corresponding official FOMC Minutes excerpt is used as the supervised answer target. This distinction is important: official Minutes text supplies the label to be generated, not evidence included in the prompt. The intended \textit{chk-3} stage therefore strengthens Minutes-style synthetic text generation through controlled analysis-to-Minutes rewriting. The archived adapter retains these input--target semantics but was initialized from \textit{Model chk-1}, not from the archived GRPO branch. The prompt format follows Table~\ref{tab:ch2:fomc_summary_prompt_training}.
+The implemented Minutes-rewriting experiment maps an indicator-based analysis
+to a paragraph written in the style of the FOMC Minutes.  Its sole
+user-supplied input is a \texttt{chk-1} analysis.  Formally,
+\(input_i^{minutes}=a_i\), where \(a_i\) denotes the supplied analysis.
+The supervised response contains a synthetic teacher-generated fidelity
+rationale followed by a paragraph derived from the same analysis.  Official
+Minutes are used neither as an input nor as
+the response target in this experiment.  The model is initialized from
+\texttt{chk-1} checkpoint 200.  The experiment therefore estimates the
+task-specific transition from the \texttt{chk-1} baseline to \texttt{chk-3}.
+Table~\ref{tab:ch2:fomc_summary_prompt_training} presents the corresponding
+prompt.
 
 \begin{table}[h]
     \centering
     \footnotesize
     \begin{tabular}{p{0.98\textwidth}}
     \toprule
-    \textbf{User Prompt for Synthetic FOMC Minutes Rewriting:} \\
+    \textbf{Condensed Prompt Contract for Synthetic FOMC Minutes Rewriting:} \\
     \midrule
     You are a senior economist at the Federal Reserve responsible for drafting internal briefing materials that may be incorporated into the official \textbf{FOMC Minutes}. \\
 
-    Your task is to transform the following analysis into a formal, institutionally appropriate paragraph aligned with the tone and structure of the \textbf{\texttt{\{target\_section\}}} section in the FOMC Minutes for the \textbf{\texttt{\{meeting\_date\}}} meeting. \\
+    Your task is to rewrite the following analysis as one formal, institutionally appropriate paragraph in the style of the FOMC Minutes. \\
 
     You will be provided with: \\
     \begin{itemize}
         \item \textbf{\texttt{<Raw Analysis>}}: An economic or financial analysis paragraph prepared from prior analytical work.
-        \item \textbf{\texttt{<Target Section>}}: The FOMC Minutes section in which the rewritten paragraph should appear.
     \end{itemize}
 
     \textbf{Your Objective:} \\
@@ -157,11 +140,6 @@ The objective is to rewrite indicator-based analysis into structured FOMC-Minute
         \item Do not quote the input verbatim unless a phrase is necessary for accuracy.
         \item Do not mention that you are rewriting or transforming text.
     \end{itemize}
-
-    \textbf{FOMC Minutes Section Name:} \\
-    \texttt{<Target Section>} \\
-    \texttt{\{target\_section\}} \\
-    \texttt{</Target Section>} \\
 
     \textbf{Input Analysis:} \\
     \texttt{<Raw Analysis>} \\
@@ -287,7 +265,11 @@ As an example, consider inflation analysis using the Personal Consumption Expend
 
 
 
-The target output combines reasoning ($c_i$) and answer ($a_i$), we firstly wrapped the Reasoning process using \textbf{\texttt{\textless think\textgreater ... \textless /think\textgreater}} and the Answer using \textbf{\texttt{\textless answer\textgreater ... \textless /answer\textgreater}}. Then we combined these two parts as our target output ($o_i = (c_i, a_i)$)(see Table. \ref{tab:ch2:sft_target_output_example}):
+The target response combines the generated rationale \(c_i\) and final answer
+\(a_i\).  The rationale terminates with
+\textbf{\texttt{\textless /think\textgreater}}, after which the final answer is
+represented as plain text.  Table~\ref{tab:ch2:sft_target_output_example}
+provides an illustrative example.
 
 
 
@@ -308,13 +290,13 @@ The target output combines reasoning ($c_i$) and answer ($a_i$), we firstly wrap
 
     Make sure the language is neutral, avoid speculation, and stick strictly to the data provided. Use terms like ``moderated'', ``deceleration'', ``partially offset'', and ``notable contributions''. Structure the analysis into sections: overall PCE trends, sectoral breakdown, and implications for inflation outlook. Avoid mentioning any data not provided, and ensure all points are backed by the numbers given. \textbf{\textless /think\textgreater} \\[1ex]
 
-    \textbf{\textless answer\textgreater} \textbf{Developments in Personal Consumption Expenditures and Implications for Inflation} \\
+    \textbf{Developments in Personal Consumption Expenditures and Implications for Inflation} \\
 
     Recent data through July 2023 indicate sustained growth in personal consumption expenditures (PCE), albeit with moderating momentum in key categories. The PCE Price Index (PCEPI) rose to 120.60 in July 2023, reflecting a 3.6\% year-over-year increase, down from the 5.9\% pace observed in July 2022. Monthly gains have decelerated notably, with the index advancing at an average rate of 0.16\% over the three months ending in July. \\
 
     ... ... \\
 
-    While consumption growth remains positive, real outlays are being constrained by tighter financial conditions and moderating excess savings. This dynamic supports a baseline of below-trend GDP growth with incremental labor market rebalancing, reducing the risk of entrenched inflation expectations. However, the resilience in wage-sensitive services categories warrants continued vigilance regarding price-setting behavior. \textbf{\textless /answer\textgreater} \\
+    While consumption growth remains positive, real outlays are being constrained by tighter financial conditions and moderating excess savings. This dynamic supports a baseline of below-trend GDP growth with incremental labor market rebalancing, reducing the risk of entrenched inflation expectations. However, the resilience in wage-sensitive services categories warrants continued vigilance regarding price-setting behavior. \\
     \bottomrule
     \end{tabular}
     \caption{SFT Target Output Example}
@@ -738,14 +720,30 @@ LoRA's mechanism involves introducing additional layers, referred to as Adapters
 \subsection*{Training Hyperparameters}\label{ch2:sec:parameter}
 
 
-Following the literature in model training and model fine-tuning (\cite{gpt2018}, \cite{meta2024llama3}, and \cite{yang2025qwen3} for model training; \cite{howard2018universal} and \cite{ding2023parameter} for model fine-tuning; and \cite{li2020rethinking}, \cite{vm2024fine} for empirical results), the legacy training notes record small learning rates and hardware-constrained batches. The archived sources are not fully consistent across stages, so Table~\ref{tab:ch2:training_hyperparameters_archive} preserves the planned and historically reported values without treating them as an immutable runtime manifest.
+Following the literature on model training and fine-tuning
+(\cite{gpt2018}; \cite{meta2024llama3}; \cite{yang2025qwen3};
+\cite{howard2018universal}; \cite{ding2023parameter}), the SFT experiments use
+small learning rates and gradient accumulation to accommodate the available
+GPU memory.  Table~\ref{tab:ch2:training_hyperparameters_archive} reports the
+realized hyperparameters for the two completed SFT experiments.  The remaining
+rows reproduce the specifications reported for the other stages and are
+retained without reinterpretation.
 
 
-For \textit{Model chk-1} and \textit{Model chk-2}, the intended setup uses 3 SFT epochs and 1 GRPO epoch. The \textit{temperature} parameter is fixed at 0.6, and a \textit{top-p} sampling strategy with a value of 0.9 is used to maintain a controlled level of output randomness.
+The \texttt{chk-1} SFT experiment comprises three epochs and 255 optimization
+steps with a learning rate of \(1.0\times10^{-6}\).  Checkpoint 200 is selected
+using the validation and generation criteria described below.
 
-For the downstream tasks, the reported setup uses 3 epochs for \textit{Model chk-3} and up to 10 epochs for \textit{Model chk-4}, with checkpoint selection based on the recorded optimization trajectory.
+The \texttt{chk-3} SFT experiment also comprises three epochs and
+terminates after 318 optimization steps.  Checkpoint 318 is retained for the
+task-aligned evaluation but is not interpreted as a canonical downstream
+checkpoint.
 
-The reported small batch sizes are hardware-constrained. Larger batches could improve throughput but would exceed available GPU memory. The epoch choices follow the training design discussed above: SFT uses a small number of passes for stable domain adaptation, whereas the intended analysis-GRPO stage is limited to one pass to keep reward-based optimization stable and computationally manageable.
+The reported small batch sizes are hardware-constrained. Larger batches could
+improve throughput but would exceed available GPU memory.  Both completed SFT
+stages use three passes through their respective training samples.  The
+decision-task specification is retained separately and is not interpreted as a
+completed result in this subsection.
 
 
 \begin{table}[htbp]
@@ -771,12 +769,11 @@ The reported small batch sizes are hardware-constrained. Larger batches could im
         \makecell[c]{\textbf{Gradient}\\\textbf{Accum.}} &
         \makecell[l]{\textbf{Key Settings}} \\
         \midrule
-        \textit{chk-1} & SFT & $1.0\times10^{-5}$ & 3 & 2 & 2 & Max prompt/completion length = 16384/8192;\newline top-p = 0.9; temperature = 0.6. \\
-        \textit{chk-2} & GRPO & $1.0\times10^{-5}$ & 1 & 1 & 4 & Max prompt/completion length = 4096/2048;\newline 4 generations per prompt; rewards = reasoning (0.4) and answer (0.6). \\
-        \textit{chk-3} & SFT & $1.0\times10^{-5}$ & 3 & 2 & 2 & Max prompt/completion length = 16384/8192;\newline top-p = 0.9; temperature = 0.6. \\
+        \textit{chk-1} & SFT & $1.0\times10^{-6}$ & 3 & 1 & 8 & Max sequence length = 7,168; QLoRA NF4; LoRA \(r=32\), \(\alpha=64\), dropout \(=0.05\); checkpoint 200 selected. \\
+        \textit{chk-3} & SFT & $1.0\times10^{-6}$ & 3 & 1 & 8 & Max sequence length = 4,096; QLoRA NF4; LoRA \(r=32\), \(\alpha=64\), dropout \(=0.05\); checkpoint 318 selected for evaluation. \\
         \textit{chk-4} & GRPO & $1.0\times10^{-6}$ & 10 & 1 & 4 & Max prompt/completion length = 8096/2048;\newline 4 generations per prompt; rewards = rate\_accuracy (1.0) and rate\_format (1.0). \\
         \bottomrule
     \end{tabularx}
-    \caption{Planned and Legacy-Reported Training Hyperparameters. {\footnotesize \textit{Notes:} These settings summarize the design and historical records; they are not an immutable artifact manifest. The archived parent-model deviations are documented in Section~\ref{ch2:sec:2-step-training}. The legacy notes report \texttt{bf16}, \texttt{flash\_attention\_2}, seed 42, and LoRA on \texttt{q\_proj} and \texttt{v\_proj} with $r=8$, $\alpha=16$, and dropout $=0.05$.}}
+    \caption{Training Hyperparameters. {\footnotesize \textit{Notes:} The \texttt{chk-1} and \texttt{chk-3} rows report the realized configurations of the completed SFT experiments.  Both use \texttt{bf16}, seed 42, and LoRA on \texttt{q\_proj}, \texttt{k\_proj}, \texttt{v\_proj}, \texttt{o\_proj}, \texttt{gate\_proj}, \texttt{up\_proj}, and \texttt{down\_proj}.  The \texttt{chk-4} row reproduces an earlier decision-task specification and is not interpreted as a result in this subsection.}}
     \label{tab:ch2:training_hyperparameters_archive}
 \end{table}
