@@ -443,20 +443,54 @@ card, and style guide.
     \label{tab:ch2:prompt_for_data_distillation}
 \end{table}
 
-Teacher generation is attempted for the 2,117 observations with verified
-\(D-1\) evidence.  Two provider results fail the structured-output contract,
-and 43 additional observations are rejected because a required response
-component is empty.  The canonical response set therefore contains 2,072
-observations.  After the deterministic SFT allocation described below, 1,744
-observations remain eligible for this stage.  Their teacher traces are
-compressed with \texttt{deepseek-v4-flash} at maximum reasoning effort while
-the corresponding final answers are held fixed.  The compression target is
-512--2,400 tokens; the realized traces range from 517 to 1,600 tokens, with a
-median of 996 tokens.  A subsequent source-only audit removes one training
-observation, yielding the final \textit{Model chk-1} SFT corpus of 1,743
-observations: 1,354 for training, 199 for validation, and 190 for testing.
-The later deterministic repair and source-grounding qualification are reported
-with the complete sample flow in Table~\ref{tab:ch2:chk0_chk1_sample_flow}.
+\paragraph*{Derivation of the final SFT split.}
+The sample unit is a meeting--atomic-topic pair rather than a meeting.  The 102
+meetings in the training period therefore produce 1,885 distinct canonical
+topic observations.  Of these, 170 are removed because no admissible \(D-1\)
+vintage can be established, leaving 1,715 teacher-generation candidates.  Two
+teacher results fail the structured-output contract and 30 have an empty
+required response component.  The canonical training set is consequently
+\begin{equation}
+    N_{\mathrm{train}}^{\mathrm{canonical}}
+    =1{,}885-170-2-30=1{,}683.
+    \label{eq:ch2:chk1_train_canonical_count}
+\end{equation}
+The corresponding validation and test populations begin with 205 and 197
+meeting--topic observations.  Six validation observations and seven test
+observations have an empty required response component; hence their admitted
+counts are \(205-6=199\) and \(197-7=190\), respectively.  Across the three
+partitions, teacher generation is thus attempted for 2,117 observations and
+canonical admission retains 2,072.
+
+Only the training partition is subject to the stage-specific role allocation.
+For each of its 1,683 admitted observations, the role is determined by
+\begin{equation}
+    h_i=\operatorname{int}_{16}
+    \!\left(\operatorname{SHA256}(\texttt{sample\_id}_i)\right)\bmod 100.
+    \label{eq:ch2:chk1_sft_role_hash}
+\end{equation}
+Values 0--69 assign 1,190 observations to the SFT-only subset, values 90--99
+assign 165 observations to a shared subset that is also eligible for SFT, and
+values 70--89 reserve 328 observations for an earlier reward-training design.
+The initial SFT training population is therefore
+\begin{equation}
+    N_{\mathrm{train}}^{\mathrm{SFT}}
+    =1{,}190+165=1{,}355,
+    \label{eq:ch2:chk1_train_sft_count}
+\end{equation}
+whereas all 199 validation and 190 test observations remain available for SFT
+evaluation.  This produces 1,744 SFT-eligible observations in total.
+
+Their teacher traces are compressed with \texttt{deepseek-v4-flash} at maximum
+reasoning effort while the corresponding final answers are held fixed.  The
+compression target is 512--2,400 tokens; the realized traces range from 517 to
+1,600 tokens, with a median of 996 tokens.  A subsequent source-only audit
+removes one training observation with a material unit-conversion error, giving
+\(1{,}355-1=1{,}354\) final training observations.  The final \textit{Model
+chk-1} SFT corpus therefore contains 1,743 observations: 1,354 for training,
+199 for validation, and 190 for testing.  The later deterministic repair and
+source-grounding qualification are reported with the complete sample flow in
+Table~\ref{tab:ch2:chk0_chk1_sample_flow}.
 
 
 
@@ -836,4 +870,3 @@ preserve the substantive claims, numerical quantities, and dates contained in
 the analysis while expressing them as a single formal paragraph.  This dataset
 therefore defines the implemented \texttt{chk-1}$\rightarrow$\texttt{chk-3}
 experiment and the associated baseline comparison.
-
