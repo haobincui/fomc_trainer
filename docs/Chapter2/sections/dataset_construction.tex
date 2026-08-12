@@ -50,58 +50,68 @@ items, with a mean of 7.90.  Every item is bound to an evidence identifier,
 series identifier, observation date, unit, value, availability basis, and
 source hash.  Later revisions and meeting-day observations are excluded.
 
-The 3,890 training rows contain 76 raw section-title strings.  After spelling
-variants, date headings, administrative headings, and punctuation-only labels
-are normalized, these titles form a catalogue of 58 section-style groups.
-Table~\ref{tab:ch2:summary_statis} reports the token-length distribution of the
-complete training source, the five largest normalized groups, and the remaining
-53 groups combined.  Here, \textit{Count} denotes source rows rather than
-meetings or final SFT observations, and token length is measured on each
-\texttt{reference\_excerpt} without adding special tokens.  The reported
-standard deviation is the sample standard deviation, and the quartiles are
-computed across source rows.
+Table~\ref{tab:ch2:summary_statis} provides a hierarchical overview of the
+training-only Minutes source.  It first treats each of the 102 complete Minutes
+as one meeting-level document.  It then reports the 3,890 extracted section
+rows, which contain 76 raw section-title strings.  After spelling variants,
+date headings, administrative headings, and punctuation-only labels are
+normalized, these titles form a catalogue of 58 section-style groups.  The five
+largest groups are reported separately and the remaining 53 groups are pooled.
+Accordingly, \textit{Count} denotes documents in the Minutes-level row and
+source rows in the section-level rows; these quantities are not counts of final
+SFT observations.  Token length is measured without adding special tokens.
+The reported standard deviation is the sample standard deviation, and the
+quartiles are computed across the observational unit represented by each row.
 
 
 \begin{table}[htbp]
     \scriptsize
     \centering
-    \setlength{\tabcolsep}{3pt}
-    \begin{tabular}{p{5.7cm}rrrrrrrr}
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabular}{p{5.3cm}rrrrrrrr}
         \toprule
-        Section-style group & Count & Mean & Std. & Min. & 25\% & 50\% & 75\% & Max. \\
+        Names & Count & Mean & Std. & Min. & 25\% & 50\% & 75\% & Max. \\
         \midrule
-        All training style-source rows
+        \multicolumn{9}{l}{\textit{Minutes level (one observation per meeting)}} \\
+        Total Minutes
+        & 102 & 16,914.96 & 4,741.07 & 9,087 & 12,555.25 & 18,368.50 & 20,493.75 & 26,840 \\
+        \addlinespace[2pt]
+        \multicolumn{9}{l}{\textit{Section-row level (one observation per extracted row)}} \\
+        Total Extracted Section Rows
         & 3,890 & 195.93 & 149.09 & 16 & 123.00 & 174.00 & 243.00 & 7,128 \\
-        Participants' Views on Current Conditions and the Economic Outlook
+        \quad Participants' Views on Current Conditions and the Economic Outlook
         & 1,100 & 245.70 & 106.04 & 31 & 170.00 & 225.00 & 302.25 & 663 \\
-        Staff Review of the Financial Situation
+        \quad Staff Review of the Financial Situation
         & 1,060 & 160.84 & 75.86 & 33 & 103.00 & 144.00 & 203.00 & 522 \\
-        Staff Review of the Economic Situation
+        \quad Staff Review of the Economic Situation
         & 943 & 160.97 & 68.24 & 25 & 109.50 & 151.00 & 198.00 & 438 \\
-        Staff Economic Outlook
+        \quad Staff Economic Outlook
         & 179 & 181.33 & 95.33 & 48 & 121.00 & 155.00 & 214.50 & 854 \\
-        Developments in Financial Markets and Open Market Operations
+        \quad Developments in Financial Markets and Open Market Operations
         & 177 & 180.27 & 80.03 & 46 & 123.00 & 167.00 & 210.00 & 540 \\
-        Other normalized section styles (53 groups)
+        \quad Other normalized section styles (53 groups)
         & 431 & 244.22 & 356.30 & 16 & 140.50 & 206.00 & 292.00 & 7,128 \\
         \bottomrule
     \end{tabular}
-    \caption{Token-Length Statistics for the Training-Only Minutes Style Source}
+    \caption{Overview of Token-Length Statistics for the Training-Only Minutes Source}
     \label{tab:ch2:summary_statis}
 \end{table}
 
 The table uses the frozen \texttt{DeepSeek-R1-Distill-Llama-8B} tokenizer.  The
-long right tail in the residual group reflects the raw source excerpts and does
-not determine model context length, because these excerpts are never copied
-into a \textit{Model chk-1} prompt.  The style builder instead removes sentences
-containing policy outcomes, meeting-administration facts, or named-person
-references and converts the remaining prose into controlled style atoms.  The
-58 entries therefore constitute a source catalogue.  The completed experiment
-selects only two entries from that catalogue: the economic-situation style,
-estimated from 943 rows, and the financial-situation style, estimated from
-1,060 rows.  Token budgets are evaluated separately on the rendered model
-inputs; no prepared fact-card prompt is truncated, and the longest final
-prompt--response sequence contains 4,019 tokens.
+Minutes-level distribution is calculated over complete meeting documents,
+whereas each section-level distribution is calculated over individual
+\texttt{reference\_excerpt} rows.  The long right tail in the residual group
+therefore describes the extracted source and does not determine model context
+length, because these excerpts are never copied into a \textit{Model chk-1}
+prompt.  The style builder instead removes sentences containing policy
+outcomes, meeting-administration facts, or named-person references and converts
+the remaining prose into controlled style atoms.  The 58 entries therefore
+constitute a source catalogue.  The completed experiment selects only two
+entries from that catalogue: the economic-situation style, estimated from 943
+rows, and the financial-situation style, estimated from 1,060 rows.  Token
+budgets are evaluated separately on the rendered model inputs; no prepared
+fact-card prompt is truncated, and the longest final prompt--response sequence
+contains 4,019 tokens.
 
 
 
