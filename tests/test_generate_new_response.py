@@ -12,6 +12,7 @@ from generate_new_response import (
 )
 from jobs.eval.eval_leave_one_out import run_paired_evaluation
 from jobs.generation.mask_generation import (
+    apply_completion_policy_to_output,
     build_intervention_manifest,
     run_mask_generation,
     validate_output_file,
@@ -31,8 +32,77 @@ class ConstantTripletScorer:
 
 
 class TestGenerateNewResponse(unittest.TestCase):
+    def test_token_limit_policy_marks_exclusion_and_is_resume_stable(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output = Path(temporary_directory) / "generated.jsonl"
+            rows = []
+            for position, reason, output_tokens in (
+                (0, "stop", 20),
+                (1, "length", 50),
+            ):
+                generated = f"generated-{position}"
+                rows.append(
+                    {
+                        "sample_id": f"s{position}",
+                        "meeting_date": "2024-01-31",
+                        "section_name": "Section A",
+                        "generation_position": position,
+                        "generation_finish_reason": reason,
+                        "prompt_token_count": 100,
+                        "prompt_preflight_token_count": 100,
+                        "output_token_count": output_tokens,
+                        "input_was_truncated": False,
+                        "generated": generated,
+                        "generated_sha256": hashlib.sha256(
+                            generated.encode("utf-8")
+                        ).hexdigest(),
+                    }
+                )
+            output.write_text(
+                "".join(json.dumps(row) + "\n" for row in rows),
+                encoding="utf-8",
+            )
+
+            first = apply_completion_policy_to_output(
+                output,
+                max_new_tokens=50,
+                max_model_len=200,
+                token_limit_policy="exclude",
+            )
+            first_hash = hashlib.sha256(output.read_bytes()).hexdigest()
+            second = apply_completion_policy_to_output(
+                output,
+                max_new_tokens=50,
+                max_model_len=200,
+                token_limit_policy="exclude",
+            )
+
+            self.assertEqual(first, second)
+            self.assertEqual(first["attempted_row_count"], 2)
+            self.assertEqual(first["passed_row_count"], 1)
+            self.assertEqual(first["excluded_row_count"], 1)
+            self.assertEqual(
+                hashlib.sha256(output.read_bytes()).hexdigest(),
+                first_hash,
+            )
+            annotated = [
+                json.loads(line)
+                for line in output.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(
+                [row["generation_validation_status"] for row in annotated],
+                ["passed", "excluded_token_limit_finish"],
+            )
+            self.assertNotIn("generation_validation_error", annotated[0])
+            self.assertEqual(
+                annotated[1]["generation_validation_error"]["error_type"],
+                "token_limit_finish",
+            )
+
     @patch("generate_new_response.generate_responses")
-    def test_failed_batch_outputs_are_not_counted_as_success(self, mock_generate_responses):
+    def test_failed_batch_outputs_are_not_counted_as_success(
+        self, mock_generate_responses
+    ):
         mock_generate_responses.return_value = ["good output", "Failed", ""]
         input_rows = [
             {"prompt": "p1", "response": "r1"},
@@ -48,11 +118,32 @@ class TestGenerateNewResponse(unittest.TestCase):
         self.assertNotIn("generated", input_rows[1])
 
     @patch("generate_new_response.generate_responses")
+    def test_formal_generation_can_fail_closed_on_batch_exception(
+        self, mock_generate_responses
+    ):
+        mock_generate_responses.side_effect = RuntimeError(
+            "Engine core initialization failed"
+        )
+        input_rows = [{"prompt": "p1", "response": "r1"}]
+
+        with self.assertRaisesRegex(
+            RuntimeError, "Generation batch starting at index 0 failed"
+        ):
+            generate_new_response(
+                input_rows,
+                "models/test-model",
+                batch_size=1,
+                fail_closed=True,
+            )
+
+    @patch("generate_new_response.generate_responses")
     def test_legacy_argument_order_is_normalized(self, mock_generate_responses):
         mock_generate_responses.return_value = ["generated text"]
         input_rows = [{"prompt": "prompt", "response": "target"}]
 
-        results = generate_new_response(input_rows, "output/test.jsonl", "models/test-model", batch_size=1)
+        results = generate_new_response(
+            input_rows, "output/test.jsonl", "models/test-model", batch_size=1
+        )
 
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]["generated"], "generated text")
@@ -73,6 +164,7 @@ class TestGenerateNewResponse(unittest.TestCase):
             replicate_id=2,
             temperature=0.0,
             top_p=1.0,
+            system_prompt="Return a concise final answer.",
             generation_metadata={
                 "indicator": "GDP-Growth",
                 "masking_strategy": "indicator_block_deletion",
@@ -88,6 +180,14 @@ class TestGenerateNewResponse(unittest.TestCase):
         self.assertEqual(results[0]["decoding_temperature"], 0.0)
         self.assertEqual(results[0]["decoding_top_p"], 1.0)
         self.assertEqual(mock_generate_responses.call_args.kwargs["seed"], 100)
+        self.assertEqual(
+            mock_generate_responses.call_args.kwargs["system_prompt"],
+            "Return a concise final answer.",
+        )
+        self.assertEqual(
+            results[0]["generation_system_prompt_sha256"],
+            hashlib.sha256(b"Return a concise final answer.").hexdigest(),
+        )
 
     def test_resume_validation_rejects_truncated_output(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -211,12 +311,8 @@ class TestGenerateNewResponse(unittest.TestCase):
             tokenizer_path="models/test-tokenizer",
         )
 
-        first_seeds = {
-            row["sample_id"]: row["generation_seed"] for row in first
-        }
-        second_seeds = {
-            row["sample_id"]: row["generation_seed"] for row in second
-        }
+        first_seeds = {row["sample_id"]: row["generation_seed"] for row in first}
+        second_seeds = {row["sample_id"]: row["generation_seed"] for row in second}
         self.assertEqual(first_seeds, second_seeds)
         self.assertEqual(
             first_seeds["2024-01-31::economic"],
@@ -286,7 +382,9 @@ class TestGenerateNewResponse(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Invalid masking intervention"):
                 build_intervention_manifest(
                     input_dir=prompts.resolve(),
-                    input_prompt_files=sorted(path.resolve() for path in prompts.glob("*.jsonl")),
+                    input_prompt_files=sorted(
+                        path.resolve() for path in prompts.glob("*.jsonl")
+                    ),
                     roster_file=roster_file.resolve(),
                 )
 
@@ -326,7 +424,9 @@ class TestGenerateNewResponse(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "frozen intervention roster"):
                 build_intervention_manifest(
                     input_dir=prompts.resolve(),
-                    input_prompt_files=sorted(path.resolve() for path in prompts.glob("*.jsonl")),
+                    input_prompt_files=sorted(
+                        path.resolve() for path in prompts.glob("*.jsonl")
+                    ),
                     roster_file=roster_file.resolve(),
                 )
 
@@ -445,9 +545,7 @@ class TestGenerateNewResponse(unittest.TestCase):
                 "sample_id": "s1",
                 "meeting_date": "2024-01-31",
                 "section_name": "Section A",
-                "prompt": (
-                    "prefix\nGDP block\nUnemployment block\nsuffix"
-                ),
+                "prompt": ("prefix\nGDP block\nUnemployment block\nsuffix"),
             }
             (prompts / "None_masked_test.jsonl").write_text(
                 json.dumps(base) + "\n",
@@ -457,13 +555,8 @@ class TestGenerateNewResponse(unittest.TestCase):
                 json.dumps(dict(base, prompt="prefix\nsuffix")) + "\n",
                 encoding="utf-8",
             )
-            (
-                prompts / "Unemployment-Rate_masked_test.jsonl"
-            ).write_text(
-                json.dumps(
-                    dict(base, prompt="prefix\nGDP block\nsuffix")
-                )
-                + "\n",
+            (prompts / "Unemployment-Rate_masked_test.jsonl").write_text(
+                json.dumps(dict(base, prompt="prefix\nGDP block\nsuffix")) + "\n",
                 encoding="utf-8",
             )
 
@@ -561,9 +654,7 @@ class TestGenerateNewResponse(unittest.TestCase):
             self.assertEqual(len(manifest["expected_artifacts"]), 2)
             self.assertEqual(len(manifest["model_artifact"]["sha256"]), 64)
             intervention_manifest = json.loads(
-                (outputs / "intervention_manifest.json").read_text(
-                    encoding="utf-8"
-                )
+                (outputs / "intervention_manifest.json").read_text(encoding="utf-8")
             )
             self.assertEqual(
                 intervention_manifest["validation"],
@@ -604,9 +695,7 @@ class TestGenerateNewResponse(unittest.TestCase):
                 encoding="utf-8",
             )
             manifest = json.loads(
-                (outputs / "generation_manifest.json").read_text(
-                    encoding="utf-8"
-                )
+                (outputs / "generation_manifest.json").read_text(encoding="utf-8")
             )
             for artifact in manifest["expected_artifacts"]:
                 if artifact["relative_path"] == full_artifact.name:
@@ -628,6 +717,107 @@ class TestGenerateNewResponse(unittest.TestCase):
                     scorer=ConstantTripletScorer(),
                     bootstrap_samples=20,
                 )
+
+    @patch("generate_new_response.generate_responses")
+    def test_sample_id_filter_is_audited_non_release_smoke_selection(
+        self,
+        mock_generate_responses,
+    ):
+        mock_generate_responses.return_value = ["generated smoke"]
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            prompts = root / "prompts"
+            outputs = root / "outputs"
+            model = root / "model"
+            prompts.mkdir()
+            model.mkdir()
+            (model / "config.json").write_text("{}", encoding="utf-8")
+            roster = root / "roster.json"
+            roster.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "loo-intervention-roster-v1",
+                        "roster_id": "test-roster",
+                        "baseline_indicator": "None",
+                        "contexts": ["test"],
+                        "indicators": ["GDP-Growth"],
+                        "indicator_markers": {"GDP-Growth": ["GDP"]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            full_rows = [
+                {
+                    "sample_id": sample_id,
+                    "meeting_date": meeting_date,
+                    "section_name": "Section A",
+                    "prompt": f"prompt {sample_id}\nGDP block {sample_id}",
+                }
+                for sample_id, meeting_date in (
+                    ("s1", "2024-01-31"),
+                    ("s2", "2024-03-20"),
+                )
+            ]
+            masked_rows = [
+                dict(row, prompt=f"prompt {row['sample_id']}") for row in full_rows
+            ]
+            full_path = prompts / "None_masked_test.jsonl"
+            masked_path = prompts / "GDP-Growth_masked_test.jsonl"
+            full_path.write_text(
+                "".join(json.dumps(row) + "\n" for row in full_rows),
+                encoding="utf-8",
+            )
+            masked_path.write_text(
+                "".join(json.dumps(row) + "\n" for row in masked_rows),
+                encoding="utf-8",
+            )
+
+            run_mask_generation(
+                input_folder=str(prompts),
+                model_path=str(model),
+                simulation_step=1,
+                output_dir=str(outputs),
+                roster_file=str(roster),
+                batch_size=1,
+                seed=100,
+                temperature=0.0,
+                top_p=1.0,
+                max_new_tokens=128,
+                include_sample_ids=["s2"],
+            )
+
+            manifest = json.loads(
+                (outputs / "generation_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                manifest["sample_selection"],
+                {
+                    "policy": "explicit-sample-id-filter-v1",
+                    "mode": "filtered_smoke",
+                    "requested_sample_ids": ["s2"],
+                    "selected_sample_ids": ["s2"],
+                    "selected_row_count_per_artifact": 1,
+                    "full_source_row_count_per_artifact": 2,
+                    "population_release_allowed": False,
+                },
+            )
+            for artifact in manifest["input_artifacts"]:
+                self.assertEqual(artifact["source_row_count"], 2)
+                self.assertEqual(artifact["selected_source_row_count"], 1)
+                source = Path(artifact["path"])
+                self.assertEqual(
+                    artifact["source_file_sha256"],
+                    hashlib.sha256(source.read_bytes()).hexdigest(),
+                )
+            for artifact in manifest["expected_artifacts"]:
+                rows = [
+                    json.loads(line)
+                    for line in Path(artifact["path"])
+                    .read_text(encoding="utf-8")
+                    .splitlines()
+                    if line.strip()
+                ]
+                self.assertEqual([row["sample_id"] for row in rows], ["s2"])
 
 
 if __name__ == "__main__":

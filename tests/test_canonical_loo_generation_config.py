@@ -53,6 +53,39 @@ class TestCanonicalLooGenerationConfig(unittest.TestCase):
 
         self.assertTrue(self.config["generation_only"])
         self.assertFalse(self.config["training_performed"])
+        self.assertIn(
+            "output/checkpoints/recovered/",
+            self.config["artifacts"]["minutes_model"],
+        )
+        self.assertNotEqual(
+            self.config["artifacts"]["minutes_model"],
+            "../fomc_trainer_back/fomc_trainer/output/merged/"
+            "llama_sft_synthetic_20250526",
+        )
+        provenance = self.config["checkpoint_provenance"]
+        self.assertEqual(
+            provenance["minutes_artifact_id"],
+            "eval-minutes-sft-from-chk1",
+        )
+        self.assertEqual(
+            provenance["runtime_verification"],
+            "required-before-generation",
+        )
+        self.assertEqual(
+            provenance["minutes_model_sha256"],
+            "ac176afc59f73eccbded8e02b4eec7dd1de8b252c0b20352f5074cb9e02077ea",
+        )
+        self.assertEqual(
+            provenance["minutes_tokenizer_sha256"],
+            provenance["minutes_model_sha256"],
+        )
+        for key in (
+            "minutes_manifest_sha256",
+            "minutes_manifest_payload_sha256",
+            "minutes_model_sha256",
+            "minutes_tokenizer_sha256",
+        ):
+            self.assertRegex(provenance[key], r"^[0-9a-f]{64}$")
         self.assertEqual(len(indicator_roster["indicators"]), 26)
         self.assertEqual(len(section_roster["sections"]), 3)
         self.assertEqual(
@@ -67,6 +100,31 @@ class TestCanonicalLooGenerationConfig(unittest.TestCase):
             [20260728],
         )
         self.assertEqual(
+            self.config["decoding"]["indicator_analysis"]["max_token_limit_errors"],
+            2,
+        )
+        self.assertEqual(
+            self.config["decoding"]["indicator_analysis"]["max_new_tokens"],
+            8192,
+        )
+        self.assertEqual(
+            self.config["decoding"]["indicator_analysis"][
+                "requested_max_output_tokens"
+            ],
+            4096,
+        )
+        self.assertEqual(
+            self.config["invariants"]["indicator_analysis_token_limit_finish"],
+            {
+                "policy": "bounded-token-limit-errors-v1",
+                "max_errors": 2,
+            },
+        )
+        self.assertEqual(
+            self.config["invariants"]["minutes_token_limit_finish"],
+            "forbidden",
+        )
+        self.assertEqual(
             self.config["decoding"]["minutes_stochastic_robustness"]["replicate_seeds"],
             [
                 20260729,
@@ -76,12 +134,45 @@ class TestCanonicalLooGenerationConfig(unittest.TestCase):
                 24260729,
             ],
         )
+        self.assertEqual(
+            {
+                key: self.config["decoding"]["minutes_primary"][key]
+                for key in ("max_new_tokens", "max_model_len")
+            },
+            {"max_new_tokens": 8192, "max_model_len": 16384},
+        )
+        self.assertEqual(
+            {
+                key: self.config["decoding"]["minutes_stochastic_robustness"][key]
+                for key in ("max_new_tokens", "max_model_len")
+            },
+            {"max_new_tokens": 8192, "max_model_len": 16384},
+        )
+        self.assertEqual(
+            self.config["execution"],
+            {
+                "gpu_policy": "single-physical-gpu-by-nvidia-smi-index-v1",
+                "physical_gpu_index": 1,
+                "expected_visible_cuda_devices": 1,
+                "tensor_parallel_size": 1,
+            },
+        )
+        projection = self.config["analysis_projection"]
+        self.assertEqual(projection["policy"], "deepseek-final-answer-after-think-v1")
+        self.assertEqual(projection["source_field"], "generated")
+        self.assertEqual(projection["output_field"], "minutes_analysis")
+        self.assertEqual(projection["delimiter"], "</think>")
+        self.assertEqual(projection["required_delimiter_count"], 1)
+        self.assertFalse(projection["allow_plain_text_fallback"])
+        self.assertEqual(projection["truncation"], "forbidden")
+        self.assertEqual(projection["secondary_generation"], "forbidden")
 
     def test_background_launchers_are_valid_and_contain_no_training_stage(self):
         scripts = [
             REPO_ROOT / "run/_run_canonical_loo_generation.sh",
             REPO_ROOT / "run/generate_loo_pilot.sh",
             REPO_ROOT / "run/generate_loo_formal.sh",
+            REPO_ROOT / "run/generate_loo_pilot_remaining20_recovered.sh",
             REPO_ROOT / "run/generate_loo_end_to_end.sh",
         ]
         subprocess.run(
@@ -115,6 +206,23 @@ class TestCanonicalLooGenerationConfig(unittest.TestCase):
         self.assertIn("export PYTHONPATH=", generation_sources)
         self.assertIn("torch.cuda.is_available()", end_to_end_source)
         self.assertIn("import vllm", end_to_end_source)
+        self.assertIn(
+            'analysis["max_token_limit_errors"]',
+            generation_sources,
+        )
+        self.assertIn("--max-token-limit-errors", generation_sources)
+        self.assertIn("jobs.generation.project_indicator_analysis", generation_sources)
+        self.assertIn("--analysis-field", generation_sources)
+        self.assertIn("PROJECTION_OUTPUT_FIELD", generation_sources)
+        self.assertIn("--projection-manifest", generation_sources)
+        self.assertIn(
+            "jobs.main.checkpoint_provenance verify-artifact",
+            generation_sources,
+        )
+        self.assertIn(
+            "minutes_checkpoint_runtime_verification=",
+            generation_sources,
+        )
 
     def test_main_entrypoint_exposes_generation_only_stages(self):
         parser = build_parser()
@@ -152,9 +260,30 @@ class TestCanonicalLooGenerationConfig(unittest.TestCase):
                 "prompts",
             ]
         )
+        projection = parser.parse_args(
+            [
+                "project-loo-analysis",
+                "--input",
+                "analysis.jsonl",
+                "--analysis-manifest",
+                "analysis_manifest.json",
+                "--tokenizer",
+                "minutes-tokenizer",
+                "--output-dir",
+                "projection",
+            ]
+        )
 
         self.assertEqual(analysis.command, "generate-loo-analysis")
+        self.assertEqual(analysis.max_new_tokens, 8192)
+        self.assertEqual(analysis.requested_max_output_tokens, 4096)
+        self.assertEqual(analysis.max_token_limit_errors, 0)
         self.assertEqual(prompts.command, "build-loo-prompts")
+        self.assertEqual(prompts.analysis_field, "minutes_analysis")
+        self.assertEqual(prompts.minutes_max_new_tokens, 8192)
+        self.assertEqual(prompts.minutes_max_model_len, 16384)
+        self.assertEqual(projection.command, "project-loo-analysis")
+        self.assertEqual(projection.output_field, "minutes_analysis")
 
 
 if __name__ == "__main__":

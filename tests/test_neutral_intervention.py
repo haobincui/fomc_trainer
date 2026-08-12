@@ -4,6 +4,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from jobs.eval.eval_leave_one_out import (
+    discover_generated_artifacts,
+    load_and_validate_generation_manifest,
+)
 from jobs.generation.mask_generation import run_mask_generation
 from open_r1.provenance import (
     fingerprint_artifact_path,
@@ -432,6 +436,21 @@ class TestNeutralInterventionValidator(unittest.TestCase):
         self.assertEqual(
             normalized_intervention["audit"]["status"],
             "validated",
+        )
+        artifacts = discover_generated_artifacts(output)
+        _manifest, scoring_audit = load_and_validate_generation_manifest(
+            output,
+            artifacts,
+            required=True,
+        )
+        self.assertEqual(
+            scoring_audit["intervention_manifest"]["strategy"],
+            "indicator_block_neutral_replacement",
+        )
+        self.assertTrue(
+            scoring_audit["intervention_manifest"][
+                "generated_rows_bound_to_interventions"
+            ]
         )
 
     def test_rejects_non_distinct_neutral_prompts(self):

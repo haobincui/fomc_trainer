@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -40,20 +41,24 @@ from open_r1.provenance import (
     validate_sha256,
 )
 from open_r1.validator.loo_generation_spec import (
+    GenerationSafetyError,
     validate_manifest_integrity,
     validate_generation_completion,
 )
 
 
-SCHEMA_VERSION = "indicator-analysis-generation-v1"
+SCHEMA_VERSION = "indicator-analysis-generation-v2"
 INPUT_SCHEMA_VERSION = "canonical-loo-indicator-input-v2"
 PROMPT_TEMPLATE_VERSION = "indicator-analysis-prompt-d1-v1"
+SYSTEM_PROMPT_VERSION = "indicator-analysis-system-prompt-v1"
 DEFAULT_TEMPERATURE = 0.0
 DEFAULT_TOP_P = 1.0
-DEFAULT_MAX_NEW_TOKENS = 256
+DEFAULT_MAX_NEW_TOKENS = 8192
+DEFAULT_REQUESTED_MAX_OUTPUT_TOKENS = 4096
 DEFAULT_MAX_MODEL_LEN = 16384
 DEFAULT_SEED = 20260728
 DEFAULT_BATCH_SIZE = 20
+DEFAULT_MAX_TOKEN_LIMIT_ERRORS = 0
 
 _PROMPT_TEMPLATE = """Task: produce a meeting-time analysis of one economic indicator.
 Prompt template: {prompt_template_version}
@@ -67,6 +72,12 @@ Source ID: {source_id}
 Source data: {source_payload}
 
 Use only the source data above. Explain what it showed as of the meeting and its plausible relevance to policymakers. Do not add facts released after the meeting, reconstruct the historical Minutes, or discuss other indicators. Return only the indicator analysis."""
+
+_SYSTEM_PROMPT_TEMPLATE = """You are an economic-analysis assistant preparing one concise input block for an FOMC Minutes generation experiment.
+
+Return only the final indicator analysis. Do not output chain-of-thought, scratch work, planning text, XML reasoning wrappers, headings, or preambles.
+Use compact, evidence-focused prose. Prioritize the indicator's direction, magnitude, timing, and plausible policy relevance using only the supplied meeting-time data.
+The complete response must not exceed {requested_max_output_tokens} generated tokens. Do not pad the response or attempt to fill the token budget."""
 
 _REQUIRED_FIELDS = (
     "schema_version",
@@ -95,9 +106,11 @@ class IndicatorAnalysisDecoding:
     temperature: float = DEFAULT_TEMPERATURE
     top_p: float = DEFAULT_TOP_P
     max_new_tokens: int = DEFAULT_MAX_NEW_TOKENS
+    requested_max_output_tokens: int = DEFAULT_REQUESTED_MAX_OUTPUT_TOKENS
     seed: int = DEFAULT_SEED
     batch_size: int = DEFAULT_BATCH_SIZE
     max_model_len: int = DEFAULT_MAX_MODEL_LEN
+    max_token_limit_errors: int = DEFAULT_MAX_TOKEN_LIMIT_ERRORS
 
     def validate(self) -> None:
         if self.temperature != 0.0:
@@ -106,10 +119,28 @@ class IndicatorAnalysisDecoding:
             raise ValueError("Canonical indicator analysis requires top_p=1")
         if self.max_new_tokens <= 0:
             raise ValueError("max_new_tokens must be positive")
+        if (
+            isinstance(self.requested_max_output_tokens, bool)
+            or not isinstance(self.requested_max_output_tokens, int)
+            or self.requested_max_output_tokens <= 0
+        ):
+            raise ValueError("requested_max_output_tokens must be a positive integer")
+        if self.requested_max_output_tokens > self.max_new_tokens:
+            raise ValueError(
+                "requested_max_output_tokens must not exceed max_new_tokens"
+            )
         if self.batch_size <= 0:
             raise ValueError("batch_size must be positive")
         if self.max_model_len <= self.max_new_tokens:
             raise ValueError("max_model_len must exceed max_new_tokens")
+        if (
+            isinstance(self.max_token_limit_errors, bool)
+            or not isinstance(self.max_token_limit_errors, int)
+            or not 0 <= self.max_token_limit_errors <= 2
+        ):
+            raise ValueError(
+                "max_token_limit_errors must be an integer from 0 through 2"
+            )
 
 
 def _canonical_json(value: Any) -> str:
@@ -118,6 +149,22 @@ def _canonical_json(value: Any) -> str:
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
+    )
+
+
+def build_indicator_analysis_system_prompt(
+    requested_max_output_tokens: int,
+) -> str:
+    """Build the stage-specific concise-output system instruction."""
+
+    if (
+        isinstance(requested_max_output_tokens, bool)
+        or not isinstance(requested_max_output_tokens, int)
+        or requested_max_output_tokens <= 0
+    ):
+        raise ValueError("requested_max_output_tokens must be a positive integer")
+    return _SYSTEM_PROMPT_TEMPLATE.format(
+        requested_max_output_tokens=requested_max_output_tokens,
     )
 
 
@@ -134,9 +181,7 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
                     f"Invalid JSON in {path} at line {line_number}: {error}"
                 ) from error
             if not isinstance(row, dict):
-                raise ValueError(
-                    f"JSONL row {line_number} in {path} must be an object"
-                )
+                raise ValueError(f"JSONL row {line_number} in {path} must be an object")
             rows.append(row)
     if not rows:
         raise ValueError(f"Input JSONL contains no rows: {path}")
@@ -193,13 +238,11 @@ def validate_ledger_provenance(
     validate_manifest_integrity(snapshot)
     if ledger.get("schema_version") != "loo-indicator-ledger-manifest-v1":
         raise ValueError(
-            f"Unsupported ledger manifest schema: "
-            f"{ledger.get('schema_version')!r}"
+            f"Unsupported ledger manifest schema: {ledger.get('schema_version')!r}"
         )
     if snapshot.get("schema_version") != "loo-source-snapshot-manifest-v1":
         raise ValueError(
-            f"Unsupported snapshot manifest schema: "
-            f"{snapshot.get('schema_version')!r}"
+            f"Unsupported snapshot manifest schema: {snapshot.get('schema_version')!r}"
         )
     outputs = ledger.get("outputs")
     inputs = ledger.get("inputs")
@@ -214,9 +257,7 @@ def validate_ledger_provenance(
         label="ledger indicator_inputs",
     )
     if bound_input_path != input_path:
-        raise ValueError(
-            "Ledger manifest indicator_inputs path differs from --input"
-        )
+        raise ValueError("Ledger manifest indicator_inputs path differs from --input")
     expected_input_sha = validate_sha256(
         indicator_input.get("sha256"),
         label="ledger outputs.indicator_inputs.sha256",
@@ -296,7 +337,9 @@ def load_indicator_roster(path: str | Path) -> list[str]:
     indicators = payload.get("indicators") if isinstance(payload, dict) else payload
     if not isinstance(indicators, list) or not indicators:
         raise ValueError("Indicator roster must contain a non-empty 'indicators' list")
-    if not all(isinstance(indicator, str) and indicator.strip() for indicator in indicators):
+    if not all(
+        isinstance(indicator, str) and indicator.strip() for indicator in indicators
+    ):
         raise ValueError("Every roster indicator must be a non-empty string")
     if len(set(indicators)) != len(indicators):
         raise ValueError("Indicator roster contains duplicate entries")
@@ -314,9 +357,7 @@ def load_population_dates(path: str | Path) -> tuple[str, list[str]]:
     population_id = str(payload.get("population_id") or "").strip()
     raw_dates = payload.get("meeting_dates", payload.get("dates"))
     if not population_id or not isinstance(raw_dates, list) or not raw_dates:
-        raise ValueError(
-            "Population roster requires population_id and meeting_dates"
-        )
+        raise ValueError("Population roster requires population_id and meeting_dates")
     meeting_dates: list[str] = []
     for index, raw_date in enumerate(raw_dates):
         text = str(raw_date or "").strip()
@@ -367,9 +408,7 @@ def _parse_date(value: Any, *, field: str, sample_id: str) -> date:
             f"{sample_id}: {field} is not a valid YYYY-MM-DD date: {text!r}"
         ) from error
     if parsed.isoformat() != text:
-        raise ValueError(
-            f"{sample_id}: {field} must use canonical YYYY-MM-DD form"
-        )
+        raise ValueError(f"{sample_id}: {field} must use canonical YYYY-MM-DD form")
     return parsed
 
 
@@ -391,9 +430,7 @@ def _validate_source_payload(
         raise ValueError(f"{sample_id}: source_payload must be a JSON object")
     series = payload.get("series")
     if not isinstance(series, list) or not series:
-        raise ValueError(
-            f"{sample_id}: source_payload.series must be a non-empty list"
-        )
+        raise ValueError(f"{sample_id}: source_payload.series must be a non-empty list")
     seen_source_keys: set[str] = set()
     for series_index, record in enumerate(series):
         label = f"{sample_id}: source_payload.series[{series_index}]"
@@ -415,21 +452,15 @@ def _validate_source_payload(
             sample_id=label,
         )
         if record_vintage != requested_vintage_date:
-            raise ValueError(
-                f"{label}: requested_vintage_date differs from the row"
-            )
+            raise ValueError(f"{label}: requested_vintage_date differs from the row")
         if record_availability > information_as_of_date:
-            raise ValueError(
-                f"{label}: availability_as_of_date is after D-1"
-            )
+            raise ValueError(f"{label}: availability_as_of_date is after D-1")
         observations = record.get("observations")
         if not isinstance(observations, list) or not observations:
             raise ValueError(f"{label}.observations must be a non-empty list")
         previous_date: date | None = None
         for observation_index, observation in enumerate(observations):
-            observation_label = (
-                f"{label}.observations[{observation_index}]"
-            )
+            observation_label = f"{label}.observations[{observation_index}]"
             if not isinstance(observation, Mapping):
                 raise ValueError(f"{observation_label} must be an object")
             observation_date = _parse_date(
@@ -438,9 +469,7 @@ def _validate_source_payload(
                 sample_id=observation_label,
             )
             if observation_date > information_as_of_date:
-                raise ValueError(
-                    f"{observation_label}: observation date is after D-1"
-                )
+                raise ValueError(f"{observation_label}: observation date is after D-1")
             if previous_date is not None and observation_date <= previous_date:
                 raise ValueError(
                     f"{label}.observations must be strictly date-ascending"
@@ -585,17 +614,11 @@ def validate_and_prepare_rows(
                 f"{sample_id}: information_as_of_date must equal meeting_date - 1 day"
             )
         if requested_vintage_date != information_as_of_date:
-            raise ValueError(
-                f"{sample_id}: requested_vintage_date must equal D-1"
-            )
+            raise ValueError(f"{sample_id}: requested_vintage_date must equal D-1")
         if availability_as_of_date > information_as_of_date:
-            raise ValueError(
-                f"{sample_id}: availability_as_of_date is after D-1"
-            )
+            raise ValueError(f"{sample_id}: availability_as_of_date is after D-1")
         if observation_date > information_as_of_date:
-            raise ValueError(
-                f"{sample_id}: observation_date is after D-1"
-            )
+            raise ValueError(f"{sample_id}: observation_date is after D-1")
 
         normalized_meeting_timestamp = _format_timestamp(meeting_timestamp)
         if meeting_id != normalized_meeting_timestamp[:10]:
@@ -604,9 +627,7 @@ def validate_and_prepare_rows(
                 f"{normalized_meeting_timestamp[:10]!r}"
             )
         if meeting_id != parsed_meeting_date.isoformat():
-            raise ValueError(
-                f"{sample_id}: meeting_id and meeting_date must match"
-            )
+            raise ValueError(f"{sample_id}: meeting_id and meeting_date must match")
         previous_timestamp = meeting_timestamps.setdefault(
             meeting_id, normalized_meeting_timestamp
         )
@@ -712,6 +733,9 @@ def generate_indicator_analysis_rows(
         generation_fn = generate_new_response
 
     prompt_rows = [dict(row) for row in prepared_rows]
+    system_prompt = build_indicator_analysis_system_prompt(
+        config.requested_max_output_tokens
+    )
     generated_rows = generation_fn(
         prompt_rows,
         str(Path(model_path).expanduser().resolve()),
@@ -727,39 +751,91 @@ def generate_indicator_analysis_rows(
             if tokenizer_path is None
             else str(Path(tokenizer_path).expanduser().resolve())
         ),
+        system_prompt=system_prompt,
         seed_policy="sample-id-sha256-v1",
         generation_metadata={
             "generation_stage": "canonical_indicator_analysis",
             "generation_schema_version": SCHEMA_VERSION,
+            "generation_system_prompt_version": SYSTEM_PROMPT_VERSION,
+            "generation_system_prompt_sha256": sha256_text(system_prompt),
+            "generation_requested_max_output_tokens": (
+                config.requested_max_output_tokens
+            ),
         },
     )
     if not isinstance(generated_rows, list):
         raise ValueError("Generation helper must return a list of output rows")
 
     generated_by_id: dict[str, dict[str, Any]] = {}
+    token_limit_errors: list[dict[str, Any]] = []
     for row in generated_rows:
         if not isinstance(row, Mapping):
             raise ValueError("Generation helper returned a non-object row")
         sample_id = str(row.get("sample_id") or "")
         generated = row.get("generated")
         if sample_id in generated_by_id:
-            raise ValueError(f"Generation helper returned duplicate sample_id: {sample_id}")
+            raise ValueError(
+                f"Generation helper returned duplicate sample_id: {sample_id}"
+            )
         if not isinstance(generated, str) or not generated.strip():
-            raise ValueError(f"Generation failed or returned empty text for {sample_id!r}")
+            raise ValueError(
+                f"Generation failed or returned empty text for {sample_id!r}"
+            )
+        generation_record = dict(row)
         if require_runtime_metadata:
-            preflight_token_count = row.get(
-                "prompt_preflight_token_count"
-            )
-            validate_generation_completion(
-                input_token_count=preflight_token_count,
-                output_token_count=row.get("output_token_count"),
-                max_new_tokens=config.max_new_tokens,
-                context_limit=config.max_model_len,
-                finish_reason=str(row.get("generation_finish_reason") or ""),
-                input_was_truncated=row.get("input_was_truncated"),
-                consumed_input_token_count=row.get("prompt_token_count"),
-            )
-        generated_by_id[sample_id] = dict(row)
+            preflight_token_count = row.get("prompt_preflight_token_count")
+            completion_arguments = {
+                "input_token_count": preflight_token_count,
+                "output_token_count": row.get("output_token_count"),
+                "max_new_tokens": config.max_new_tokens,
+                "context_limit": config.max_model_len,
+                "finish_reason": str(row.get("generation_finish_reason") or ""),
+                "input_was_truncated": row.get("input_was_truncated"),
+                "consumed_input_token_count": row.get("prompt_token_count"),
+            }
+            try:
+                validate_generation_completion(**completion_arguments)
+            except GenerationSafetyError as error:
+                finish_reason = (
+                    str(completion_arguments["finish_reason"]).strip().lower()
+                )
+                if finish_reason not in {"length", "max_length", "max_tokens"}:
+                    raise
+                # Revalidate all context and token accounting with a normal
+                # finish reason. This ensures the tolerance applies only to
+                # an otherwise valid token-limit completion.
+                validate_generation_completion(
+                    **{
+                        **completion_arguments,
+                        "finish_reason": "stop",
+                    }
+                )
+                error_record = {
+                    "sample_id": sample_id,
+                    "error_type": "token_limit_finish",
+                    "message": str(error),
+                    "finish_reason": str(completion_arguments["finish_reason"]),
+                    "input_token_count": preflight_token_count,
+                    "output_token_count": row.get("output_token_count"),
+                    "max_new_tokens": config.max_new_tokens,
+                }
+                token_limit_errors.append(error_record)
+                generation_record["generation_validation_status"] = (
+                    "accepted_token_limit_error"
+                )
+                generation_record["generation_validation_error"] = error_record
+            else:
+                generation_record["generation_validation_status"] = "passed"
+        generated_by_id[sample_id] = generation_record
+
+    if len(token_limit_errors) > config.max_token_limit_errors:
+        sample_ids = [record["sample_id"] for record in token_limit_errors]
+        raise GenerationSafetyError(
+            "Indicator analysis produced "
+            f"{len(token_limit_errors)} token-limit completion errors, "
+            f"exceeding the allowed maximum of "
+            f"{config.max_token_limit_errors}; sample_ids={sample_ids}"
+        )
 
     expected_ids = [str(row["sample_id"]) for row in prepared_rows]
     expected_set = set(expected_ids)
@@ -866,21 +942,16 @@ def run_indicator_analysis_generation(
         "source_registry": source_registry,
     }
     supplied_provenance = {
-        label: value
-        for label, value in provenance_values.items()
-        if value is not None
+        label: value for label, value in provenance_values.items() if value is not None
     }
-    if supplied_provenance and len(supplied_provenance) != len(
-        provenance_values
-    ):
+    if supplied_provenance and len(supplied_provenance) != len(provenance_values):
         raise ValueError(
             "ledger_manifest, snapshot_manifest, and source_registry must be "
             "supplied together"
         )
     if generation_fn is None and not supplied_provenance:
         raise ValueError(
-            "Canonical runtime requires ledger, snapshot, and registry "
-            "provenance"
+            "Canonical runtime requires ledger, snapshot, and registry provenance"
         )
     provenance_paths = {
         label: Path(value).expanduser().resolve()
@@ -901,17 +972,13 @@ def run_indicator_analysis_generation(
         "tokenizer": fingerprint_artifact_path(resolved_tokenizer_path),
     }
     if population_path is not None:
-        fingerprints_before["population"] = fingerprint_artifact_path(
-            population_path
-        )
+        fingerprints_before["population"] = fingerprint_artifact_path(population_path)
     for label, path in provenance_paths.items():
         fingerprints_before[label] = fingerprint_artifact_path(path)
     provenance_binding: dict[str, str] | None = None
     if provenance_paths:
         if population_path is None:
-            raise ValueError(
-                "Canonical ledger provenance requires a frozen population"
-            )
+            raise ValueError("Canonical ledger provenance requires a frozen population")
         provenance_binding = validate_ledger_provenance(
             input_path=input_path,
             ledger_manifest_path=provenance_paths["ledger_manifest"],
@@ -925,12 +992,8 @@ def run_indicator_analysis_generation(
     population_id: str | None = None
     population_dates: list[str] | None = None
     if population_path is not None:
-        population_id, population_dates = load_population_dates(
-            population_path
-        )
-        observed_dates = sorted(
-            {str(row["meeting_date"]) for row in prepared_rows}
-        )
+        population_id, population_dates = load_population_dates(population_path)
+        observed_dates = sorted({str(row["meeting_date"]) for row in prepared_rows})
         if observed_dates != population_dates:
             raise ValueError(
                 "Indicator-analysis meetings do not match the frozen "
@@ -952,9 +1015,7 @@ def run_indicator_analysis_generation(
         "tokenizer": fingerprint_artifact_path(resolved_tokenizer_path),
     }
     if population_path is not None:
-        fingerprints_after["population"] = fingerprint_artifact_path(
-            population_path
-        )
+        fingerprints_after["population"] = fingerprint_artifact_path(population_path)
     for label, path in provenance_paths.items():
         fingerprints_after[label] = fingerprint_artifact_path(path)
     changed = [
@@ -981,6 +1042,9 @@ def run_indicator_analysis_generation(
         "population_dates": population_dates,
         "ledger_provenance": provenance_binding,
         "prompt_template_sha256": sha256_text(_PROMPT_TEMPLATE),
+        "system_prompt_sha256": sha256_text(
+            build_indicator_analysis_system_prompt(config.requested_max_output_tokens)
+        ),
         "decoding": asdict(config),
     }
     run_id = f"indicator-analysis-{sha256_text(_canonical_json(run_binding))[:16]}"
@@ -992,7 +1056,9 @@ def run_indicator_analysis_generation(
             {
                 "run_id": run_id,
                 "generation_model_sha256": fingerprints_before["model"]["sha256"],
-                "generation_tokenizer_sha256": fingerprints_before["tokenizer"]["sha256"],
+                "generation_tokenizer_sha256": fingerprints_before["tokenizer"][
+                    "sha256"
+                ],
             }
         )
         bound_results.append(bound)
@@ -1017,9 +1083,7 @@ def run_indicator_analysis_generation(
             "information_as_of_date": row["information_as_of_date"],
             "requested_vintage_date": row["requested_vintage_date"],
             "availability_as_of_date": row["availability_as_of_date"],
-            "availability_evidence_type": row[
-                "availability_evidence_type"
-            ],
+            "availability_evidence_type": row["availability_evidence_type"],
             "source_interface": row["source_interface"],
             "observation_date": row["observation_date"],
         }
@@ -1032,22 +1096,68 @@ def run_indicator_analysis_generation(
             "indicator": row["indicator"],
             "prompt_sha256": row["prompt_sha256"],
             "generated_sha256": row["generated_sha256"],
+            "generation_validation_status": row.get(
+                "generation_validation_status",
+                "not_evaluated",
+            ),
         }
         for row in bound_results
     ]
+    completion_errors = [
+        dict(row["generation_validation_error"])
+        for row in bound_results
+        if row.get("generation_validation_status") == "accepted_token_limit_error"
+    ]
+    passed_completion_count = sum(
+        row.get("generation_validation_status") == "passed" for row in bound_results
+    )
+    not_evaluated_count = sum(
+        "generation_validation_status" not in row for row in bound_results
+    )
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "status": "complete",
         "run_id": run_id,
         "generation_only": True,
         "training_performed": False,
+        "execution_environment": {
+            "physical_gpu_index": os.environ.get(
+                "LOO_CANONICAL_PHYSICAL_GPU_INDEX"
+            ),
+            "physical_gpu_uuid": os.environ.get(
+                "LOO_CANONICAL_PHYSICAL_GPU_UUID"
+            ),
+            "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+            "declared_visible_device_count": os.environ.get(
+                "LOO_CANONICAL_VISIBLE_DEVICE_COUNT"
+            ),
+            "tensor_parallel_size": 1,
+        },
         "prompt_template": {
             "version": PROMPT_TEMPLATE_VERSION,
             "template_sha256": sha256_text(_PROMPT_TEMPLATE),
         },
+        "system_prompt": {
+            "version": SYSTEM_PROMPT_VERSION,
+            "sha256": sha256_text(
+                build_indicator_analysis_system_prompt(
+                    config.requested_max_output_tokens
+                )
+            ),
+            "requested_max_output_tokens": (config.requested_max_output_tokens),
+            "hard_max_new_tokens": config.max_new_tokens,
+        },
         "decoding": asdict(config),
         "inputs": fingerprints_before,
         "ledger_provenance": provenance_binding,
+        "completion_validation": {
+            "policy": "bounded-token-limit-errors-v1",
+            "max_token_limit_errors": config.max_token_limit_errors,
+            "observed_token_limit_error_count": len(completion_errors),
+            "passed_count": passed_completion_count,
+            "not_evaluated_count": not_evaluated_count,
+            "errors": completion_errors,
+        },
         "inventory": {
             "row_count": len(bound_results),
             "meeting_count": len(meeting_ids),
@@ -1056,9 +1166,7 @@ def run_indicator_analysis_generation(
             "indicator_roster": roster,
             "population_id": population_id,
             "population_dates": population_dates,
-            "source_inventory_sha256": sha256_text(
-                _canonical_json(source_inventory)
-            ),
+            "source_inventory_sha256": sha256_text(_canonical_json(source_inventory)),
             "rows": artifact_inventory,
         },
         "output": output_fingerprint,
@@ -1109,6 +1217,35 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=DEFAULT_MAX_NEW_TOKENS,
+        help=(
+            "Technical generation stop limit. The system prompt requests a "
+            "smaller response limit to retain overflow tolerance."
+        ),
+    )
+    parser.add_argument(
+        "--requested-max-output-tokens",
+        type=int,
+        default=DEFAULT_REQUESTED_MAX_OUTPUT_TOKENS,
+        help=("Maximum response length requested in the analysis system prompt."),
+    )
+    parser.add_argument(
+        "--max-model-len",
+        type=int,
+        default=DEFAULT_MAX_MODEL_LEN,
+    )
+    parser.add_argument(
+        "--max-token-limit-errors",
+        type=int,
+        default=DEFAULT_MAX_TOKEN_LIMIT_ERRORS,
+        help=(
+            "Allow at most this many otherwise-valid analysis rows whose "
+            "finish reason is a token limit; maximum supported value is 2."
+        ),
+    )
     return parser
 
 
@@ -1127,6 +1264,10 @@ def main() -> None:
         decoding=IndicatorAnalysisDecoding(
             seed=args.seed,
             batch_size=args.batch_size,
+            max_new_tokens=args.max_new_tokens,
+            requested_max_output_tokens=(args.requested_max_output_tokens),
+            max_model_len=args.max_model_len,
+            max_token_limit_errors=args.max_token_limit_errors,
         ),
     )
     print(

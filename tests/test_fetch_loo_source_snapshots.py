@@ -1,8 +1,10 @@
 import hashlib
+import io
 import json
 import tempfile
 import threading
 import unittest
+import zipfile
 from datetime import date, timedelta
 from pathlib import Path
 from unittest.mock import patch
@@ -14,6 +16,7 @@ from jobs.main.fetch_loo_source_snapshots import (
     SnapshotRequest,
     SourceSeries,
     _download_with_retry,
+    _normalise_alfred_response,
     build_snapshot_requests,
     fetch_source_snapshots,
     load_source_registry,
@@ -59,6 +62,14 @@ def _csv_for_request(request: SnapshotRequest) -> bytes:
     return (
         ",".join(header) + "\n" + ",".join([observation_date, *values]) + "\n"
     ).encode("utf-8")
+
+
+def _zip_response(members: dict[str, str]) -> bytes:
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for name, content in members.items():
+            archive.writestr(name, content)
+    return output.getvalue()
 
 
 def _registry_payload() -> dict:
@@ -221,6 +232,103 @@ class TestCsvValidation(unittest.TestCase):
 
         with self.assertRaisesRegex(SnapshotFetchError, "equal lengths"):
             validate_alfred_csv(_csv_for_request(valid), request)
+
+
+class TestZipNormalization(unittest.TestCase):
+    def test_merges_exact_vintage_partition_in_requested_order(self):
+        request = _request()
+        body = _zip_response(
+            {
+                "README.txt": "ALFRED export\n",
+                "quarterly.csv": (
+                    "observation_date,TEST_20240130\n"
+                    "2023-01-01,1.25\n"
+                    "2024-01-01,2.50\n"
+                ),
+                "quarterly,_end_of_period.csv": (
+                    "observation_date,TEST_20240319\n"
+                    "2023-01-01,3.25\n"
+                    "2024-01-01,4.50\n"
+                ),
+            }
+        )
+
+        normalized, original, transport = _normalise_alfred_response(
+            HttpResult(200, {"content-type": "application/zip"}, body),
+            request,
+        )
+
+        self.assertEqual(original, body)
+        self.assertEqual(normalized.headers["content-type"], "application/csv")
+        self.assertEqual(
+            normalized.body.decode(),
+            (
+                "observation_date,TEST_20240130,TEST_20240319\n"
+                "2023-01-01,1.25,3.25\n"
+                "2024-01-01,2.50,4.50\n"
+            ),
+        )
+        self.assertEqual(
+            transport["normalization"],
+            "alfred-partitioned-csv-zip-to-csv-v1",
+        )
+        self.assertEqual(
+            [member["name"] for member in transport["members"]],
+            ["quarterly.csv", "quarterly,_end_of_period.csv"],
+        )
+
+    def test_rejects_duplicate_vintage_column_across_members(self):
+        request = _request()
+        body = _zip_response(
+            {
+                "first.csv": (
+                    "observation_date,TEST_20240130\n2023-01-01,1\n"
+                ),
+                "second.csv": (
+                    "observation_date,TEST_20240130,TEST_20240319\n"
+                    "2023-01-01,2,3\n"
+                ),
+            }
+        )
+
+        with self.assertRaisesRegex(SnapshotFetchError, "duplicate"):
+            _normalise_alfred_response(
+                HttpResult(200, {"content-type": "application/zip"}, body),
+                request,
+            )
+
+    def test_rejects_path_traversal_member(self):
+        request = _request()
+        body = _zip_response(
+            {
+                "../quarterly.csv": (
+                    "observation_date,TEST_20240130,TEST_20240319\n"
+                    "2023-01-01,1,2\n"
+                )
+            }
+        )
+
+        with self.assertRaisesRegex(SnapshotFetchError, "unsafe"):
+            _normalise_alfred_response(
+                HttpResult(200, {"content-type": "application/zip"}, body),
+                request,
+            )
+
+    def test_rejects_missing_requested_vintage_column(self):
+        request = _request()
+        body = _zip_response(
+            {
+                "quarterly.csv": (
+                    "observation_date,TEST_20240130\n2023-01-01,1\n"
+                )
+            }
+        )
+
+        with self.assertRaisesRegex(SnapshotFetchError, "missing"):
+            _normalise_alfred_response(
+                HttpResult(200, {"content-type": "application/zip"}, body),
+                request,
+            )
 
 
 class _NoOpLimiter:

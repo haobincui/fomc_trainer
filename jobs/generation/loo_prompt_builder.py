@@ -33,6 +33,12 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Protocol
 
+from open_r1.minutes_prompt import (
+    CANONICAL_MINUTES_PROMPT_SPEC,
+    MINUTES_REQUESTED_MAX_OUTPUT_TOKENS,
+    MinutesPromptSpec,
+    load_minutes_prompt_config,
+)
 from open_r1.provenance import fingerprint_artifact_path, sha256_file, sha256_text
 from open_r1.validator.intervention import (
     has_line_block_boundaries,
@@ -43,7 +49,7 @@ from open_r1.validator.intervention import (
 
 
 PROMPT_ROW_SCHEMA_VERSION = "loo-prompt-row-v1"
-PROMPT_MANIFEST_SCHEMA_VERSION = "loo-prompt-manifest-v1"
+PROMPT_MANIFEST_SCHEMA_VERSION = "loo-prompt-manifest-v2"
 INTERVENTION_MANIFEST_SCHEMA_VERSION = "loo-intervention-v2"
 NEUTRAL_MANIFEST_SCHEMA_VERSION = "loo-neutral-intervention-v1"
 SOURCE_ROSTER_SCHEMA_VERSION = "loo-intervention-roster-v1"
@@ -93,6 +99,15 @@ class TokenizerLike(Protocol):
     """The minimal tokenizer interface used by the prompt builder."""
 
     def encode(self, text: str, *, add_special_tokens: bool = False) -> list[int]:
+        ...
+
+    def apply_chat_template(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        tokenize: bool,
+        add_generation_prompt: bool,
+    ) -> list[int]:
         ...
 
 
@@ -503,6 +518,34 @@ def _token_count(tokenizer: TokenizerLike, text: str) -> int:
     return len(token_ids)
 
 
+def _chat_prompt_token_count(
+    tokenizer: TokenizerLike,
+    *,
+    prompt: str,
+    system_prompt: str,
+) -> int:
+    apply_chat_template = getattr(tokenizer, "apply_chat_template", None)
+    if not callable(apply_chat_template):
+        raise TypeError(
+            "Canonical prompt budgeting requires tokenizer.apply_chat_template"
+        )
+    token_ids = apply_chat_template(
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt},
+        ],
+        tokenize=True,
+        add_generation_prompt=True,
+    )
+    if not isinstance(token_ids, (list, tuple)):
+        raise TypeError(
+            "Tokenizer.apply_chat_template must return a list or tuple of token IDs"
+        )
+    if not token_ids:
+        raise ValueError("Chat template produced an empty prompt token sequence")
+    return len(token_ids)
+
+
 def _candidate_k_values(
     count_for_k: Any,
     *,
@@ -604,7 +647,26 @@ def _make_prompt_row(
     indicator: str,
     prompt: str,
     tokenizer: TokenizerLike,
+    minutes_prompt_spec: MinutesPromptSpec,
+    experiment_config_binding: dict[str, Any] | None,
+    minutes_max_new_tokens: int,
+    minutes_max_model_len: int,
 ) -> dict[str, Any]:
+    chat_prompt_token_count = _chat_prompt_token_count(
+        tokenizer,
+        prompt=prompt,
+        system_prompt=minutes_prompt_spec.text,
+    )
+    requested_total = chat_prompt_token_count + minutes_max_new_tokens
+    if requested_total > minutes_max_model_len:
+        raise ValueError(
+            "Canonical Minutes prompt exceeds the frozen context budget: "
+            f"sample_id={sample_id!r}, arm={arm!r}, indicator={indicator!r}, "
+            f"chat_prompt_tokens={chat_prompt_token_count}, "
+            f"max_new_tokens={minutes_max_new_tokens}, "
+            f"max_model_len={minutes_max_model_len}, "
+            f"overflow={requested_total - minutes_max_model_len}"
+        )
     return {
         "schema_version": PROMPT_ROW_SCHEMA_VERSION,
         "sample_id": sample_id,
@@ -619,6 +681,20 @@ def _make_prompt_row(
         "prompt": prompt,
         "prompt_sha256": sha256_text(prompt),
         "prompt_token_count_no_special_tokens": _token_count(tokenizer, prompt),
+        "prompt_token_count_chat_template": chat_prompt_token_count,
+        "context_headroom_tokens": minutes_max_model_len - requested_total,
+        "generation_system_prompt_version": minutes_prompt_spec.version,
+        "generation_system_prompt_sha256": minutes_prompt_spec.sha256,
+        "generation_requested_max_output_tokens": (
+            minutes_prompt_spec.requested_max_output_tokens
+        ),
+        "generation_hard_max_new_tokens": minutes_prompt_spec.hard_max_new_tokens,
+        "generation_max_model_len": minutes_prompt_spec.max_model_len,
+        "experiment_config_sha256": (
+            None
+            if experiment_config_binding is None
+            else experiment_config_binding["sha256"]
+        ),
     }
 
 
@@ -688,9 +764,17 @@ def build_canonical_loo_prompts(
     tokenizer: TokenizerLike,
     tokenizer_artifact: dict[str, Any],
     output_dir: str | Path,
-    analysis_text_field: str = "generated",
+    analysis_text_field: str = "minutes_analysis",
     population_id: str | None = None,
     prompt_template_file: str | Path | None = None,
+    minutes_max_new_tokens: int = 8192,
+    minutes_max_model_len: int = 16384,
+    minutes_system_prompt: str | None = None,
+    minutes_requested_max_output_tokens: int = (
+        MINUTES_REQUESTED_MAX_OUTPUT_TOKENS
+    ),
+    minutes_system_prompt_version: str | None = None,
+    experiment_config_file: str | Path | None = None,
 ) -> dict[str, Any]:
     """Build and freeze exact-delete and token-matched neutral prompt artifacts."""
 
@@ -700,6 +784,74 @@ def build_canonical_loo_prompts(
     population_path = Path(population_file).expanduser().resolve()
     destination = Path(output_dir).expanduser().resolve()
     tokenizer_fingerprint = _validate_tokenizer_artifact(tokenizer_artifact)
+    if (
+        isinstance(minutes_max_new_tokens, bool)
+        or not isinstance(minutes_max_new_tokens, int)
+        or minutes_max_new_tokens <= 0
+        or isinstance(minutes_max_model_len, bool)
+        or not isinstance(minutes_max_model_len, int)
+        or minutes_max_model_len <= minutes_max_new_tokens
+    ):
+        raise ValueError("Invalid frozen Minutes context budget")
+    experiment_config_binding: dict[str, Any] | None = None
+    scoped_experiment: dict[str, Any] | None = None
+    if experiment_config_file is not None:
+        if minutes_system_prompt is not None or minutes_system_prompt_version is not None:
+            raise ValueError(
+                "--experiment-config cannot be combined with an ad hoc Minutes "
+                "system prompt"
+            )
+        minutes_prompt_spec, experiment_config_binding, scoped_experiment = (
+            load_minutes_prompt_config(experiment_config_file)
+        )
+        if (
+            minutes_max_new_tokens != minutes_prompt_spec.hard_max_new_tokens
+            or minutes_max_model_len != minutes_prompt_spec.max_model_len
+            or minutes_requested_max_output_tokens
+            != minutes_prompt_spec.requested_max_output_tokens
+        ):
+            raise ValueError(
+                "Prompt-builder token limits differ from the scoped experiment "
+                "Minutes prompt contract"
+            )
+    elif minutes_system_prompt is None:
+        minutes_prompt_spec = CANONICAL_MINUTES_PROMPT_SPEC
+        if (
+            minutes_max_new_tokens != minutes_prompt_spec.hard_max_new_tokens
+            or minutes_max_model_len != minutes_prompt_spec.max_model_len
+            or minutes_requested_max_output_tokens
+            != minutes_prompt_spec.requested_max_output_tokens
+        ):
+            raise ValueError(
+                "Canonical Minutes prompt requires the frozen 4096/8192/16384 "
+                "requested/hard/context limits"
+            )
+    else:
+        if not isinstance(minutes_system_prompt, str) or not minutes_system_prompt.strip():
+            raise ValueError("minutes_system_prompt must be a non-empty string")
+        if (
+            isinstance(minutes_requested_max_output_tokens, bool)
+            or not isinstance(minutes_requested_max_output_tokens, int)
+            or minutes_requested_max_output_tokens <= 0
+        ):
+            raise ValueError("Invalid requested Minutes output limit")
+        explicit_requested_max_output_tokens = min(
+            minutes_requested_max_output_tokens,
+            minutes_max_new_tokens,
+        )
+        minutes_prompt_spec = MinutesPromptSpec(
+            version=(
+                minutes_system_prompt_version
+                or "explicit-unscoped-minutes-prompt-v1"
+            ),
+            text=minutes_system_prompt,
+            sha256=sha256_text(minutes_system_prompt),
+            requested_max_output_tokens=explicit_requested_max_output_tokens,
+            hard_max_new_tokens=minutes_max_new_tokens,
+            max_model_len=minutes_max_model_len,
+            input_truncation="forbidden",
+            token_limit_policy="error",
+        )
 
     population_id_value, meeting_dates = _load_population(
         population_path,
@@ -714,6 +866,45 @@ def build_canonical_loo_prompts(
     source_roster = _load_indicator_roster(indicator_path)
     indicators = list(source_roster["indicators"])
     markers = dict(source_roster["indicator_markers"])
+    if scoped_experiment is not None:
+        expected_population = scoped_experiment.get("populations", {}).get(
+            population_id_value
+        )
+        scope_mismatches: dict[str, Any] = {}
+        if scoped_experiment.get("baseline_indicator") != BASELINE_INDICATOR:
+            scope_mismatches["baseline_indicator"] = {
+                "expected": BASELINE_INDICATOR,
+                "observed": scoped_experiment.get("baseline_indicator"),
+            }
+        if scoped_experiment.get("full_context_roster_id") != source_roster.get("roster_id"):
+            scope_mismatches["full_context_roster_id"] = {
+                "expected": source_roster.get("roster_id"),
+                "observed": scoped_experiment.get("full_context_roster_id"),
+            }
+        if scoped_experiment.get("full_context_indicators") != indicators:
+            scope_mismatches["full_context_indicators"] = {
+                "expected": indicators,
+                "observed": scoped_experiment.get("full_context_indicators"),
+            }
+        if not isinstance(expected_population, dict) or expected_population.get(
+            "meeting_dates"
+        ) != meeting_dates:
+            scope_mismatches["population"] = {
+                "expected": {"population_id": population_id_value, "meeting_dates": meeting_dates},
+                "observed": expected_population,
+            }
+        if scoped_experiment.get("section_names") != [
+            section.family for section in sections
+        ]:
+            scope_mismatches["section_names"] = {
+                "expected": [section.family for section in sections],
+                "observed": scoped_experiment.get("section_names"),
+            }
+        if scope_mismatches:
+            raise ValueError(
+                "Prompt inputs differ from the scoped experiment: "
+                f"{scope_mismatches}"
+            )
     analysis_blocks = _load_analysis_blocks(
         analysis_path,
         analysis_text_field=analysis_text_field,
@@ -802,6 +993,10 @@ def build_canonical_loo_prompts(
                 indicator=BASELINE_INDICATOR,
                 prompt=full_prompt,
                 tokenizer=tokenizer,
+                minutes_prompt_spec=minutes_prompt_spec,
+                experiment_config_binding=experiment_config_binding,
+                minutes_max_new_tokens=minutes_max_new_tokens,
+                minutes_max_model_len=minutes_max_model_len,
             )
             exact_rows[BASELINE_INDICATOR].append(full_row)
             neutral_rows[BASELINE_INDICATOR].append(dict(full_row))
@@ -874,6 +1069,10 @@ def build_canonical_loo_prompts(
                     indicator=rendered.indicator,
                     prompt=delete_prompt,
                     tokenizer=tokenizer,
+                    minutes_prompt_spec=minutes_prompt_spec,
+                    experiment_config_binding=experiment_config_binding,
+                    minutes_max_new_tokens=minutes_max_new_tokens,
+                    minutes_max_model_len=minutes_max_model_len,
                 )
                 exact_rows[rendered.indicator].append(delete_row)
                 deletion_proofs[(rendered.indicator, sample_id)] = {
@@ -932,6 +1131,10 @@ def build_canonical_loo_prompts(
                     indicator=rendered.indicator,
                     prompt=neutral_prompt,
                     tokenizer=tokenizer,
+                    minutes_prompt_spec=minutes_prompt_spec,
+                    experiment_config_binding=experiment_config_binding,
+                    minutes_max_new_tokens=minutes_max_new_tokens,
+                    minutes_max_model_len=minutes_max_model_len,
                 )
                 neutral_rows[rendered.indicator].append(neutral_row)
                 neutral_proof = {
@@ -1096,6 +1299,18 @@ def build_canonical_loo_prompts(
     }
     neutral_manifest_text = _json_text(neutral_manifest)
     ledger_text = _jsonl_text(ledger_rows)
+    budget_rows = [
+        row
+        for rows_by_indicator in (exact_rows, neutral_rows)
+        for rows in rows_by_indicator.values()
+        for row in rows
+    ]
+    chat_token_counts = [
+        int(row["prompt_token_count_chat_template"]) for row in budget_rows
+    ]
+    context_headrooms = [
+        int(row["context_headroom_tokens"]) for row in budget_rows
+    ]
 
     prompt_manifest = {
         "schema_version": PROMPT_MANIFEST_SCHEMA_VERSION,
@@ -1117,6 +1332,27 @@ def build_canonical_loo_prompts(
         "indicators": indicators,
         "block_order": indicators,
         "analysis_text_field": analysis_text_field,
+        "minutes_system_prompt": minutes_prompt_spec.as_dict(),
+        "experiment_config": experiment_config_binding,
+        "context_budget": {
+            "policy": "exact-chat-template-no-truncation-v1",
+            "system_prompt_version": minutes_prompt_spec.version,
+            "system_prompt_sha256": minutes_prompt_spec.sha256,
+            "requested_max_output_tokens": (
+                minutes_prompt_spec.requested_max_output_tokens
+            ),
+            "token_count_policy": (
+                "tokenizer.apply_chat_template(tokenize=True,"
+                "add_generation_prompt=True)"
+            ),
+            "max_new_tokens": minutes_max_new_tokens,
+            "max_model_len": minutes_max_model_len,
+            "audited_prompt_row_count": len(budget_rows),
+            "maximum_chat_prompt_tokens": max(chat_token_counts),
+            "minimum_context_headroom_tokens": min(context_headrooms),
+            "all_rows_fit": True,
+            "input_truncation": "forbidden",
+        },
         "prompt_template": {
             "source": template_source,
             "sha256": sha256_text(template),
@@ -1145,6 +1381,17 @@ def build_canonical_loo_prompts(
                 "path": str(population_path),
                 "sha256": sha256_file(population_path),
             },
+            *(
+                []
+                if experiment_config_binding is None
+                else [
+                    {
+                        "role": "experiment_config",
+                        "path": experiment_config_binding["path"],
+                        "sha256": experiment_config_binding["sha256"],
+                    }
+                ]
+            ),
         ],
         "forbidden_target_reference_fields": sorted(FORBIDDEN_TARGET_FIELDS),
         "counts": {
@@ -1215,8 +1462,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--tokenizer", required=True)
     parser.add_argument("--output-dir", required=True)
-    parser.add_argument("--analysis-field", default="generated")
+    parser.add_argument("--analysis-field", default="minutes_analysis")
     parser.add_argument("--prompt-template")
+    parser.add_argument("--minutes-max-new-tokens", type=int, default=8192)
+    parser.add_argument("--minutes-max-model-len", type=int, default=16384)
+    parser.add_argument(
+        "--minutes-requested-max-output-tokens",
+        type=int,
+        default=4096,
+    )
+    parser.add_argument(
+        "--experiment-config",
+        help=(
+            "Scoped experiment JSON containing the frozen Minutes system-prompt "
+            "contract. Canonical scoped runs must provide this option."
+        ),
+    )
     return parser
 
 
@@ -1246,6 +1507,12 @@ def main(argv: list[str] | None = None) -> int:
         analysis_text_field=args.analysis_field,
         population_id=args.population_id,
         prompt_template_file=args.prompt_template,
+        minutes_max_new_tokens=args.minutes_max_new_tokens,
+        minutes_max_model_len=args.minutes_max_model_len,
+        minutes_requested_max_output_tokens=(
+            args.minutes_requested_max_output_tokens
+        ),
+        experiment_config_file=args.experiment_config,
     )
     print(
         json.dumps(

@@ -15,6 +15,25 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from jobs.generation.canonical_indicator_analysis import (
+    SYSTEM_PROMPT_VERSION,
+    build_indicator_analysis_system_prompt,
+)
+from jobs.generation.project_indicator_analysis import (
+    OUTPUT_FIELD as PROJECTION_OUTPUT_FIELD,
+    PROJECTION_POLICY,
+    PROJECTION_ROW_SCHEMA_VERSION,
+    PROJECTION_SCHEMA_VERSION,
+    SOURCE_FIELD as PROJECTION_SOURCE_FIELD,
+    THINK_DELIMITER,
+    canonical_row_sha256,
+    extract_minutes_analysis,
+)
+from open_r1.generate import get_system_prompt
+from open_r1.minutes_prompt import (
+    load_minutes_prompt_config,
+    validate_minutes_prompt_spec,
+)
 from open_r1.provenance import (
     sha256_file,
     sha256_text,
@@ -29,8 +48,13 @@ from open_r1.validator.loo_generation_spec import (
 
 
 RELEASE_SCHEMA_VERSION = "canonical-loo-generation-release-v1"
-ANALYSIS_SCHEMA_VERSION = "indicator-analysis-generation-v1"
-PROMPT_SCHEMA_VERSION = "loo-prompt-manifest-v1"
+ANALYSIS_SCHEMA_VERSIONS = frozenset(
+    {
+        "indicator-analysis-generation-v1",
+        "indicator-analysis-generation-v2",
+    }
+)
+PROMPT_SCHEMA_VERSION = "loo-prompt-manifest-v2"
 GENERATION_SCHEMA_VERSION = "loo-generation-v4"
 SAMPLE_SEED_POLICY = "sample-id-sha256-v1"
 DELETION_STRATEGY = "indicator_block_deletion"
@@ -129,9 +153,7 @@ def _read_jsonl(path: Path, *, label: str) -> list[dict[str, Any]]:
                     f"Invalid JSON in {label} {path}:{line_number}: {exc}"
                 ) from exc
             if not isinstance(row, dict):
-                raise ValueError(
-                    f"{label} row {line_number} must be a JSON object"
-                )
+                raise ValueError(f"{label} row {line_number} must be a JSON object")
             rows.append(row)
     if not rows:
         raise ValueError(f"{label} contains no rows: {path}")
@@ -156,6 +178,21 @@ def _resolve_within(
 
 def _relative_to_run_root(path: Path, run_root: Path) -> str:
     return path.resolve().relative_to(run_root).as_posix()
+
+
+def _release_path(path: Path, run_root: Path) -> str:
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(run_root).as_posix()
+    except ValueError:
+        return str(resolved)
+
+
+def _resolve_artifact_path(path: str | Path, *, base: Path) -> Path:
+    candidate = Path(path).expanduser()
+    if not candidate.is_absolute():
+        candidate = base / candidate
+    return candidate.resolve()
 
 
 def _require_digest(value: Any, *, label: str) -> str:
@@ -198,10 +235,10 @@ def _validate_analysis(
     spec: Mapping[str, Any],
 ) -> dict[str, Any]:
     manifest = _read_json(manifest_path, label="analysis manifest")
-    if manifest.get("schema_version") != ANALYSIS_SCHEMA_VERSION:
+    analysis_schema_version = manifest.get("schema_version")
+    if analysis_schema_version not in ANALYSIS_SCHEMA_VERSIONS:
         raise ValueError(
-            f"Unsupported analysis manifest schema: "
-            f"{manifest.get('schema_version')!r}"
+            f"Unsupported analysis manifest schema: {analysis_schema_version!r}"
         )
     if manifest.get("status") != "complete":
         raise ValueError("Analysis manifest status must be 'complete'")
@@ -222,18 +259,14 @@ def _validate_analysis(
         or not isinstance(inventory, Mapping)
         or not isinstance(inputs, Mapping)
     ):
-        raise ValueError(
-            "Analysis manifest lacks input, output, or inventory metadata"
-        )
+        raise ValueError("Analysis manifest lacks input, output, or inventory metadata")
     analysis_model = inputs.get("model")
     analysis_tokenizer = inputs.get("tokenizer")
     if not isinstance(analysis_model, Mapping) or not isinstance(
         analysis_tokenizer,
         Mapping,
     ):
-        raise ValueError(
-            "Analysis manifest lacks model/tokenizer fingerprints"
-        )
+        raise ValueError("Analysis manifest lacks model/tokenizer fingerprints")
     frozen_artifacts = spec.get("frozen_artifacts", {})
     frozen_model_hashes = {
         str(entry.get("sha256"))
@@ -309,10 +342,8 @@ def _validate_analysis(
             raise ValueError(
                 f"Analysis ledger provenance differs from its inputs: {mismatches}"
             )
-    output_path = _resolve_within(
-        run_root,
+    output_path = _resolve_artifact_path(
         str(output.get("path") or ""),
-        label="analysis output",
         base=manifest_path.parent,
     )
     output_sha256 = _assert_file_hash(
@@ -337,16 +368,178 @@ def _validate_analysis(
         raise ValueError(
             "Analysis inventory row list does not match analysis output count"
         )
+    if analysis_schema_version == "indicator-analysis-generation-v2":
+        completion_validation = manifest.get("completion_validation")
+        if not isinstance(completion_validation, Mapping):
+            raise ValueError("Analysis v2 manifest lacks completion_validation")
+        configured_analysis = (
+            spec.get("generation_config", {})
+            .get("decoding", {})
+            .get("indicator_analysis", {})
+        )
+        if not isinstance(configured_analysis, Mapping):
+            raise ValueError("Generation spec lacks indicator_analysis decoding policy")
+        configured_hard_limit = configured_analysis.get("max_new_tokens")
+        configured_requested_limit = configured_analysis.get(
+            "requested_max_output_tokens"
+        )
+        if (
+            isinstance(configured_hard_limit, bool)
+            or not isinstance(configured_hard_limit, int)
+            or configured_hard_limit <= 0
+            or isinstance(configured_requested_limit, bool)
+            or not isinstance(configured_requested_limit, int)
+            or configured_requested_limit <= 0
+            or configured_requested_limit > configured_hard_limit
+        ):
+            raise ValueError(
+                "Generation spec has invalid indicator-analysis hard and "
+                "requested output limits"
+            )
+        system_prompt = manifest.get("system_prompt")
+        if not isinstance(system_prompt, Mapping):
+            raise ValueError("Analysis v2 manifest lacks system_prompt")
+        expected_system_prompt_sha256 = sha256_text(
+            build_indicator_analysis_system_prompt(configured_requested_limit)
+        )
+        declared_system_prompt_sha256 = validate_sha256(
+            system_prompt.get("sha256"),
+            label="analysis system_prompt.sha256",
+        )
+        if (
+            system_prompt.get("version") != SYSTEM_PROMPT_VERSION
+            or declared_system_prompt_sha256 != expected_system_prompt_sha256
+            or system_prompt.get("requested_max_output_tokens")
+            != configured_requested_limit
+            or system_prompt.get("hard_max_new_tokens") != configured_hard_limit
+        ):
+            raise ValueError(
+                "Analysis system prompt or output limits differ from the "
+                "frozen generation config"
+            )
+        configured_error_limit = configured_analysis.get("max_token_limit_errors")
+        configured_invariant = (
+            spec.get("generation_config", {})
+            .get("invariants", {})
+            .get("indicator_analysis_token_limit_finish", {})
+        )
+        if (
+            not isinstance(configured_invariant, Mapping)
+            or configured_invariant.get("policy") != "bounded-token-limit-errors-v1"
+            or configured_invariant.get("max_errors") != configured_error_limit
+        ):
+            raise ValueError(
+                "Generation spec has an inconsistent indicator-analysis "
+                "token-limit policy"
+            )
+        declared_error_limit = completion_validation.get("max_token_limit_errors")
+        if (
+            completion_validation.get("policy") != "bounded-token-limit-errors-v1"
+            or isinstance(declared_error_limit, bool)
+            or not isinstance(declared_error_limit, int)
+            or not 0 <= declared_error_limit <= 2
+            or declared_error_limit != configured_error_limit
+        ):
+            raise ValueError(
+                "Analysis completion error limit differs from the frozen "
+                "generation config"
+            )
+        declared_errors = completion_validation.get("errors")
+        if not isinstance(declared_errors, list):
+            raise ValueError("Analysis completion_validation.errors must be a list")
+        row_errors: list[dict[str, Any]] = []
+        passed_count = 0
+        for row in rows:
+            if (
+                row.get("generation_system_prompt_sha256")
+                != expected_system_prompt_sha256
+                or row.get("generation_requested_max_output_tokens")
+                != configured_requested_limit
+                or row.get("max_new_tokens") != configured_hard_limit
+            ):
+                raise ValueError(
+                    "Analysis row system prompt or output limits differ "
+                    "from the frozen generation config"
+                )
+            validation_status = row.get("generation_validation_status")
+            if validation_status == "passed":
+                passed_count += 1
+                if "generation_validation_error" in row:
+                    raise ValueError("Passed analysis row contains a validation error")
+                continue
+            if validation_status != "accepted_token_limit_error":
+                raise ValueError(
+                    "Analysis row has an unsupported generation validation "
+                    f"status: {validation_status!r}"
+                )
+            error = row.get("generation_validation_error")
+            if (
+                not isinstance(error, Mapping)
+                or error.get("sample_id") != row.get("sample_id")
+                or error.get("error_type") != "token_limit_finish"
+                or str(error.get("finish_reason") or "").strip().lower()
+                not in {"length", "max_length", "max_tokens"}
+                or error.get("finish_reason") != row.get("generation_finish_reason")
+                or row.get("input_was_truncated") is not False
+                or error.get("max_new_tokens")
+                != configured_analysis.get("max_new_tokens")
+            ):
+                raise ValueError(
+                    "Analysis row has an invalid recorded token-limit error"
+                )
+            row_errors.append(dict(error))
+        observed_error_count = len(row_errors)
+        if observed_error_count > declared_error_limit:
+            raise ValueError("Analysis token-limit errors exceed the frozen allowance")
+        expected_summary = {
+            "observed_token_limit_error_count": observed_error_count,
+            "passed_count": passed_count,
+            "not_evaluated_count": 0,
+        }
+        summary_mismatches = {
+            key: {
+                "expected": expected,
+                "observed": completion_validation.get(key),
+            }
+            for key, expected in expected_summary.items()
+            if completion_validation.get(key) != expected
+        }
+        if summary_mismatches or declared_errors != row_errors:
+            raise ValueError(
+                "Analysis completion validation summary differs from its "
+                f"rows: {summary_mismatches}"
+            )
+        completion_summary: dict[str, Any] = {
+            "schema_version": analysis_schema_version,
+            "policy": completion_validation.get("policy"),
+            "max_token_limit_errors": declared_error_limit,
+            **expected_summary,
+            "errors": row_errors,
+        }
+        system_prompt_summary: dict[str, Any] | None = {
+            "version": SYSTEM_PROMPT_VERSION,
+            "sha256": expected_system_prompt_sha256,
+            "requested_max_output_tokens": configured_requested_limit,
+            "hard_max_new_tokens": configured_hard_limit,
+        }
+    else:
+        completion_summary = {
+            "schema_version": analysis_schema_version,
+            "policy": "strict-legacy-v1",
+            "max_token_limit_errors": 0,
+            "observed_token_limit_error_count": 0,
+            "passed_count": len(rows),
+            "not_evaluated_count": 0,
+            "errors": [],
+        }
+        system_prompt_summary = None
     manifest_sha256 = sha256_file(manifest_path)
     _find_source_hash(spec, manifest_sha256, label="analysis manifest")
     _find_source_hash(spec, output_sha256, label="analysis output")
     return {
-        "manifest_relative_path": _relative_to_run_root(
-            manifest_path,
-            run_root,
-        ),
+        "manifest_relative_path": _release_path(manifest_path, run_root),
         "manifest_sha256": manifest_sha256,
-        "output_relative_path": _relative_to_run_root(output_path, run_root),
+        "output_relative_path": _release_path(output_path, run_root),
         "output_sha256": output_sha256,
         "row_count": len(rows),
         "run_id": manifest.get("run_id"),
@@ -354,6 +547,269 @@ def _validate_analysis(
         "model_sha256": analysis_model.get("sha256"),
         "tokenizer_sha256": analysis_tokenizer.get("sha256"),
         "ledger_provenance": ledger_provenance,
+        "system_prompt": system_prompt_summary,
+        "completion_validation": completion_summary,
+        "_manifest_path": str(manifest_path),
+        "_output_path": str(output_path),
+    }
+
+
+def _validate_projection(
+    *,
+    manifest_path: Path,
+    run_root: Path,
+    spec: Mapping[str, Any],
+    analysis: Mapping[str, Any],
+) -> dict[str, Any]:
+    manifest = _read_json(manifest_path, label="analysis projection manifest")
+    if manifest.get("schema_version") != PROJECTION_SCHEMA_VERSION:
+        raise ValueError(
+            "Unsupported analysis projection schema: "
+            f"{manifest.get('schema_version')!r}"
+        )
+    if (
+        manifest.get("status") != "complete"
+        or manifest.get("generation_performed") is not False
+        or manifest.get("truncation_performed") is not False
+        or manifest.get("summarization_performed") is not False
+    ):
+        raise ValueError(
+            "Analysis projection must be complete, deterministic, and perform "
+            "no generation, truncation, or summarization"
+        )
+
+    configured = spec.get("generation_config", {}).get("analysis_projection")
+    if not isinstance(configured, Mapping):
+        raise ValueError("Generation spec lacks the canonical analysis projection")
+    expected_config = {
+        "policy": PROJECTION_POLICY,
+        "source_field": PROJECTION_SOURCE_FIELD,
+        "output_field": PROJECTION_OUTPUT_FIELD,
+        "required_format": "deepseek_think_completion",
+        "delimiter": THINK_DELIMITER,
+        "required_delimiter_count": 1,
+        "allow_plain_text_fallback": False,
+        "require_nonempty_reasoning": True,
+        "require_nonempty_final_answer": True,
+        "truncation": "forbidden",
+        "secondary_generation": "forbidden",
+    }
+    config_mismatches = {
+        key: {"expected": value, "observed": configured.get(key)}
+        for key, value in expected_config.items()
+        if configured.get(key) != value
+    }
+    if config_mismatches:
+        raise ValueError(
+            "Frozen analysis projection policy is not canonical: "
+            f"{config_mismatches}"
+        )
+
+    policy = manifest.get("projection")
+    if not isinstance(policy, Mapping):
+        raise ValueError("Analysis projection manifest lacks projection policy")
+    expected_manifest_policy = {
+        "policy": PROJECTION_POLICY,
+        "required_format": "deepseek_think_completion",
+        "delimiter": THINK_DELIMITER,
+        "required_delimiter_count": 1,
+        "allow_plain_text_fallback": False,
+        "require_nonempty_reasoning": True,
+        "require_nonempty_final_answer": True,
+        "source_field": PROJECTION_SOURCE_FIELD,
+        "output_field": PROJECTION_OUTPUT_FIELD,
+    }
+    policy_mismatches = {
+        key: {"expected": value, "observed": policy.get(key)}
+        for key, value in expected_manifest_policy.items()
+        if policy.get(key) != value
+    }
+    if policy_mismatches:
+        raise ValueError(
+            f"Analysis projection manifest policy differs: {policy_mismatches}"
+        )
+
+    input_record = manifest.get("input")
+    input_manifest_record = manifest.get("input_analysis_manifest")
+    output_record = manifest.get("output")
+    inventory = manifest.get("inventory")
+    if not all(
+        isinstance(value, Mapping)
+        for value in (
+            input_record,
+            input_manifest_record,
+            output_record,
+            inventory,
+        )
+    ):
+        raise ValueError("Analysis projection manifest lacks artifact metadata")
+
+    input_path = _resolve_artifact_path(
+        str(input_record.get("path") or ""),
+        base=manifest_path.parent,
+    )
+    input_manifest_path = _resolve_artifact_path(
+        str(input_manifest_record.get("path") or ""),
+        base=manifest_path.parent,
+    )
+    if (
+        input_path != Path(str(analysis["_output_path"])).resolve()
+        or input_manifest_path != Path(str(analysis["_manifest_path"])).resolve()
+        or input_record.get("sha256") != analysis["output_sha256"]
+        or input_manifest_record.get("sha256") != analysis["manifest_sha256"]
+        or input_record.get("row_count") != analysis["row_count"]
+    ):
+        raise ValueError(
+            "Analysis projection is not bound to the validated raw analysis"
+        )
+
+    output_path = _resolve_within(
+        run_root,
+        str(output_record.get("path") or ""),
+        label="analysis projection output",
+        base=manifest_path.parent,
+    )
+    output_sha256 = _assert_file_hash(
+        output_path,
+        output_record.get("sha256"),
+        label="analysis projection output",
+    )
+    manifest_sha256 = sha256_file(manifest_path)
+    _find_source_hash(spec, manifest_sha256, label="analysis projection manifest")
+    _find_source_hash(spec, output_sha256, label="analysis projection output")
+
+    tokenizer_artifact = manifest.get("tokenizer_artifact")
+    frozen_tokenizers = spec.get("frozen_artifacts", {}).get("tokenizers", {})
+    minutes_tokenizer = (
+        frozen_tokenizers.get("minutes_tokenizer")
+        if isinstance(frozen_tokenizers, Mapping)
+        else None
+    )
+    if (
+        not isinstance(tokenizer_artifact, Mapping)
+        or not isinstance(minutes_tokenizer, Mapping)
+        or tokenizer_artifact.get("sha256") != minutes_tokenizer.get("sha256")
+    ):
+        raise ValueError(
+            "Analysis projection tokenizer differs from the frozen Minutes tokenizer"
+        )
+
+    raw_rows = _read_jsonl(input_path, label="raw analysis projection input")
+    projected_rows = _read_jsonl(output_path, label="analysis projection output")
+    if len(raw_rows) != len(projected_rows):
+        raise ValueError("Analysis projection row count differs from raw analysis")
+    if (
+        output_record.get("row_count") != len(projected_rows)
+        or inventory.get("row_count") != len(projected_rows)
+    ):
+        raise ValueError("Analysis projection declared row count is invalid")
+
+    expected_inventory: list[dict[str, Any]] = []
+    for position, (raw, projected) in enumerate(
+        zip(raw_rows, projected_rows, strict=True)
+    ):
+        source_text = raw.get(PROJECTION_SOURCE_FIELD)
+        reasoning, answer = extract_minutes_analysis(source_text)
+        source_text_sha256 = sha256_text(str(source_text))
+        if raw.get(f"{PROJECTION_SOURCE_FIELD}_sha256") != source_text_sha256:
+            raise ValueError(
+                f"Raw analysis row {position + 1} has an invalid generated hash"
+            )
+        answer_sha256 = sha256_text(answer)
+        token_count = projected.get(
+            f"{PROJECTION_OUTPUT_FIELD}_token_count_no_special_tokens"
+        )
+        if (
+            isinstance(token_count, bool)
+            or not isinstance(token_count, int)
+            or token_count <= 0
+        ):
+            raise ValueError(
+                f"Analysis projection row {position + 1} has invalid token count"
+            )
+        expected_row = {
+            "schema_version": PROJECTION_ROW_SCHEMA_VERSION,
+            "projection_position": position,
+            "sample_id": str(raw.get("sample_id") or "").strip(),
+            "meeting_date": str(raw.get("meeting_date") or "").strip(),
+            "indicator": str(raw.get("indicator") or "").strip(),
+            "source_field": PROJECTION_SOURCE_FIELD,
+            "source_row_sha256": canonical_row_sha256(raw),
+            "source_text_sha256": source_text_sha256,
+            PROJECTION_OUTPUT_FIELD: answer,
+            f"{PROJECTION_OUTPUT_FIELD}_sha256": answer_sha256,
+            f"{PROJECTION_OUTPUT_FIELD}_token_count_no_special_tokens": token_count,
+        }
+        if projected != expected_row:
+            raise ValueError(
+                "Projected analysis row differs from deterministic re-extraction "
+                f"at position {position}"
+            )
+        expected_inventory.append(
+            {
+                "projection_position": position,
+                "sample_id": expected_row["sample_id"],
+                "meeting_date": expected_row["meeting_date"],
+                "indicator": expected_row["indicator"],
+                "source_row_sha256": expected_row["source_row_sha256"],
+                "source_text_sha256": source_text_sha256,
+                "reasoning_sha256": sha256_text(reasoning),
+                f"{PROJECTION_OUTPUT_FIELD}_sha256": answer_sha256,
+                f"{PROJECTION_OUTPUT_FIELD}_token_count_no_special_tokens": (
+                    token_count
+                ),
+            }
+        )
+    if inventory.get("rows") != expected_inventory:
+        raise ValueError(
+            "Analysis projection inventory differs from deterministic re-extraction"
+        )
+    projected_token_counts = [
+        int(
+            row[
+                f"{PROJECTION_OUTPUT_FIELD}_token_count_no_special_tokens"
+            ]
+        )
+        for row in expected_inventory
+    ]
+    expected_inventory_summary = {
+        "meeting_count": len(
+            {str(row["meeting_date"]) for row in expected_inventory}
+        ),
+        "indicator_count": len(
+            {str(row["indicator"]) for row in expected_inventory}
+        ),
+        "minimum_final_answer_tokens": min(projected_token_counts),
+        "maximum_final_answer_tokens": max(projected_token_counts),
+    }
+    inventory_mismatches = {
+        key: {"expected": value, "observed": inventory.get(key)}
+        for key, value in expected_inventory_summary.items()
+        if inventory.get(key) != value
+    }
+    if inventory_mismatches:
+        raise ValueError(
+            "Analysis projection inventory summary differs from rows: "
+            f"{inventory_mismatches}"
+        )
+
+    return {
+        "manifest_relative_path": _relative_to_run_root(manifest_path, run_root),
+        "manifest_sha256": manifest_sha256,
+        "output_relative_path": _relative_to_run_root(output_path, run_root),
+        "output_sha256": output_sha256,
+        "row_count": len(projected_rows),
+        "policy": PROJECTION_POLICY,
+        "source_field": PROJECTION_SOURCE_FIELD,
+        "output_field": PROJECTION_OUTPUT_FIELD,
+        "tokenizer_sha256": tokenizer_artifact.get("sha256"),
+        "minimum_final_answer_tokens": inventory.get(
+            "minimum_final_answer_tokens"
+        ),
+        "maximum_final_answer_tokens": inventory.get(
+            "maximum_final_answer_tokens"
+        ),
+        "_output_path": str(output_path),
     }
 
 
@@ -378,16 +834,12 @@ def _validate_prompt_rows(
         sample_id = str(row.get("sample_id") or "").strip()
         prompt = row.get("prompt")
         if not sample_id or not isinstance(prompt, str) or not prompt:
-            raise ValueError(
-                f"{label} row {row_number} lacks sample_id or prompt"
-            )
+            raise ValueError(f"{label} row {row_number} lacks sample_id or prompt")
         if sample_id in by_sample:
             raise ValueError(f"{label} contains duplicate sample_id {sample_id!r}")
         prompt_digest = sha256_text(prompt)
         if row.get("prompt_sha256") not in {None, prompt_digest}:
-            raise ValueError(
-                f"{label} has an invalid prompt_sha256 for {sample_id!r}"
-            )
+            raise ValueError(f"{label} has an invalid prompt_sha256 for {sample_id!r}")
         by_sample[sample_id] = row
     return by_sample
 
@@ -424,13 +876,12 @@ def _validate_prompts(
     manifest_path: Path,
     run_root: Path,
     spec: Mapping[str, Any],
-    analysis: Mapping[str, Any],
+    projection: Mapping[str, Any],
 ) -> tuple[dict[str, Any], dict[str, dict[str, dict[str, Any]]]]:
     manifest = _read_json(manifest_path, label="prompt manifest")
     if manifest.get("schema_version") != PROMPT_SCHEMA_VERSION:
         raise ValueError(
-            f"Unsupported prompt manifest schema: "
-            f"{manifest.get('schema_version')!r}"
+            f"Unsupported prompt manifest schema: {manifest.get('schema_version')!r}"
         )
     manifest_sha256 = sha256_file(manifest_path)
     _find_source_hash(spec, manifest_sha256, label="prompt manifest")
@@ -461,18 +912,14 @@ def _validate_prompts(
         or any(not isinstance(value, str) or not value for value in population_dates)
         or population_dates != sorted(set(population_dates))
     ):
-        raise ValueError(
-            "Prompt manifest requires unique ordered population_dates"
-        )
+        raise ValueError("Prompt manifest requires unique ordered population_dates")
     if (
         not isinstance(section_families, list)
         or not section_families
         or any(not isinstance(value, str) or not value for value in section_families)
         or len(section_families) != len(set(section_families))
     ):
-        raise ValueError(
-            "Prompt manifest requires unique non-empty section_families"
-        )
+        raise ValueError("Prompt manifest requires unique non-empty section_families")
     if not isinstance(counts, Mapping):
         raise ValueError("Prompt manifest lacks counts")
 
@@ -489,9 +936,10 @@ def _validate_prompts(
             "Prompt manifest must contain one analysis_blocks source artifact"
         )
     analysis_source = analysis_source_matches[0]
-    if analysis_source.get("sha256") != analysis["output_sha256"]:
+    if analysis_source.get("sha256") != projection["output_sha256"]:
         raise ValueError(
-            "Prompt manifest is not bound to the validated analysis output hash"
+            "Prompt manifest is not bound to the validated projected analysis "
+            "output hash"
         )
     analysis_source_path = _resolve_within(
         run_root,
@@ -501,11 +949,89 @@ def _validate_prompts(
     )
     if (
         _relative_to_run_root(analysis_source_path, run_root)
-        != analysis["output_relative_path"]
+        != projection["output_relative_path"]
     ):
         raise ValueError(
             "Prompt manifest analysis_blocks path differs from the validated "
-            "analysis output"
+            "projected analysis output"
+        )
+    if manifest.get("analysis_text_field") != PROJECTION_OUTPUT_FIELD:
+        raise ValueError(
+            "Canonical prompt manifest must use the projected minutes_analysis field"
+        )
+
+    context_budget = manifest.get("context_budget")
+    generation_config = spec.get("generation_config", {})
+    decoding = generation_config.get("decoding", {})
+    primary_decoding = (
+        decoding.get("minutes_primary") if isinstance(decoding, Mapping) else None
+    )
+    stochastic_decoding = (
+        decoding.get("minutes_stochastic_robustness")
+        if isinstance(decoding, Mapping)
+        else None
+    )
+    if (
+        not isinstance(context_budget, Mapping)
+        or not isinstance(primary_decoding, Mapping)
+        or not isinstance(stochastic_decoding, Mapping)
+    ):
+        raise ValueError("Prompt manifest lacks the frozen Minutes context budget")
+    expected_max_new_tokens = primary_decoding.get("max_new_tokens")
+    expected_max_model_len = primary_decoding.get("max_model_len")
+    if (
+        stochastic_decoding.get("max_new_tokens") != expected_max_new_tokens
+        or stochastic_decoding.get("max_model_len") != expected_max_model_len
+        or expected_max_new_tokens != 8192
+        or expected_max_model_len != 16384
+    ):
+        raise ValueError(
+            "Canonical primary and stochastic Minutes decoding must share the "
+            "frozen 8192/16384 token budget"
+        )
+    raw_configured_minutes_prompt = generation_config.get("minutes_system_prompt")
+    if raw_configured_minutes_prompt is None:
+        configured_minutes_prompt = None
+        expected_system_prompt_sha256 = sha256_text(get_system_prompt())
+    else:
+        configured_minutes_prompt = validate_minutes_prompt_spec(
+            raw_configured_minutes_prompt
+        )
+        declared_minutes_prompt = validate_minutes_prompt_spec(
+            manifest.get("minutes_system_prompt")
+        )
+        if declared_minutes_prompt != configured_minutes_prompt:
+            raise ValueError(
+                "Prompt manifest Minutes system prompt differs from the frozen "
+                "generation config"
+            )
+        expected_system_prompt_sha256 = configured_minutes_prompt.sha256
+    expected_budget_fields = {
+        "policy": "exact-chat-template-no-truncation-v1",
+        "system_prompt_sha256": expected_system_prompt_sha256,
+        "max_new_tokens": expected_max_new_tokens,
+        "max_model_len": expected_max_model_len,
+        "all_rows_fit": True,
+        "input_truncation": "forbidden",
+    }
+    if configured_minutes_prompt is not None:
+        expected_budget_fields.update(
+            {
+                "system_prompt_version": configured_minutes_prompt.version,
+                "requested_max_output_tokens": (
+                    configured_minutes_prompt.requested_max_output_tokens
+                ),
+            }
+        )
+    budget_mismatches = {
+        key: {"expected": value, "observed": context_budget.get(key)}
+        for key, value in expected_budget_fields.items()
+        if context_budget.get(key) != value
+    }
+    if budget_mismatches:
+        raise ValueError(
+            f"Prompt context budget differs from frozen Minutes config: "
+            f"{budget_mismatches}"
         )
 
     raw_artifacts = manifest.get("artifacts")
@@ -543,9 +1069,7 @@ def _validate_prompts(
                 f"Unexpected prompt arm for {relative_path}: {entry.get('arm')!r}"
             )
         if indicator in inventory[folder]:
-            raise ValueError(
-                f"Duplicate prompt artifact for {folder}/{indicator}"
-            )
+            raise ValueError(f"Duplicate prompt artifact for {folder}/{indicator}")
         path = _resolve_within(
             run_root,
             relative_path,
@@ -585,17 +1109,80 @@ def _validate_prompts(
             base=manifest_path.parent,
         )
         observed = {
-            path.resolve()
-            for path in folder_path.glob("*.jsonl")
-            if path.is_file()
+            path.resolve() for path in folder_path.glob("*.jsonl") if path.is_file()
         }
-        declared = {
-            entry["path"].resolve() for entry in inventory[folder].values()
-        }
+        declared = {entry["path"].resolve() for entry in inventory[folder].values()}
         if observed != declared:
             raise ValueError(
                 f"Prompt folder {folder} contains undeclared or missing JSONL files"
             )
+
+    audited_rows = [
+        row
+        for folder_inventory in inventory.values()
+        for artifact in folder_inventory.values()
+        for row in artifact["rows"].values()
+    ]
+    chat_counts: list[int] = []
+    headrooms: list[int] = []
+    for row in audited_rows:
+        chat_count = row.get("prompt_token_count_chat_template")
+        headroom = row.get("context_headroom_tokens")
+        if (
+            isinstance(chat_count, bool)
+            or not isinstance(chat_count, int)
+            or chat_count <= 0
+            or isinstance(headroom, bool)
+            or not isinstance(headroom, int)
+            or headroom < 0
+            or chat_count + expected_max_new_tokens + headroom
+            != expected_max_model_len
+        ):
+            raise ValueError(
+                "Prompt row has invalid exact chat-template context metadata"
+            )
+        chat_counts.append(chat_count)
+        headrooms.append(headroom)
+        if configured_minutes_prompt is not None:
+            expected_row_prompt_metadata = {
+                "generation_system_prompt_version": (
+                    configured_minutes_prompt.version
+                ),
+                "generation_system_prompt_sha256": (
+                    configured_minutes_prompt.sha256
+                ),
+                "generation_requested_max_output_tokens": (
+                    configured_minutes_prompt.requested_max_output_tokens
+                ),
+                "generation_hard_max_new_tokens": (
+                    configured_minutes_prompt.hard_max_new_tokens
+                ),
+                "generation_max_model_len": configured_minutes_prompt.max_model_len,
+            }
+            row_prompt_mismatches = {
+                key: {"expected": value, "observed": row.get(key)}
+                for key, value in expected_row_prompt_metadata.items()
+                if row.get(key) != value
+            }
+            if row_prompt_mismatches:
+                raise ValueError(
+                    "Prompt row Minutes system-prompt metadata differs from the "
+                    f"frozen generation config: {row_prompt_mismatches}"
+                )
+    expected_budget_summary = {
+        "audited_prompt_row_count": len(audited_rows),
+        "maximum_chat_prompt_tokens": max(chat_counts),
+        "minimum_context_headroom_tokens": min(headrooms),
+    }
+    summary_mismatches = {
+        key: {"expected": value, "observed": context_budget.get(key)}
+        for key, value in expected_budget_summary.items()
+        if context_budget.get(key) != value
+    }
+    if summary_mismatches:
+        raise ValueError(
+            f"Prompt context budget summary differs from rows: {summary_mismatches}"
+        )
 
     references: dict[str, Any] = {}
     for key in (
@@ -615,6 +1202,32 @@ def _validate_prompts(
                 label=key,
             )
 
+    experiment_config_binding = manifest.get("experiment_config")
+    if configured_minutes_prompt is not None:
+        if not isinstance(experiment_config_binding, Mapping):
+            raise ValueError(
+                "Canonical prompt manifest lacks its scoped experiment binding"
+            )
+        experiment_path = Path(
+            str(experiment_config_binding.get("path") or "")
+        ).expanduser().resolve()
+        loaded_prompt, loaded_binding, _ = load_minutes_prompt_config(
+            experiment_path
+        )
+        if (
+            loaded_prompt != configured_minutes_prompt
+            or loaded_binding["sha256"]
+            != experiment_config_binding.get("sha256")
+        ):
+            raise ValueError(
+                "Scoped experiment config changed after prompt construction"
+            )
+        _find_source_hash(
+            spec,
+            loaded_binding["sha256"],
+            label="scoped experiment config",
+        )
+
     summary = {
         "manifest_relative_path": _relative_to_run_root(
             manifest_path,
@@ -628,6 +1241,18 @@ def _validate_prompts(
         "baseline_indicator": baseline,
         "indicator_count": len(indicators),
         "counts": dict(counts),
+        "analysis_text_field": manifest.get("analysis_text_field"),
+        "minutes_system_prompt": (
+            None
+            if configured_minutes_prompt is None
+            else configured_minutes_prompt.as_dict()
+        ),
+        "experiment_config": (
+            None
+            if experiment_config_binding is None
+            else dict(experiment_config_binding)
+        ),
+        "context_budget": dict(context_budget),
         "artifact_count": sum(len(values) for values in inventory.values()),
         "references": references,
     }
@@ -658,14 +1283,11 @@ def _validate_generation_row(
     prompt_sha256 = sha256_text(source_prompt)
     if row.get("source_prompt_sha256") != prompt_sha256:
         raise ValueError(
-            f"{artifact_label} has an invalid source_prompt_sha256 for "
-            f"{sample_id!r}"
+            f"{artifact_label} has an invalid source_prompt_sha256 for {sample_id!r}"
         )
     generated = row.get("generated")
     if not isinstance(generated, str) or not generated.strip():
-        raise ValueError(
-            f"{artifact_label} has empty generated text for {sample_id!r}"
-        )
+        raise ValueError(f"{artifact_label} has empty generated text for {sample_id!r}")
     generated_sha256 = sha256_text(generated)
     if row.get("generated_sha256") != generated_sha256:
         raise ValueError(
@@ -687,6 +1309,24 @@ def _validate_generation_row(
         "generation_tokenizer_sha256": manifest["tokenizer_artifact"]["sha256"],
         "generation_system_prompt_sha256": manifest["system_prompt_sha256"],
     }
+    manifest_minutes_prompt = manifest.get("minutes_system_prompt")
+    if manifest_minutes_prompt is not None:
+        minutes_prompt_spec = validate_minutes_prompt_spec(
+            manifest_minutes_prompt
+        )
+        expected_metadata.update(
+            {
+                "generation_system_prompt_version": minutes_prompt_spec.version,
+                "generation_requested_max_output_tokens": (
+                    minutes_prompt_spec.requested_max_output_tokens
+                ),
+                "experiment_config_sha256": manifest["experiment_config"][
+                    "sha256"
+                ],
+            }
+        )
+    else:
+        minutes_prompt_spec = None
     mismatches = {
         key: {"expected": value, "observed": row.get(key)}
         for key, value in expected_metadata.items()
@@ -698,8 +1338,18 @@ def _validate_generation_row(
             f"{sample_id!r}: {mismatches}"
         )
     try:
+        source_chat_prompt_tokens = int(
+            source_row["prompt_token_count_chat_template"]
+        )
+        observed_preflight_tokens = int(row["prompt_preflight_token_count"])
+        if observed_preflight_tokens != source_chat_prompt_tokens:
+            raise ValueError(
+                "runtime prompt preflight count differs from the frozen "
+                f"chat-template count: expected={source_chat_prompt_tokens}, "
+                f"observed={observed_preflight_tokens}"
+            )
         completion = validate_generation_completion(
-            input_token_count=int(row["prompt_preflight_token_count"]),
+            input_token_count=observed_preflight_tokens,
             output_token_count=int(row["output_token_count"]),
             max_new_tokens=int(manifest["max_new_tokens"]),
             context_limit=int(manifest["max_model_len"]),
@@ -707,10 +1357,19 @@ def _validate_generation_row(
             input_was_truncated=row.get("input_was_truncated"),
             consumed_input_token_count=int(row["prompt_token_count"]),
         )
+        if (
+            minutes_prompt_spec is not None
+            and int(row["output_token_count"])
+            > minutes_prompt_spec.requested_max_output_tokens
+        ):
+            raise ValueError(
+                "output_token_count exceeds the requested concise Minutes limit: "
+                f"output={row['output_token_count']}, requested="
+                f"{minutes_prompt_spec.requested_max_output_tokens}"
+            )
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError(
-            f"{artifact_label} has invalid completion metadata for "
-            f"{sample_id!r}: {exc}"
+            f"{artifact_label} has invalid completion metadata for {sample_id!r}: {exc}"
         ) from exc
     return {
         "sample_id": sample_id,
@@ -748,13 +1407,44 @@ def _validate_generation_run(
             f"{expectation.name} has unsupported generation schema "
             f"{manifest.get('schema_version')!r}"
         )
+    decoding_key = (
+        "minutes_primary"
+        if expectation.name.endswith("_primary")
+        else "minutes_stochastic_robustness"
+    )
+    configured_decoding = (
+        spec.get("generation_config", {}).get("decoding", {}).get(decoding_key)
+    )
+    if not isinstance(configured_decoding, Mapping):
+        raise ValueError(
+            f"Generation spec lacks frozen decoding for {expectation.name}"
+        )
+    prompt_minutes_payload = prompt_summary.get("minutes_system_prompt")
+    if prompt_minutes_payload is None:
+        expected_minutes_prompt = None
+        expected_system_prompt_sha256 = sha256_text(get_system_prompt())
+    else:
+        expected_minutes_prompt = validate_minutes_prompt_spec(
+            prompt_minutes_payload
+        )
+        observed_minutes_prompt = validate_minutes_prompt_spec(
+            manifest.get("minutes_system_prompt")
+        )
+        if observed_minutes_prompt != expected_minutes_prompt:
+            raise ValueError(
+                f"{expectation.name} Minutes prompt differs from the prompt manifest"
+            )
+        expected_system_prompt_sha256 = expected_minutes_prompt.sha256
     expected_fields = {
         "masking_strategy": expectation.strategy,
         "simulation_step": expectation.replicate_count,
         "temperature": expectation.temperature,
         "top_p": expectation.top_p,
+        "max_new_tokens": configured_decoding.get("max_new_tokens"),
+        "max_model_len": configured_decoding.get("max_model_len"),
         "seed_policy": SAMPLE_SEED_POLICY,
         "require_normal_finish": True,
+        "system_prompt_sha256": expected_system_prompt_sha256,
     }
     mismatches = {
         key: {"expected": value, "observed": manifest.get(key)}
@@ -765,14 +1455,83 @@ def _validate_generation_run(
         raise ValueError(
             f"{expectation.name} generation configuration mismatch: {mismatches}"
         )
+    sample_selection = manifest.get("sample_selection")
+    if sample_selection is not None:
+        if not isinstance(sample_selection, Mapping):
+            raise ValueError(f"{expectation.name} has invalid sample_selection")
+        if (
+            sample_selection.get("mode") != "full_population"
+            or sample_selection.get("policy") != "full-population-v1"
+            or sample_selection.get("population_release_allowed") is not True
+            or sample_selection.get("requested_sample_ids") != []
+        ):
+            raise ValueError(
+                f"{expectation.name} is sample-filtered smoke output and cannot "
+                "be sealed as a population release"
+            )
+    elif expected_minutes_prompt is not None:
+        raise ValueError(f"{expectation.name} lacks sample_selection metadata")
+    if expected_minutes_prompt is not None:
+        expected_experiment = prompt_summary.get("experiment_config")
+        if (
+            not isinstance(expected_experiment, Mapping)
+            or manifest.get("experiment_config") != expected_experiment
+        ):
+            raise ValueError(
+                f"{expectation.name} is not bound to the scoped experiment config"
+            )
+    completion_validation = manifest.get("completion_validation")
+    if completion_validation is not None:
+        if (
+            not isinstance(completion_validation, Mapping)
+            or completion_validation.get("token_limit_policy") != "error"
+            or completion_validation.get("excluded_row_count") != 0
+            or manifest.get("status") != "complete"
+            or manifest.get("scorable_population_complete") is not True
+        ):
+            raise ValueError(
+                f"{expectation.name} uses completion exclusions and cannot be "
+                "sealed as a complete canonical generation release"
+            )
+    execution = spec.get("generation_config", {}).get("execution")
+    observed_execution = manifest.get("execution_environment")
+    if not isinstance(execution, Mapping) or not isinstance(
+        observed_execution,
+        Mapping,
+    ):
+        raise ValueError(f"{expectation.name} lacks canonical GPU execution metadata")
+    expected_execution = {
+        "physical_gpu_index": "1",
+        "cuda_visible_devices": "1",
+        "declared_visible_device_count": "1",
+        "tensor_parallel_size": 1,
+    }
+    execution_mismatches = {
+        key: {"expected": value, "observed": observed_execution.get(key)}
+        for key, value in expected_execution.items()
+        if observed_execution.get(key) != value
+    }
+    physical_uuid = observed_execution.get("physical_gpu_uuid")
+    if (
+        execution.get("physical_gpu_index") != 1
+        or execution.get("expected_visible_cuda_devices") != 1
+        or execution.get("tensor_parallel_size") != 1
+        or not isinstance(physical_uuid, str)
+        or not physical_uuid.startswith("GPU-")
+        or execution_mismatches
+    ):
+        raise ValueError(
+            f"{expectation.name} did not run with only physical GPU 1: "
+            f"{execution_mismatches}"
+        )
     if Path(str(manifest.get("output_dir") or "")).expanduser().resolve() != directory:
         raise ValueError(f"{expectation.name} output_dir is not its run directory")
 
-    prompt_folder_path = (
-        Path(prompt_inventory[expectation.prompt_folder][
+    prompt_folder_path = Path(
+        prompt_inventory[expectation.prompt_folder][
             str(prompt_summary["baseline_indicator"])
-        ]["path"]).parent.resolve()
-    )
+        ]["path"]
+    ).parent.resolve()
     if (
         Path(str(manifest.get("input_folder") or "")).expanduser().resolve()
         != prompt_folder_path
@@ -787,9 +1546,7 @@ def _validate_generation_run(
         spec_binding,
         Mapping,
     ):
-        raise ValueError(
-            f"{expectation.name} lacks prompt/spec manifest bindings"
-        )
+        raise ValueError(f"{expectation.name} lacks prompt/spec manifest bindings")
     if (
         prompt_binding.get("sha256") != prompt_summary["manifest_sha256"]
         or prompt_binding.get("population_id") != prompt_summary["population_id"]
@@ -798,11 +1555,9 @@ def _validate_generation_run(
             f"{expectation.name} is not bound to the active prompt manifest"
         )
     if (
-        Path(str(spec_binding.get("path") or "")).expanduser().resolve()
-        != spec_path
+        Path(str(spec_binding.get("path") or "")).expanduser().resolve() != spec_path
         or spec_binding.get("file_sha256") != spec_file_sha256
-        or spec_binding.get("payload_sha256")
-        != spec["integrity"]["payload_sha256"]
+        or spec_binding.get("payload_sha256") != spec["integrity"]["payload_sha256"]
         or spec_binding.get("run_id") != spec["run_id"]
     ):
         raise ValueError(
@@ -820,32 +1575,42 @@ def _validate_generation_run(
             or before.get("file_count") != after.get("file_count")
             or before.get("total_bytes") != after.get("total_bytes")
         ):
-            raise ValueError(
-                f"{expectation.name} {kind} changed during generation"
-            )
+            raise ValueError(f"{expectation.name} {kind} changed during generation")
     frozen_artifacts = spec.get("frozen_artifacts")
     if not isinstance(frozen_artifacts, Mapping):
         raise ValueError("Generation spec lacks frozen_artifacts")
-    frozen_model_hashes = {
-        str(entry.get("sha256"))
-        for entry in frozen_artifacts.get("models", {}).values()
-        if isinstance(entry, Mapping)
-    }
-    frozen_tokenizer_hashes = {
-        str(entry.get("sha256"))
-        for entry in frozen_artifacts.get("tokenizers", {}).values()
-        if isinstance(entry, Mapping)
-    }
-    if manifest["model_artifact"].get("sha256") not in frozen_model_hashes:
+    frozen_models = frozen_artifacts.get("models")
+    frozen_tokenizers = frozen_artifacts.get("tokenizers")
+    minutes_model = (
+        frozen_models.get("minutes_model")
+        if isinstance(frozen_models, Mapping)
+        else None
+    )
+    minutes_tokenizer = (
+        frozen_tokenizers.get("minutes_tokenizer")
+        if isinstance(frozen_tokenizers, Mapping)
+        else None
+    )
+    if not isinstance(minutes_model, Mapping):
+        raise ValueError("Generation spec lacks frozen models.minutes_model")
+    if not isinstance(minutes_tokenizer, Mapping):
         raise ValueError(
-            f"{expectation.name} model is not bound by the generation spec"
+            "Generation spec lacks frozen tokenizers.minutes_tokenizer"
+        )
+    if (
+        manifest["model_artifact"].get("sha256")
+        != minutes_model.get("sha256")
+    ):
+        raise ValueError(
+            f"{expectation.name} model differs from frozen models.minutes_model"
         )
     if (
         manifest["tokenizer_artifact"].get("sha256")
-        not in frozen_tokenizer_hashes
+        != minutes_tokenizer.get("sha256")
     ):
         raise ValueError(
-            f"{expectation.name} tokenizer is not bound by the generation spec"
+            f"{expectation.name} tokenizer differs from frozen "
+            "tokenizers.minutes_tokenizer"
         )
 
     replicate_seeds = manifest.get("replicate_seeds")
@@ -858,25 +1623,19 @@ def _validate_generation_run(
         )
         or len(replicate_seeds) != len(set(replicate_seeds))
     ):
-        raise ValueError(
-            f"{expectation.name} has an invalid replicate seed inventory"
-        )
+        raise ValueError(f"{expectation.name} has an invalid replicate seed inventory")
     if replicate_seeds != EXPECTED_REPLICATE_SEEDS[expectation.name]:
         raise ValueError(
             f"{expectation.name} replicate seeds differ from the frozen "
             f"design: expected={EXPECTED_REPLICATE_SEEDS[expectation.name]}, "
             f"observed={replicate_seeds}"
         )
-    spec_replicate_seeds = spec.get("seed_policy", {}).get(
-        "replicate_seeds"
-    )
-    if (
-        not isinstance(spec_replicate_seeds, list)
-        or not set(replicate_seeds).issubset(spec_replicate_seeds)
+    spec_replicate_seeds = spec.get("seed_policy", {}).get("replicate_seeds")
+    if not isinstance(spec_replicate_seeds, list) or not set(replicate_seeds).issubset(
+        spec_replicate_seeds
     ):
         raise ValueError(
-            f"{expectation.name} replicate seeds are not bound by the "
-            "generation spec"
+            f"{expectation.name} replicate seeds are not bound by the generation spec"
         )
     expected_replicates = {
         str(index): seed for index, seed in enumerate(replicate_seeds)
@@ -950,9 +1709,7 @@ def _validate_generation_run(
             label=f"{expectation.name} output artifact",
             base=directory,
         )
-        declared_absolute = Path(
-            str(entry.get("path") or "")
-        ).expanduser().resolve()
+        declared_absolute = Path(str(entry.get("path") or "")).expanduser().resolve()
         if declared_absolute != output_path:
             raise ValueError(
                 f"{expectation.name} output path binding mismatch for {key!r}"
@@ -975,8 +1732,7 @@ def _validate_generation_run(
             or str(entry.get("context")) != str(source["context"])
         ):
             raise ValueError(
-                f"{expectation.name} expected artifact metadata mismatch for "
-                f"{key!r}"
+                f"{expectation.name} expected artifact metadata mismatch for {key!r}"
             )
         rows = _read_jsonl(
             output_path,
@@ -1034,9 +1790,7 @@ def _validate_generation_run(
             f"{expectation.name} contains undeclared or missing output JSONL files"
         )
     if set(baseline_rows) != set(expected_replicates):
-        raise ValueError(
-            f"{expectation.name} lacks one full baseline per replicate"
-        )
+        raise ValueError(f"{expectation.name} lacks one full baseline per replicate")
 
     intervention = manifest.get("intervention_manifest")
     if not isinstance(intervention, Mapping):
@@ -1071,14 +1825,13 @@ def _validate_generation_run(
         "max_model_len": manifest["max_model_len"],
         "temperature": manifest["temperature"],
         "top_p": manifest["top_p"],
+        "execution_environment": dict(observed_execution),
         "intervention_manifest_sha256": intervention_sha256,
         "expected_artifacts": [
             {
                 "relative_path": _relative_to_run_root(path, run_root),
                 "sha256": sha256_file(path),
-                "row_count": len(
-                    _read_jsonl(path, label=f"{expectation.name} output")
-                ),
+                "row_count": len(_read_jsonl(path, label=f"{expectation.name} output")),
             }
             for path in sorted(output_paths)
         ],
@@ -1114,8 +1867,7 @@ def _compare_baselines(
     }
     if run_mismatches:
         raise ValueError(
-            f"{regime} deletion/neutral generation settings differ: "
-            f"{run_mismatches}"
+            f"{regime} deletion/neutral generation settings differ: {run_mismatches}"
         )
     if set(deletion_rows) != set(neutral_rows):
         raise ValueError(
@@ -1208,6 +1960,7 @@ def finalize_loo_generation(
     generation_spec: str | Path,
     generation_spec_sha256: str,
     analysis_manifest: str | Path,
+    projection_manifest: str | Path,
     prompt_manifest: str | Path,
     output: str | Path,
 ) -> tuple[dict[str, Any], str]:
@@ -1221,10 +1974,18 @@ def finalize_loo_generation(
         generation_spec,
         label="generation spec",
     )
-    analysis_path = _resolve_within(
-        root,
+    analysis_path = _resolve_artifact_path(
         analysis_manifest,
-        label="analysis manifest",
+        base=root,
+    )
+    if not analysis_path.is_file():
+        raise FileNotFoundError(
+            f"Raw analysis manifest does not exist: {analysis_path}"
+        )
+    projection_path = _resolve_within(
+        root,
+        projection_manifest,
+        label="analysis projection manifest",
     )
     prompt_path = _resolve_within(
         root,
@@ -1257,20 +2018,24 @@ def finalize_loo_generation(
         run_root=root,
         spec=spec,
     )
+    projection = _validate_projection(
+        manifest_path=projection_path,
+        run_root=root,
+        spec=spec,
+        analysis=analysis,
+    )
     prompts, prompt_inventory = _validate_prompts(
         manifest_path=prompt_path,
         run_root=root,
         spec=spec,
-        analysis=analysis,
+        projection=projection,
     )
     if spec.get("population_id") != prompts.get("population_id"):
         raise ValueError(
             "Generation spec population_id differs from the prompt manifest"
         )
     if analysis.get("population_id") not in {None, prompts.get("population_id")}:
-        raise ValueError(
-            "Analysis population_id differs from the prompt manifest"
-        )
+        raise ValueError("Analysis population_id differs from the prompt manifest")
     populations = generation_config.get("populations")
     invariants = generation_config.get("invariants")
     configured_sections = generation_config.get("sections")
@@ -1280,22 +2045,17 @@ def finalize_loo_generation(
         or not isinstance(configured_sections, list)
     ):
         raise ValueError(
-            "Generation spec config must freeze populations, sections, and "
-            "invariants"
+            "Generation spec config must freeze populations, sections, and invariants"
         )
     population_config = populations.get(spec["population_id"])
     if not isinstance(population_config, Mapping):
-        raise ValueError(
-            "Generation spec config does not contain its population_id"
-        )
+        raise ValueError("Generation spec config does not contain its population_id")
     if population_config.get("phase") != spec.get("phase"):
         raise ValueError(
             "Generation spec phase differs from its frozen population config"
         )
     expected_dates = population_config.get("meeting_dates")
-    expected_indicator_count = invariants.get(
-        "indicator_count_per_meeting"
-    )
+    expected_indicator_count = invariants.get("indicator_count_per_meeting")
     expected_section_count = invariants.get("section_count_per_meeting")
     configured_section_names = [
         str(entry.get("section_name") or "")
@@ -1332,9 +2092,7 @@ def finalize_loo_generation(
         )
     expected_meeting_count = len(expected_dates)
     expected_unit_count = expected_meeting_count * expected_section_count
-    expected_analysis_count = (
-        expected_meeting_count * expected_indicator_count
-    )
+    expected_analysis_count = expected_meeting_count * expected_indicator_count
     expected_prompt_counts = {
         "meeting_count": expected_meeting_count,
         "section_count": expected_section_count,
@@ -1352,14 +2110,19 @@ def finalize_loo_generation(
     }
     if prompt_count_mismatches:
         raise ValueError(
-            f"Prompt counts differ from the frozen design: "
-            f"{prompt_count_mismatches}"
+            f"Prompt counts differ from the frozen design: {prompt_count_mismatches}"
         )
     if analysis["row_count"] != expected_analysis_count:
         raise ValueError(
             "Analysis row count differs from the frozen design: "
             f"expected={expected_analysis_count}, "
             f"observed={analysis['row_count']}"
+        )
+    if projection["row_count"] != expected_analysis_count:
+        raise ValueError(
+            "Projected analysis row count differs from the frozen design: "
+            f"expected={expected_analysis_count}, "
+            f"observed={projection['row_count']}"
         )
     for folder, artifacts in prompt_inventory.items():
         for indicator, artifact in artifacts.items():
@@ -1400,6 +2163,12 @@ def finalize_loo_generation(
         neutral_rows=baselines["neutral_stochastic"],
     )
 
+    release_analysis = {
+        key: value for key, value in analysis.items() if not key.startswith("_")
+    }
+    release_projection = {
+        key: value for key, value in projection.items() if not key.startswith("_")
+    }
     payload = {
         "schema_version": RELEASE_SCHEMA_VERSION,
         "status": "complete",
@@ -1416,7 +2185,8 @@ def finalize_loo_generation(
             "payload_sha256": spec["integrity"]["payload_sha256"],
             "schema_version": spec["schema_version"],
         },
-        "analysis": analysis,
+        "analysis": release_analysis,
+        "analysis_projection": release_projection,
         "prompts": prompts,
         "generation_runs": run_summaries,
         "baseline_equivalence": {
@@ -1424,21 +2194,20 @@ def finalize_loo_generation(
             "stochastic": stochastic_equivalence,
         },
         "validation_policy": {
-            "expected_run_names": [
-                expectation.name for expectation in EXPECTED_RUNS
-            ],
+            "expected_run_names": [expectation.name for expectation in EXPECTED_RUNS],
             "expected_replicate_counts": {
                 expectation.name: expectation.replicate_count
                 for expectation in EXPECTED_RUNS
             },
             "normal_finish_required": True,
             "input_truncation": "forbidden",
-            "token_limit_finish": "forbidden",
+            "indicator_analysis_token_limit_finish": analysis["completion_validation"],
+            "analysis_projection_policy": PROJECTION_POLICY,
+            "minutes_token_limit_finish": "forbidden",
+            "execution_policy": generation_config.get("execution"),
             "row_seed_inputs": ["replicate_seed", "sample_id"],
             "full_baseline_cross_strategy_match": "exact_text_and_sha256",
-            "information_cutoff_policy": generation_config.get(
-                "information_cutoff"
-            ),
+            "information_cutoff_policy": generation_config.get("information_cutoff"),
         },
     }
     release = seal_manifest(payload)
@@ -1458,6 +2227,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--generation-spec", required=True)
     parser.add_argument("--generation-spec-sha256", required=True)
     parser.add_argument("--analysis-manifest", required=True)
+    parser.add_argument("--projection-manifest", required=True)
     parser.add_argument("--prompt-manifest", required=True)
     parser.add_argument("--output", required=True)
     return parser
@@ -1472,6 +2242,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             generation_spec=args.generation_spec,
             generation_spec_sha256=args.generation_spec_sha256,
             analysis_manifest=args.analysis_manifest,
+            projection_manifest=args.projection_manifest,
             prompt_manifest=args.prompt_manifest,
             output=args.output,
         )

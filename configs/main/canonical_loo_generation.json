@@ -3,13 +3,51 @@
   "generation_only": true,
   "training_performed": false,
   "claim_boundary": "Prompt intervention on frozen models and prespecified chronological populations; checkpoint lineage must be audited separately before describing either population as held out.",
+  "minutes_system_prompt": {
+    "version": "canonical-minutes-section-concise-v1",
+    "text": "You draft exactly one requested FOMC Minutes section. Return only the finished Minutes-style prose for that section. Do not reveal analysis or reasoning, do not emit `<think>` or XML/Markdown wrappers, and do not add a preamble, headings, bullet lists, or any other section. Synthesize only the evidence in the user prompt and do not quote indicator blocks verbatim. Be concise and complete. You must finish the section within 4,096 output tokens. Stop immediately after the requested section.",
+    "sha256": "8bcd4db511b1c0327bb958839ccae97aa1f4653bbd60f6c9aa69e2520537eb21",
+    "requested_max_output_tokens": 4096,
+    "hard_max_new_tokens": 8192,
+    "max_model_len": 16384,
+    "input_truncation": "forbidden",
+    "token_limit_policy": "error"
+  },
+  "execution": {
+    "gpu_policy": "single-physical-gpu-by-nvidia-smi-index-v1",
+    "physical_gpu_index": 1,
+    "expected_visible_cuda_devices": 1,
+    "tensor_parallel_size": 1
+  },
+  "analysis_projection": {
+    "policy": "deepseek-final-answer-after-think-v1",
+    "source_field": "generated",
+    "output_field": "minutes_analysis",
+    "required_format": "deepseek_think_completion",
+    "delimiter": "</think>",
+    "required_delimiter_count": 1,
+    "allow_plain_text_fallback": false,
+    "require_nonempty_reasoning": true,
+    "require_nonempty_final_answer": true,
+    "truncation": "forbidden",
+    "secondary_generation": "forbidden"
+  },
   "artifacts": {
     "analysis_model": "../fomc_trainer_back/fomc_trainer/output/merged/llama_grpo_20250515",
     "analysis_tokenizer": "models/DeepSeek-R1-Distill-Llama-8B",
-    "minutes_model": "../fomc_trainer_back/fomc_trainer/output/merged/llama_sft_synthetic_20250526",
-    "minutes_tokenizer": "../fomc_trainer_back/fomc_trainer/output/merged/llama_sft_synthetic_20250526",
+    "minutes_model": "output/checkpoints/recovered/llama_sft_synthetic_20250526_2_cp1668_recovered_v1_20260729/model",
+    "minutes_tokenizer": "output/checkpoints/recovered/llama_sft_synthetic_20250526_2_cp1668_recovered_v1_20260729/model",
     "indicator_roster": "configs/main/leave_one_out_roster.json",
     "indicator_source_registry": "configs/main/loo_indicator_sources.json"
+  },
+  "checkpoint_provenance": {
+    "minutes_checkpoint_manifest": "output/checkpoints/recovered/llama_sft_synthetic_20250526_2_cp1668_recovered_v1_20260729/checkpoint_manifest.json",
+    "minutes_artifact_id": "eval-minutes-sft-from-chk1",
+    "minutes_manifest_sha256": "1265d8d0fc0c0940fa1c66c9c5655940b238a0235e30bf581f55f33a551b4d18",
+    "minutes_manifest_payload_sha256": "16d29ec20f283c34b1cf69e7b2d5459a5a228e86466e0c2d3ae620e39168acc7",
+    "minutes_model_sha256": "ac176afc59f73eccbded8e02b4eec7dd1de8b252c0b20352f5074cb9e02077ea",
+    "minutes_tokenizer_sha256": "ac176afc59f73eccbded8e02b4eec7dd1de8b252c0b20352f5074cb9e02077ea",
+    "runtime_verification": "required-before-generation"
   },
   "information_cutoff": {
     "policy": "previous-calendar-day-v1",
@@ -84,8 +122,10 @@
     "indicator_analysis": {
       "temperature": 0.0,
       "top_p": 1.0,
-      "max_new_tokens": 256,
+      "max_new_tokens": 8192,
+      "requested_max_output_tokens": 4096,
       "max_model_len": 16384,
+      "max_token_limit_errors": 2,
       "replicate_seeds": [
         20260728
       ]
@@ -121,7 +161,11 @@
       "sample_id"
     ],
     "input_truncation": "forbidden",
-    "token_limit_finish": "forbidden",
+    "indicator_analysis_token_limit_finish": {
+      "policy": "bounded-token-limit-errors-v1",
+      "max_errors": 2
+    },
+    "minutes_token_limit_finish": "forbidden",
     "source_information_cutoff": "requested_vintage_date == information_as_of_date == meeting_date - 1 calendar day",
     "source_observation_cutoff": "observation_date <= information_as_of_date",
     "meeting_day_data": "forbidden"

@@ -49,6 +49,10 @@ COVERAGE_SCHEMA_VERSION = "loo-indicator-ledger-coverage-v1"
 EXCLUSION_SCHEMA_VERSION = "loo-indicator-ledger-exclusion-v1"
 
 EXPECTED_MEETING_COUNT = 13
+CHECKPOINT_EVAL_MEETING_COUNT = 11
+SUPPORTED_MEETING_COUNTS = frozenset(
+    {CHECKPOINT_EVAL_MEETING_COUNT, EXPECTED_MEETING_COUNT}
+)
 EXPECTED_INDICATOR_COUNT = 26
 EXPECTED_LEDGER_ROW_COUNT = EXPECTED_MEETING_COUNT * EXPECTED_INDICATOR_COUNT
 
@@ -103,6 +107,19 @@ _LOOKBACK_PATTERN = re.compile(
 
 class LooLedgerError(ValueError):
     """Raised when a source ledger cannot be proven D-1 safe."""
+
+
+class LooSamplingWindowEmptyError(LooLedgerError):
+    """Raised when safe rows exist but none survive the frozen sample window."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        exclusions: Sequence[Mapping[str, Any]],
+    ) -> None:
+        super().__init__(message)
+        self.exclusions = [dict(row) for row in exclusions]
 
 
 class LooLedgerIntegrityError(LooLedgerError):
@@ -241,13 +258,10 @@ def _load_population(path: Path) -> tuple[str, list[date]]:
         _parse_iso_date(value, label=f"population meeting_dates[{index}]")
         for index, value in enumerate(raw_dates)
     ]
-    if (
-        len(dates) != EXPECTED_MEETING_COUNT
-        or dates != sorted(set(dates))
-    ):
+    if len(dates) not in SUPPORTED_MEETING_COUNTS or dates != sorted(set(dates)):
         raise LooLedgerError(
-            f"Canonical population must contain exactly {EXPECTED_MEETING_COUNT} "
-            "unique ascending meeting dates"
+            "Population must contain exactly one of "
+            f"{sorted(SUPPORTED_MEETING_COUNTS)} unique ascending meeting dates"
         )
     return population_id, dates
 
@@ -1069,13 +1083,14 @@ def _sample_observations(
     # would incorrectly discard annual period labels near the boundary (for
     # example 2020-01-01 for a 2022-01-25 information date).
 
-    if frequency in {"daily", "weekly", "biweekly"} and selected:
-        by_month: dict[tuple[int, int], dict[str, str]] = {}
-        for item in selected:
-            parsed = _parse_iso_date(item["date"], label="observation date")
-            by_month[(parsed.year, parsed.month)] = item
-        selected = [by_month[key] for key in sorted(by_month)]
-        selected = selected[-25:]
+    if frequency in {"daily", "weekly", "biweekly"}:
+        if selected:
+            by_month: dict[tuple[int, int], dict[str, str]] = {}
+            for item in selected:
+                parsed = _parse_iso_date(item["date"], label="observation date")
+                by_month[(parsed.year, parsed.month)] = item
+            selected = [by_month[key] for key in sorted(by_month)]
+            selected = selected[-25:]
     else:
         frequency_caps = {
             "monthly": 24,
@@ -1101,9 +1116,10 @@ def _sample_observations(
     ]
     if not selected:
         latest = as_of.isoformat() if observations else "none"
-        raise LooLedgerError(
+        raise LooSamplingWindowEmptyError(
             f"{sample_id}/{source['source_key']}: no observation survives the "
-            f"frozen sampling policy (latest candidate={latest})"
+            f"frozen sampling policy (latest candidate={latest})",
+            exclusions=excluded,
         )
     return selected, excluded
 
@@ -1146,6 +1162,7 @@ def _build_artifacts(
 ) -> dict[str, Any]:
     roster = _load_roster(roster_path)
     population_id, meeting_dates = _load_population(population_path)
+    expected_row_count = len(meeting_dates) * len(roster)
     registry_sha256 = sha256_file(registry_path)
     sources, indicator_sources, registry_policy = _load_registry(
         registry_path,
@@ -1335,9 +1352,9 @@ def _build_artifacts(
                 }
             )
 
-    if len(ledger_rows) != EXPECTED_LEDGER_ROW_COUNT:
+    if len(ledger_rows) != expected_row_count:
         raise LooLedgerError(
-            f"Canonical ledger must contain {EXPECTED_LEDGER_ROW_COUNT} rows, "
+            f"Ledger must contain {expected_row_count} rows, "
             f"constructed {len(ledger_rows)}"
         )
     if len({row["sample_id"] for row in ledger_rows}) != len(ledger_rows):
@@ -1644,18 +1661,19 @@ def validate_loo_indicator_ledger(
     outputs = manifest.get("outputs")
     if not isinstance(outputs, Mapping):
         raise LooLedgerIntegrityError("Ledger manifest lacks outputs")
+    expected_row_count = len(expected["ledger_rows"])
     paths = {
         "indicator_inputs": _validate_output_record(
             manifest_dir=manifest_path.parent,
             record=outputs.get("indicator_inputs"),
             label="indicator_inputs",
-            expected_row_count=EXPECTED_LEDGER_ROW_COUNT,
+            expected_row_count=expected_row_count,
         ),
         "source_evidence": _validate_output_record(
             manifest_dir=manifest_path.parent,
             record=outputs.get("source_evidence"),
             label="source_evidence",
-            expected_row_count=EXPECTED_LEDGER_ROW_COUNT,
+            expected_row_count=expected_row_count,
         ),
         "excluded_records": _validate_output_record(
             manifest_dir=manifest_path.parent,
@@ -1720,7 +1738,7 @@ def validate_loo_indicator_ledger(
         "status": "valid",
         "schema_version": LEDGER_MANIFEST_SCHEMA_VERSION,
         "population_id": manifest["population_id"],
-        "row_count": EXPECTED_LEDGER_ROW_COUNT,
+        "row_count": expected_row_count,
         "manifest_payload_sha256": payload_sha256,
         "ledger_sha256": manifest["outputs"]["indicator_inputs"]["sha256"],
         "excluded_record_count": len(observed_exclusions),
@@ -1730,14 +1748,17 @@ def validate_loo_indicator_ledger(
 __all__ = [
     "AVAILABILITY_EVIDENCE_TYPE",
     "COVERAGE_SCHEMA_VERSION",
+    "CHECKPOINT_EVAL_MEETING_COUNT",
     "EXPECTED_LEDGER_ROW_COUNT",
     "INFORMATION_CUTOFF_POLICY",
     "LEDGER_MANIFEST_SCHEMA_VERSION",
     "LEDGER_ROW_SCHEMA_VERSION",
     "LooLedgerError",
     "LooLedgerIntegrityError",
+    "LooSamplingWindowEmptyError",
     "SAMPLING_POLICY_VERSION",
     "SOURCE_INTERFACE",
+    "SUPPORTED_MEETING_COUNTS",
     "build_loo_indicator_ledger",
     "compute_request_id",
     "decision_identity_timestamp",

@@ -1,21 +1,29 @@
 import json
+import sys
 import tempfile
+import types
 import unittest
 from datetime import date, timedelta
 from pathlib import Path
 
 from jobs.generation.canonical_indicator_analysis import (
     DEFAULT_MAX_NEW_TOKENS,
+    DEFAULT_REQUESTED_MAX_OUTPUT_TOKENS,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     IndicatorAnalysisDecoding,
     build_indicator_analysis_prompt,
+    build_indicator_analysis_system_prompt,
+    generate_indicator_analysis_rows,
     run_indicator_analysis_generation,
     validate_and_prepare_rows,
     validate_ledger_provenance,
 )
 from open_r1.provenance import sha256_file, sha256_text
-from open_r1.validator.loo_generation_spec import seal_manifest
+from open_r1.validator.loo_generation_spec import (
+    GenerationSafetyError,
+    seal_manifest,
+)
 
 
 def _write_json(path: Path, payload) -> None:
@@ -42,9 +50,10 @@ def _row(
     information_as_of_date: str | None = None,
     observation_date: str = "2023-10-01",
 ) -> dict:
-    as_of = information_as_of_date or (
-        date.fromisoformat(meeting_id) - timedelta(days=1)
-    ).isoformat()
+    as_of = (
+        information_as_of_date
+        or (date.fromisoformat(meeting_id) - timedelta(days=1)).isoformat()
+    )
     payload = {
         "series": [
             {
@@ -57,9 +66,7 @@ def _row(
                 "transformation": "level",
                 "availability_as_of_date": as_of,
                 "requested_vintage_date": as_of,
-                "observations": [
-                    {"date": observation_date, "value": "3.2"}
-                ],
+                "observations": [{"date": observation_date, "value": "3.2"}],
             }
         ]
     }
@@ -98,6 +105,70 @@ class RecordingGenerator:
         ]
 
 
+def _runtime_generator_with_finish_reasons(
+    finish_reasons: list[str],
+    *,
+    input_was_truncated: bool = False,
+):
+    def generate(rows, model_path, **kwargs):
+        if len(rows) != len(finish_reasons):
+            raise AssertionError("Fixture finish-reason count mismatch")
+        return [
+            {
+                **row,
+                "generated": f"Analysis for {row['sample_id']}",
+                "prompt_preflight_token_count": 10,
+                "prompt_token_count": 10,
+                "output_token_count": (
+                    kwargs["max_new_tokens"] if finish_reason == "length" else 20
+                ),
+                "generation_finish_reason": finish_reason,
+                "input_was_truncated": input_was_truncated,
+            }
+            for row, finish_reason in zip(
+                rows,
+                finish_reasons,
+                strict=True,
+            )
+        ]
+
+    return generate
+
+
+def _generate_with_runtime_metadata(
+    rows: list[dict],
+    finish_reasons: list[str],
+    *,
+    max_token_limit_errors: int,
+    input_was_truncated: bool = False,
+) -> list[dict]:
+    prepared = validate_and_prepare_rows(
+        rows,
+        [row["indicator"] for row in rows],
+    )
+    module = types.SimpleNamespace(
+        generate_new_response=_runtime_generator_with_finish_reasons(
+            finish_reasons,
+            input_was_truncated=input_was_truncated,
+        )
+    )
+    original = sys.modules.get("generate_new_response")
+    sys.modules["generate_new_response"] = module
+    try:
+        return generate_indicator_analysis_rows(
+            prepared,
+            model_path="unused-model",
+            decoding=IndicatorAnalysisDecoding(
+                max_token_limit_errors=max_token_limit_errors,
+            ),
+        )
+    finally:
+        if original is None:
+            sys.modules.pop("generate_new_response", None)
+        else:
+            sys.modules["generate_new_response"] = original
+
+
 class TestCanonicalIndicatorAnalysisValidation(unittest.TestCase):
     def test_rejects_information_date_after_d_minus_one(self):
         rows = [
@@ -114,9 +185,7 @@ class TestCanonicalIndicatorAnalysisValidation(unittest.TestCase):
     def test_rejects_observation_after_d_minus_one(self):
         row = _row("2024-01-31", "GDP-Growth")
         row["observation_date"] = "2024-01-31"
-        row["source_payload"]["series"][0]["observations"][0][
-            "date"
-        ] = "2024-01-31"
+        row["source_payload"]["series"][0]["observations"][0]["date"] = "2024-01-31"
 
         with self.assertRaisesRegex(ValueError, "observation_date is after D-1"):
             validate_and_prepare_rows([row], ["GDP-Growth"])
@@ -196,6 +265,82 @@ class TestCanonicalIndicatorAnalysisValidation(unittest.TestCase):
         self.assertNotIn("2026-07-28", prepared["prompt"])
         self.assertIn("Information available through: 2024-01-30", prepared["prompt"])
 
+    def test_allows_at_most_two_recorded_token_limit_finishes(self):
+        rows = [
+            _row("2024-01-31", indicator)
+            for indicator in (
+                "GDP-Growth",
+                "Unemployment-Rate",
+                "Treasury-Yields",
+            )
+        ]
+
+        generated = _generate_with_runtime_metadata(
+            rows,
+            ["length", "stop", "length"],
+            max_token_limit_errors=2,
+        )
+
+        self.assertEqual(
+            [row["generation_validation_status"] for row in generated],
+            [
+                "accepted_token_limit_error",
+                "passed",
+                "accepted_token_limit_error",
+            ],
+        )
+        self.assertEqual(
+            generated[0]["generation_validation_error"]["sample_id"],
+            "2024-01-31::GDP-Growth",
+        )
+
+    def test_rejects_three_token_limit_finishes(self):
+        rows = [
+            _row("2024-01-31", indicator)
+            for indicator in (
+                "GDP-Growth",
+                "Unemployment-Rate",
+                "Treasury-Yields",
+            )
+        ]
+
+        with self.assertRaisesRegex(
+            GenerationSafetyError,
+            "3 token-limit completion errors",
+        ):
+            _generate_with_runtime_metadata(
+                rows,
+                ["length", "length", "length"],
+                max_token_limit_errors=2,
+            )
+
+    def test_does_not_tolerate_unknown_finish_reason(self):
+        row = _row("2024-01-31", "GDP-Growth")
+
+        with self.assertRaisesRegex(
+            GenerationSafetyError,
+            "Unknown or unsuccessful",
+        ):
+            _generate_with_runtime_metadata(
+                [row],
+                ["cancelled"],
+                max_token_limit_errors=2,
+            )
+
+    def test_does_not_tolerate_input_truncation(self):
+        row = _row("2024-01-31", "GDP-Growth")
+
+        with self.assertRaisesRegex(
+            GenerationSafetyError,
+            "Input truncation is forbidden",
+        ):
+            _generate_with_runtime_metadata(
+                [row],
+                ["length"],
+                max_token_limit_errors=2,
+                input_was_truncated=True,
+            )
+
 
 class TestCanonicalIndicatorAnalysisRun(unittest.TestCase):
     def test_generates_complete_panel_with_fingerprinted_manifest(self):
@@ -237,11 +382,26 @@ class TestCanonicalIndicatorAnalysisRun(unittest.TestCase):
             )
             self.assertEqual(len(generated_rows), 4)
             self.assertEqual(manifest, disk_manifest)
+            self.assertEqual(
+                manifest["schema_version"],
+                "indicator-analysis-generation-v2",
+            )
             self.assertTrue(manifest["generation_only"])
             self.assertFalse(manifest["training_performed"])
             self.assertEqual(manifest["inventory"]["meeting_count"], 2)
             self.assertEqual(manifest["inventory"]["indicator_count"], 2)
             self.assertEqual(manifest["inventory"]["row_count"], 4)
+            self.assertEqual(
+                manifest["completion_validation"],
+                {
+                    "policy": "bounded-token-limit-errors-v1",
+                    "max_token_limit_errors": 0,
+                    "observed_token_limit_error_count": 0,
+                    "passed_count": 0,
+                    "not_evaluated_count": 4,
+                    "errors": [],
+                },
+            )
             self.assertEqual(
                 manifest["output"]["sha256"],
                 sha256_file(output_dir / "indicator_analysis.jsonl"),
@@ -266,6 +426,20 @@ class TestCanonicalIndicatorAnalysisRun(unittest.TestCase):
             self.assertEqual(
                 kwargs["max_new_tokens"],
                 DEFAULT_MAX_NEW_TOKENS,
+            )
+            expected_system_prompt = build_indicator_analysis_system_prompt(
+                DEFAULT_REQUESTED_MAX_OUTPUT_TOKENS
+            )
+            self.assertEqual(kwargs["system_prompt"], expected_system_prompt)
+            self.assertIn("4096 generated tokens", expected_system_prompt)
+            self.assertEqual(
+                manifest["system_prompt"],
+                {
+                    "version": "indicator-analysis-system-prompt-v1",
+                    "sha256": sha256_text(expected_system_prompt),
+                    "requested_max_output_tokens": 4096,
+                    "hard_max_new_tokens": 8192,
+                },
             )
 
     def test_refuses_to_overwrite_immutable_artifacts(self):
@@ -368,6 +542,16 @@ class TestCanonicalIndicatorAnalysisRun(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "temperature=0"):
             IndicatorAnalysisDecoding(temperature=0.5).validate()
 
+    def test_requested_output_limit_must_fit_inside_hard_limit(self):
+        with self.assertRaisesRegex(
+            ValueError,
+            "must not exceed max_new_tokens",
+        ):
+            IndicatorAnalysisDecoding(
+                max_new_tokens=4096,
+                requested_max_output_tokens=4097,
+            ).validate()
+
 
 class TestCanonicalIndicatorLedgerProvenance(unittest.TestCase):
     def _write_chain(self, root: Path) -> dict[str, Path]:
@@ -410,13 +594,9 @@ class TestCanonicalIndicatorLedgerProvenance(unittest.TestCase):
                     "status": "complete",
                     "inputs": {
                         "registry": {"sha256": sha256_file(registry)},
-                        "snapshot_manifest": {
-                            "sha256": sha256_file(snapshot)
-                        },
+                        "snapshot_manifest": {"sha256": sha256_file(snapshot)},
                         "roster": {"sha256": sha256_file(roster)},
-                        "population": {
-                            "sha256": sha256_file(population)
-                        },
+                        "population": {"sha256": sha256_file(population)},
                     },
                     "outputs": {
                         "indicator_inputs": {

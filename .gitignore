@@ -8,6 +8,10 @@ __pycache__/
 
 # Editor backup files in the dissertation tree
 /docs/**/*.back
+*.orig
+
+# Local Codex working files
+.codex_tmp/
 
 # C extensions
 *.so

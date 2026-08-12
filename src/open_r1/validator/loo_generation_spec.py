@@ -51,6 +51,7 @@ TOKEN_LIMIT_FINISH_REASONS = frozenset(
         "token_limit",
     }
 )
+TOKEN_LIMIT_POLICIES = frozenset({"error", "exclude"})
 
 
 class GenerationSpecError(ValueError):
@@ -409,6 +410,12 @@ def _normalise_finish_reason(value: Any) -> str:
     return text
 
 
+def is_token_limit_finish_reason(value: Any) -> bool:
+    """Return whether a backend finish reason denotes output-token exhaustion."""
+
+    return _normalise_finish_reason(value) in TOKEN_LIMIT_FINISH_REASONS
+
+
 def validate_generation_completion(
     *,
     input_token_count: int,
@@ -419,8 +426,20 @@ def validate_generation_completion(
     input_was_truncated: bool = False,
     consumed_input_token_count: int | None = None,
     allowed_finish_reasons: Sequence[str] | None = None,
+    token_limit_policy: str = "error",
 ) -> dict[str, Any]:
-    """Validate context accounting and reject token-limit/unknown completions."""
+    """Validate completion accounting and classify token-limit exclusions.
+
+    ``token_limit_policy="error"`` preserves the canonical fail-closed
+    behavior. ``"exclude"`` retains a terminal raw record for provenance but
+    marks it ineligible for scoring. All other safety failures remain fatal.
+    """
+
+    if token_limit_policy not in TOKEN_LIMIT_POLICIES:
+        raise GenerationSafetyError(
+            "token_limit_policy must be one of "
+            f"{sorted(TOKEN_LIMIT_POLICIES)}, observed {token_limit_policy!r}"
+        )
 
     context_audit = validate_context_budget(
         input_token_count=input_token_count,
@@ -444,10 +463,24 @@ def validate_generation_completion(
 
     normalised_reason = _normalise_finish_reason(finish_reason)
     if normalised_reason in TOKEN_LIMIT_FINISH_REASONS:
-        raise GenerationSafetyError(
-            f"Generation ended at a token limit ({finish_reason!r}); the output "
-            "is not canonical-safe"
-        )
+        if token_limit_policy == "error":
+            raise GenerationSafetyError(
+                f"Generation ended at a token limit ({finish_reason!r}); the "
+                "output is not canonical-safe"
+            )
+        return {
+            **context_audit,
+            "output_token_count": output_token_count,
+            "finish_reason": normalised_reason,
+            "consumed_full_output_budget": (
+                output_token_count == max_new_tokens
+            ),
+            "generation_validation_status": (
+                "excluded_token_limit_finish"
+            ),
+            "eligible_for_scoring": False,
+            "exclusion_reason": "token_limit_finish",
+        }
     allowed = (
         DEFAULT_SUCCESS_FINISH_REASONS
         if allowed_finish_reasons is None
@@ -471,6 +504,9 @@ def validate_generation_completion(
         "output_token_count": output_token_count,
         "finish_reason": normalised_reason,
         "consumed_full_output_budget": output_token_count == max_new_tokens,
+        "generation_validation_status": "passed",
+        "eligible_for_scoring": True,
+        "exclusion_reason": None,
     }
 
 

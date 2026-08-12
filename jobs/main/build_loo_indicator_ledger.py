@@ -11,7 +11,7 @@ from open_r1.validator.loo_ledger import build_loo_indicator_ledger
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Build an immutable 13-meeting × 26-indicator ledger from a "
+            "Build an immutable 11- or 13-meeting × 26-indicator ledger from a "
             "sealed historical-vintage snapshot manifest and raw CSV evidence."
         )
     )
@@ -28,7 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--population",
         required=True,
-        help="Frozen 13-meeting population JSON",
+        help="Frozen 11- or 13-meeting population JSON",
     )
     parser.add_argument(
         "--roster",

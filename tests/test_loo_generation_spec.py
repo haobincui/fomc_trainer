@@ -264,6 +264,44 @@ class TestGenerationSafetyValidation(unittest.TestCase):
                 finish_reason="cancelled",
             )
 
+    def test_explicit_exclusion_policy_classifies_only_token_limit_finishes(self):
+        audit = validate_generation_completion(
+            input_token_count=100,
+            output_token_count=50,
+            max_new_tokens=50,
+            context_limit=200,
+            finish_reason="length",
+            consumed_input_token_count=100,
+            token_limit_policy="exclude",
+        )
+
+        self.assertEqual(
+            audit["generation_validation_status"],
+            "excluded_token_limit_finish",
+        )
+        self.assertFalse(audit["eligible_for_scoring"])
+        self.assertEqual(audit["exclusion_reason"], "token_limit_finish")
+
+        with self.assertRaisesRegex(GenerationSafetyError, "Unknown"):
+            validate_generation_completion(
+                input_token_count=100,
+                output_token_count=25,
+                max_new_tokens=50,
+                context_limit=200,
+                finish_reason="cancelled",
+                token_limit_policy="exclude",
+            )
+        with self.assertRaisesRegex(GenerationSafetyError, "truncation"):
+            validate_generation_completion(
+                input_token_count=100,
+                output_token_count=50,
+                max_new_tokens=50,
+                context_limit=200,
+                finish_reason="length",
+                input_was_truncated=True,
+                token_limit_policy="exclude",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

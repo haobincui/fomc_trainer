@@ -128,9 +128,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--roster",
         default="configs/main/leave_one_out_roster.json",
     )
-    validate_loo_ledger.add_argument(
-        "--expected-manifest-payload-sha256"
-    )
+    validate_loo_ledger.add_argument("--expected-manifest-payload-sha256")
 
     finalize_loo_workflow = subparsers.add_parser(
         "finalize-loo-workflow",
@@ -151,7 +149,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     finalize_loo_workflow.add_argument("--output", required=True)
 
-    cleanup_parser = subparsers.add_parser("cleanup-generated", parents=[dry_run_parent])
+    cleanup_parser = subparsers.add_parser(
+        "cleanup-generated", parents=[dry_run_parent]
+    )
     cleanup_parser.add_argument("--execute", action="store_true")
 
     train_parser = subparsers.add_parser("train", parents=[dry_run_parent])
@@ -160,7 +160,9 @@ def build_parser() -> argparse.ArgumentParser:
     merge_parser = subparsers.add_parser("merge", parents=[dry_run_parent])
     merge_parser.add_argument("stage", choices=[*TRAINING_STAGES, "all"])
 
-    generate_minutes = subparsers.add_parser("generate-minutes", parents=[dry_run_parent])
+    generate_minutes = subparsers.add_parser(
+        "generate-minutes", parents=[dry_run_parent]
+    )
     generate_minutes.add_argument("--model", required=True)
     generate_minutes.add_argument(
         "--input",
@@ -192,6 +194,41 @@ def build_parser() -> argparse.ArgumentParser:
     generate_loo_analysis.add_argument("--output-dir", required=True)
     generate_loo_analysis.add_argument("--seed", type=int, default=20260728)
     generate_loo_analysis.add_argument("--batch-size", type=int, default=20)
+    generate_loo_analysis.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=8192,
+    )
+    generate_loo_analysis.add_argument(
+        "--requested-max-output-tokens",
+        type=int,
+        default=4096,
+    )
+    generate_loo_analysis.add_argument(
+        "--max-model-len",
+        type=int,
+        default=16384,
+    )
+    generate_loo_analysis.add_argument(
+        "--max-token-limit-errors",
+        type=int,
+        default=0,
+    )
+
+    project_loo_analysis = subparsers.add_parser(
+        "project-loo-analysis",
+        parents=[dry_run_parent],
+        help="Extract deterministic final answers for canonical Minutes prompts.",
+    )
+    project_loo_analysis.add_argument("--input", required=True)
+    project_loo_analysis.add_argument("--analysis-manifest", required=True)
+    project_loo_analysis.add_argument("--tokenizer", required=True)
+    project_loo_analysis.add_argument("--output-dir", required=True)
+    project_loo_analysis.add_argument("--source-field", default="generated")
+    project_loo_analysis.add_argument(
+        "--output-field",
+        default="minutes_analysis",
+    )
 
     build_loo_prompts = subparsers.add_parser(
         "build-loo-prompts",
@@ -211,8 +248,21 @@ def build_parser() -> argparse.ArgumentParser:
     build_loo_prompts.add_argument("--population-id")
     build_loo_prompts.add_argument("--tokenizer", required=True)
     build_loo_prompts.add_argument("--output-dir", required=True)
-    build_loo_prompts.add_argument("--analysis-field", default="generated")
+    build_loo_prompts.add_argument(
+        "--analysis-field",
+        default="minutes_analysis",
+    )
     build_loo_prompts.add_argument("--prompt-template")
+    build_loo_prompts.add_argument(
+        "--minutes-max-new-tokens",
+        type=int,
+        default=8192,
+    )
+    build_loo_prompts.add_argument(
+        "--minutes-max-model-len",
+        type=int,
+        default=16384,
+    )
 
     build_loo_spec = subparsers.add_parser(
         "build-loo-spec",
@@ -243,6 +293,7 @@ def build_parser() -> argparse.ArgumentParser:
     finalize_loo.add_argument("--generation-spec", required=True)
     finalize_loo.add_argument("--generation-spec-sha256", required=True)
     finalize_loo.add_argument("--analysis-manifest", required=True)
+    finalize_loo.add_argument("--projection-manifest", required=True)
     finalize_loo.add_argument("--prompt-manifest", required=True)
     finalize_loo.add_argument("--output", required=True)
 
@@ -255,7 +306,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-folder",
         default="dataset/processed/main/evaluation_inputs/mask_prompts_test",
     )
-    filter_mask.add_argument("--split", choices=["train", "eval", "test"], default="test")
+    filter_mask.add_argument(
+        "--split", choices=["train", "eval", "test"], default="test"
+    )
 
     generate_mask = subparsers.add_parser("generate-masking", parents=[dry_run_parent])
     generate_mask.add_argument("--model", required=True)
@@ -331,13 +384,17 @@ def build_parser() -> argparse.ArgumentParser:
         "--allow-missing-generation-manifest",
         action="store_true",
     )
-    masking.add_argument("--unmatched-policy", choices=["error", "drop"], default="error")
+    masking.add_argument(
+        "--unmatched-policy", choices=["error", "drop"], default="error"
+    )
     masking.add_argument("--embedding-batch-size", type=int, default=8)
     masking.add_argument("--score-chunk-size", type=int, default=256)
     masking.add_argument("--bootstrap-samples", type=int, default=5000)
     masking.add_argument("--bootstrap-seed", type=int, default=20260728)
 
-    decision = subparsers.add_parser("eval-decision-baselines", parents=[dry_run_parent])
+    decision = subparsers.add_parser(
+        "eval-decision-baselines", parents=[dry_run_parent]
+    )
     decision.add_argument("--prediction-file", action="append", default=[])
     decision.add_argument("--market-baseline")
 
@@ -543,6 +600,37 @@ def main() -> None:
                 str(args.seed),
                 "--batch-size",
                 str(args.batch_size),
+                "--max-new-tokens",
+                str(args.max_new_tokens),
+                "--requested-max-output-tokens",
+                str(args.requested_max_output_tokens),
+                "--max-model-len",
+                str(args.max_model_len),
+                "--max-token-limit-errors",
+                str(args.max_token_limit_errors),
+            ],
+            dry_run=args.dry_run,
+        )
+        return
+
+    if args.command == "project-loo-analysis":
+        _run(
+            [
+                PYTHON,
+                "-m",
+                "jobs.generation.project_indicator_analysis",
+                "--input",
+                args.input,
+                "--analysis-manifest",
+                args.analysis_manifest,
+                "--tokenizer",
+                args.tokenizer,
+                "--output-dir",
+                args.output_dir,
+                "--source-field",
+                args.source_field,
+                "--output-field",
+                args.output_field,
             ],
             dry_run=args.dry_run,
         )
@@ -567,6 +655,10 @@ def main() -> None:
             args.output_dir,
             "--analysis-field",
             args.analysis_field,
+            "--minutes-max-new-tokens",
+            str(args.minutes_max_new_tokens),
+            "--minutes-max-model-len",
+            str(args.minutes_max_model_len),
         ]
         if args.population_id:
             command.extend(["--population-id", args.population_id])
@@ -616,6 +708,8 @@ def main() -> None:
                 args.generation_spec_sha256,
                 "--analysis-manifest",
                 args.analysis_manifest,
+                "--projection-manifest",
+                args.projection_manifest,
                 "--prompt-manifest",
                 args.prompt_manifest,
                 "--output",
@@ -683,9 +777,7 @@ def main() -> None:
         if args.require_normal_finish:
             command.append("--require-normal-finish")
         if args.intervention_manifest:
-            command.extend(
-                ["--intervention-manifest", args.intervention_manifest]
-            )
+            command.extend(["--intervention-manifest", args.intervention_manifest])
         if args.prompt_manifest:
             command.extend(["--prompt-manifest", args.prompt_manifest])
         if args.generation_spec:
@@ -752,9 +844,7 @@ def main() -> None:
         if args.reference_file:
             command.extend(["--reference-file", args.reference_file])
         if args.embedding_model_sha256:
-            command.extend(
-                ["--embedding-model-sha256", args.embedding_model_sha256]
-            )
+            command.extend(["--embedding-model-sha256", args.embedding_model_sha256])
         for reference_key in args.reference_key:
             command.extend(["--reference-key", reference_key])
         if args.row_output_file:

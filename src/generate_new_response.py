@@ -2,10 +2,11 @@ import json
 import os
 import random
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 
-from open_r1.generate import generate_responses
+from open_r1.generate import generate_responses, get_system_prompt
 from open_r1.provenance import sha256_text
 from open_r1.validator.loo_generation_spec import derive_row_seed
 from utils import save_output
@@ -32,9 +33,7 @@ def _normalise_generation_result(result: object) -> dict:
             "finish_reason": result.get("finish_reason"),
             "stop_reason": result.get("stop_reason"),
             "prompt_token_count": result.get("prompt_token_count"),
-            "prompt_preflight_token_count": result.get(
-                "prompt_preflight_token_count"
-            ),
+            "prompt_preflight_token_count": result.get("prompt_preflight_token_count"),
             "output_token_count": result.get("output_token_count"),
             "input_was_truncated": result.get("input_was_truncated"),
         }
@@ -63,8 +62,11 @@ def generate_new_response(
     max_new_tokens: int = 8192,
     max_model_len: int = 16384,
     tokenizer_path: str | None = None,
+    system_prompt: str | None = None,
     seed_policy: str = ROW_SEED_POLICY_BATCH,
     generation_metadata: dict | None = None,
+    fail_closed: bool = False,
+    progress_callback: Callable[[list[dict], list[int]], None] | None = None,
 ) -> list[dict]:
     if seed_policy not in {ROW_SEED_POLICY_BATCH, ROW_SEED_POLICY_SAMPLE}:
         raise ValueError(
@@ -73,6 +75,14 @@ def generate_new_response(
         )
     if seed_policy == ROW_SEED_POLICY_SAMPLE and seed is None:
         raise ValueError("sample-id-sha256-v1 requires a non-null base seed")
+    effective_system_prompt = (
+        get_system_prompt() if system_prompt is None else system_prompt
+    )
+    if (
+        not isinstance(effective_system_prompt, str)
+        or not effective_system_prompt.strip()
+    ):
+        raise ValueError("system_prompt must be a non-empty string")
 
     if output_file is not None:
         output_suffixes = {".jsonl", ".xlsx", ".csv"}
@@ -82,14 +92,16 @@ def generate_new_response(
             model_path, output_file = output_file, model_path
 
     if isinstance(input_prompt_file, pd.DataFrame):
-        lines = input_prompt_file.to_dict(orient='records')
+        lines = input_prompt_file.to_dict(orient="records")
     elif isinstance(input_prompt_file, list):
         lines = input_prompt_file
     elif isinstance(input_prompt_file, str):
         with open(input_prompt_file, "r", encoding="utf-8") as f:
             lines = [json.loads(line) for line in f]
     else:
-        raise ValueError("input_prompt_file must be a DataFrame, list of dicts, or a file path string.")
+        raise ValueError(
+            "input_prompt_file must be a DataFrame, list of dicts, or a file path string."
+        )
 
     total = len(lines)
     print(f"✅ Total prompts available: {total}")
@@ -104,6 +116,7 @@ def generate_new_response(
     output_generated = []
     output_generation_seeds = []
     output_generation_metadata = []
+    output_dicts = []
     failed_index = []
 
     if not batch_size:
@@ -118,6 +131,73 @@ def generate_new_response(
     batch_indices = []
     batch_number = 0
 
+    def materialize_batch(start: int, expected_indices: list[int]) -> None:
+        """Materialize and optionally persist one completed inference batch."""
+
+        batch_rows = []
+        for idx, tgt, gen, generation_seed, result_metadata in zip(
+            output_index[start:],
+            output_target[start:],
+            output_generated[start:],
+            output_generation_seeds[start:],
+            output_generation_metadata[start:],
+            strict=True,
+        ):
+            base_data = dict(lines[idx])
+            if generation_metadata:
+                base_data.update(generation_metadata)
+
+            source_index = base_data.get("source_index", base_data.get("index", idx))
+            base_data.update(
+                {
+                    "index": base_data.get("index", idx),
+                    "source_index": source_index,
+                    "generation_position": base_data.get("generation_position", idx),
+                    "source_prompt_sha256": sha256_text(
+                        str(base_data.get("prompt") or "")
+                    ),
+                    "target": tgt,
+                    "generated": gen,
+                    "generated_sha256": sha256_text(gen),
+                    "replicate_id": (
+                        None if replicate_id is None else str(replicate_id)
+                    ),
+                    "generation_seed": generation_seed,
+                    "generation_seed_policy": seed_policy,
+                    "generation_model": model_path,
+                    "generation_tokenizer": tokenizer_path or model_path,
+                    "generation_system_prompt_sha256": sha256_text(
+                        effective_system_prompt
+                    ),
+                    "generation_batch_size": int(batch_size),
+                    "decoding_temperature": float(temperature),
+                    "decoding_top_p": float(top_p),
+                    "max_new_tokens": int(max_new_tokens),
+                    "max_model_len": int(max_model_len),
+                    "generation_finish_reason": result_metadata.get(
+                        "finish_reason"
+                    ),
+                    "generation_stop_reason": result_metadata.get("stop_reason"),
+                    "prompt_token_count": result_metadata.get(
+                        "prompt_token_count"
+                    ),
+                    "prompt_preflight_token_count": result_metadata.get(
+                        "prompt_preflight_token_count"
+                    ),
+                    "output_token_count": result_metadata.get(
+                        "output_token_count"
+                    ),
+                    "input_was_truncated": result_metadata.get(
+                        "input_was_truncated"
+                    ),
+                }
+            )
+            batch_rows.append(base_data)
+
+        output_dicts.extend(batch_rows)
+        if progress_callback is not None:
+            progress_callback(batch_rows, list(expected_indices))
+
     for item in lines:
         index += 1
         prompt = item["prompt"]
@@ -128,6 +208,8 @@ def generate_new_response(
         batch_indices.append(index)
 
         if len(batch_prompts) == batch_size:
+            output_start = len(output_index)
+            completed_batch_indices = list(batch_indices)
             batch_seed = None if seed is None else seed + batch_number
             row_seeds = (
                 [
@@ -149,11 +231,16 @@ def generate_new_response(
                     return_metadata=True,
                     max_model_len=max_model_len,
                     tokenizer_path=tokenizer_path,
+                    system_prompt=effective_system_prompt,
                 )
                 for i, result in enumerate(batch_outputs):
                     metadata = _normalise_generation_result(result)
                     generated = metadata["text"]
-                    if not isinstance(generated, str) or not generated.strip() or generated.strip() == "Failed":
+                    if (
+                        not isinstance(generated, str)
+                        or not generated.strip()
+                        or generated.strip() == "Failed"
+                    ):
                         failed_index.append(batch_indices[i])
                         f += 1
                         n += 1
@@ -169,7 +256,12 @@ def generate_new_response(
                     print(f"✅ No. {batch_indices[i]} : Suc {s + 1}, Fail {f}")
                     s += 1
                     n += 1
+                materialize_batch(output_start, completed_batch_indices)
             except Exception as e:
+                if fail_closed:
+                    raise RuntimeError(
+                        f"Generation batch starting at index {batch_indices[0]} failed"
+                    ) from e
                 print(f"❌ Batch starting at index {batch_indices[0]} failed: {e}")
                 failed_index.extend(batch_indices)
                 f += len(batch_prompts)
@@ -182,6 +274,8 @@ def generate_new_response(
 
     # 处理最后一个不满 batch 的剩余
     if batch_prompts:
+        output_start = len(output_index)
+        completed_batch_indices = list(batch_indices)
         batch_seed = None if seed is None else seed + batch_number
         row_seeds = (
             [
@@ -203,11 +297,16 @@ def generate_new_response(
                 return_metadata=True,
                 max_model_len=max_model_len,
                 tokenizer_path=tokenizer_path,
+                system_prompt=effective_system_prompt,
             )
             for i, result in enumerate(batch_outputs):
                 metadata = _normalise_generation_result(result)
                 generated = metadata["text"]
-                if not isinstance(generated, str) or not generated.strip() or generated.strip() == "Failed":
+                if (
+                    not isinstance(generated, str)
+                    or not generated.strip()
+                    or generated.strip() == "Failed"
+                ):
                     failed_index.append(batch_indices[i])
                     f += 1
                     n += 1
@@ -223,64 +322,16 @@ def generate_new_response(
                 print(f"✅ No. {batch_indices[i]} : Suc {s + 1}, Fail {f}")
                 s += 1
                 n += 1
+            materialize_batch(output_start, completed_batch_indices)
         except Exception as e:
+            if fail_closed:
+                raise RuntimeError(
+                    f"Final generation batch starting at index {batch_indices[0]} failed"
+                ) from e
             print(f"❌ Final batch starting at index {batch_indices[0]} failed: {e}")
             failed_index.extend(batch_indices)
             f += len(batch_prompts)
             n += len(batch_prompts)
-
-    # 写出结果到 output_file
-    output_dicts = []
-    for idx, tgt, gen, generation_seed, result_metadata in zip(
-        output_index,
-        output_target,
-        output_generated,
-        output_generation_seeds,
-        output_generation_metadata,
-        strict=True,
-    ):
-        try:
-            base_data = dict(lines[idx])
-        except (IndexError, json.JSONDecodeError) as e:
-            print(f"⚠️ Skipping index {idx} due to error: {e}")
-            continue
-
-        if generation_metadata:
-            base_data.update(generation_metadata)
-
-        source_index = base_data.get("source_index", base_data.get("index", idx))
-
-        # Overwrite or add the new fields.
-        base_data.update({
-            "index": base_data.get("index", idx),
-            "source_index": source_index,
-            "generation_position": idx,
-            "source_prompt_sha256": sha256_text(str(base_data.get("prompt") or "")),
-            "target": tgt,
-            "generated": gen,
-            "generated_sha256": sha256_text(gen),
-            "replicate_id": None if replicate_id is None else str(replicate_id),
-            "generation_seed": generation_seed,
-            "generation_seed_policy": seed_policy,
-            "generation_model": model_path,
-            "generation_tokenizer": tokenizer_path or model_path,
-            "generation_batch_size": int(batch_size),
-            "decoding_temperature": float(temperature),
-            "decoding_top_p": float(top_p),
-            "max_new_tokens": int(max_new_tokens),
-            "max_model_len": int(max_model_len),
-            "generation_finish_reason": result_metadata.get("finish_reason"),
-            "generation_stop_reason": result_metadata.get("stop_reason"),
-            "prompt_token_count": result_metadata.get("prompt_token_count"),
-            "prompt_preflight_token_count": result_metadata.get(
-                "prompt_preflight_token_count"
-            ),
-            "output_token_count": result_metadata.get("output_token_count"),
-            "input_was_truncated": result_metadata.get(
-                "input_was_truncated"
-            ),
-        })
-        output_dicts.append(base_data)
 
     if output_file:
         output_parent = os.path.dirname(output_file)
@@ -291,7 +342,9 @@ def generate_new_response(
     print(f"🎯 Finished. Total: {n}, Success: {s}, Failed: {f}")
     if failed_index and output_file:
         print(f"❗ Failed indices: {failed_index}")
-        pd.DataFrame({"Failed": failed_index}).to_csv(output_file.split(".")[0] + "_failed.csv", index=False)
+        pd.DataFrame({"Failed": failed_index}).to_csv(
+            output_file.split(".")[0] + "_failed.csv", index=False
+        )
 
     print("✅ Finished processing all prompts.")
     print(f"✅ Total: {total}, Suc: {s}, Fail: {f}")

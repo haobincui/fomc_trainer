@@ -5,12 +5,18 @@ import unittest
 from pathlib import Path
 
 from jobs.eval.eval_leave_one_out import (
+    GeneratedArtifact,
     _holm_adjust,
+    _load_scoped_experiment,
+    _resolve_intervention_generation_scope,
     discover_generated_artifacts,
     load_and_validate_generation_manifest,
     pair_generated_artifacts,
+    prepare_paired_rows,
     run_paired_evaluation,
     summarise_scored_rows,
+    validate_scoped_generation_rows,
+    validate_scoped_score_matrix,
 )
 from open_r1.validator.leave_one_out import (
     leave_one_out_metrics_from_similarities,
@@ -86,6 +92,224 @@ class TestLeaveOneOutMetric(unittest.TestCase):
 
         self.assertAlmostEqual(metrics["delta"], 0.2)
         self.assertNotAlmostEqual(metrics["delta"], 1.0 - 0.6)
+
+
+class TestInterventionGenerationScope(unittest.TestCase):
+    def test_accepts_a_sealed_partial_indicator_subset(self):
+        manifest_path = Path("generation_manifest.json")
+        generated, audit = _resolve_intervention_generation_scope(
+            {
+                "intervention_scope": {
+                    "schema_version": "loo-intervention-generation-scope-v1",
+                    "mode": "partial_intervention_shard",
+                    "baseline_indicator": "None",
+                    "full_roster_indicators": ["A", "B", "C"],
+                    "generated_intervention_indicators": ["A", "C"],
+                    "omitted_intervention_indicators": ["B"],
+                    "baseline_contains_full_roster": True,
+                    "standalone_canonical_release_allowed": False,
+                }
+            },
+            baseline_indicator="None",
+            full_roster_indicators={"A", "B", "C"},
+            manifest_path=manifest_path,
+        )
+
+        self.assertEqual(generated, {"A", "C"})
+        self.assertEqual(audit["mode"], "partial_intervention_shard")
+        self.assertEqual(audit["generated_intervention_indicator_count"], 2)
+
+    def test_rejects_an_unsealed_missing_indicator(self):
+        with self.assertRaisesRegex(ValueError, "exact complement"):
+            _resolve_intervention_generation_scope(
+                {
+                    "intervention_scope": {
+                        "schema_version": "loo-intervention-generation-scope-v1",
+                        "mode": "partial_intervention_shard",
+                        "baseline_indicator": "None",
+                        "full_roster_indicators": ["A", "B", "C"],
+                        "generated_intervention_indicators": ["A"],
+                        "omitted_intervention_indicators": ["B"],
+                        "baseline_contains_full_roster": True,
+                        "standalone_canonical_release_allowed": False,
+                    }
+                },
+                baseline_indicator="None",
+                full_roster_indicators={"A", "B", "C"},
+                manifest_path=Path("generation_manifest.json"),
+            )
+
+
+class TestScopedSixIndicatorMatrix(unittest.TestCase):
+    def test_requires_every_indicator_meeting_section_replicate_cell(self):
+        scope = _load_scoped_experiment(
+            Path(__file__).resolve().parents[1]
+            / "configs/main/loo_experiment_legacy6.json"
+        )
+        rows = [
+            {
+                "indicator": indicator,
+                "meeting_date": meeting_date,
+                "section_name": section_name,
+                "replicate_id": "0",
+            }
+            for indicator in scope["intervention_indicators"]
+            for meeting_date in scope["populations"]["pilot_eval_13"][
+                "meeting_dates"
+            ]
+            for section_name in scope["section_names"]
+        ]
+        audit = validate_scoped_score_matrix(
+            rows,
+            scope=scope,
+            population_id="pilot_eval_13",
+            regime="primary",
+        )
+        self.assertEqual(audit["pair_count"], 234)
+        with self.assertRaisesRegex(ValueError, "strict scoped matrix"):
+            validate_scoped_score_matrix(
+                rows[:-1],
+                scope=scope,
+                population_id="pilot_eval_13",
+                regime="primary",
+            )
+
+    def test_scoped_generation_rows_enforce_requested_4096_limit(self):
+        scope = _load_scoped_experiment(
+            Path(__file__).resolve().parents[1]
+            / "configs/main/loo_experiment_legacy6.json"
+        )
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "rows.jsonl"
+            common = {
+                "generation_system_prompt_version": scope["minutes_system_prompt"][
+                    "version"
+                ],
+                "generation_system_prompt_sha256": scope["minutes_system_prompt"][
+                    "sha256"
+                ],
+                "generation_requested_max_output_tokens": 4096,
+                "max_new_tokens": 8192,
+                "max_model_len": 16384,
+                "generation_model_sha256": "a" * 64,
+                "generation_tokenizer_sha256": "b" * 64,
+                "experiment_config_sha256": scope["_sha256"],
+                "input_was_truncated": False,
+                "generation_validation_status": "passed",
+                "generation_finish_reason": "stop",
+                "output_token_count": 4096,
+            }
+            _write_jsonl(path, [common])
+            artifact = GeneratedArtifact(
+                path=path,
+                indicator="None",
+                context="pilot_eval_13",
+                replicate_id="0",
+                generation_seed=1,
+                row_count=1,
+                sha256="c" * 64,
+            )
+            generation_manifest = {
+                "model_artifact": {"sha256": "a" * 64},
+                "tokenizer_artifact": {"sha256": "b" * 64},
+            }
+            audit = validate_scoped_generation_rows(
+                artifacts=[artifact],
+                generation_manifest=generation_manifest,
+                scope=scope,
+            )
+            self.assertEqual(audit["max_observed_output_tokens"], 4096)
+            _write_jsonl(path, [{**common, "output_token_count": 4097}])
+            with self.assertRaisesRegex(ValueError, "invalid completion"):
+                validate_scoped_generation_rows(
+                    artifacts=[artifact],
+                    generation_manifest=generation_manifest,
+                    scope=scope,
+                )
+
+
+class TestTokenLimitPairExclusions(unittest.TestCase):
+    def test_marked_token_limit_row_is_never_sent_to_scoring(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            full_path = root / "None_masked_test_0.jsonl"
+            masked_path = root / "GDP-Growth_masked_test_0.jsonl"
+            common = {
+                "sample_id": "s1",
+                "meeting_date": "2024-01-31",
+                "section_name": "Section A",
+                "replicate_id": "0",
+                "generation_finish_reason": "stop",
+                "generation_validation_status": "passed",
+            }
+            _write_jsonl(full_path, [dict(common, generated="full")])
+            _write_jsonl(
+                masked_path,
+                [
+                    dict(
+                        common,
+                        generated="truncated masked",
+                        generation_finish_reason="length",
+                        generation_validation_status=(
+                            "excluded_token_limit_finish"
+                        ),
+                    )
+                ],
+            )
+            full = GeneratedArtifact(
+                path=full_path,
+                indicator="None",
+                context="test",
+                replicate_id="0",
+                generation_seed=None,
+                row_count=1,
+                sha256="a" * 64,
+            )
+            masked = GeneratedArtifact(
+                path=masked_path,
+                indicator="GDP-Growth",
+                context="test",
+                replicate_id="0",
+                generation_seed=None,
+                row_count=1,
+                sha256="b" * 64,
+            )
+            exclusions: list[dict] = []
+
+            prepared = prepare_paired_rows(
+                full,
+                masked,
+                target_mode="full-output",
+                reference_index=None,
+                reference_key_fields=("meeting_date", "section_name"),
+                unmatched_policy="error",
+                exclusions=exclusions,
+                allow_token_limit_exclusions=True,
+            )
+
+            self.assertEqual(prepared, [])
+            self.assertEqual(len(exclusions), 1)
+            self.assertEqual(
+                exclusions[0]["reason"],
+                "masked_token_limit_finish",
+            )
+            with self.assertRaisesRegex(
+                ValueError,
+                "explicit record-and-exclude",
+            ):
+                prepare_paired_rows(
+                    full,
+                    masked,
+                    target_mode="full-output",
+                    reference_index=None,
+                    reference_key_fields=(
+                        "meeting_date",
+                        "section_name",
+                    ),
+                    unmatched_policy="drop",
+                    exclusions=[],
+                    allow_token_limit_exclusions=False,
+                )
 
 
 class TestPairedLeaveOneOutEvaluation(unittest.TestCase):

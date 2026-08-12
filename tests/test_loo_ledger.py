@@ -19,7 +19,7 @@ from open_r1.validator.loo_ledger import (
     information_as_of_date,
     validate_loo_indicator_ledger,
 )
-from open_r1.validator.loo_ledger import _sample_observations
+from open_r1.validator.loo_ledger import _load_population, _sample_observations
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -247,6 +247,44 @@ class LedgerFixture:
 
 
 class TestD1LedgerConstruction(unittest.TestCase):
+    def test_accepts_frozen_eleven_meeting_checkpoint_population(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            population_path = Path(temporary_directory) / "population.json"
+            meeting_dates = [
+                f"2025-{month:02d}-01" for month in range(1, 12)
+            ]
+            _write_json(
+                population_path,
+                {
+                    "population_id": "checkpoint-eval-11",
+                    "meeting_dates": meeting_dates,
+                },
+            )
+
+            population_id, parsed_dates = _load_population(population_path)
+
+            self.assertEqual(population_id, "checkpoint-eval-11")
+            self.assertEqual(
+                [value.isoformat() for value in parsed_dates],
+                meeting_dates,
+            )
+
+    def test_rejects_unsupported_twelve_meeting_population(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            population_path = Path(temporary_directory) / "population.json"
+            _write_json(
+                population_path,
+                {
+                    "population_id": "unsupported-12",
+                    "meeting_dates": [
+                        f"2025-{month:02d}-01" for month in range(1, 13)
+                    ],
+                },
+            )
+
+            with self.assertRaisesRegex(LooLedgerError, r"\[11, 13\]"):
+                _load_population(population_path)
+
     def test_builds_exact_338_row_replayable_ledger(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
             fixture = LedgerFixture(Path(temporary_directory))

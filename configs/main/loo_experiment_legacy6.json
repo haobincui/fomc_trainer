@@ -1,0 +1,126 @@
+{
+  "schema_version": "loo-scoped-experiment-v1",
+  "experiment_id": "legacy6-full26-v1",
+  "baseline_indicator": "None",
+  "full_context_roster_id": "chapter2-historical-26-indicators-after-2009-v1",
+  "full_context_indicators": [
+    "Bank-Capital",
+    "Bank-Credit-to-Private-Sector",
+    "Business-Investment",
+    "Commodity-Prices",
+    "Consumer-Confidence-Index",
+    "Consumer-Price-Index-(CPI)",
+    "Corporate-Bond-Yields",
+    "Equity-Market-Indices",
+    "Exchange-Rate",
+    "Federal-Funds-Rate",
+    "Federal-Reserve-Balance-Sheet",
+    "GDP-Growth",
+    "Government-Purchases",
+    "Home-Prices",
+    "Housing-Starts",
+    "Industrial-Production",
+    "International-Equity-Markets",
+    "Labour-Market",
+    "Market-Volatility-(VIX)",
+    "Money-Supply",
+    "Mortgage-Rates",
+    "Overnight-Rate",
+    "Personal-Consumption-Expenditures-(PCE)",
+    "Trade-Balance",
+    "Treasury-Yields",
+    "Unemployment-Rate"
+  ],
+  "intervention_indicators": [
+    "Consumer-Price-Index-(CPI)",
+    "Equity-Market-Indices",
+    "Federal-Funds-Rate",
+    "GDP-Growth",
+    "Treasury-Yields",
+    "Unemployment-Rate"
+  ],
+  "populations": {
+    "pilot_eval_13": {
+      "phase": "pilot",
+      "split_label": "eval",
+      "meeting_dates": [
+        "2021-12-15",
+        "2022-01-26",
+        "2022-03-16",
+        "2022-05-04",
+        "2022-06-15",
+        "2022-07-27",
+        "2022-09-21",
+        "2022-11-02",
+        "2022-12-14",
+        "2023-02-01",
+        "2023-03-22",
+        "2023-05-03",
+        "2023-06-14"
+      ]
+    },
+    "formal_test_13": {
+      "phase": "formal",
+      "split_label": "test",
+      "meeting_dates": [
+        "2023-07-26",
+        "2023-09-20",
+        "2023-11-01",
+        "2023-12-13",
+        "2024-01-31",
+        "2024-03-20",
+        "2024-05-01",
+        "2024-06-12",
+        "2024-07-31",
+        "2024-09-18",
+        "2024-11-07",
+        "2024-12-18",
+        "2025-01-29"
+      ]
+    }
+  },
+  "section_names": [
+    "Participants' Views on Current Conditions and the Economic Outlook",
+    "Staff Review of the Economic Situation",
+    "Staff Review of the Financial Situation"
+  ],
+  "minutes_system_prompt": {
+    "version": "canonical-minutes-section-concise-v1",
+    "text": "You draft exactly one requested FOMC Minutes section. Return only the finished Minutes-style prose for that section. Do not reveal analysis or reasoning, do not emit `<think>` or XML/Markdown wrappers, and do not add a preamble, headings, bullet lists, or any other section. Synthesize only the evidence in the user prompt and do not quote indicator blocks verbatim. Be concise and complete. You must finish the section within 4,096 output tokens. Stop immediately after the requested section.",
+    "sha256": "8bcd4db511b1c0327bb958839ccae97aa1f4653bbd60f6c9aa69e2520537eb21",
+    "requested_max_output_tokens": 4096,
+    "hard_max_new_tokens": 8192,
+    "max_model_len": 16384,
+    "input_truncation": "forbidden",
+    "token_limit_policy": "error"
+  },
+  "decoding": {
+    "primary": {
+      "temperature": 0.0,
+      "top_p": 1.0,
+      "replicate_seeds": [
+        20260728
+      ]
+    },
+    "stochastic": {
+      "temperature": 0.6,
+      "top_p": 0.9,
+      "replicate_seeds": [
+        20260729,
+        21260729,
+        22260729,
+        23260729,
+        24260729
+      ]
+    }
+  },
+  "release_policy": {
+    "smoke": "non-inferential-engineering-validation-only",
+    "pilot": "exploratory-protocol-validation",
+    "formal": "six-indicator-final-inference",
+    "complete_matrix_required": true,
+    "generation_exclusions_allowed": false,
+    "legacy_or_remaining20_pooling": "forbidden"
+  },
+  "claim_boundary": "Six preregistered prompt-information-block interventions against a full 26-block context; estimates are model-output similarity effects and are not economic causal effects on FOMC decisions."
+}

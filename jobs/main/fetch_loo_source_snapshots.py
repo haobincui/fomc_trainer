@@ -25,6 +25,7 @@ import shutil
 import tempfile
 import threading
 import time
+import zipfile
 from math import ceil
 from collections.abc import Callable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -50,6 +51,7 @@ SOURCE_INTERFACE = "alfred-graph-csv-v1"
 ALFRED_GRAPH_CSV_URL = "https://alfred.stlouisfed.org/graph/alfredgraph.csv"
 MAX_VINTAGES_PER_REQUEST = 12
 CANONICAL_VINTAGE_COUNT = 26
+CHECKPOINT_EVAL_VINTAGE_COUNT = 11
 MAX_CONCURRENCY = 2
 MAX_REQUESTS_PER_SECOND = 2.0
 DEFAULT_LOOKBACK_YEARS = 5
@@ -58,6 +60,9 @@ DEFAULT_MAX_RETRIES = 4
 DEFAULT_USER_AGENT = "fomc-trainer-canonical-loo/1"
 RETRYABLE_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 SAFE_COMPONENT = re.compile(r"^[A-Za-z0-9._-]+$")
+MAX_ZIP_MEMBER_COUNT = 16
+MAX_ZIP_UNCOMPRESSED_BYTES = 50 * 1024 * 1024
+ZIP_NORMALIZATION = "alfred-partitioned-csv-zip-to-csv-v1"
 
 
 class SnapshotFetchError(RuntimeError):
@@ -657,6 +662,246 @@ def validate_alfred_csv(
     )
 
 
+def _normalise_alfred_zip(
+    body: bytes,
+    request: SnapshotRequest,
+) -> tuple[bytes, dict[str, Any]]:
+    """Merge ALFRED's definition-split ZIP response into one canonical CSV.
+
+    ALFRED occasionally partitions requested vintages into separate CSV
+    members when a series definition changes.  This function accepts only a
+    safe, exact partition of the requested vintage columns and reconstructs
+    the ordinary graph-export CSV expected by the downstream validator.
+    """
+
+    expected_columns = [
+        f"{request.series_id}_{vintage_date.replace('-', '')}"
+        for vintage_date in request.vintage_dates
+    ]
+    expected_set = set(expected_columns)
+    values_by_column: dict[str, dict[str, str]] = {}
+    all_dates: set[str] = set()
+    member_records: list[dict[str, Any]] = []
+
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(body))
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise SnapshotFetchError(
+            f"{request.request_id}: malformed ALFRED ZIP response"
+        ) from exc
+
+    with archive:
+        members = archive.infolist()
+        if not 1 <= len(members) <= MAX_ZIP_MEMBER_COUNT:
+            raise SnapshotFetchError(
+                f"{request.request_id}: ALFRED ZIP contains {len(members)} "
+                f"members; allowed range is 1..{MAX_ZIP_MEMBER_COUNT}"
+            )
+        total_uncompressed = sum(member.file_size for member in members)
+        if total_uncompressed > MAX_ZIP_UNCOMPRESSED_BYTES:
+            raise SnapshotFetchError(
+                f"{request.request_id}: ALFRED ZIP expands to "
+                f"{total_uncompressed} bytes, exceeding the safety limit"
+            )
+
+        csv_member_count = 0
+        for member in members:
+            name = member.filename
+            if (
+                not name
+                or "\x00" in name
+                or "/" in name
+                or "\\" in name
+                or name in {".", ".."}
+                or member.is_dir()
+            ):
+                raise SnapshotFetchError(
+                    f"{request.request_id}: unsafe ALFRED ZIP member {name!r}"
+                )
+            if member.flag_bits & 0x1:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: encrypted ALFRED ZIP members "
+                    "are not permitted"
+                )
+            if name.casefold() == "readme.txt":
+                continue
+            if not name.casefold().endswith(".csv"):
+                raise SnapshotFetchError(
+                    f"{request.request_id}: unexpected ALFRED ZIP member "
+                    f"{name!r}"
+                )
+
+            csv_member_count += 1
+            try:
+                member_body = archive.read(member)
+            except (OSError, RuntimeError, zipfile.BadZipFile) as exc:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: could not read ALFRED ZIP "
+                    f"member {name!r}"
+                ) from exc
+            if len(member_body) != member.file_size:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: ALFRED ZIP member {name!r} "
+                    "size does not match its archive directory entry"
+                )
+            try:
+                text = member_body.decode("utf-8-sig")
+            except UnicodeDecodeError as exc:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: ALFRED ZIP member {name!r} "
+                    "is not valid UTF-8"
+                ) from exc
+            if "\x00" in text:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: ALFRED ZIP member {name!r} "
+                    "contains a NUL byte"
+                )
+            try:
+                rows = list(csv.reader(io.StringIO(text, newline="")))
+            except csv.Error as exc:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: malformed CSV member {name!r}: "
+                    f"{exc}"
+                ) from exc
+            if not rows or len(rows[0]) < 2 or rows[0][0] != "observation_date":
+                raise SnapshotFetchError(
+                    f"{request.request_id}: invalid header in ALFRED ZIP "
+                    f"member {name!r}"
+                )
+            columns = rows[0][1:]
+            if len(columns) != len(set(columns)):
+                raise SnapshotFetchError(
+                    f"{request.request_id}: duplicate vintage column within "
+                    f"ALFRED ZIP member {name!r}"
+                )
+            unexpected = sorted(set(columns) - expected_set)
+            duplicate = sorted(set(columns) & set(values_by_column))
+            if unexpected or duplicate:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: ALFRED ZIP column partition is "
+                    f"invalid; unexpected={unexpected}, duplicate={duplicate}"
+                )
+
+            member_values = {column: {} for column in columns}
+            previous_date: date | None = None
+            for row_number, row in enumerate(rows[1:], 2):
+                if not row or not any(cell.strip() for cell in row):
+                    continue
+                if len(row) != len(rows[0]):
+                    raise SnapshotFetchError(
+                        f"{request.request_id}: ZIP member {name!r} row "
+                        f"{row_number} has {len(row)} columns, expected "
+                        f"{len(rows[0])}"
+                    )
+                raw_date = row[0].strip()
+                try:
+                    observation_date = date.fromisoformat(raw_date)
+                except ValueError as exc:
+                    raise SnapshotFetchError(
+                        f"{request.request_id}: ZIP member {name!r} row "
+                        f"{row_number} has invalid observation_date "
+                        f"{raw_date!r}"
+                    ) from exc
+                if observation_date.isoformat() != raw_date:
+                    raise SnapshotFetchError(
+                        f"{request.request_id}: ZIP member {name!r} row "
+                        f"{row_number} observation_date is not canonical"
+                    )
+                if previous_date is not None and observation_date <= previous_date:
+                    raise SnapshotFetchError(
+                        f"{request.request_id}: ZIP member {name!r} dates "
+                        "are not strictly ascending and unique"
+                    )
+                previous_date = observation_date
+                all_dates.add(raw_date)
+                for column, raw_value in zip(columns, row[1:], strict=True):
+                    member_values[column][raw_date] = raw_value.strip()
+
+            values_by_column.update(member_values)
+            member_records.append(
+                {
+                    "name": name,
+                    "sha256": _sha256_bytes(member_body),
+                    "byte_count": len(member_body),
+                    "columns": columns,
+                }
+            )
+
+    if csv_member_count == 0:
+        raise SnapshotFetchError(
+            f"{request.request_id}: ALFRED ZIP contains no CSV members"
+        )
+    missing = [column for column in expected_columns if column not in values_by_column]
+    if missing:
+        raise SnapshotFetchError(
+            f"{request.request_id}: ALFRED ZIP is missing requested vintage "
+            f"columns {missing}"
+        )
+
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(["observation_date", *expected_columns])
+    for observation_date in sorted(all_dates):
+        writer.writerow(
+            [
+                observation_date,
+                *[
+                    values_by_column[column].get(observation_date, "")
+                    for column in expected_columns
+                ],
+            ]
+        )
+    normalized_body = output.getvalue().encode("utf-8")
+    # Apply the ordinary strict validator before returning normalized bytes.
+    validate_alfred_csv(normalized_body, request)
+    return normalized_body, {
+        "normalization": ZIP_NORMALIZATION,
+        "archive_format": "zip",
+        "members": member_records,
+    }
+
+
+def _normalise_alfred_response(
+    response: HttpResult,
+    request: SnapshotRequest,
+) -> tuple[HttpResult, bytes | None, dict[str, Any] | None]:
+    """Return a canonical CSV response and optional preserved transport facts."""
+
+    content_type = (
+        str(response.headers.get("content-type") or "")
+        .split(";", 1)[0]
+        .strip()
+        .lower()
+    )
+    if content_type == "application/csv":
+        return response, None, None
+    if content_type not in {"application/zip", "application/x-zip-compressed"}:
+        raise SnapshotFetchError(
+            f"{request.request_id}: expected application/csv or a supported "
+            f"ALFRED ZIP response, received {content_type!r}"
+        )
+
+    normalized_body, details = _normalise_alfred_zip(response.body, request)
+    normalized_headers = dict(response.headers)
+    normalized_headers["content-type"] = "application/csv"
+    transport = {
+        **details,
+        "content_type": content_type,
+        "sha256": _sha256_bytes(response.body),
+        "byte_count": len(response.body),
+        "relative_path": "response.transport.zip",
+    }
+    return (
+        HttpResult(
+            status_code=response.status_code,
+            headers=normalized_headers,
+            body=normalized_body,
+        ),
+        response.body,
+        transport,
+    )
+
+
 class RateLimiter:
     """Thread-safe limiter for request-start times."""
 
@@ -785,6 +1030,8 @@ def _write_atomic_request_cache(
     response: HttpResult,
     retrieved_at_utc: str,
     validation: CsvValidation,
+    transport_body: bytes | None = None,
+    transport_metadata: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     raw_path = _resolve_relative_path(output_dir, request.raw_relative_path)
     request_dir = raw_path.parent
@@ -823,6 +1070,29 @@ def _write_atomic_request_cache(
                 "last_observation_date": validation.last_observation_date,
             },
         }
+        if transport_body is not None or transport_metadata is not None:
+            if transport_body is None or transport_metadata is None:
+                raise SnapshotFetchError(
+                    f"{request.request_id}: transport body and metadata "
+                    "must be supplied together"
+                )
+            expected_transport_sha = _sha256_bytes(transport_body)
+            if (
+                transport_metadata.get("sha256") != expected_transport_sha
+                or transport_metadata.get("byte_count") != len(transport_body)
+                or transport_metadata.get("relative_path")
+                != "response.transport.zip"
+            ):
+                raise SnapshotFetchError(
+                    f"{request.request_id}: transport metadata does not "
+                    "match the preserved response"
+                )
+            temporary_transport = temporary_dir / "response.transport.zip"
+            with temporary_transport.open("wb") as handle:
+                handle.write(transport_body)
+                handle.flush()
+                os.fsync(handle.fileno())
+            metadata["transport"] = dict(transport_metadata)
         temporary_metadata = temporary_dir / "response.json"
         metadata_bytes = (
             json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
@@ -868,6 +1138,46 @@ def _load_cached_request(
         raise SnapshotFetchError(
             f"{request.request_id}: cached raw response hash/size mismatch"
         )
+    transport = metadata.get("transport")
+    if transport is not None:
+        if not isinstance(transport, Mapping):
+            raise SnapshotFetchError(
+                f"{request.request_id}: cached transport metadata is invalid"
+            )
+        transport_relative_path = transport.get("relative_path")
+        if transport_relative_path != "response.transport.zip":
+            raise SnapshotFetchError(
+                f"{request.request_id}: cached transport path is invalid"
+            )
+        transport_path = raw_path.with_name(transport_relative_path)
+        if not transport_path.is_file():
+            raise SnapshotFetchError(
+                f"{request.request_id}: preserved transport response is missing"
+            )
+        transport_body = transport_path.read_bytes()
+        if (
+            transport.get("sha256") != _sha256_bytes(transport_body)
+            or transport.get("byte_count") != len(transport_body)
+        ):
+            raise SnapshotFetchError(
+                f"{request.request_id}: cached transport hash/size mismatch"
+            )
+        reconstructed, _, reconstructed_transport = _normalise_alfred_response(
+            HttpResult(
+                status_code=200,
+                headers={"content-type": str(transport.get("content_type") or "")},
+                body=transport_body,
+            ),
+            request,
+        )
+        if (
+            reconstructed.body != body
+            or reconstructed_transport != dict(transport)
+        ):
+            raise SnapshotFetchError(
+                f"{request.request_id}: cached transport no longer "
+                "reconstructs the normalized CSV"
+            )
     observed = validate_alfred_csv(body, request)
     expected_validation = metadata.get("validation")
     current_validation = {
@@ -887,7 +1197,7 @@ def _request_manifest_record(
     request: SnapshotRequest,
     metadata: Mapping[str, Any],
 ) -> dict[str, Any]:
-    return {
+    record = {
         "request_id": request.request_id,
         "source_key": request.source_key,
         "series_id": request.series_id,
@@ -903,6 +1213,9 @@ def _request_manifest_record(
         "status_code": metadata["status_code"],
         "validation": metadata["validation"],
     }
+    if "transport" in metadata:
+        record["transport"] = metadata["transport"]
+    return record
 
 
 def _write_new_file_atomically(path: Path, content: bytes) -> None:
@@ -1021,8 +1334,12 @@ def fetch_source_snapshots(
                 "for 13 vintages, two populations for 26, or set "
                 "--expected-vintage-count explicitly"
             )
-    elif expected_vintage_count not in {13, CANONICAL_VINTAGE_COUNT}:
-        raise ValueError("expected_vintage_count must be 13 or 26")
+    elif expected_vintage_count not in {
+        CHECKPOINT_EVAL_VINTAGE_COUNT,
+        13,
+        CANONICAL_VINTAGE_COUNT,
+    }:
+        raise ValueError("expected_vintage_count must be 11, 13, or 26")
     meetings, populations = load_meetings(
         population_paths,
         expected_vintage_count=expected_vintage_count,
@@ -1073,17 +1390,9 @@ def fetch_source_snapshots(
                 max_retries=max_retries,
                 sleep=retry_sleep,
             )
-            content_type = (
-                str(response.headers.get("content-type") or "")
-                .split(";", 1)[0]
-                .strip()
-                .lower()
+            response, transport_body, transport_metadata = (
+                _normalise_alfred_response(response, snapshot_request)
             )
-            if content_type != "application/csv":
-                raise SnapshotFetchError(
-                    f"{snapshot_request.request_id}: expected "
-                    f"application/csv, received {content_type!r}"
-                )
             validation = validate_alfred_csv(
                 response.body,
                 snapshot_request,
@@ -1094,6 +1403,8 @@ def fetch_source_snapshots(
                 response=response,
                 retrieved_at_utc=retrieved_at,
                 validation=validation,
+                transport_body=transport_body,
+                transport_metadata=transport_metadata,
             )
         return _request_manifest_record(snapshot_request, metadata)
 
@@ -1146,8 +1457,8 @@ def fetch_source_snapshots(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Fetch immutable, keyless ALFRED graph CSV snapshots for all 26 "
-            "canonical LOO meeting vintages."
+            "Fetch immutable, keyless ALFRED graph CSV snapshots for a frozen "
+            "LOO or common-checkpoint evaluation population."
         )
     )
     parser.add_argument("--registry", required=True, type=Path)
@@ -1163,11 +1474,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--expected-vintage-count",
         type=int,
-        choices=(13, CANONICAL_VINTAGE_COUNT),
+        choices=(
+            CHECKPOINT_EVAL_VINTAGE_COUNT,
+            13,
+            CANONICAL_VINTAGE_COUNT,
+        ),
         default=None,
         help=(
-            "Expected unique meetings. By default this is inferred as 13 for "
-            "one --population and 26 for two."
+            "Expected unique meetings. Pass 11 for the clean checkpoint "
+            "comparison; by default this is inferred as 13 for one "
+            "--population and 26 for two."
         ),
     )
     parser.add_argument(
