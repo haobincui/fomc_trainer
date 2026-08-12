@@ -1,0 +1,89 @@
+model_name_or_path: models/DeepSeek-R1-Distill-Llama-8B
+model_revision: null
+dtype: bfloat16
+attn_implementation: flex_attention
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+use_bnb_nested_quant: true
+bnb_4bit_quant_storage: bfloat16
+
+dataset_name: output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/analysis_sft
+dataset_prompt_column: prompt
+dataset_train_split: train
+dataset_test_split: validation
+dataset_semantic_override_stage: chk1
+dataset_semantic_override_candidate_manifest: output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/candidate_manifest.json
+dataset_semantic_override_candidate_manifest_sha256: 41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700
+dataset_semantic_override_validation_receipt: docs/summary/20260809T213520Z/chk1_clean_sft_token_validation.json
+dataset_semantic_override_validation_receipt_sha256: 12c9f9f56c3946a98e3ca4eb4770818c30489b71c5cc498bbedb24edafef187b
+dataset_semantic_override_audit_summary: output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_qwen_source_audit/summary.json
+dataset_semantic_override_audit_summary_sha256: 780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e
+dataset_semantic_override_authorization_receipt: docs/summary/20260809T234411Z/chk1_semantic_override_authorization.json
+dataset_semantic_override_authorization_receipt_sha256: efe099889333a951df9a371cc2cfc06b22560c93a408cbfedb07e5f16084f602
+system_prompt: |
+  Analyze only the supplied point-in-time FOMC evidence. Do not infer facts from
+  later releases or from the target meeting's Minutes. Use the model's native
+  reasoning boundary, then provide a concise, evidence-grounded final analysis.
+
+bf16: true
+tf32: true
+optim: paged_adamw_8bit
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 5.0e-05
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+weight_decay: 0.01
+max_grad_norm: 1.0
+packing: false
+completion_only_loss: true
+max_length: 4608
+
+do_eval: true
+eval_strategy: steps
+eval_steps: 10
+num_train_epochs: 2
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+ddp_find_unused_parameters: false
+dataloader_num_workers: 2
+dataloader_pin_memory: true
+
+peft_merged_model_path: output/training/retrain_v2/chk1_clean_v2_override_full_20260809/merged/chk1
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+output_dir: output/training/retrain_v2/chk1_clean_v2_override_full_20260809/adapters/chk1
+overwrite_output_dir: false
+resume_from_checkpoint: null
+save_strategy: steps
+save_steps: 1
+save_total_limit: null
+save_only_model: false
+checkpoint_keep_last: 3
+checkpoint_keep_every_n_steps: 10
+callbacks:
+  - loss_log
+  - checkpoint_retention
+log_level: info
+logging_strategy: steps
+logging_steps: 1
+logging_first_step: true
+push_to_hub: false
+report_to: []
+seed: 42
+data_seed: 42
+use_cache: false
+use_liger_kernel: true
+activation_offloading: false

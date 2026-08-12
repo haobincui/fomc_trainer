@@ -1,0 +1,24 @@
+# Merge-only configuration for the chk3 checkpoint-318 evaluation candidate.
+# It performs no training, is non-promotable, and publishes only to a new
+# evaluation artifact path.  merge_from_config refuses to overwrite that path.
+model_name_or_path: output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1
+output_dir: output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/checkpoint-318
+peft_merged_model_path: output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/models/chk3_cp318_merged
+
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_bias: none
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+source_training_config: configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_full3ep_lr1e6_20260810.yaml
+source_native_generation_manifest: output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/cp318/manifest.json
+scope: chk3_checkpoint_318_evaluation_merge_only
+canonical_dag_promotable: false

@@ -15,15 +15,26 @@
 from transformers.utils.import_utils import _is_package_available
 
 
-# Use same as transformers.utils.import_utils
-_e2b_available = _is_package_available("e2b")
+def _package_available(name: str) -> bool:
+    """Normalize Transformers 4.x/5.x private helper return contracts."""
+
+    result = _is_package_available(name)
+    # Transformers 5 returns ``(available, version)`` while older releases
+    # returned a boolean.  Treating the new tuple directly as a bool makes
+    # ``(False, None)`` truthy and eagerly imports missing optional packages.
+    return bool(result[0] if isinstance(result, tuple) else result)
+
+
+# Use the same package probes as Transformers without relying on its private
+# helper's version-specific return type.
+_e2b_available = _package_available("e2b")
 
 
 def is_e2b_available() -> bool:
     return _e2b_available
 
 
-_morph_available = _is_package_available("morphcloud")
+_morph_available = _package_available("morphcloud")
 
 
 def is_morph_available() -> bool:

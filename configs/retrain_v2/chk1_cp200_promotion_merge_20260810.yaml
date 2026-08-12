@@ -1,0 +1,35 @@
+promotion_schema_version: 1
+promotion_id: chk1_clean_v2_lr1e6_selected_cp200_20260810
+stage: chk1
+checkpoint_step: 200
+
+model_name_or_path: models/DeepSeek-R1-Distill-Llama-8B
+output_dir: output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200
+peft_merged_model_path: output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_20260810/merged/chk1
+
+expected_base_model_sha256: bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11
+expected_source_adapter_sha256: fa454f73071b3989bf7c9ea3aaabb5a599196396a3ecb369d8956b849bacdc2f
+expected_adapter_model_sha256: 7a5155562d9482028e0acb777a7b5758e4283f8463c0c39a0cade4062959b9a9
+expected_adapter_config_sha256: 038a883598021f7f7b0d1144cdb59e1adaf10473b01e25a656f28499467c7534
+
+selection_evidence:
+  - path: docs/summary/20260810T123000Z/chk1_checkpoint_selection/artifact.json
+    sha256: 274f8ad170617d650a3bc9ae181e506158eb4294481825479aef0f2c79455eb6
+  - path: docs/summary/20260810T123000Z/chk1_checkpoint_selection/selection_snapshot.jsonl
+    sha256: 4a5d2f3a9de4cbcc5f54b400817740d707143ba25eeec6963db3b51291353652
+  - path: docs/summary/20260810T123000Z/chk1_checkpoint_selection/source_notes.md
+    sha256: 2fa0eabd68d3afde7330eeff224316f79c861754c8d3c5bc589310e036c08423
+
+authorization_receipt: docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_downstream_override_authorization.json
+promotion_receipt: docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/merge_receipt.json
+downstream_stages_allowed:
+  - chk2
+canonical_dag_integration: false
+
+merge_policy:
+  executor: jobs.retrain_v2.merge_adapter.merge_from_config
+  model_dtype: bfloat16
+  device: cpu
+  source_adapter_copy: true
+  publication: renameat2(RENAME_NOREPLACE)
+  overwrite: false

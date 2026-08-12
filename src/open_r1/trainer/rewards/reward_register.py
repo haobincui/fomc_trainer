@@ -7,6 +7,32 @@ from open_r1.trainer.rewards.reward_funcs.online_reward import (
     combined_reward,
     reasoning_reward,
 )
+from open_r1.trainer.rewards.reward_funcs.analysis_reward_v2 import (
+    grounded_analysis_reward_v2,
+)
+from open_r1.trainer.rewards.reward_funcs.analysis_reward_v3 import (
+    grounded_analysis_reward_v3,
+)
+from open_r1.trainer.rewards.reward_funcs.analysis_reward_v3_deepseek_high import (
+    DEEPSEEK_BASE_URL,
+    DEEPSEEK_MAX_OUTPUT_TOKENS,
+    DEEPSEEK_MODEL,
+    grounded_analysis_reward_v3_deepseek_high,
+)
+from open_r1.trainer.rewards.reward_funcs.analysis_reward_v3_deepseek_low import (
+    DEEPSEEK_BASE_URL as DEEPSEEK_LOW_BASE_URL,
+    DEEPSEEK_MAX_OUTPUT_TOKENS as DEEPSEEK_LOW_MAX_OUTPUT_TOKENS,
+    DEEPSEEK_MODEL as DEEPSEEK_LOW_MODEL,
+    DEEPSEEK_TIMEOUT600_SECONDS as DEEPSEEK_LOW_TIMEOUT600_SECONDS,
+    grounded_analysis_reward_v3_deepseek_low,
+    grounded_analysis_reward_v3_deepseek_low_timeout600,
+)
+from open_r1.trainer.rewards.reward_funcs.decision_reward_v2 import (
+    decision_dense_reward_v2,
+)
+from open_r1.trainer.rewards.reward_funcs.decision_reward_v3 import (
+    decision_dense_reward_v3,
+)
 from open_r1.trainer.rewards.reward_funcs.reward_funcs import (
     accuracy_reward,
     binary_code_reward,
@@ -28,7 +54,14 @@ def _online_reward_kwargs(script_args, training_args=None) -> dict:
     reward_kwargs = {
         "url": getattr(script_args, "judge_url", None),
         "model": getattr(script_args, "judge_model", None),
+        "tokenizer_path": getattr(script_args, "judge_tokenizer_path", None),
+        "max_model_len": getattr(script_args, "judge_max_model_len", None),
+        "max_completion_tokens": getattr(
+            script_args, "judge_max_completion_tokens", None
+        ),
         "timeout": getattr(script_args, "judge_timeout", None),
+        "max_retries": getattr(script_args, "judge_max_retries", 3),
+        "backoff_seconds": getattr(script_args, "judge_backoff_seconds", 1.0),
         "verbose": getattr(script_args, "judge_verbose", None),
         "sleep_seconds": getattr(script_args, "judge_sleep_seconds", None),
         "api_key_env": getattr(script_args, "judge_api_key_env", None),
@@ -42,7 +75,73 @@ def _online_reward_kwargs(script_args, training_args=None) -> dict:
 
 def get_reward_funcs(script_args, training_args=None) -> list[Callable]:
     online_reward_kwargs = _online_reward_kwargs(script_args, training_args)
+    deepseek_high_reward_kwargs = {
+        **online_reward_kwargs,
+        "url": DEEPSEEK_BASE_URL,
+        "model": DEEPSEEK_MODEL,
+        "max_completion_tokens": DEEPSEEK_MAX_OUTPUT_TOKENS,
+        "timeout": 420,
+        "max_retries": 2,
+        "backoff_seconds": 2.0,
+        "api_key_env": "DEEPSEEK_API_KEY",
+    }
+    deepseek_low_reward_kwargs = {
+        **online_reward_kwargs,
+        "url": DEEPSEEK_LOW_BASE_URL,
+        "model": DEEPSEEK_LOW_MODEL,
+        "max_completion_tokens": DEEPSEEK_LOW_MAX_OUTPUT_TOKENS,
+        "timeout": 420,
+        "max_retries": 2,
+        "backoff_seconds": 2.0,
+        "api_key_env": "DEEPSEEK_API_KEY",
+    }
+    deepseek_low_timeout600_reward_kwargs = {
+        **deepseek_low_reward_kwargs,
+        "timeout": DEEPSEEK_LOW_TIMEOUT600_SECONDS,
+    }
+    persisted_reward_kwargs = (
+        {"save_path": online_reward_kwargs["save_path"]}
+        if "save_path" in online_reward_kwargs
+        else {}
+    )
     REWARD_FUNCS_REGISTRY = {
+        "grounded_analysis_v2": update_wrapper(
+            partial(grounded_analysis_reward_v2, **online_reward_kwargs),
+            grounded_analysis_reward_v2,
+        ),
+        "grounded_analysis_v3": update_wrapper(
+            partial(grounded_analysis_reward_v3, **online_reward_kwargs),
+            grounded_analysis_reward_v3,
+        ),
+        "grounded_analysis_v3_deepseek_high": update_wrapper(
+            partial(
+                grounded_analysis_reward_v3_deepseek_high,
+                **deepseek_high_reward_kwargs,
+            ),
+            grounded_analysis_reward_v3_deepseek_high,
+        ),
+        "grounded_analysis_v3_deepseek_low": update_wrapper(
+            partial(
+                grounded_analysis_reward_v3_deepseek_low,
+                **deepseek_low_reward_kwargs,
+            ),
+            grounded_analysis_reward_v3_deepseek_low,
+        ),
+        "grounded_analysis_v3_deepseek_low_timeout600": update_wrapper(
+            partial(
+                grounded_analysis_reward_v3_deepseek_low_timeout600,
+                **deepseek_low_timeout600_reward_kwargs,
+            ),
+            grounded_analysis_reward_v3_deepseek_low_timeout600,
+        ),
+        "decision_dense_v2": update_wrapper(
+            partial(decision_dense_reward_v2, **persisted_reward_kwargs),
+            decision_dense_reward_v2,
+        ),
+        "decision_dense_v3": update_wrapper(
+            partial(decision_dense_reward_v3, **persisted_reward_kwargs),
+            decision_dense_reward_v3,
+        ),
         "rate_accuracy": rate_accuracy_reward,
         "rate_format": rate_format_reward,
         "online": update_wrapper(partial(combined_reward, **online_reward_kwargs), combined_reward),

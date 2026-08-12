@@ -1,0 +1,116 @@
+schema_version: 2
+experiment_family: fomc_retrain_v2
+
+paths:
+  dataset_release_root: dataset/processed/retrain_v2
+  output_root: output/training/retrain_v2
+
+judge:
+  artifact: models/Qwen3.5-9B
+  tokenizer_path: models/Qwen3.5-9B
+  served_model_name: Qwen3.5-9B
+  url: http://127.0.0.1:8000/v1/chat/completions
+  timeout: 180
+  max_retries: 3
+  backoff_seconds: 1.0
+  max_model_len: 8192
+  max_completion_tokens: 2048
+  candidate_reserve_tokens: 1536
+  boundary_margin_tokens: 32
+  used_by: chk2
+
+derived_data_contract:
+  producer_stage: chk2
+  manifest_filename: derived_release_manifest.json
+  generation:
+    temperature: 0
+    do_sample: false
+  required_audits:
+    - schema
+    - token_budget
+    - reference_leakage
+    - analysis_lineage
+    - decision_balance
+    - target_integrity
+    - point_in_time
+
+hardware:
+  gpu_model: NVIDIA A30
+  gpu_count: 2
+  gpu_memory_gib: 24
+  attention_implementation: stage_specific
+  attention_implementation_by_stage:
+    chk1: flex_attention
+    chk2: sdpa
+    chk3: sdpa
+    chk4: sdpa
+  precision: bfloat16
+  quantization: nf4_double_quant
+  max_gpu_memory_gib: 22
+
+token_budgets:
+  chk1:
+    prompt: 3072
+    completion: null
+    total: 7168
+    overflow_policy: error
+  chk2:
+    prompt: 2560
+    completion: 1024
+    overflow_policy: error
+  chk3:
+    prompt: 3072
+    completion: null
+    total: 4096
+    overflow_policy: error
+  chk4:
+    prompt: 2560
+    completion: 512
+    overflow_policy: error
+
+stages:
+  chk0:
+    kind: foundation
+    parent: null
+    artifact: models/DeepSeek-R1-Distill-Llama-8B
+    launcher: none
+
+  chk1:
+    kind: analysis_sft
+    parent: chk0
+    config: configs/retrain_v2/chk1_analysis_sft.yaml
+    dataset_release_role: base
+    dataset: dataset/processed/retrain_v2/__BASE_RELEASE_ID__/analysis_sft
+    artifact: output/training/retrain_v2/__RUN_ID__/merged/chk1
+    launcher: ddp_2xa30
+
+  chk2:
+    kind: analysis_grpo
+    parent: chk1
+    config: configs/retrain_v2/chk2_analysis_grpo.yaml
+    dataset_release_role: base
+    dataset: dataset/processed/retrain_v2/__BASE_RELEASE_ID__/analysis_grpo
+    artifact: output/training/retrain_v2/__RUN_ID__/merged/chk2
+    launcher: policy_gpu1_judge_gpu0
+    required_rewards:
+      - grounded_analysis_v2
+
+  chk3:
+    kind: minutes_sft
+    parent: chk2
+    config: configs/retrain_v2/chk3_minutes_sft.yaml
+    dataset_release_role: derived_chk2
+    dataset: dataset/processed/retrain_v2/__DERIVED_RELEASE_ID__/minutes_alignment
+    artifact: output/training/retrain_v2/__RUN_ID__/merged/chk3
+    launcher: ddp_2xa30
+
+  chk4:
+    kind: decision_grpo
+    parent: chk2
+    config: configs/retrain_v2/chk4_decision_grpo.yaml
+    dataset_release_role: derived_chk2
+    dataset: dataset/processed/retrain_v2/__DERIVED_RELEASE_ID__/decision_grpo
+    artifact: output/training/retrain_v2/__RUN_ID__/merged/chk4
+    launcher: ddp_2xa30
+    required_rewards:
+      - decision_dense_v2

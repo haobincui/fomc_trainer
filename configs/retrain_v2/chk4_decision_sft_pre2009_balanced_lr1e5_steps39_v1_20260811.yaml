@@ -1,0 +1,101 @@
+model_name_or_path: output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_core_v3_20260810/parent/merged/chk1
+model_revision: null
+dtype: bfloat16
+attn_implementation: sdpa
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+use_bnb_nested_quant: true
+bnb_4bit_quant_storage: bfloat16
+
+dataset_name: dataset/processed/retrain_v2/chk4_decision_pre2009_train_balanced_v1_20260811/decision_sft
+dataset_chk4_role: decision_sft_pre2009_balanced
+dataset_chk4_release_manifest: dataset/processed/retrain_v2/chk4_decision_pre2009_train_balanced_v1_20260811/release_manifest.json
+dataset_chk4_release_manifest_sha256: 5141e00569b94e4af96f030f46176e9cd409199a6f26ac1c63a2ce335fe1e2d6
+dataset_prompt_column: prompt
+dataset_train_split: train
+dataset_test_split: validation
+system_prompt: |
+  You are an FOMC policy decision analyst. Use only the supplied target-neutral
+  pre-meeting analysis. In the native reasoning section, weigh the evidence under
+  the maximum-employment and price-stability objectives.
+
+  Do not use outside or remembered historical information, infer the meeting
+  identity, or claim that the Committee actually took an action. After closing
+  the reasoning section, output exactly one JSON object with keys direction and
+  magnitude_bp. Direction must be cut, hold, or hike. Hold requires magnitude 0;
+  cut and hike require 25, 50, 75, or 100. Output no headings, commentary, answer
+  tags, or additional keys.
+
+bf16: true
+tf32: true
+optim: paged_adamw_8bit
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 1.0e-05
+lr_scheduler_type: cosine
+warmup_ratio: 0.0
+warmup_steps: 2
+weight_decay: 0.01
+max_grad_norm: 1.0
+packing: false
+completion_only_loss: true
+max_length: 3072
+train_sampler: manifest_fixed_schedule_v2
+shuffle_dataset: false
+group_by_length: false
+dataloader_drop_last: false
+
+do_eval: true
+eval_strategy: steps
+eval_steps: 13
+max_steps: 39
+num_train_epochs: 1
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+ddp_find_unused_parameters: false
+dataloader_num_workers: 0
+dataloader_pin_memory: true
+
+peft_merged_model_path: output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_pre2009_balanced_lr1e5_steps39_v1_20260811/merged/chk4_sft
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_bias: none
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+output_dir: output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_pre2009_balanced_lr1e5_steps39_v1_20260811/adapters/chk4_sft
+overwrite_output_dir: false
+resume_from_checkpoint: null
+save_strategy: steps
+save_steps: 1
+save_total_limit: null
+save_only_model: false
+checkpoint_keep_last: 3
+checkpoint_keep_every_n_steps: 0
+checkpoint_keep_steps:
+  - 13
+  - 26
+  - 39
+callbacks:
+  - loss_log
+  - checkpoint_retention
+log_level: info
+logging_strategy: steps
+logging_steps: 1
+logging_first_step: true
+push_to_hub: false
+report_to: []
+seed: 42
+data_seed: 42
+use_cache: false
+use_liger_kernel: false
+activation_offloading: false

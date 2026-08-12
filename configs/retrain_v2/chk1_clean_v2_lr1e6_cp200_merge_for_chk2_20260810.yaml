@@ -1,0 +1,27 @@
+# Merge-only configuration for the user-selected chk1 checkpoint-200.
+# This file does not authorize training and must not be passed to train_sft.
+model_name_or_path: models/DeepSeek-R1-Distill-Llama-8B
+output_dir: output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200
+peft_merged_model_path: output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1
+
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_bias: none
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+source_training_config: configs/retrain_v2/chk1_analysis_sft_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810.yaml
+source_training_config_sha256: c9521a29f531a8a57862e5148eabfa896a803ed59825ff52d5df09206eee61f0
+source_probe_comparison: docs/summary/20260810T113500Z/chk1_lr1e6_cp200_vs_chk0_comparison.json
+source_probe_comparison_sha256: 7e778176b3923b0c97ec2c06f4aaca29ec75d0010bef85bed4391e273d25d345
+selection_artifact: docs/summary/20260810T123000Z/chk1_checkpoint_selection/artifact.json
+selection_artifact_sha256: 274f8ad170617d650a3bc9ae181e506158eb4294481825479aef0f2c79455eb6
+downstream_authorization_receipt: docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_to_chk2_authorization.json
+semantic_audit_status: failed

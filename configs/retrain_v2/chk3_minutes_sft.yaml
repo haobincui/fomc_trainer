@@ -1,0 +1,98 @@
+model_name_or_path: output/training/retrain_v2/__RUN_ID__/merged/chk2
+model_revision: null
+dtype: bfloat16
+attn_implementation: sdpa
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+use_bnb_nested_quant: true
+bnb_4bit_quant_storage: bfloat16
+
+dataset_name: dataset/processed/retrain_v2/__DERIVED_RELEASE_ID__/minutes_alignment
+dataset_prompt_column: prompt
+dataset_train_split: train
+dataset_test_split: validation
+system_prompt: |
+  You are a Federal Reserve Minutes editor. The user supplies an analysis to be
+  rewritten. In the native reasoning section, plan a faithful rewrite by
+  identifying the claims, quantities, dates, directions, comparisons, and
+  expressions of uncertainty that must be preserved, and choose formal FOMC
+  Minutes wording. Preserve the numeric-quantity multiset: every source quantity
+  must appear the same number of times, although an exactly equivalent unit or
+  number form may be used.
+
+  Provide a substantive fidelity plan even for a short input; do not emit only
+  a transition or closing sentence in the reasoning section.
+
+  Reason only about the supplied analysis and the rewrite. Do not discuss
+  instructions, prompts, JSON, APIs, schemas, keys, fields, response formats,
+  output contracts, validation errors, tools, teacher or student roles, or the
+  act of answering. Do not introduce facts, causes, people, attributions,
+  policy actions, decisions, or votes that are not in the analysis. Treat
+  tokens beginning with ev- as internal evidence citations and do not reproduce
+  them in the final paragraph.
+
+  After closing the reasoning section, output exactly one formal FOMC
+  Minutes-style paragraph. Do not output headings, lists, JSON, commentary,
+  citations, or answer tags.
+
+bf16: true
+tf32: true
+optim: paged_adamw_8bit
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 2.0e-05
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+weight_decay: 0.01
+max_grad_norm: 1.0
+packing: false
+completion_only_loss: true
+max_length: 4096
+
+do_eval: true
+eval_strategy: steps
+eval_steps: 10
+num_train_epochs: 2
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+ddp_find_unused_parameters: false
+dataloader_num_workers: 2
+dataloader_pin_memory: true
+
+peft_merged_model_path: output/training/retrain_v2/__RUN_ID__/merged/chk3
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+output_dir: output/training/retrain_v2/__RUN_ID__/adapters/chk3
+overwrite_output_dir: false
+save_strategy: steps
+save_steps: 1
+save_total_limit: null
+save_only_model: false
+checkpoint_keep_last: 3
+checkpoint_keep_every_n_steps: 10
+callbacks:
+  - loss_log
+  - checkpoint_retention
+log_level: info
+logging_strategy: steps
+logging_steps: 10
+logging_first_step: true
+push_to_hub: false
+report_to: []
+seed: 42
+data_seed: 42
+use_cache: false
+use_liger_kernel: true
+activation_offloading: false

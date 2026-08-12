@@ -1,0 +1,122 @@
+model_name_or_path: output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1
+model_revision: null
+dtype: bfloat16
+attn_implementation: sdpa
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+use_bnb_nested_quant: true
+bnb_4bit_quant_storage: bfloat16
+
+dataset_name: dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810
+dataset_prompt_column: prompt
+dataset_train_split: train
+dataset_test_split: validation
+user_prompt_suffix: |
+  Mandatory output contract: the opening <think> has already been supplied.
+  Use at most 512 generated tokens for reasoning, then emit exactly one literal
+  </think> and immediately provide a concise plain-text FOMC analysis. Never
+  stop before writing the answer, and do not repeat the opening <think> tag.
+system_prompt: |
+  Analyze only the supplied point-in-time FOMC evidence. Do not use later data
+  or the target meeting's Minutes. Use the native reasoning boundary and make
+  every factual or numerical statement traceable to the supplied evidence.
+  After the native </think> boundary, return one concise plain-text FOMC-style
+  analysis paragraph. Do not output JSON, evidence IDs, schema commentary,
+  Markdown, model-control tokens, or a rehearsal of the output instructions.
+
+bf16: true
+tf32: true
+optim: paged_adamw_8bit
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 5.0e-07
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+weight_decay: 0.01
+max_grad_norm: 1.0
+dataloader_num_workers: 0
+dataloader_pin_memory: false
+
+do_eval: false
+eval_strategy: "no"
+num_train_epochs: 1
+max_prompt_length: 2560
+max_completion_length: 4096
+chat_template_kwargs:
+  truncation: false
+  max_length: 2560
+num_generations: 4
+generation_batch_size: 4
+temperature: 0.7
+top_p: 0.9
+beta: 0.04
+loss_type: dapo
+scale_rewards: group
+epsilon: 0.2
+num_iterations: 1
+importance_sampling_level: token
+mask_truncated_completions: true
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 4
+use_vllm: false
+
+reward_funcs:
+  - grounded_analysis_v3_deepseek_high
+reward_weights:
+  - 1.0
+save_reward: true
+judge_url: https://api.deepseek.com
+judge_model: deepseek-v4-flash
+# Used only for local reasoning-efficiency accounting; DeepSeek performs the
+# provider-side context accounting.
+judge_tokenizer_path: models/Qwen3.5-9B
+judge_max_model_len: 12288
+judge_max_completion_tokens: 16384
+judge_candidate_reserve_tokens: 4352
+judge_boundary_margin_tokens: 32
+judge_timeout: 420
+# The DeepSeek reward interprets this as the maximum total attempt count.
+judge_max_retries: 2
+judge_backoff_seconds: 2.0
+judge_verbose: false
+judge_api_key_env: DEEPSEEK_API_KEY
+
+peft_merged_model_path: output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/merged/chk2
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+output_dir: output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2
+overwrite_output_dir: false
+save_strategy: steps
+save_steps: 1
+save_total_limit: null
+save_only_model: false
+checkpoint_keep_last: 3
+checkpoint_keep_every_n_steps: 10
+callbacks:
+  - loss_log
+  - reward_log
+  - runtime_safety
+  - checkpoint_retention
+log_completions: true
+log_level: info
+logging_strategy: steps
+logging_steps: 1
+logging_first_step: true
+push_to_hub: false
+report_to: []
+seed: 42
+data_seed: 42
+use_cache: false
+use_liger_kernel: false

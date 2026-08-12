@@ -1,0 +1,17 @@
+# Exact-verified chk4-scoped core parent reused read-only by the isolated v5 branch.
+model_name_or_path: models/DeepSeek-R1-Distill-Llama-8B
+output_dir: output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200
+peft_merged_model_path: output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_core_v3_20260810/parent/merged/chk1
+
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_bias: none
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj

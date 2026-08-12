@@ -1,6 +1,9 @@
 # FOMC Trainer
 
-`fomc_trainer` now maintains a single active workflow: `main`.
+The current provenance-controlled retraining workflow is `retrain_v2`; its executable
+runbook is [`run/retrain_v2/README.md`](run/retrain_v2/README.md). The older `main`
+workflow remains available for historical compatibility, but it is not the chk0→chk4
+training entry point.
 
 Core conventions:
 
@@ -49,21 +52,23 @@ Active configuration files:
 ## Environment Setup
 
 ```bash
-conda create -n fomc_trainer python=3.10
-conda activate fomc_trainer
-
-pip install -r requirements.txt
-pip install -e .
-pip install flash-attn==2.5.6 --no-build-isolation
+run/setup_retrain_v2_envs.sh --train --skip-checks
+run/check_retrain_v2_envs.sh --train --skip-gpu
 ```
 
-After installation, verify that the main entry points are available:
+Retrain-v2 training and data code always runs in the `fomc_trainer` conda environment.
+The setup command pins Python 3.10.9 and the training lock, removes incompatible legacy
+packages, and writes the exact environment freeze. Do not install this repository with
+the legacy editable dependency set and do not install the old FlashAttention 2.5.6 pin.
+Qwen3.5-9B serving remains isolated in `fomc_judge_v2`.
+
+After installation, verify the retraining entry points:
 
 ```bash
-python -m jobs.main.run_pipeline --help
-python -m jobs.main.build_datasets --help
-python -m process_fomc_report.build_qa_master --help
-python -m process_fomc_report.generate_prompt_and_response.run_generate_prompt_pipeline --help
+conda run -n fomc_trainer python -m jobs.retrain_v2.chk1.canonical_workflow --help
+conda run -n fomc_trainer python -m jobs.retrain_v2.build_base_release --help
+run/retrain_v2/pipeline.sh --help
+run/retrain_v2/stage.sh --help
 ```
 
 ## Recommended Entry Points
@@ -89,7 +94,7 @@ Frequently used active paths:
 
 ## Running the Main Workflow
 
-### 1. Run the four checkpoint data scripts
+### 1. Run the input-building compatibility scripts
 
 Run them in order:
 
@@ -106,6 +111,12 @@ Behavior:
 - `chk2.sh` generates only the `analysis_grpo` data and requires `chk1` to have completed.
 - `chk3.sh` generates only the `minutes_alignment` data and requires `chk1` to have completed.
 - `chk4.sh` generates only the `decision` data and synchronizes `dataset/processed/main/datasets/` at the end.
+
+The `chkN.sh` names identify data-building stages. Their execution
+dependencies do not define model-checkpoint ancestry. In the intended
+analysis-to-Minutes design, model weights follow
+`chk-0 -> chk-1 -> chk-2 -> chk-3`: `chk-2` is GRPO initialized from
+`chk-1`, and `chk-3` is Minutes SFT initialized from `chk-2`.
 
 Defaults:
 
@@ -143,7 +154,14 @@ python -m jobs.main.run_pipeline audit
 
 ## Training CLI
 
-### Recommended entry point
+### Operational entry point for the active configurations
+
+The active configuration set preserves historical executable forks and does
+not, as currently written, instantiate every edge of the intended linear
+`chk-0 -> chk-1 -> chk-2 -> chk-3` design. In particular, the retained
+Minutes-SFT configurations initialize from analysis SFT. The
+provenance-controlled four-artifact evaluation uses frozen archived artifacts
+and does not run any of these training commands.
 
 Train one stage:
 
@@ -326,10 +344,24 @@ entry point is:
 By default, this script starts in the background with `nohup` and immediately
 prints the PID, log path, and workflow directory. Replace `all` with `pilot` or
 `formal` as needed, or set `LOO_FOREGROUND=1` for debugging. Before launch, it
-checks PyTorch, Transformers, vLLM, and visible CUDA GPUs. On the current host,
+resolves physical GPU `1` with `nvidia-smi`, exposes numeric device `1` to
+every background worker, and verifies that logical `cuda:0` has GPU `1`'s
+recorded UUID. Numeric visibility is required by the pinned vLLM runtime. A
+caller-supplied `CUDA_VISIBLE_DEVICES` cannot override this canonical policy.
+It also checks PyTorch, Transformers, and vLLM. On the current host,
 if `LOO_PYTHON` is unset, it uses the available
 `~/.conda/envs/llama_factory` environment to avoid the incomplete PyTorch
 namespace in the base Python installation.
+
+Before the first Minutes prompt is generated, the inner launcher verifies the
+complete runtime model and tokenizer directory trees against the sealed,
+externally pinned checkpoint provenance manifest. It requires the
+`eval-minutes-sft-from-chk1` artifact to be marked usable, checks both manifest
+digests and both runtime artifact digests, and requires the recovered model to
+differ from the historical overwrite reference. A merely existing directory
+is not sufficient. The legacy `llama_sft_synthetic_20250526` directory and any
+unregistered `LOO_MINUTES_MODEL` or `LOO_MINUTES_TOKENIZER` override fail before
+generation.
 
 The workflow neither reads nor requires `FRED_API_KEY`. Network concurrency is
 limited to 1–2 requests. The 26 vintages are fetched per series in
@@ -344,6 +376,44 @@ boundaries. After all four generation cells finish, the launcher validates
 every file, requires the same-seed full baselines from the deletion and neutral
 arms to match exactly, and only then writes the population and workflow release
 manifests.
+
+Compute may be split by intervention indicator without changing the full
+baseline. In `pilot` mode, set `LOO_INTERVENTION_INDICATORS` to a
+comma-separated subset of canonical IDs. Analysis and the full Minutes prompt
+still retain all 26 indicator blocks; only the requested deletion and neutral
+cells are generated, and `None` is included automatically. The result is a
+`partial_complete` `intervention_shard_manifest.json`, not a standalone
+canonical release. Legacy seven-indicator outputs cannot fill omitted cells
+because their populations, prompts, and decoding policies differ.
+
+Minutes generation remains fail-closed by default. For an operational partial
+shard, `LOO_MINUTES_TOKEN_LIMIT_POLICY=exclude` retains any token-limit row as
+raw provenance, marks it `excluded_token_limit_finish`, and continues with
+later artifacts. These rows are never eligible for LOO scoring. A shard with
+such exclusions is sealed as
+`partial_complete_with_generation_exclusions`, explicitly marked
+non-canonical, and reports every affected sample and effective denominator.
+
+Indicator analysis uses a frozen 8,192-token technical generation limit while
+its dedicated system prompt requests a compact answer within 4,096 tokens. The
+raw completion is always retained unchanged. Before Minutes prompt
+construction, a deterministic projection requires exactly one `</think>`
+delimiter, non-empty reasoning before it, and a non-empty final answer after
+it. Only that final answer becomes the `minutes_analysis` evidence field; no
+second model, summarization, fallback, or truncation is allowed. The projection
+manifest binds every raw row, extracted answer, tokenizer token count, and
+output hash. The prompt builder then applies the real Minutes chat template and
+requires `prompt_tokens + 8,192 <= 16,384` for every full, deletion, and neutral
+row before writing any prompt artifacts.
+
+At most two otherwise valid technical token-limit finishes may be retained in
+raw indicator analysis, with each exception recorded by sample ID; a third
+exception fails the stage. This bounded exception applies only to indicator
+analysis. Input truncation, malformed projections, empty or missing rows,
+context overflow and unknown finish reasons remain fatal. Minutes token-limit
+finishes are also fatal under the default policy; the explicit partial-shard
+exclusion policy described above records and excludes them without weakening
+any other safety check.
 
 The input directory must contain `None_masked_*.jsonl` files (full prompts) and
 indicator-specific `*_masked_*.jsonl` files for the same sample set. Each row
@@ -661,49 +731,11 @@ Active workflows must not write to `archive/`.
 
 
 
-## Setup
-```bash
-conda create -n train_llama python=3.10
+## Retrain-v2 setup and training
 
-# for mac and windows
-# conda activate fomc_trainer
-
-# for linux
-source activate train_llama
-
-pip install -e.[dev]
-pip install flash-attn==2.5.6 --no-build-isolation
-```
-
-
-## Setup for the Judge Model (GRPO)
-```bash
-conda create -n vllm_env python=3.10
-# for mac and windows
-# conda activate vllm_env
-
-# for linux
-source activate vllm_env
-
-pip install "bitsandbytes>=0.43.0"
-pip install "peft>=0.14.0"
-pip install vllm
-```
-
-
-## Run Training
-```bash
-# SFT
-./run/train_llama/chk1.sh
-
-
-# GRPO
-## start the judge model
-bash start_vllm.sh
-
-## run training
-bash run_grpo.sh
-```
+Do not use the former `train_llama`, `vllm_env`, `start_vllm.sh`, or `run_grpo.sh`
+instructions for the rebuilt checkpoints. Use the locked environments and stage launchers
+documented in [`run/retrain_v2/README.md`](run/retrain_v2/README.md).
 
 ## Config Files
 

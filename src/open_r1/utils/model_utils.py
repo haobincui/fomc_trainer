@@ -35,6 +35,7 @@ def get_tokenizer(
         model_args.model_name_or_path,
         revision=model_args.model_revision,
         trust_remote_code=model_args.trust_remote_code,
+        use_fast=True,
     )
 
     if training_args.chat_template is not None:
@@ -69,5 +70,4 @@ def get_model(
     if hasattr(model.config, "text_config") and hasattr(model.config.text_config, "use_cache"):
         model.config.text_config.use_cache = use_cache
     return model
-
 

@@ -1,0 +1,16 @@
+# Direct runtime lock for the isolated retrain-v2 Qwen3.5-9B judge service.
+# The vLLM dependency tree intentionally lives outside fomc_train_v2.
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+torch==2.10.0
+torchvision==0.25.0
+torchaudio==2.10.0
+# vLLM 0.19.1 rejects older releases when its dynamic 4-bit loader is used.
+bitsandbytes==0.48.2
+huggingface-hub==1.11.0
+numpy==2.2.6
+safetensors==0.5.3
+sentencepiece==0.2.0
+tokenizers==0.22.2
+transformers==5.5.4
+vllm==0.19.1

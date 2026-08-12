@@ -1,0 +1,23 @@
+# Merge-only configuration for the user-selected standalone chk3 checkpoint-250.
+# This config performs no training and is scoped only to the frozen generation comparison.
+model_name_or_path: output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1
+output_dir: output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/checkpoint-250
+peft_merged_model_path: output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_chk3_cp250_20260810_v1/models/chk3_cp250_merged
+
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_bias: none
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+source_training_config: configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_full3ep_lr1e6_20260810.yaml
+source_checkpoint_selection_receipt: docs/summary/20260810T222112Z/chk3_checkpoint_selection/checkpoint_selection_receipt.json
+scope: frozen_chk0_chk1_chk3_cp250_generation_comparison_only
+canonical_dag_promotable: false
