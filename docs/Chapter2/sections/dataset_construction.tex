@@ -261,228 +261,189 @@ Total & 5327 & 44116 \\
 
 \subsection*{Economic and Financial Market Indicators}
 
+After processing the Minutes, we construct the numerical evidence supplied to
+the model from a fixed roster of 26 \emph{atomic topics}.  An atomic topic is
+the smallest topical unit used by the current \texttt{chk1} pipeline to connect
+a paragraph-level analytical target to relevant point-in-time observations.  An
+indicator, by contrast, is an individual time series that supplies quantitative
+evidence for that topic.  The relationship is therefore one-to-many: one atomic
+topic may be represented by several complementary indicator series, whereas an
+indicator series does not constitute a separate training example by itself.
 
-After processing the Minutes, we extracted numerical series to build model prompts. Guided by the reference-label taxonomy, we collected macroeconomic series from the FRED database and financial-market series from WRDS. FRED offers country-level macroeconomic data, while WRDS provides standardized access to widely used asset-pricing variables and benchmark series.
-
-For macroeconomic coverage, we include GDP growth, Consumer Price Index measures, Federal Funds Rate series, unemployment measures, trade indicators, and Treasury yields. For financial coverage, we include equity indices, commodity prices, volatility indices, Federal Reserve balance-sheet measures, overnight-rate series, and corporate-bond yields.
-
-
-Overall, the dataset spans 102 indicators in 26 categories that are relevant for monetary-policy analysis. Table~\ref{tab:ch2:extracted_data} lists the indicators used in this chapter.
-
+The completed implementation constructs all fact cards from sealed ALFRED
+vintage snapshots.  For a meeting held on date $t$, the information set is
+restricted to observations available no later than $t-1$, thereby excluding
+releases and revisions that were not observable before the meeting.  The source
+registry contains 108 configured series bindings.  Of these, 15 are disabled in
+the current implementation and do not occur in any prepared fact card.  The
+combined training, validation, and test artifacts contain 93 distinct enabled
+series, all of which appear at least once.  Table~\ref{tab:ch2:extracted_data}
+reports the resulting mapping from the 26 atomic topics to these 93 series.
 
 \begin{center}
-\begin{singlespace}    
+\begin{singlespace}
 \begin{scriptsize}
-\begin{longtable}{p{0.33\textwidth}|p{0.66\textwidth}}
-        \toprule
-        \textbf{Category}  & \textbf{Indicator} \\
-        \hline
-        Labour Market  & All Employees, Total Nonfarm (Thousands of Persons, Seasonally Adjusted) \\
-        \hline
-        Labour Market  & Job Openings, Total Nonfarm(Level in Thousands, Seasonally Adjusted) \\
-        \hline
-        Labour Market  & Labor Force Participation Rate(Percent, Seasonally Adjusted) \\
-        \hline
-        Labour Market  & Total Nonfarm Private Payroll Employment(Persons, Seasonally Adjusted) \\
-        \hline
-        Money Supply  & Total Monetary Base( currency in circulation plus reserve balances, Billions of Dollars, Not Seasonally Adjusted) \\
-        \hline
-        Money Supply  & M2SL(Billions of Dollars, Seasonally Adjusted) \\
-        \hline
-        Unemployment Rate  & Unemployment Rate (Seasonal adjusted) \\
-        \hline
-        International Equity Markets  & MSCI WORLD \\
-        \hline
-        International Equity Markets  & MSCI Emerging Markets Index(future) \\
-        \hline
-        Housing Starts  & Annual Rate for Housing Units Authorized in Permit-Issuing Places in United States (Seasonally Adjusted Total Units [Thousands of Units]) \\
-        \hline
-        Housing Starts  & New Privately-Owned Housing Units Started, Total Units(Thousands of Units, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Home Prices  & Rental Vacancy Rate in the United States(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Home Prices  & All-Transactions House Price Index for the United States( Index 1980Q1=100, Not Seasonally Adjusted) \\
-        \hline
-        Home Prices  & S\&P CoreLogic Case-Shiller U.S. National Home Price Index (Index Jan 2000=100, Seasonally Adjusted) \\
-        \hline
-        Federal Reserve Balance Sheet  & Balance Sheet,Total Assets(Millions of U.S. Dollars, Not Seasonally Adjusted) \\
-        \hline
-        Federal Reserve Balance Sheet  & Balance Sheet, Mortgage-Backed Securities(Millions of U.S. Dollars, Not Seasonally Adjusted) \\
-        \hline
-        Federal Reserve Balance Sheet  & Reserve Balances with Federal Reserve Banks(Billions of U.S. Dollars, Not Seasonally Adjusted) \\
-        \hline
-        Federal Reserve Balance Sheet  & Summary Of SOMA holdings \\
-        \hline
-        Exchange Rate  & U.S. Dollars to Euro Spot Exchange Rate(U.S. Dollars to One Euro, Not Seasonally Adjusted) \\
-        \hline
-        Exchange Rate  & U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate(U.S. Dollars to One U.K. Pound Sterling, Not Seasonally Adjusted) \\
-        \hline
-        Exchange Rate  & Japanese Yen to U.S. Dollar Spot Exchange Rate(Japanese Yen to One U.S. Dollar, Not Seasonally Adjusted) \\
-        \hline
-        Exchange Rate  & Nominal Broad U.S. Dollar Index(Index Jan 2006=100, Not Seasonally Adjusted) \\
-        \hline
-        Exchange Rate  & Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate(Chinese Yuan Renminbi to One U.S. Dollar, Not Seasonally Adjusted) \\
-        \hline
-        Consumer Confidence Index  & Advance Monthly Sales for Retail and Food Services(Seasonally Adjusted Sales - Monthly [Millions of Dollars]) \\
-        \hline
-        Consumer Confidence Index  & Consumer Sentiment(Index 1966Q1=100, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA 1-3 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA CCC \& Lower US High Yield Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA AAA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA 7-10 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA BBB US Corporate Index Effective Yield (Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA 5-7 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA 3-5 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA B \& Lower US Emerging Markets Liquid Corporate Plus Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA 15+ Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA BB US High Yield Index Effective Yield (Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA AA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & ICE BofA 10-15 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & Moody's Seasoned Baa Corporate Bond Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Corporate Bond Yields  & Moody's Seasoned Aaa Corporate Bond Yield(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Commodity Prices  & Producer Price Index by Commodity, Fuels and Related Products and Power (Index 1982=100, Not Seasonally Adjusted) \\
-        \hline
-        Commodity Prices  & Producer Price Index by Commodity, Farm Products(Index 1982=100, Not Seasonally Adjusted) \\
-        \hline
-        Commodity Prices  & Producer Price Index by Commodity, All Commodities(Index 1982=100, Not Seasonally Adjusted) \\
-        \hline
-        Commodity Prices  & Crude Oil Prices(West Texas Intermediate, Dollars per Barrel, Not Seasonally Adjusted) \\
-        \hline
-        Commodity Prices  & Producer Price Index by Commodity, Metals and Metal Products(Index 1982=100, Not Seasonally Adjusted) \\
-        \hline
-        Commodity Prices  & Crude Oil Prices(Brent,Dollars per Barrel, Not Seasonally Adjusted) \\
-        \hline
-        GDP Growth  & Gross domestic product ([Millions of dollars] Seasonally adjusted at annual rates) \\
-        \hline
-        Mortgage Rates  & 30-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted, Weekly, Ending Thursday) \\
-        \hline
-        Mortgage Rates  & 15-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Equity Market Indices  & Dow Jones Industrial Average \\
-        \hline
-        Equity Market Indices  & NASDAQ Composite Index \\
-        \hline
-        Equity Market Indices  & S\&P 500 Index \\
-        \hline
-        Industrial Production  & industrial\_production(total manufacturing, Index 2017=100, Seasonally Adjusted) \\
-        \hline
-        Industrial Production  & Industrial Production( Manufacturing, Durable Goods, Semiconductor and Other Electronic Component ) \\
-        \hline
-        Industrial Production  & Industrial Production( Mining) \\
-        \hline
-        Industrial Production  & Industrial Production( Manufacturing, Nondurable Goods, Food, Beverage, and Tobacco) \\
-        \hline
-        Industrial Production  & Industrial Production( Utilities, Electric and Gas Utilities) \\
-        \hline
-        Industrial Production  & Industrial Production(Manufacturing, Durable Goods,  Motor Vehicles and Parts) \\
-        \hline
-        Industrial Production  & industrial\_production(total\_index, Index 2017=100, Seasonally Adjusted) \\
-        \hline
-        Business Investment  & Real Private Nonresidential Fixed Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Business Investment  & Real Gross Private Domestic Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Business Investment  & Commercial Paper Outstanding(Billions of Dollars, Seasonally Adjusted) \\
-        \hline
-        Personal Consumption Expenditures (PCE)  & Personal Consumption Expenditures Index(Index 2017=100, Seasonally Adjusted) \\
-        \hline
-        Personal Consumption Expenditures (PCE)  & Personal consumption expenditures by major function (Index numbers, 2017=100; quarters and months are seasonally adjusted) \\
-        \hline
-        Personal Consumption Expenditures (PCE)  & Personal consumption expenditures by major function(Millions of dollars; quarters and months are seasonally adjusted at annual rates) \\
-        \hline
-        Market Volatility (VIX)  & CBOE S\&P 500 3-Month Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
-        \hline
-        Market Volatility (VIX)  & CBOE Gold ETF Volatility Index(Index, Not Seasonally Adjusted) \\
-        \hline
-        Market Volatility (VIX)  & CBOE Crude Oil ETF Volatility Index(Index, Not Seasonally Adjusted) \\
-        \hline
-        Market Volatility (VIX)  & CBOE DJIA Volatility Index (Index, Daily, Not Seasonally Adjusted) \\
-        \hline
-        Market Volatility (VIX)  & CBOE NASDAQ 100 Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
-        \hline
-        Market Volatility (VIX)  & CBOE Volatility Index(Index, Not Seasonally Adjusted) \\
-        \hline
-        Market Volatility (VIX)  & CBOE Russell 2000 Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
-        \hline
-        Trade Balance  & Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates) \\
-        \hline
-        Federal Funds Rate  & Federal Funds Effective Rate(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Federal Funds Rate  & Federal Funds Target Range - Upper Limit (Percent, Not Seasonally Adjusted) \\
-        \hline
-        Bank Capital  & Bank Total Assets, All Commercial Banks(Billions of U.S. Dollars, Seasonally Adjusted) \\
-        \hline
-        Bank Capital  & Bank Capital to Total Assets for United States(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Overnight Rate  & Secured Overnight Financing Rate (Percent, Not Seasonally Adjusted) \\
-        \hline
-        Government Purchases  & Government current expenditures, National defense(Billions of Dollars, Not Seasonally Adjusted) \\
-        \hline
-        Government Purchases  & Real Government Consumption Expenditures and Gross Investment (Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Government Purchases  & Federal Government,Current Expenditures(Billions of Dollars, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Consumer Price Index (CPI)  & Consumer Price Index for All Urban Consumers (CPI-U, seasonal adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Credit Card Loans(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & Total Consumer Credit Owned and Securitized(Millions of Dollars, Seasonally Adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Tightening Standards for Auto Loans(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & Personal Saving Rate(Percent, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Reporting Increased Willingness to Make Consumer Installment Loans(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Small Firms(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Bank Credit to Private Sector  & Percent Change of Total Consumer Credit(Percent Change at Annual Rate, Seasonally Adjusted Annual Rate) \\
-        \hline
-        Bank Credit to Private Sector  & KBW Nasdaq Bank Index \\
-        \hline
-        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Tightening Standards for Commercial Real Estate Loans with Construction and Land Development Purposes(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 3-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 1-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 7-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 3-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 6-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \hline
-        Treasury Yields  & Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
-        \bottomrule   
-        \caption{Economic and Financial Market Indicators}
-        \label{tab:ch2:extracted_data}   
+\renewcommand{\arraystretch}{1.08}
+\begin{longtable}{p{0.25\textwidth}cp{0.64\textwidth}}
+\caption{Mapping from Atomic Topics to Enabled Point-in-Time Indicator Series}
+\label{tab:ch2:extracted_data} \\
+\toprule
+\textbf{Atomic topic} & \textbf{$N$} & \textbf{Enabled indicator series (series ID)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Atomic topic} & \textbf{$N$} & \textbf{Enabled indicator series (series ID)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\textit{Continued on the next page}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+Bank Capital & 2 &
+Total Assets, All Commercial Banks (\texttt{TLAACBW027SBOG}); \newline
+Regulatory Tier 1 Capital as a Percent of Average Assets (\texttt{BOGZ1FL010000026Q}) \\
+\midrule
+Bank Credit to Private Sector & 9 &
+Total Consumer Credit Owned and Securitized (\texttt{TOTALSL}); \newline
+Percent Change of Total Consumer Credit (\texttt{TOTALSLAR}); \newline
+Personal Saving Rate (\texttt{PSAVERT}); \newline
+Banks Reporting Increased Willingness to Make Consumer Installment Loans (\texttt{DRIWCIL}); \newline
+Banks Tightening Standards for Auto Loans (\texttt{STDSAUTO}); \newline
+Banks Tightening Standards for Construction and Land Development Loans (\texttt{SUBLPDRCSC}); \newline
+Banks Tightening C\&I Standards for Large and Middle-Market Firms (\texttt{DRTSCILM}); \newline
+Banks Tightening C\&I Standards for Small Firms (\texttt{DRTSCIS}); \newline
+Banks Tightening Standards for Credit Card Loans (\texttt{DRTSCLCC}) \\
+\midrule
+Business Investment & 3 &
+Commercial Paper Outstanding (\texttt{COMPOUT}); \newline
+Real Gross Private Domestic Investment Growth (\texttt{A006RL1Q225SBEA}); \newline
+Real Private Nonresidential Fixed Investment (\texttt{OB000336Q}) \\
+\midrule
+Commodity Prices & 6 &
+Brent Crude Oil Price (\texttt{DCOILBRENTEU}); \newline
+West Texas Intermediate Crude Oil Price (\texttt{DCOILWTICO}); \newline
+Producer Price Index: All Commodities (\texttt{PPIACO}); \newline
+Producer Price Index: Farm Products (\texttt{WPU01}); \newline
+Producer Price Index: Fuels and Related Products and Power (\texttt{PPIENG}); \newline
+Producer Price Index: Metals and Metal Products (\texttt{WPU10}) \\
+\midrule
+Consumer Confidence Index & 2 &
+University of Michigan Consumer Sentiment (\texttt{UMCSENT}); \newline
+Advance Retail and Food Services Sales (\texttt{RSAFS}) \\
+\midrule
+Consumer Price Index (CPI) & 1 &
+Consumer Price Index for All Urban Consumers: All Items (\texttt{CPIAUCSL}) \\
+\midrule
+Corporate Bond Yields & 3 &
+Moody's Seasoned Aaa Corporate Bond Yield (\texttt{AAA}); \newline
+Moody's Seasoned Baa Corporate Bond Yield (\texttt{DBAA}); \newline
+Chicago Fed NFCI Credit Subindex (\texttt{NFCICREDIT}) \\
+\midrule
+Equity Market Indices & 2 &
+NASDAQ Composite (\texttt{NASDAQCOM}); \newline
+OECD Share Prices: United States (\texttt{SPASTT01USM661N}) \\
+\midrule
+Exchange Rate & 5 &
+Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate (\texttt{DEXCHUS}); \newline
+Japanese Yen to U.S. Dollar Spot Exchange Rate (\texttt{DEXJPUS}); \newline
+Nominal Broad U.S. Dollar Index (\texttt{DTWEXBGS}); \newline
+U.S. Dollars to Euro Spot Exchange Rate (\texttt{DEXUSEU}); \newline
+U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate (\texttt{DEXUSUK}) \\
+\midrule
+Federal Funds Rate & 3 &
+Federal Funds Effective Rate (\texttt{DFF}); \newline
+Federal Funds Effective Rate (\texttt{FEDFUNDS}); \newline
+Federal Funds Target Range Upper Limit (\texttt{DFEDTARU}) \\
+\midrule
+Federal Reserve Balance Sheet & 4 &
+Federal Reserve Total Assets (\texttt{WALCL}); \newline
+Federal Reserve Mortgage-Backed Securities Held Outright (\texttt{WSHOMCB}); \newline
+Reserve Balances with Federal Reserve Banks (\texttt{WRESBAL}); \newline
+Federal Reserve Treasury Securities Held Outright (\texttt{TREAST}) \\
+\midrule
+GDP Growth & 2 &
+Gross Domestic Product (\texttt{GDP}); \newline
+Real Gross Domestic Product Growth (\texttt{A191RL1Q225SBEA}) \\
+\midrule
+Government Purchases & 3 &
+Federal Government Current Expenditures (\texttt{FGEXPND}); \newline
+Government Current Expenditures: National Defense (\texttt{G160461A027NBEA}); \newline
+Real Government Consumption Expenditures and Gross Investment (\texttt{GCEC1}) \\
+\midrule
+Home Prices & 2 &
+All-Transactions House Price Index for the United States (\texttt{USSTHPI}); \newline
+Rental Vacancy Rate in the United States (\texttt{RRVRUSQ156N}) \\
+\midrule
+Housing Starts & 2 &
+Housing Starts (\texttt{HOUST}); \newline
+New Private Housing Units Authorized by Building Permits (\texttt{PERMIT}) \\
+\midrule
+Industrial Production & 7 &
+Industrial Production: Semiconductor and Other Electronic Components (\texttt{IPG3344S}); \newline
+Industrial Production: Food, Beverage, and Tobacco (\texttt{IPG311A2S}); \newline
+Industrial Production: Mining (\texttt{IPMINE}); \newline
+Industrial Production: Electric and Gas Utilities (\texttt{IPG2211A2N}); \newline
+Industrial Production: Motor Vehicles and Parts (\texttt{IPG3361T3S}); \newline
+Industrial Production: Manufacturing (\texttt{IPMAN}); \newline
+Industrial Production: Total Index (\texttt{INDPRO}) \\
+\midrule
+International Equity Markets & 3 &
+OECD Share Prices: Japan (\texttt{SPASTT01JPM661N}); \newline
+OECD Share Prices: Euro Area (\texttt{SPASTT01EZM661N}); \newline
+OECD Share Prices: United Kingdom (\texttt{SPASTT01GBM661N}) \\
+\midrule
+Labour Market & 4 &
+All Employees, Total Nonfarm (\texttt{PAYEMS}); \newline
+Job Openings, Total Nonfarm (\texttt{JTSJOL}); \newline
+Labor Force Participation Rate (\texttt{CIVPART}); \newline
+All Employees, Total Private (\texttt{USPRIV}) \\
+\midrule
+Market Volatility (VIX) & 8 &
+CBOE Crude Oil ETF Volatility Index (\texttt{OVXCLS}); \newline
+CBOE DJIA Volatility Index (\texttt{VXDCLS}); \newline
+CBOE Gold ETF Volatility Index (\texttt{GVZCLS}); \newline
+CBOE NASDAQ 100 Volatility Index (\texttt{VXNCLS}); \newline
+CBOE Russell 2000 Volatility Index (\texttt{RVXCLS}); \newline
+CBOE S\&P 500 3-Month Volatility Index (\texttt{VXVCLS}); \newline
+CBOE Volatility Index (\texttt{VIXCLS}); \newline
+Chicago Fed NFCI Risk Subindex (\texttt{NFCIRISK}) \\
+\midrule
+Money Supply & 2 &
+M2 Money Stock (\texttt{M2SL}); \newline
+Monetary Base: Total (\texttt{BOGMBASE}) \\
+\midrule
+Mortgage Rates & 2 &
+15-Year Fixed Rate Mortgage Average (\texttt{MORTGAGE15US}); \newline
+30-Year Fixed Rate Mortgage Average (\texttt{MORTGAGE30US}) \\
+\midrule
+Overnight Rate & 1 &
+Secured Overnight Financing Rate (\texttt{SOFR}) \\
+\midrule
+Personal Consumption Expenditures (PCE) & 3 &
+Personal Consumption Expenditures Price Index (\texttt{PCEPI}); \newline
+Personal Consumption Expenditures Excluding Food and Energy (\texttt{PCEPILFE}); \newline
+Real Personal Consumption Expenditures Growth (\texttt{DPCERL1Q225SBEA}) \\
+\midrule
+Trade Balance & 2 &
+Net Exports of Goods and Services (\texttt{NETEXP}); \newline
+Trade Balance: Goods and Services (\texttt{BOPGSTB}) \\
+\midrule
+Treasury Yields & 11 &
+1-Month Treasury Constant Maturity Rate (\texttt{DGS1MO}); \newline
+3-Month Treasury Constant Maturity Rate (\texttt{DGS3MO}); \newline
+6-Month Treasury Constant Maturity Rate (\texttt{DGS6MO}); \newline
+1-Year Treasury Constant Maturity Rate (\texttt{DGS1}); \newline
+2-Year Treasury Constant Maturity Rate (\texttt{DGS2}); \newline
+3-Year Treasury Constant Maturity Rate (\texttt{DGS3}); \newline
+5-Year Treasury Constant Maturity Rate (\texttt{DGS5}); \newline
+7-Year Treasury Constant Maturity Rate (\texttt{DGS7}); \newline
+10-Year Treasury Constant Maturity Rate (\texttt{DGS10}); \newline
+20-Year Treasury Constant Maturity Rate (\texttt{DGS20}); \newline
+30-Year Treasury Constant Maturity Rate (\texttt{DGS30}) \\
+\midrule
+Unemployment Rate & 1 &
+Unemployment Rate (\texttt{UNRATE}) \\
 \end{longtable}
 \end{scriptsize}
 \end{singlespace}
