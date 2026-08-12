@@ -5,7 +5,7 @@
 \subsection*{2-Step Training for Base Model and Further Fine-tuning for Downstream Tasks}
 
 \subsubsection*{2-Step Training for Base Model}
-To improve macro-financial analytical performance, we use a two-step fine-tuning pipeline on the Base Model (denoted as ``Model chk-0''): Supervised Fine-Tuning (SFT) followed by Reinforcement Learning (RL) with Group Relative Policy Optimization (GRPO).
+To improve macro-financial analytical performance, we define an intended two-step fine-tuning pipeline on the Base Model (denoted as ``Model chk-0''): Supervised Fine-Tuning (SFT) followed by Reinforcement Learning (RL) with Group Relative Policy Optimization (GRPO).
 
 \paragraph*{Model chk-1}
 In Step 1 (``Model chk-1''), SFT uses high-quality Question-Answer (Q\&A) data to align model outputs with reference analyses. Because the base model is pre-trained on general-domain corpora, SFT provides domain adaptation toward structured reasoning in economic and financial domain. SFT also benefits from a clearly defined supervised loss function, which facilitates stable convergence and efficient training.
@@ -13,10 +13,10 @@ In Step 1 (``Model chk-1''), SFT uses high-quality Question-Answer (Q\&A) data t
 However, this approach has limitations. There is a risk of overfitting, the model may memorize specific phrasing or stylistic patterns from the training data, thereby limiting its generalize beyond the dataset. To mitigate these risks, we trained the model for only a few epochs during the SFT phase, and employ RL training after that. 
 
 \paragraph*{Model chk-2}
-Following SFT, in the Step 2 (``Model chk-2''), we applied GRPO to further fine-tune the model via reinforcement learning. GRPO is a on-policy RL method that enables unsupervised training by allowing the model to self-optimize based on defined reward functions. Unlike SFT, RL supports flexible reward structures (policies) that can be adjusted to dynamically shape the model's behavior toward desired outcomes, such as the model-based ``LLM-as-Judge'' (\cite{zheng2024judging}). To manage the computational and stability challenges of policy-gradient training, we adopt GRPO (\cite{shao2024deepseekmath}) as our RL training method, which reduce the computational cost by removing the reward model in the traditional RL framework (e.g. Proximal Policy Optimization (PPO, \cite{schulman2017proximal})). Additionally, we limited the GRPO training to one epoch following SFT, thereby striking a balance between enhancing reasoning capabilities and maintaining training stability.
+In the intended Step 2 (``Model chk-2''), GRPO follows SFT and further fine-tunes \textit{Model chk-1} through reinforcement learning. GRPO is an on-policy RL method that allows the model to optimize against defined reward functions. Unlike SFT, RL supports flexible reward structures that can shape model behavior toward specified objectives, such as model-based ``LLM-as-Judge'' scoring (\cite{zheng2024judging}). To manage the computational and stability challenges of policy-gradient training, the design adopts GRPO (\cite{shao2024deepseekmath}), which avoids the separately trained value model used in approaches such as Proximal Policy Optimization (PPO; \cite{schulman2017proximal}). The planned GRPO stage is limited to one epoch.
 
 
-After this two-step training, the model is expected to produce stronger data-grounded macro-financial analysis and more coherent policy-relevant reasoning from structured inputs. Figure~\ref{fig:ch2:training_stage1} summarizes the \texttt{chk-0} $\rightarrow$ \texttt{chk-1} $\rightarrow$ \texttt{chk-2} workflow for this stage.
+After this intended two-step training, the model is expected to produce stronger data-grounded macro-financial analysis and more coherent policy-relevant reasoning from structured inputs. Figure~\ref{fig:ch2:training_stage1} summarizes the planned \texttt{chk-0} $\rightarrow$ \texttt{chk-1} $\rightarrow$ \texttt{chk-2} workflow. The archived-artifact audit in Section~\ref{ch2:sec:2-step-training} shows that the surviving historical GRPO artifact instead branches directly from \texttt{chk-0}; the figure should therefore be read as the design, not as the recovered artifact graph.
 
 
 \begin{figure}
@@ -31,7 +31,7 @@ After this two-step training, the model is expected to produce stronger data-gro
 
 \subsubsection*{Further Training for Downstream Tasks}
 
-To evaluate the model's analytical and simulation capabilities and to assess the effectiveness of the training process, we apply the resulting model to two downstream tasks: (1) synthetic FOMC Minutes generation and (2) Federal Funds Rate (FFR) prediction. For the first task, we further fine-tune the model with SFT for Minutes rewriting (\textit{Model chk-3}). For the second task, we use GRPO to adapt the model for predicting changes in the federal funds rate (\textit{Model chk-4}). Figure~\ref{fig:ch2:training_stage2} illustrates the training workflow for these two tasks.
+Under the intended design, we apply \textit{Model chk-2} to two downstream tasks: (1) synthetic FOMC Minutes generation and (2) Federal Funds Rate (FFR) decision inference. For the first task, SFT aligns the model for Minutes rewriting (\textit{Model chk-3}). For the second task, GRPO adapts the model for standardized rate-decision inference (\textit{Model chk-4}). Figure~\ref{fig:ch2:training_stage2} illustrates this planned workflow; the archived branches differ as described in Section~\ref{ch2:sec:2-step-training}.
 
 \begin{figure}
     \centering
@@ -124,7 +124,7 @@ Additionally, to reinforce adherence to this structured format, we employed a de
 \paragraph*{Synthetic FOMC Minutes Generation (\textit{Model chk-3})}
 For the synthetic FOMC Minutes task, we aim to explore the simulation capacity of the LLM. 
 
-Our target is to guide the model rewrite the analysis of indicators into a structured FOMC Minutes. The input to this task is no longer the raw indicator table used in Step 1, but the analysis or summary generated from those indicators. We pair this analytical content with the target Minutes section name and meeting date, and ask the model to produce a paragraph consistent with the tone, structure, and section-specific conventions of the official Minutes. Formally, we denote the input as $input_i^{minutes} = (a_i, s_i, d_i)$, where $a_i$ is the analysis or summary generated from \textit{Model chk-2}, $s_i$ is the target FOMC section, and $d_i$ is the meeting date. The target output is the corresponding section text from the official FOMC Minutes. Because the model has already learned basic macro-financial reasoning in the previous stage, this downstream task mainly focuses on style alignment and document-level rewriting rather than new domain learning. The prompt format follows Table~\ref{tab:ch2:fomc_summary_prompt_training}.
+The objective is to rewrite indicator-based analysis into structured FOMC-Minutes-style text. The input is not the official Minutes and is no longer the raw indicator table used in Step 1; it is the generated analysis or summary, paired with the target Minutes section name and meeting date. Formally, $input_i^{minutes}=(a_i,s_i,d_i)$, where $a_i$ is the analysis or summary generated by the intended \textit{Model chk-2}, $s_i$ is the target section, and $d_i$ is the meeting date. The corresponding official FOMC Minutes excerpt is used as the supervised answer target. This distinction is important: official Minutes text supplies the label to be generated, not evidence included in the prompt. The intended \textit{chk-3} stage therefore strengthens Minutes-style synthetic text generation through controlled analysis-to-Minutes rewriting. The archived adapter retains these input--target semantics but was initialized from \textit{Model chk-1}, not from the archived GRPO branch. The prompt format follows Table~\ref{tab:ch2:fomc_summary_prompt_training}.
 
 \begin{table}[h]
     \centering
@@ -738,14 +738,14 @@ LoRA's mechanism involves introducing additional layers, referred to as Adapters
 \subsection*{Training Hyperparameters}\label{ch2:sec:parameter}
 
 
-Following the literature in model training and model fine-tuning (\cite{gpt2018}, \cite{meta2024llama3}, and \cite{yang2025qwen3} for model training; \cite{howard2018universal} and \cite{ding2023parameter} for model fine-tuning; and \cite{li2020rethinking}, \cite{vm2024fine} for empirical results), the general training setup was configured with a learning rate of $3.0\times10^{-6}$ and a batch size of 2 for both the SFT and GRPO. 
+Following the literature in model training and model fine-tuning (\cite{gpt2018}, \cite{meta2024llama3}, and \cite{yang2025qwen3} for model training; \cite{howard2018universal} and \cite{ding2023parameter} for model fine-tuning; and \cite{li2020rethinking}, \cite{vm2024fine} for empirical results), the legacy training notes record small learning rates and hardware-constrained batches. The archived sources are not fully consistent across stages, so Table~\ref{tab:ch2:training_hyperparameters_archive} preserves the planned and historically reported values without treating them as an immutable runtime manifest.
 
 
-For \textit{Model chk-1} and \textit{Model chk-2}, We trained SFT for 3 epochs and GRPO for 1 epoch. The \textit{temperature} parameter was fixed at 0.6, and a \textit{top-p} sampling strategy with a value of 0.9 was employed to maintain a controlled level of output randomness. 
+For \textit{Model chk-1} and \textit{Model chk-2}, the intended setup uses 3 SFT epochs and 1 GRPO epoch. The \textit{temperature} parameter is fixed at 0.6, and a \textit{top-p} sampling strategy with a value of 0.9 is used to maintain a controlled level of output randomness.
 
-For downstream tasks, we applied 1 epochs for \textit{Model chk-3} and 10 epochs for \textit{Model chk-4} and choose the converged checkpoint as our final model.
+For the downstream tasks, the reported setup uses 3 epochs for \textit{Model chk-3} and up to 10 epochs for \textit{Model chk-4}, with checkpoint selection based on the recorded optimization trajectory.
 
-The batch size of 2 is hardware-constrained. Larger batches could improve throughput but would exceed available GPU memory. The epoch choices follow the training design discussed above: SFT uses a small number of passes for stable domain adaptation, whereas GRPO is limited to one pass to keep reward-based optimization stable and computationally manageable. Table~\ref{tab:ch2:training_hyperparameters_archive} summarizes the hyperparameters for our training.
+The reported small batch sizes are hardware-constrained. Larger batches could improve throughput but would exceed available GPU memory. The epoch choices follow the training design discussed above: SFT uses a small number of passes for stable domain adaptation, whereas the intended analysis-GRPO stage is limited to one pass to keep reward-based optimization stable and computationally manageable.
 
 
 \begin{table}[htbp]
@@ -777,6 +777,6 @@ The batch size of 2 is hardware-constrained. Larger batches could improve throug
         \textit{chk-4} & GRPO & $1.0\times10^{-6}$ & 10 & 1 & 4 & Max prompt/completion length = 8096/2048;\newline 4 generations per prompt; rewards = rate\_accuracy (1.0) and rate\_format (1.0). \\
         \bottomrule
     \end{tabularx}
-    \caption{Training Hyperparameters. {\footnotesize \textit{Notes:} All four runs use \texttt{bf16}, \texttt{flash\_attention\_2}, seed 42, and LoRA on \texttt{q\_proj} and \texttt{v\_proj} with $r=8$, $\alpha=16$, and dropout $=0.05$.}}
+    \caption{Planned and Legacy-Reported Training Hyperparameters. {\footnotesize \textit{Notes:} These settings summarize the design and historical records; they are not an immutable artifact manifest. The archived parent-model deviations are documented in Section~\ref{ch2:sec:2-step-training}. The legacy notes report \texttt{bf16}, \texttt{flash\_attention\_2}, seed 42, and LoRA on \texttt{q\_proj} and \texttt{v\_proj} with $r=8$, $\alpha=16$, and dropout $=0.05$.}}
     \label{tab:ch2:training_hyperparameters_archive}
 \end{table}

@@ -17,7 +17,7 @@ On the other hand, recent advances in neural networks and LLMs have led to remar
 
 Moreover, synthetic data have been widely accepted by financial researchers as powerful tools for robustness testing. For instance, \cite{cao2022synthetic} created a synthetic limit order book to evaluate forecasting models, while \cite{carvajal2022synthetic} used synthetic stock prices to train trading algorithms. Beyond time-series data, the financial industry manages vast volumes of structured documents, such as financial reports, Bank of England Monetary Policy Committee (MPC) meeting minutes, and Federal Reserve FOMC meeting minutes. The simulation capabilities of LLMs make them ideal for generating synthetic structured textual data in these contexts.
 
-This chapter proposes a fine-tuned LLM framework for simulating monetary-policy communication and decision-relevant analysis. Conditioned on macroeconomic and financial indicators, the model is trained to generate (i) domain-consistent analytical narratives and (ii) institutionally styled text aligned with FOMC Minutes sections. We then evaluate stylistic fidelity, target-relative indicator sensitivity, and economic relevance through paired leave-one-out diagnostics, sentiment--return regressions, and policy-decision prediction. The leave-one-out evidence is treated as a sensitivity diagnostic rather than as proof that every generated claim is grounded in the supplied indicators.
+This chapter proposes a fine-tuned LLM framework for simulating monetary-policy communication and decision-relevant analysis. Conditioned on macroeconomic and financial indicators, the model is trained to generate (i) domain-consistent analytical narratives and (ii) institutionally styled text aligned with FOMC Minutes sections. We then evaluate stylistic similarity, target-relative indicator sensitivity, and economic relevance through paired leave-one-out diagnostics, sentiment--return regressions, and policy-decision prediction. The leave-one-out evidence is treated as a sensitivity diagnostic rather than as proof that every generated claim is grounded in the supplied indicators. Because the surviving archived artifacts do not instantiate every edge of the intended sequential training pipeline, the historical results are treated as branch-specific or legacy descriptive comparisons rather than as a clean staged ablation.
 
 
 
@@ -55,7 +55,7 @@ To address this central question, we study the following sub-questions:
 This study makes several important contributions to the literature at the intersection of central banking, financial economics, and artificial intelligence:
 
 \begin{itemize}
-\item[] \textbf{Methodological Innovation:} We employed a two-step post-training pipeline (SFT + GRPO) to adapt an LLM for indicator-conditioned macro-financial reasoning, together with a downstream alignment procedure for generating structured Minutes-style text.
+\item[] \textbf{Methodological Innovation:} We design a two-step post-training pipeline (SFT + GRPO) to adapt an LLM for indicator-conditioned macro-financial reasoning, together with a downstream alignment procedure for generating structured Minutes-style text. The distinction between this intended design and the surviving archived implementation is reported explicitly in Section~\ref{ch2:sec:2-step-training}.
 
 \item[] \textbf{Framework for Synthetic Text Generation:} We propose a framework for generating structured textual data through LLM fine-tuning. This approach translates discrete qualitative information into a continuous distribution, offering new perspectives on risk management strategies in the financial sector.
 
@@ -75,4 +75,3 @@ This study makes several important contributions to the literature at the inters
 \subsection*{Chapter Structure}
 
 This chapter is organized as follows. Section~\ref{ch2:sec:lr} reviews the related literature on synthetic data and large language models. Section~\ref{ch2:sec:2-step-training} outlines the two-step post-training framework. Section~\ref{ch2:sec:the-dataset} describes the dataset construction process and prompt templates. Section~\ref{ch2:sec:base_model} introduces the base model, while Sections~\ref{ch2:sec:training} and~\ref{ch2:sec:parameter} describe the fine-tuning method and hyperparameter settings. Section~\ref{ch2:sec:application} presents the evaluation dimensions and empirical tests, and Section~\ref{ch2:sec:result} reports the training and evaluation results. Finally, Section~\ref{ch2:sec:conclusion} concludes the chapter and discusses future research.
-

@@ -17,7 +17,7 @@
 
 
 \subsection*{2-Step Training for Base Model}
-To develop a model that can (i) conduct macro-financial analysis from structured indicators and (ii) generate institutionally styled FOMC-Minutes text, we adopt a two-step post-training pipeline: Supervised Fine-Tuning (SFT) followed by Reinforcement Learning (RL) using Group Relative Policy Optimization (GRPO). SFT provides a stable, reference-guided signal for domain adaptation, while GRPO further shapes the model's reasoning behavior using reward feedback. After these two steps, we apply the trained model to downstream generation and simulation tasks and evaluate it using both text-based and economics-based criteria.
+To develop a model that can (i) conduct macro-financial analysis from structured indicators and (ii) generate institutionally styled FOMC-Minutes text, the intended design adopts a two-step post-training pipeline: Supervised Fine-Tuning (SFT) followed by Reinforcement Learning (RL) using Group Relative Policy Optimization (GRPO). SFT provides a stable, reference-guided signal for domain adaptation, while GRPO is intended to further shape the model's reasoning behavior using reward feedback. After these two planned steps, the design applies the trained model to downstream generation and simulation tasks and evaluates it using both text-based and economics-based criteria.
 
 
 In Step 1 (SFT), we focus on enhancing the model's analytical capability in economics and finance. Although modern LLMs are pre-trained on broad public corpora of publicly available texts, they often lack the domain-specific knowledge required for specialized tasks such as financial data interpretation and monetary policy decision-making. Therefore, SFT focuses on training the model to map macroeconomic and financial inputs to structured analytical outputs consistent with the narrative style of FOMC materials.
@@ -26,23 +26,23 @@ In Step 1 (SFT), we focus on enhancing the model's analytical capability in econ
 On the other hand, SFT improves controllability and adherence to a target format, but it may still leave gaps in multi-step reasoning and in consistent use of numerical evidence. To address this, we complement SFT with a second step reinforcement learning which can explicitly rewards coherent reasoning and data-consistent conclusions.
 
 
-In Step 2 (GRPO), we use reinforcement learning with domain-specific rewards to refine reasoning quality and reduce unsupported generation. In our setting, rewards are designed to encourage both correct output structure (reasoning process and final answer) and  high-quality economic analysis as judged against clear evaluation criteria. This step is intended to improve logical consistency and the model's ability to emulate deliberative, policy-style reasoning.
+In the intended Step 2 (GRPO), reinforcement learning uses domain-specific rewards to refine reasoning quality and reduce unsupported generation. The planned rewards encourage both correct output structure (reasoning process and final answer) and high-quality economic analysis as judged against explicit evaluation criteria. This step is intended to improve logical consistency and the model's ability to emulate deliberative, policy-style reasoning.
 
 
-Overall, we expect the two-step post-training pipeline (SFT + GRPO) to produce a model that is not only stylistically aligned with FOMC-Minutes language but also better able to reason from macro-financial evidence. The SFT step provides the foundation for domain adaptation and structured generation, while the GRPO step further improves the quality, consistency, and policy relevance of the model’s analytical outputs. 
+Overall, we expect the intended two-step post-training pipeline (SFT + GRPO) to produce a model that is not only stylistically aligned with FOMC-Minutes language but also better able to reason from macro-financial evidence. The SFT step provides the foundation for domain adaptation and structured generation, while the GRPO step is intended to further improve the quality, consistency, and policy relevance of the model's analytical outputs.
 
 
 \subsection*{Further Fine-tuning for Downstream Tasks}
-After the two-step post-training described above, the model has acquired the basic capability to perform structured macro-financial analysis. We then further adapt it for downstream tasks. In this research, we focus on two downstream objectives: synthetic FOMC Minutes generation and monetary-policy decision making.
+Under the intended two-step design, the resulting model provides the initialization for two downstream tasks. We focus on synthetic FOMC Minutes generation and monetary-policy decision making.
 
-For the first task, the objective is to rewrite model-generated analysis into institutionally styled FOMC-Minutes text. The input is an analytical paragraph or summary derived from macroeconomic and financial indicators, together with the target section title and meeting date, while the target output is the corresponding section text from the official Minutes. Because this task mainly concerns stylistic alignment, section consistency, and controlled rewriting, we apply an additional SFT stage to train the model on paired summary-to-Minutes examples.
+For the first task, the objective is to rewrite model-generated analysis into institutionally styled FOMC-Minutes text. The input is an analytical paragraph or summary derived from macroeconomic and financial indicators, together with the target section title and meeting date. The supervised answer target is the corresponding excerpt from the official FOMC Minutes; the official excerpt is not supplied as an input. Because this task mainly concerns Minutes-style alignment, section consistency, and controlled rewriting, the intended \texttt{chk-3} stage applies SFT to paired analysis-to-Minutes examples initialized from \texttt{chk-2}.
 
 For the second task, the model must infer the most likely Federal Funds Rate decision from meeting-related analysis and map that conclusion to a standardized set of vote outcomes. Compared with the rewriting task, this objective places greater weight on multi-signal aggregation, policy reasoning, and consistency between the analysis and the final decision. Accordingly, we further use GRPO with task-specific rewards to strengthen the model's decision-oriented reasoning and output control.
 
 
 
 \subsection*{Summary for Training Plan}
-In summary, the training plan is organized around five named checkpoints. The core post-training pipeline produces \texttt{chk-0}, \texttt{chk-1}, and \texttt{chk-2}, corresponding to the base reasoning model, the SFT-adapted analytical model, and the GRPO-refined analytical model. From \texttt{chk-2}, we further branch into two downstream task-specific checkpoints: \texttt{chk-3} for synthetic text generation and \texttt{chk-4} for monetary-policy decision making. This organization makes it possible to separate the contributions of domain adaptation, reward-guided reasoning refinement, and downstream task alignment. Table~\ref{tab:ch2:model_checkpoints} summarizes the role of each checkpoint.
+In summary, the intended training plan is organized around five named checkpoints. The core post-training pipeline produces \texttt{chk-0}, \texttt{chk-1}, and \texttt{chk-2}, corresponding to the base reasoning model, the SFT-adapted analytical model, and the GRPO-refined analytical model. From \texttt{chk-2}, the design further branches into two downstream task-specific checkpoints: \texttt{chk-3} for synthetic text generation and \texttt{chk-4} for monetary-policy decision making. This planned organization would separate the contributions of domain adaptation, reward-guided reasoning refinement, and downstream task alignment if every edge were represented by an immutable artifact. Table~\ref{tab:ch2:model_checkpoints} summarizes the intended role of each checkpoint.
 
 \begin{table}[htbp]
     \centering
@@ -63,9 +63,21 @@ In summary, the training plan is organized around five named checkpoints. The co
         \textbf{\textit{Model chk-4}} & Task-specific GRPO branch from \textit{chk-2}. & Improves policy-decision inference and standardized vote selection from meeting-related analysis. & Reward feedback based on vote accuracy and vote format for structured decision outputs. & Decision-making model used for FFR prediction and policy-inference evaluation. \\
         \bottomrule
     \end{tabularx}
-    \caption{Comparison of Model Checkpoints in the Full Training Pipeline}
+    \caption{Intended Model Checkpoints in the Full Training Pipeline}
     \label{tab:ch2:model_checkpoints}
 \end{table}
+
+\paragraph*{Archived-artifact provenance and deviation from the design}
+The checkpoint table defines the intended computational graph; it is not a claim that every surviving historical artifact implements that graph. A provenance audit of the archived adapter metadata, runtime state, and merged weights recovers the following distinction:
+\begin{quote}
+\small
+\textbf{Intended design:}\quad
+\texttt{chk-0} $\rightarrow$ \texttt{chk-1} $\rightarrow$ \texttt{chk-2} $\rightarrow$ \texttt{chk-3}.\\
+\textbf{Surviving archived branches:}\quad
+\texttt{chk-0} $\rightarrow$ analysis-GRPO artifact;\quad
+\texttt{chk-0} $\rightarrow$ \texttt{chk-1} $\rightarrow$ Minutes-SFT adapter.
+\end{quote}
+Specifically, the archived analysis-GRPO artifact identifies \texttt{chk-0}, rather than \texttt{chk-1}, as its parent, while the archived Minutes-SFT adapter identifies \texttt{chk-1}, rather than the GRPO artifact, as its parent. In addition, the old merged-model directory associated with the Minutes branch was subsequently overwritten by decision-branch weights and is not an immutable \texttt{chk-3} artifact. Consequently, the surviving results can support only comparisons among archived branches. They cannot identify the incremental effect of the intended \texttt{chk-1}$\rightarrow$\texttt{chk-2} or \texttt{chk-2}$\rightarrow$\texttt{chk-3} transitions. Throughout the remainder of the chapter, checkpoint names describe their intended roles; where a result comes from the archived implementation, its branch-specific or legacy status is stated explicitly.
 
 
 
@@ -170,6 +182,69 @@ meaningful signals and supports inference of Federal Reserve decisions.
 
 
 \subsection*{Evaluation Methods}
+
+\subsubsection*{Provenance-Controlled Common-Test Checkpoint Comparison}
+
+The main checkpoint comparison uses one frozen test manifest for all four
+models.  It contains 11 FOMC meetings from March 2025 through June 2026 and
+three requested Minutes sections per meeting, for 33 generation rows per
+artifact.  A prospective-only robustness subset removes the first two
+meetings and therefore contains 9 meetings and 27 rows per artifact.  Each
+prompt is rendered mechanically from historical-vintage macro-financial
+observations available on the calendar day before the meeting
+(\(D-1\)). Meeting-day observations and later revisions are excluded.  The
+corresponding official Minutes sections are stored separately and are
+available only to the scorer; they are never interpolated into a generation
+prompt.
+
+This common-input design is an end-to-end stress benchmark: each artifact is
+asked to map the same raw \(D-1\) evidence directly to a requested Minutes
+section.  It is not identical to the intended \texttt{chk-3} training task,
+whose input is analysis generated by \texttt{chk-2} and whose supervised
+target is the corresponding original official Minutes excerpt.  The resulting
+task/input mismatch is deliberate for a common-input comparison, but it limits
+the claim boundary: this benchmark can describe how the archived artifacts
+behave in raw-evidence-to-Minutes generation and cannot, by itself, establish
+in-task analysis-to-Minutes rewriting ability or the incremental value of the
+intended \texttt{chk-2}$\rightarrow$\texttt{chk-3} transition.
+
+The four evaluated artifacts are the provenance-verified base model, the
+analysis-SFT branch, the archived analysis-GRPO branch, and a newly recovered
+merge of the archived Minutes-SFT adapter with its verified analysis-SFT
+parent.  These artifacts correspond to the intended roles
+\texttt{chk-0}--\texttt{chk-3}, but the last two do not implement the intended
+linear parentage.  We therefore report common-sample artifact comparisons,
+not stagewise incremental effects.  The overwritten historical Minutes
+directory is marked unusable and is excluded.  Recovery consists only of
+merging the surviving adapter with its verified parent; no model is retrained.
+
+All artifacts receive byte-identical prompts and deterministic greedy
+decoding settings.  The model, tokenizer, prompt, configuration, and
+per-sample deterministic seeds are retained with every row.  Empty responses,
+unparseable final answers, input truncation, and token-limit completions remain
+in the 33-row denominator and are marked invalid rather than silently
+dropped.
+
+Automatic evaluation has four groups.  First, semantic similarity uses
+BERTScore with a frozen RoBERTa-large encoder and cosine similarity from a
+separately frozen MPNet encoder that is independent of the training rewards.
+Long texts are split deterministically at sentence boundaries and aggregated
+with token-count weights rather than silently truncated.  Second, surface
+quality includes ROUGE-L, output length, trigram repetition, and format
+compliance.  Third, deterministic evidence rules check numerical values,
+units, time references, numbers absent from the input, and the unsupported
+rate among claims covered by those rules.  This last quantity is explicitly
+not an exhaustive natural-language-inference factuality score.  Fourth,
+directional checks compare inflation, growth, employment, and unemployment
+language with input-derived changes and compare policy-stance language with
+the direction of the supplied federal-funds-rate evidence.  No LLM judge or
+human rating is introduced into this comparison.
+
+Rows are first averaged within meeting, and meetings receive equal weight.
+Uncertainty is estimated with 10,000 meeting-cluster bootstrap resamples using
+seed 20260729.  Paired tests are limited to edges supported by the verified
+archived lineage, and their \(p\)-values are adjusted as one Holm family.
+The same procedure is repeated for the 27-row prospective-only subset.
 
 
 \subsubsection*{Textual Similarity}
@@ -289,7 +364,7 @@ Overall, we propose the following hypotheses for cosine similarity and BERTScore
 \end{equation*}
 
 
-where subscripts $FT$ and $Base$ denote the fine-tuned and baseline models. The hypothesis is that fine-tuning increases semantic alignment with the target text. A statistically significant result would indicate that the fine-tuned model has effectively learned additional semantic and contextual information through the fine-tuning process.
+where subscripts $FT$ and $Base$ denote the fine-tuned and baseline models. These inequalities describe a directional hypothesis about semantic alignment. Valid inference would require paired row-level scores from a fixed test manifest, meeting-aware uncertainty estimates, and an immutable checkpoint identity for each output. Cosine similarity and BERTScore alone measure resemblance to a reference; they do not establish factual, numerical, directional, or reasoning fidelity.
 
 
 %%%%% end of text similarity
@@ -365,13 +440,13 @@ embedding model.
 
 %%%% end of leave-one-out definition
 
-\subsubsection*{Statistical Significance using Synthetic Texts}
+\subsubsection*{Exploratory Association Test using Synthetic Texts}
 
 
 This test evaluates the model’s simulation capacity by conducting empirical analyses on the synthetic text it generates. The current literature has confirmed the impact of the release of FOMC Minutes on the financial market, for instance, \cite{rosa2013financial} found that the release of the Minutes significantly increases the volatility of the U.S. asset prices, including treasury rate, equity market index and the exchange rate. \cite{rosa2011high} found that both the statements and the policy decisions have significant effects on the exchange rate market. \cite{huang2021economic} applied an adaptive Bayesian text mining approach, and confirmed the predictive power of the sentiments of FOMC's text in important economic variables. \cite{tadle2022fomc} confirmed the sentiments contained in the Minutes have significantly impacts on the fed funds futures rate and U.S. dollars exchange rate. 
 
 
-Building on these evidences, we test whether the synthetic Minutes generated by our fine-tuned LLM exhibit comparable market relevance. Specifically, a statistically significant relationship between the synthetic text and corresponding financial indicators would indicate that the model is capable of producing realistic, policy-relevant content that mirrors the economic impact of actual FOMC communications.
+Building on this literature, we use an exploratory association test to ask whether sentiment extracted from synthetic Minutes preserves the direction of a historical text--market relationship. Because synthetic text was not released to the market at the historical event time, this exercise cannot identify a market impact caused by the generated text. Nor can statistical significance in this regression, by itself, establish realistic or factually grounded Minutes generation.
 
 
 
@@ -387,7 +462,7 @@ We follow the empirical design in \cite{tadle2022fomc}, which examines how FOMC 
 
 where $p^f_t$ is the price for the Federal Fund Rate Future contract $f$ at time $t$. $VIX_t$ is the log change of the Volatility Index (VIX), $Z_t^M$ and $Z_t^S$ are the sentiment scores extracted from the Minutes and Statements, $Y_t$ is the monthly time effect, and $\phi_t$ is the error term.
 
-Following the empirical test, we conduct a bootstrap procedure to estimate the distribution of the $\beta$ coefficients. Statistically significant $\beta$ values would indicate that our synthetic text exhibits similar properties to the original FOMC Minutes in text-mining-based analyses, thereby validating its effectiveness in capturing the underlying informational content.
+Following the empirical test, a bootstrap procedure estimates the distribution of the $\beta$ coefficients. A fully identified comparison would additionally require the exact source series, resampling unit, model manifest, and uncertainty for the difference between model-derived coefficients. The surviving legacy outputs do not retain all of these elements, so the archived plots are reported later only as exploratory and unverified.
 
 
 
@@ -537,21 +612,21 @@ SFT is trained for 3 epochs (2,346 optimization steps). Each epoch covers 3,128 
 As shown in Figure~\ref{fig:ch2:stage1_sft_loss}, training loss declines from 2.1504 (step 20) to 0.6913 (step 2340). Evaluation loss decreases from 2.1193 to 0.7097 by step 1,560 and ends at 0.6984. After roughly step 1,340, training loss continues to fall while evaluation loss plateaus, which is consistent with mild overfitting risk.
 
 
-\subsubsection*{Step 2: Group Relative Policy Optimization (GRPO) Results (\textit{Model chk-2})}
-After SFT, in Step 2, we conduct Reinforcement Learning (RL) via Group Relative Policy Optimization (GRPO) to further enhance analytical and reasoning quality. Following Section~\ref{ch2:sec:model_train:rl}, we implement an \textit{accuracy reward} to evaluate the final analysis and a \textit{reasoning reward} to evaluate the reasoning trajectory. We assign equal weights to the two reward components, and Figure~\ref{fig:ch2:stage2_grpo_reward} plots the 20-step rolling average of the total training reward during GRPO with $\pm$1 standard deviation bands.
+\subsubsection*{Archived Analysis GRPO Results (Intended Role: \textit{Model chk-2})}
+The intended Step 2 initializes GRPO from \textit{Model chk-1}. The surviving 1,094-step GRPO artifact, however, identifies \textit{Model chk-0} as its parent and therefore represents a separate analysis-GRPO branch rather than the planned sequential \textit{chk-1}$\rightarrow$\textit{chk-2} transition. Following Section~\ref{ch2:sec:model_train:rl}, the archived run uses an \textit{accuracy reward} for the final analysis and a \textit{reasoning reward} for the reasoning trajectory. Figure~\ref{fig:ch2:stage2_grpo_reward} plots its 20-step rolling average total reward with $\pm$1 standard-deviation bands. The curve documents optimization of this archived branch; it does not estimate incremental improvement after SFT.
 
 
 
 \begin{figure}[htbp]
     \begin{center}
             \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage1_train/trainer_state_grpo_stage1_20250517.png}
-            \caption{20-Step Rolling Average of Training Reward for Step 2 GRPO ((\textit{Model chk-2})), with $\pm$1-Standard Deviation Intervals}
+            \caption{20-Step Rolling Average Reward for the Archived Analysis-GRPO Branch (Intended Role: \textit{Model chk-2})}
             \label{fig:ch2:stage2_grpo_reward}
     \end{center}
 \end{figure}
 
 
-In this step, the model was trained for one epoch. The training log over 1,094 steps demonstrates increasing stability in the reward metrics, particularly in the \textit{Accuracy Reward}. The 20-step rolling average of the \textit{Total Reward} showed a steady rise from approximately 0.70 to around 0.78, before stabilizing with minor fluctuations near 0.756, with block-level averages ranging from 0.76 to 0.79. The \textit{Reasoning Reward} remained consistently high, averaging around 0.95 and only occasionally dipping to approximately 0.85, indicating a robust and reliable chain-of-thought generation. In contrast, the \textit{Accuracy Reward} improved from 0.44 in the early stages to above 0.70, before stabilizing in the 0.60-0.65 range—suggesting enhanced precision in final responses, though with some potential for further improvement.
+In this archived run, the model was trained for one epoch. Over 1,094 steps, the 20-step rolling average of the \textit{Total Reward} rose from approximately 0.70 to around 0.78 before fluctuating near 0.756, with block-level averages ranging from 0.76 to 0.79. The judge-derived \textit{Reasoning Reward} averaged around 0.95 and occasionally fell to approximately 0.85, while the \textit{Accuracy Reward} rose from about 0.44 early in training to above 0.70 before fluctuating around 0.60--0.65. These are in-training reward diagnostics tied to the archived reward functions; they are not independent evidence of reasoning correctness, held-out accuracy, or an incremental GRPO contribution beyond SFT.
 
 
 % Moreover, reward volatilities exhibited signs of convergence. The 200-step rolling standard deviation declined from 0.0641 to 0.0584 for the \textit{reasoning reward}, from 0.1331 to 0.1250 for the \textit{accuracy reward}, and from 0.1573 to 0.1449 for the \textit{total reward}. These reductions in variability further confirm the model’s improved analytical consistency following training.
@@ -567,30 +642,30 @@ In this step, the model was trained for one epoch. The training log over 1,094 s
 % 
 
 
-In summary, with only 0.042\% trainable parameters, compared with \textit{Model chk-0} the two-step demonstrated measurable improvements following the two-step training process. SFT improves supervised fit, and GRPO improves reward-aligned reasoning stability. Overall, the combined approach of instruction tuning followed by reinforcement learning effectively improved both reasoning consistency and answer quality
+In summary, the SFT loss and archived GRPO reward trajectories show that their respective branch objectives were optimized with a small trainable parameter share. Because the recovered GRPO artifact did not start from the recovered SFT checkpoint, these curves do not demonstrate the incremental value of the intended two-step sequence or establish an improvement in held-out reasoning and answer quality.
 
 
 
-\subsubsection*{Synthetic Text SFT Results (\textit{Model chk-3})}
+\subsubsection*{Archived Minutes-SFT Results (Intended Role: \textit{Model chk-3})}
 
-In this section, we further fine-tuned the \textit{Model chk-2} for the task of synthetic FOMC Minutes generation. The training dataset consisted of 1,113 question-answer (Q\&A) pairs. The model was trained for 3 epochs with gradient accumulation every 2 steps and an effective batch size of 2. The total number of optimization steps was 1,668.
+In the intended design, \textit{Model chk-3} is obtained by further fine-tuning \textit{Model chk-2} for synthetic FOMC Minutes generation. The preserved Minutes-SFT adapter instead identifies \textit{Model chk-1} as its parent. Its 1,113 training pairs use generated indicator analysis as input and the corresponding official FOMC Minutes excerpt as the supervised answer target, thereby training controlled Minutes-style synthetic text generation. The archived run records 3 epochs, gradient accumulation every 2 steps, an effective batch size of 2, and 1,668 optimization steps.
 
-Training began with an initial loss of 2.0127, while the evaluation loss at step 20 was 2.0589. As training progressed, the loss steadily decreased, reaching a value of 0.9494 at step 820, accompanied by an evaluation loss of 0.9895. Figure~\ref{fig:ch2:stage2_sft} illustrates the training and evaluation loss trajectories throughout the process. These results indicate that the model successfully converged to a stable performance level.
+Training began with an initial loss of 2.0127, while the evaluation loss at step 20 was 2.0589. As training progressed, the loss decreased to 0.9494 at step 820, accompanied by an evaluation loss of 0.9895. Figure~\ref{fig:ch2:stage2_sft} illustrates the archived training and evaluation loss trajectories. The decline documents optimization of the Minutes-rewriting objective on the \textit{chk-1} branch; it does not identify the incremental effect of the intended \textit{chk-2}$\rightarrow$\textit{chk-3} transition.
 
 
 \begin{figure}[htbp]
     \begin{center}
             \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/training_curve_synthetic_20250526.png}
-            \caption{Training Loss and Evaluation Loss for Stage 2 Synthetic Text Supervised Fine-Tuning (\textit{Model chk-3})}
+            \caption{Archived Minutes-SFT Training and Evaluation Loss (Intended Role: \textit{Model chk-3})}
             \label{fig:ch2:stage2_sft}
     \end{center}
 \end{figure}
 
 
 
-\subsubsection*{Policy Prediction GRPO Results (\textit{Model chk-4})}
+\subsubsection*{Policy Prediction GRPO Results (Intended Role: \textit{Model chk-4})}
 
-In this section, we applied Group Relative Policy Optimization (GRPO) to fine-tune the \textit{Model chk-2} in predicting the monetary policy decision, specifically the vote for the change of the Federal Fund Rate (FFR). Here, we employed two reward functions for optimization, \textit{``Vote Accuracy Reward''} and \textit{``Vote Format Reward''}. The \textit{``Total Reward''} is summed of these two rewards. Figure~\ref{fig:ch2:stage2_grpo} illustrated the rolling average total rewards with a window of 20 steps after 1940-step training. 
+The intended policy branch applies GRPO to \textit{Model chk-2} to infer the standardized Federal Funds Rate (FFR) vote. The surviving decision adapters instead branch from \textit{Model chk-1}; a later decision-branch merge also overwrote the old merged directory previously associated with the Minutes branch. The archived decision run uses \textit{``Vote Accuracy Reward''} and \textit{``Vote Format Reward''}, whose sum forms the \textit{``Total Reward''}. Figure~\ref{fig:ch2:stage2_grpo} shows the 20-step rolling average over the recorded training trajectory.
 
 
 \begin{figure}[htbp]
@@ -604,7 +679,7 @@ In this section, we applied Group Relative Policy Optimization (GRPO) to fine-tu
 
 
 % % 
-For this stage of training, we initiated the process with a total of 5 epochs and 1,940 training steps. Throughout the training trajectory, both the format reward and accuracy reward demonstrated consistent upward trends, indicative of effective early-stage learning and successful policy optimization. By step 1,200, the rolling standard deviations for each reward component had notably decreased, reflecting improved stability in model behavior and convergence toward higher-reward regions of the parameter space. This reduction in reward volatility underscores the model’s growing consistency and reliability in generating policy-aligned voting decisions.
+The archived configuration records 5 planned epochs and 1,940 training steps. Within the displayed trajectory, the format- and accuracy-reward rolling averages generally increase, while their rolling standard deviations are lower near step 1,200 than in earlier portions of the run. These quantities are descriptive diagnostics of the archived reward functions and sampled training outputs. Without a fixed held-out comparison, they cannot be interpreted as evidence of policy-optimization effectiveness, behavioral reliability, convergence, or a causal change in policy-decision accuracy.
 
 % Importantly, after step 1,200, the total reward plateaued, and no further significant upward trend was observed. To mitigate the risk of overfitting and ensure generalization, we selected the model checkpoint at step 1,200 (corresponding to epoch 2.0) as the final model for this training stage.
 
@@ -615,7 +690,7 @@ For this stage of training, we initiated the process with a total of 5 epochs an
 
 \subsubsection*{Training Results Summary}
 
-To sum up, these loss metrics suggest that the model successfully absorbed knowledge from the training data. The observed reduction in both training and evaluation losses over the course of training indicates an improvement in the model's ability to generate required texts. It's worth noting that the model's capacity to reduce the training evaluation loss, despite being trained solely on the training dataset, is indicative of its improved understanding and extrapolation of the underlying patterns for the evaluation dataset.
+The archived curves show optimization progress within the SFT, analysis-GRPO, Minutes-SFT, and decision-GRPO branches. They should not be combined into a single causal or incremental training narrative because the preserved parent checkpoints differ from the intended graph. In particular, lower loss or higher in-training reward does not replace a common, leakage-free held-out comparison of \texttt{chk-0}, \texttt{chk-1}, \texttt{chk-2}, and \texttt{chk-3}.
 
 
 
@@ -625,17 +700,229 @@ To sum up, these loss metrics suggest that the model successfully absorbed knowl
 
 \subsection*{Model Evaluation Results}
 
-This subsection reports evaluation results for the two downstream branches separately. The \textit{textual similarity} test directly compares \textit{Model chk-3} with \textit{Model chk-0}. For the historical \textit{target-relative indicator-sensitivity} (Leave-one-out) results, the surviving workbooks do not retain enough checkpoint or split provenance to assign the aggregates to a verified model checkpoint; the canonical rerun must pin both identities explicitly. The \textit{statistical significance} test uses synthetic Minutes generated by \textit{Model chk-3}, with the corresponding \textit{Model chk-0} series reported as a baseline benchmark. By contrast, the \textit{decision prediction} tests are carried out on the task-specific decision-making branch (\textit{Model chk-4}) and are reported relative to \textit{Model chk-0} under both original-Minutes and synthetic-Minutes inputs.
+This subsection separates the surviving archived branch comparisons from the intended staged evaluation. The historical textual-similarity aggregates compare a legacy Minutes-branch output with \textit{Model chk-0}, but the old merged directory is not an immutable \textit{chk-3} artifact. Row-level workbooks survive, but they lack a checkpoint-bound test manifest and meeting identifiers needed to reconstruct the resampling clusters. Historical references to approximately 490 analysis records and 140 Minutes records concern different legacy split versions and units; they are not treated as one fixed common test set. The historical \textit{target-relative indicator-sensitivity} workbooks likewise do not retain enough checkpoint or split provenance to assign their aggregates to a verified model checkpoint. The association and decision experiments are retained as legacy exploratory analyses. None of these results constitutes a common-test-set comparison of \texttt{chk-0}, \texttt{chk-1}, \texttt{chk-2}, and \texttt{chk-3}, so they cannot establish stage-by-stage incremental value.
+
+\subsubsection*{Provenance-Controlled Four-Artifact Common-Test Results}
+
+Table~\ref{tab:ch2:common_test_quality} reports completion, semantic
+similarity, and surface-quality results from the frozen common test.  Under
+the pre-registered greedy-decoding protocol, the base model, analysis-SFT
+model, and recovered Minutes-SFT branch each reached the 8,192-token
+completion limit on all 33 rows.  They therefore produced no valid final
+answers.  The archived GRPO branch completed 32 of 33 rows; its only
+token-limit failure was the economic-situation section for the March 2025
+meeting.  That failed row is outside the prospective-only subset, in which
+the archived GRPO branch completed all 27 rows.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \begin{tabular}{p{0.25\textwidth} c c c c}
+        \toprule
+        \textbf{Metric} &
+        \makecell[c]{\texttt{chk-0}\\base} &
+        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
+        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
+        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
+        \midrule
+        Valid rows & 0/33; 0/27 & 0/33; 0/27 & 32/33; 27/27 & 0/33; 0/27 \\
+        BERTScore F1 $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.515; 0.529 & 0.000; 0.000 \\
+        MPNet cosine $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.440; 0.456 & 0.000; 0.000 \\
+        ROUGE-L F1 $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.100; 0.105 & 0.000; 0.000 \\
+        Length ratio (descriptive) & 7.587; 7.782 & 8.027; 8.156 & 0.738; 0.496 & 6.920; 7.509 \\
+        Trigram repetition $\downarrow$ & 1.000; 1.000 & 1.000; 1.000 & 0.046; 0.017 & 1.000; 1.000 \\
+        Format compliance $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.242; 0.296 & 0.000; 0.000 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Common-test completion, semantic, and surface results. Each cell
+    reports the meeting-equal-weight mean for all 11 meetings followed by the
+    prospective-only 9-meeting mean. Fatal rows remain in the denominator and
+    receive the pre-registered worst-case headline-quality values, while
+    length ratio remains descriptive; hence a semantic score of zero for an
+    all-fatal artifact is a failure penalty, not an encoder assessment of its
+    truncated text. $^{\dagger}$The archived GRPO artifact
+    does not implement the intended \texttt{chk-1}$\rightarrow$\texttt{chk-2}
+    edge. $^{\ddagger}$The recovered Minutes adapter does not implement the
+    intended \texttt{chk-2}$\rightarrow$\texttt{chk-3} edge.}
+    \label{tab:ch2:common_test_quality}
+\end{table}
+
+For the archived GRPO branch, the all-meeting mean BERTScore F1 is 0.515
+(95\% cluster-bootstrap interval: 0.470--0.553), MPNet cosine is 0.440
+(0.398--0.476), and ROUGE-L F1 is 0.100 (0.090--0.108).  The corresponding
+prospective-only values are 0.529 (0.498--0.561), 0.456 (0.424--0.485),
+and 0.105 (0.100--0.111).  Only 8 of 33 rows satisfy the body-only format
+contract; most otherwise valid outputs reproduce a section heading.  Format
+noncompliance is recorded separately and does not suppress semantic,
+surface, or factual scoring.
+
+Table~\ref{tab:ch2:common_test_grounding} reports deterministic factual,
+numeric, and directional checks.  The archived GRPO branch attains high
+conditional numeric-value accuracy (0.925), but mentions only about 0.3\% of
+the available evidence values and has a rule-covered unsupported-claim rate
+of 0.858.  Unit and time accuracy are also low.  Thus, matching a small set
+of stated numbers does not imply broad evidentiary coverage or factual
+grounding.  Direction consistency is 0.383, and no coverable policy-stance
+claim matches the stance derived from the supplied federal-funds-rate
+evidence.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \begin{tabular}{p{0.28\textwidth} c c c c}
+        \toprule
+        \textbf{Metric} &
+        \makecell[c]{\texttt{chk-0}\\base} &
+        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
+        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
+        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
+        \midrule
+        Numeric-value accuracy $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.925; 0.962 & 0.000; 0.000 \\
+        Evidence-value coverage $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.003; 0.003 & 0.000; 0.000 \\
+        Unit accuracy $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.165; 0.162 & 0.000; 0.000 \\
+        Time accuracy $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.133; 0.125 & 0.000; 0.000 \\
+        Novel-number rate $\downarrow$ & 1.000; 1.000 & 1.000; 1.000 & 0.073; 0.037 & 1.000; 1.000 \\
+        Rule-covered unsupported rate $\downarrow$ & 1.000; 1.000 & 1.000; 1.000 & 0.858; 0.849 & 1.000; 1.000 \\
+        Direction consistency $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.383; 0.357 & 0.000; 0.000 \\
+        Direction coverage $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.692; 0.772 & 0.000; 0.000 \\
+        Policy-stance consistency $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.000; 0.000 & 0.000; 0.000 \\
+        Policy-stance coverage $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.667; 0.667 & 0.000; 0.000 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Common-test deterministic grounding and directional results.
+    Cells report all-meeting and prospective-only means. Numeric, unit, time,
+    direction, and stance accuracies are conditional on rule-eligible claims;
+    eligibility counts and all confidence intervals are retained in the
+    sealed row-level and summary artifacts. The unsupported rate covers only
+    claims addressed by deterministic rules and is not an exhaustive
+    natural-language-inference factuality measure. Fatal-row values are
+    pre-registered penalties.}
+    \label{tab:ch2:common_test_grounding}
+\end{table}
+
+The paired contrasts follow only the three verified archived parent edges.
+After treating all 66 pre-specified metric tests in each subset as one Holm
+family, no adjusted \(p\)-value is below 0.05.  In particular, even the
+archived-GRPO-versus-base contrasts for valid completion and BERTScore F1
+have adjusted \(p=0.0645\) in the all-meeting analysis.  The equal
+worst-case scores of the three all-fatal artifacts do not establish model
+equivalence or absence of a training effect.  More importantly, the
+archived GRPO artifact is a branch from \texttt{chk-0}, and the recovered
+Minutes adapter is a branch from \texttt{chk-1}; these results therefore do
+not estimate the intended \texttt{chk-1}$\rightarrow$\texttt{chk-2} or
+\texttt{chk-2}$\rightarrow$\texttt{chk-3} increments.  Because the common
+test uses raw \(D-1\) evidence rather than generated analysis as input, the
+all-fatal Minutes result also cannot be used to reject its intended
+analysis-to-Minutes rewriting capability.  Evaluating that task directly
+would require a provenance-matched \texttt{chk-2} artifact and its generated
+analysis inputs; no such model is reconstructed or retrained here.
 
 
-\subsubsection*{Textual Similarity Performance}
+\subsubsection*{Length-Tolerant Robustness View}
 
-To assess the effectiveness of Minutes-style alignment, we evaluate performance using sentence-level Cosine Similarity and token-level BERTScore. We report results for (i) the full generated text, (ii) the reasoning trajectory ($c_i$, marked as ``think''), and (iii) the final answer ($a_i$, marked as ``answer'').
+Because a token-limit completion can still contain analysable text, we also
+report a separate, post-hoc robustness view that does not classify
+\texttt{finish\_reason=length} as invalid.  This view does not require a
+closing \texttt{</think>} tag.  The first \texttt{<answer>} opening tag, when
+present, marks the beginning of the scored candidate; otherwise the complete
+non-empty raw completion is scored.  All 132 archived completions lack an
+\texttt{<answer>} opening tag, so every row uses the latter fallback.  None of
+the prompts was input-truncated.  The resulting 132/132 scoreable rows are
+sealed separately from the strict results above and do not redefine normal
+generation completion.
 
-Table~\ref{tab:ch2:result_cos_stage2_synthetic} compares \textit{Model chk-3} against \textit{Model chk-0}. Figure~\ref{fig:ch2:stage2-cos} shows the distribution of Cosine Similarity scores, while Figures~\ref{fig:ch2:stage2-f1}, \ref{fig:ch2:stage2-precision}, and \ref{fig:ch2:stage2-recall} report BERTScore in terms of F1, Precision, and Recall. Since the primary objective is synthetic Minutes generation, we focus on the ``answer'' segment.
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \begin{tabular}{p{0.25\textwidth} c c c c}
+        \toprule
+        \textbf{Metric} &
+        \makecell[c]{\texttt{chk-0}\\base} &
+        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
+        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
+        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
+        \midrule
+        Valid rows & 33/33; 27/27 & 33/33; 27/27 & 33/33; 27/27 & 33/33; 27/27 \\
+        Token-limit rows & 33/33; 27/27 & 33/33; 27/27 & 1/33; 0/27 & 33/33; 27/27 \\
+        BERTScore F1 $\uparrow$ & 0.145; 0.144 & 0.145; 0.143 & 0.644; 0.663 & 0.147; 0.144 \\
+        MPNet cosine $\uparrow$ & 0.042; 0.042 & 0.043; 0.038 & 0.452; 0.463 & 0.047; 0.044 \\
+        ROUGE-L F1 $\uparrow$ & 0.027; 0.026 & 0.035; 0.034 & 0.116; 0.119 & 0.033; 0.032 \\
+        Length ratio (descriptive) & 7.587; 7.782 & 8.027; 8.156 & 1.566; 1.348 & 6.920; 7.509 \\
+        Trigram repetition $\downarrow$ & 0.984; 0.984 & 0.987; 0.987 & 0.115; 0.095 & 0.985; 0.989 \\
+        Format compliance $\uparrow$ & 1.000; 1.000 & 0.970; 0.963 & 0.000; 0.000 & 1.000; 1.000 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Length-tolerant common-test semantic and surface results. Each
+    cell reports the all-11 and prospective-only meeting-equal-weight means.
+    Token-limit rows are scored rather than assigned failure penalties.
+    Format compliance is a narrow body-only contract check, not an overall
+    quality rating. $^{\dagger}$The archived GRPO artifact does not implement
+    the intended \texttt{chk-1}$\rightarrow$\texttt{chk-2} edge.
+    $^{\ddagger}$The recovered Minutes adapter does not implement the intended
+    \texttt{chk-2}$\rightarrow$\texttt{chk-3} edge.}
+    \label{tab:ch2:common_test_length_tolerant_quality}
+\end{table}
+
+Table~\ref{tab:ch2:common_test_length_tolerant_grounding} reports the
+all-meeting grounding results.  Parentheses give the number of rows eligible
+for each conditional metric.  In particular, high conditional numeric
+accuracy coexists with evidence-value coverage below 0.7\% for every artifact.
+The base, analysis-SFT, and Minutes-SFT completions contain no rule-coverable
+direction or policy-stance claim, so consistency is undefined rather than
+zero; their zero coverage makes that absence explicit.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \begin{tabular}{p{0.28\textwidth} c c c c}
+        \toprule
+        \textbf{All-11 metric} &
+        \makecell[c]{\texttt{chk-0}\\base} &
+        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
+        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
+        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
+        \midrule
+        Numeric-value accuracy $\uparrow$ & 0.999 (11) & 0.960 (11) & 0.952 (29) & 0.984 (15) \\
+        Evidence-value coverage $\uparrow$ & 0.002 (33) & 0.006 (33) & 0.006 (33) & 0.005 (33) \\
+        Unit accuracy $\uparrow$ & 0.043 (11) & 0.357 (11) & 0.146 (29) & 0.271 (14) \\
+        Time accuracy $\uparrow$ & 1.000 (3) & 1.000 (3) & 0.538 (33) & 0.750 (8) \\
+        Novel-number rate $\downarrow$ & 0.001 (13) & 0.022 (12) & 0.034 (33) & 0.016 (15) \\
+        Rule-covered unsupported rate $\downarrow$ & 0.862 (13) & 0.546 (12) & 0.822 (33) & 0.482 (15) \\
+        Direction consistency $\uparrow$ & NA (0) & NA (0) & 0.346 (29) & NA (0) \\
+        Direction coverage $\uparrow$ & 0.000 (33) & 0.000 (33) & 0.848 (33) & 0.000 (33) \\
+        Policy-stance consistency $\uparrow$ & NA (0) & NA (0) & 0.000 (17) & NA (0) \\
+        Policy-stance coverage $\uparrow$ & 0.000 (21) & 0.000 (21) & 0.810 (21) & 0.000 (21) \\
+        \bottomrule
+    \end{tabular}
+    \caption{Length-tolerant all-meeting deterministic grounding results.
+    Accuracy and unsupported-rate estimates are conditional on rule-eligible
+    generated claims; evidence-value and directional coverage must be read
+    jointly with them. NA denotes no eligible generated claim.}
+    \label{tab:ch2:common_test_length_tolerant_grounding}
+\end{table}
+
+The archived GRPO branch has the strongest semantic and surface-overlap means
+and substantially less repetition in this robustness view, but its
+rule-covered unsupported rate is 0.822, direction consistency is 0.346, and
+policy-stance consistency is zero.  The other three artifacts are approximately
+6.9--8.0 times the reference length and have trigram repetition near 0.985;
+counting them as valid therefore does not turn them into high-quality final
+answers.  No archived-parent contrast has a Holm-adjusted \(p\)-value below
+0.05.  For archived GRPO versus base, the all-meeting BERTScore, MPNet,
+ROUGE-L, and repetition contrasts each have raw \(p=0.0009766\) and
+\(p_{\mathrm{Holm}}=0.0566406\).  As with the strict analysis, these are
+archived-branch comparisons rather than estimates of the intended sequential
+training effects.
 
 
-All reported metrics improve for \textit{Model chk-3} relative to \textit{Model chk-0}, with the largest gains in the ``answer'' segment. For example, the cosine-similarity gain is 2.872\% for ``answer'' versus 0.7575\% for ``full'' text. The gain in $BERTScore_{answer}^{F1}$ is 1.5207\%, roughly twice the $BERTScore_{full}^{F1}$ gain (0.7673\%). These differences are statistically significant at the 0.1\% level.
+\subsubsection*{Legacy Textual Similarity Performance}
+
+The archived evaluation used sentence-level Cosine Similarity and token-level BERTScore for (i) the full generated text, (ii) the reasoning trajectory ($c_i$, marked as ``think''), and (iii) the final answer ($a_i$, marked as ``answer''). These metrics quantify reference similarity only.
+
+Table~\ref{tab:ch2:result_cos_stage2_synthetic} reproduces the archived aggregate point estimates under their legacy checkpoint labels. Figures~\ref{fig:ch2:stage2-cos}, \ref{fig:ch2:stage2-f1}, \ref{fig:ch2:stage2-precision}, and \ref{fig:ch2:stage2-recall} reproduce the corresponding archived distributions. They are retained for transparency, not promoted as current main results.
+
+
+Within the archived aggregate table, the Minutes-branch means are higher than the base means, with the largest reported relative differences in the ``answer'' segment: 2.872\% for cosine similarity and 1.5207\% for BERTScore F1. Although separate 140-row score workbooks survive, their checkpoint binding, meeting membership, encoder revision, and reproducible test specification are not recoverable to the current standard. The previously reported significance stars and very large $t$-statistics are therefore removed; no inferential claim is made from these aggregates.
 
 
 
@@ -644,14 +931,14 @@ All reported metrics improve for \textit{Model chk-3} relative to \textit{Model 
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_Cosine-Similarity_distribution.png}
-        \caption{Textual Similarity Result for Cosine-Similarity}
+        \caption{Legacy Descriptive Cosine-Similarity Distribution}
         \label{fig:ch2:stage2-cos}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-F1_distribution.png}
-        \caption{Textual Similarity Result for BERTScore-F1}
+        \caption{Legacy Descriptive BERTScore-F1 Distribution}
         \label{fig:ch2:stage2-f1}
     \end{minipage}
 \end{figure}
@@ -661,14 +948,14 @@ All reported metrics improve for \textit{Model chk-3} relative to \textit{Model 
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-Precision_distribution.png}
-        \caption{Textual Similarity Result for BERTScore-Precision}
+        \caption{Legacy Descriptive BERTScore-Precision Distribution}
         \label{fig:ch2:stage2-precision}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-Recall_distribution.png}
-        \caption{Textual Similarity Result for BERTScore-Recall}
+        \caption{Legacy Descriptive BERTScore-Recall Distribution}
         \label{fig:ch2:stage2-recall}
     \end{minipage}
 \end{figure}
@@ -683,45 +970,33 @@ All reported metrics improve for \textit{Model chk-3} relative to \textit{Model 
     \footnotesize
     \begin{tabular}{l c c c}
         \toprule
-        & \textit{Model chk-3}& \textit{Model chk-0}& Difference (in \%)\\
+        & \makecell[c]{Legacy Minutes\\branch}& \textit{Model chk-0}& \makecell[c]{Archived relative\\difference (in \%)}\\
         \hline
         $Cos_{full}$&0.9357&0.9287&0.7575\\ 
-                    &$({2912.33}^{***})$&$({5742.71}^{***})$&$({19.49}^{***})$\\ 
         $Cos_{think}$&0.9178&0.9033&1.617\\ 
-                    &$({5898.69}^{***})$&$({5396.43}^{***})$&$({62.87}^{***})$\\ 
         $Cos_{answer}$&0.929&0.9031&\textbf{2.872}\\ 
-                    &$({2365.92}^{***})$&$({3488.41}^{***})$&$({53.63}^{***})$\\
         \hline
         $BERTScore_{full}^{Precision}$&0.8647&0.8575&0.8441\\ 
-                    &$({4224.71}^{***})$&$({4297.97}^{***})$&$({25.10}^{***})$\\ 
         $BERTScore_{think}^{Precision}$&0.8653&0.8574&0.917\\ 
-                    &$({4266.65}^{***})$&$({4402.03}^{***})$&$({28.16}^{***})$\\ 
         $BERTScore_{answer}^{Precision}$&0.8579&0.8441&\textbf{1.6387}\\ 
-                    &$({4049.85}^{***})$&$({4181.28}^{***})$&$({47.84}^{***})$\\ 
 
         \hline
         $BERTScore_{full}^{Recall}$&0.8728&0.8664&0.7372\\ 
-                    &$({7081.24}^{***})$&$({7889.06}^{***})$&$({37.86}^{***})$\\ 
         $BERTScore_{think}^{Recall}$&0.8728&0.8681&0.5398\\ 
-                    &$({7361.39}^{***})$&$({7787.30}^{***})$&$({28.21}^{***})$\\ 
         $BERTScore_{answer}^{Recall}$&0.8796&0.868&\textbf{1.3372}\\ 
-                    &$({6304.12}^{***})$&$({7364.94}^{***})$&$({63.64}^{***})$\\ 
 
         \hline
         $BERTScore_{full}^{F1}$&0.8686&0.862&0.7673\\ 
-                    &$({5207.58}^{***})$&$({5842.11}^{***})$&$({29.61}^{***})$\\ 
         $BERTScore_{think}^{F1}$&0.8691&0.8628&0.735\\ 
-                    &$({5509.68}^{***})$&$({5800.15}^{***})$&$({29.43}^{***})$\\ 
         $BERTScore_{answer}^{F1}$&0.8688&0.8558&1.5207\\ 
-                    &$({5245.30}^{***})$&$({5465.88}^{***})$&$({57.07}^{***})$\\ 
         \bottomrule
     \end{tabular}
-    \caption{Summary Textual Similarity Results for Cosine Similarity and BERTScore Tests}
+    \caption{Legacy Descriptive Text-Similarity Aggregates. The row-level scores, exact test manifest, and immutable Minutes-branch checkpoint were not recovered; no significance test or staged-training effect is claimed.}
     \label{tab:ch2:result_cos_stage2_synthetic}
 \end{table}
 
 
-In summary, relative to \textit{Model chk-0}, \textit{Model chk-3} more effectively captures and reproduces the linguistic style, analytical reasoning, and structural coherence of authentic FOMC Minutes, demonstrating high fidelity at both the sentence and token levels.
+In summary, the legacy aggregates suggest higher semantic resemblance to the reference text for the archived Minutes branch than for the base-model output under that historical evaluation. They do not establish analytical-reasoning quality, structural or factual fidelity, correct numerical and directional content, or the incremental contribution of any particular training stage.
 
 
 
@@ -839,9 +1114,9 @@ remain unavailable.
 
 
 
-\subsubsection*{Empirical Models Test Results}
+\subsubsection*{Legacy Exploratory Association Results}
 
-As a further validation step, we evaluate the \textit{simulation capability} of synthetic Minutes generated by \textit{Model chk-3} using the sentiment-return regression framework in Eq.~\ref{eq:ch2:sentiment_reg} (\citet{tadle2022fomc}). We test whether sentiment extracted from synthetic Minutes explains variation in financial-market variables (federal funds futures and USD exchange rates). This provides a robustness check on whether empirical relationships persist when text inputs are model-generated rather than historical. Figure~\ref{fig:ch2:bootstrap_ft_base} reports bootstrapped $\beta_{Z_m}$ and $t$-statistic distributions for \textit{Model chk-3} and \textit{Model chk-0}.
+The archived analysis applied the sentiment--return regression in Eq.~\ref{eq:ch2:sentiment_reg} (\citet{tadle2022fomc}) to synthetic Minutes and to a base-model series. Figure~\ref{fig:ch2:bootstrap_ft_base} is retained as a legacy record of the resulting bootstrapped $\beta_{Z_m}$ and $t$-statistic distributions. The exact source series, immutable Minutes-branch checkpoint, resampling unit, and model-difference test were not recovered, so this figure is not treated as a verified main result.
 
 
 \begin{figure}[htbp]
@@ -850,13 +1125,13 @@ As a further validation step, we evaluate the \textit{simulation capability} of 
     \begin{subfigure}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{simulation_figure/ft_betas.png}
-        \caption{\textit{Model chk-3}: coefficient distribution}
+        \caption{Legacy Minutes branch: coefficient distribution}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{simulation_figure/ft_tvalues.png}
-        \caption{\textit{Model chk-3}: t-statistics distribution}
+        \caption{Legacy Minutes branch: t-statistic distribution}
     \end{subfigure}
     \vspace{0.8em}
 
@@ -872,7 +1147,7 @@ As a further validation step, we evaluate the \textit{simulation capability} of 
         \includegraphics[width=\textwidth]{simulation_figure/base_tvalues.png}
         \caption{\textit{Model chk-0}: t-statistics distribution}
     \end{subfigure}
-    \caption{Bootstrap distributions of $Z_{t}^{M}$ coefficients and t-statistics for \textit{Model chk-3} and \textit{Model chk-0}.}
+    \caption{Legacy, unverified bootstrap distributions of $Z_{t}^{M}$ coefficients and t-statistics for the archived Minutes branch and \textit{Model chk-0}.}
     \label{fig:ch2:bootstrap_ft_base}
 \end{figure}
 
@@ -885,7 +1160,7 @@ As a further validation step, we evaluate the \textit{simulation capability} of 
 % target: -0.289101766
 % 
 
-As an exploratory validation, we examine whether the synthetic text preserves the directional empirical signal in the benchmark regression. The bootstrap mean coefficient for $Z_t^m$ increases from 0.00224 for \textit{Model chk-0} to 0.00271 for \textit{Model chk-3}, narrowing the gap to the benchmark coefficient (0.00505) by 20.97\%. The corresponding $t$-statistic also rises from 0.6169 to 0.7152. Taken together, these results provide preliminary rather than conclusive evidence that \textit{Model chk-3} better retains the underlying policy-related signal.
+The archived coefficient and $t$-statistic summaries are not sufficient to test equality with a benchmark or a difference between models. Accordingly, the earlier ``gap reduction'' interpretation is not used as a chapter-level finding. At most, the figure documents the direction of a legacy exploratory association; it provides no causal evidence of market impact and no verified evidence of an incremental \textit{chk-3} effect.
 
 
 
@@ -927,15 +1202,15 @@ For this assessment, we use the non-decision sections from the FOMC Minutes as i
 
 
 
-Table~\ref{tab:ch2:decision_acc} shows broadly comparable performance across periods. For \textit{Model chk-4}, overall accuracy is 78.13\% in the post-2009 sample and 80.77\% in the pre-2009 sample. For \textit{Model chk-0}, the corresponding values are 66.41\% and 70.21\%. Across all observations, \textit{Model chk-4} outperforms \textit{Model chk-0} (78.89\% vs.\ 67.42\%), indicating stronger inferential performance in both in-sample and out-of-sample settings.
+Table~\ref{tab:ch2:decision_acc} reports higher raw overall accuracy for the archived decision branch than for \textit{Model chk-0}. However, the two rows use different effective samples (180 versus 178 Minutes, with different period counts), so the percentages are not a like-for-like paired comparison and do not establish a task-training effect.
 
-Notably, the most significant performance gain appears in cases where the Federal Funds Rate (FFR) is expected to rise. In the ``Raise'' category, \textit{Model chk-4} achieves an accuracy of 93.75\%, surpassing \textit{Model chk-0}'s 85.71\%. Similarly, for the ``No Change'' category, which represents the majority of cases, \textit{Model chk-4} reaches 79.10\% compared with 63.08\% for \textit{Model chk-0}. However, results in the “Cut” category should be interpreted with caution due to the limited sample size (14 observations), which may not provide sufficient statistical power.
-
-
-We next evaluate decisions inferred from synthetic sections generated by \textit{Model chk-2}. Using the same template, we replace original Minutes text with synthetic text and ask each model to select one policy action from Table~\ref{tab:ch2:vote_choice}.
+The archived category percentages are descriptive only. In particular, the ``Cut'' category contains few observations, while the ``No Change'' category dominates the sample. A valid model comparison requires the same meetings, explicit treatment of invalid outputs, and paired uncertainty.
 
 
-For this experiment, we generated 500 synthetic Minutes and then drew 20 random samples (sampling interval: 2,000). Decision-prediction accuracy based on synthetic Minutes is reported in Table~\ref{tab:ch2:decision_acc_synthetic}.
+We next reproduce a legacy decision experiment whose source description labels the synthetic sections as outputs of \textit{Model chk-2}. The artifact audit shows that the surviving analysis-GRPO artifact actually branches from \textit{Model chk-0}, so this label does not establish the intended staged lineage. Using the same template, the legacy experiment replaces original Minutes text with synthetic text and asks each model to select one policy action from Table~\ref{tab:ch2:vote_choice}.
+
+
+The archived description reports 500 synthetic Minutes and 20 random samples with a sampling interval of 2,000, but it does not preserve a sufficient row-level manifest to reconstruct the sampling unit or denominator. Table~\ref{tab:ch2:decision_acc_synthetic} is therefore retained only as a legacy descriptive aggregate.
 
 
 \begin{table}[htbp]
@@ -945,36 +1220,20 @@ For this experiment, we generated 500 synthetic Minutes and then drew 20 random 
       \textbf{Target Vote} & \textit{Model chk-0} & \textit{Model chk-4} \\
       \midrule
       Overall & 0.4601 & \textbf{0.7055}\\
-              & $({1555.63}^{***})$ & $({2707.50}^{***})$\\[0.3em]
-
       Cut by 50 bp & 0.0504 & \textbf{0.0534}\\
-                   & $({32.76}^{***})$ & $({34.34}^{***})$\\[0.3em]
-
       Cut by 25 bp & \textbf{0.2466} & 0.1534\\
-                   & $({208.86}^{***})$ & $({147.19}^{***})$\\[0.3em]
-
       No change & 0.4567 & \textbf{0.7824}\\
-                & $({1396.12}^{***})$ & $({2721.95}^{***})$\\[0.3em]
-
       Raise by 25 bp & \textbf{0.6212} & 0.5469\\
-                     & $({658.82}^{***})$ & $({664.30}^{***})$\\[0.3em]
-
       Raise by 50 bp & \textbf{0.1588} & 0.1548\\
-                     & $({92.34}^{***})$ & $({89.65}^{***})$\\[0.3em]
-
       Raise by 75 bp & 0.6077 & \textbf{0.6268}\\
-                     & $({361.37}^{***})$ & $({355.74}^{***})$\\
       \bottomrule
       \end{tabular}
-    \caption{Prediction Accuracy for Using Synthetic FOMC Minutes}
+    \caption{Legacy Descriptive Accuracy Using Synthetic FOMC Minutes. The historical sample manifest and denominator were not recovered; the former significance statistics are not reported.}
     \label{tab:ch2:decision_acc_synthetic}
 \end{table}
 
 
-\textit{Model chk-4} achieves notably higher overall accuracy (0.7055) than \textit{Model chk-0} (0.4601), particularly in the “No Change” and “Raise by 75 bp” categories, demonstrating stronger alignment with realistic policy patterns.
-
-
-These results confirm that task-specific GRPO materially improves decision prediction when synthetic Minutes are used as the input representation. 
+The archived table reports a higher overall point estimate for the decision branch than for \textit{Model chk-0}, but the missing sample manifest and unverifiable synthetic-text checkpoint prevent an inferential or stage-attribution claim. The values do not confirm that task-specific GRPO materially improves decision prediction.
 
 To place the \textit{Model chk-4} results in a broader benchmark context, it is useful to compare the results with different benchmarks. Here, we selects three panels. Panel A uses only pre-meeting information, Panel B uses stripped same-meeting FOMC statements, and Panel C uses stripped FOMC Minutes released after the meeting. Accordingly, the table below reports one representative high-performing baseline from each panel together with \textit{Model chk-4}, and the rows should not be interpreted as a single unified leaderboard.
 
@@ -1028,7 +1287,7 @@ Because Minutes are published after the meeting, Panel C is an ex post inference
     \label{tab:ch2:decision_acc_overview}
 \end{table}
 
-The compact comparison highlights three points. First, Panel A and Panel B achieve higher overall and ``No change'' accuracy, which is unsurprising given their respective information sets and the dominance of no-change outcomes in the historical sample. Second, \textit{Model chk-4} delivers the strongest performance in the ``Raise'' category, reaching 93.75\%, which indicates a clear advantage in identifying tightening episodes from policy-relevant discussion. Third, relative to the minutes-based benchmark in Panel C, \textit{Model chk-4} improves cut, raise, and overall accuracy, although it remains below Panel C on the majority ``No change'' category. Taken together, these results suggest that the main gain from the LLM approach comes from decision-relevant synthesis of policy discussion rather than from simply reproducing the dominant no-change class.
+The compact table provides descriptive archived point estimates across different information sets. Panel A and Panel B have higher overall and ``No change'' accuracy in this sample, in which no-change outcomes dominate. The \textit{Model chk-4} row has the highest reported ``Raise'' point estimate (93.75\%), while its ``Cut,'' ``Raise,'' and overall point estimates exceed those in Panel C and its ``No change'' estimate is lower. Because the panels use different information sets and the table does not supply a matched-sample uncertainty analysis, these differences do not establish a model advantage, an improvement caused by task-specific training, or a gain attributable to decision-relevant synthesis.
 
 
 
@@ -1038,22 +1297,44 @@ The compact comparison highlights three points. First, Panel A and Panel B achie
 \section{Conclusion}\label{ch2:sec:conclusion}
 
 
-In conclusion, this chapter develops a fine-tuned LLM framework for generating structured synthetic policy text from macro-financial indicators. The strongest empirical evidence comes from the synthetic Minutes generation task, where \textit{Model chk-3} consistently outperforms \textit{Model chk-0} on textual similarity measures, indicating stronger Minutes-style alignment and higher textual fidelity. This result suggests that the downstream SFT stage is effective in adapting the model to the stylistic and structural conventions of FOMC Minutes.
+In conclusion, this chapter develops an intended \texttt{chk-0}$\rightarrow$\texttt{chk-1}$\rightarrow$\texttt{chk-2}$\rightarrow$\texttt{chk-3} framework for generating structured synthetic policy text from macro-financial indicators. In the \texttt{chk-3} design, generated analysis is the input and the corresponding official FOMC Minutes excerpt is the supervised answer target, so the downstream SFT objective directly trains Minutes-style rewriting. The surviving artifacts do not instantiate this full sequence: the archived analysis-GRPO artifact branches from \texttt{chk-0}, the Minutes-SFT adapter branches from \texttt{chk-1}, and the old Minutes merged directory was later overwritten by decision-branch weights.
 
 
-Beyond similarity, however, the remaining evidence is more qualified. The
-surviving Leave-one-out aggregates provide descriptive, section-dependent
-evidence of output sensitivity, with mixed signed alignment deltas against
-actual Minutes. Because the row-level generations and meeting clusters for
-the manuscript's 25/26-indicator experiments are unavailable, these
-recovered LOO tables do not support current inferential claims; valid
-confidence intervals require a rerun of the paired pipeline. A surviving
-seven-indicator pilot has a different intervention and sample and is not used
-to fill this gap. Likewise, the econometric validation should be interpreted
-as exploratory, since it provides preliminary rather than conclusive
-evidence that synthetic Minutes retain policy-relevant signal.
+The new frozen common test completes the requested four-artifact comparison
+without retraining. Under its strict final-answer contract, only the archived
+GRPO-from-\texttt{chk-0} branch reliably completes final answers: 32/33
+overall and 27/27 in the prospective-only subset. The base, analysis-SFT, and
+recovered Minutes-SFT artifacts reach the completion limit on every row.
+Their zero strict headline scores are pre-registered failure penalties, not
+semantic assessments of their truncated text, and equality of those
+penalties does not establish model equivalence. In the separate
+length-tolerant robustness view, all four artifacts have 33/33 scoreable
+non-empty completions. That view confirms that the archived GRPO branch has
+substantially higher reference similarity and much less repetition, while the
+other three outputs are approximately 6.9--8.0 times the reference length and
+repeat nearly all trigrams. Across both views, evidence-value coverage remains
+below 0.7\%, unsupported-claim rates are high where claims are rule-coverable,
+and no pre-specified contrast remains significant at the 5\% level after Holm
+adjustment.
 
-In the downstream decision task, \textit{Model chk-4} improves policy decision prediction relative to \textit{Model chk-0}, which suggests that task-specific post-training enhances decision-relevant inference from policy discussion. Taken together, these findings support the promise of LLM-based policy-text simulation for macro-financial analysis.
+These formal results characterize archived-artifact behavior, not the
+incremental value of the intended training stages. In particular, the
+recovered Minutes branch is evaluated out of its intended input
+distribution: the common test supplies raw \(D-1\) evidence rather than
+\texttt{chk-2}-generated analysis. Its failure therefore cannot reject
+analysis-to-Minutes rewriting ability. The older textual-similarity
+aggregates remain descriptive because their exact test manifest and
+immutable Minutes checkpoint were not recovered; they are not mixed with
+the new results. The surviving Leave-one-out, econometric, and decision
+analyses likewise remain legacy exploratory evidence under their separate
+provenance and split limitations.
+
+In the downstream decision task, the archived decision branch reports higher
+raw accuracy than \textit{Model chk-0}, but unequal effective samples and
+incomplete manifests preclude a clean paired comparison. Taken together,
+the completed common test reveals a substantial completion-reliability
+problem and weak evidence grounding under the tested protocol, while the
+remaining legacy studies motivate further provenance-controlled evaluation.
 
 
 Several avenues for future research therefore remain open. First, beyond
