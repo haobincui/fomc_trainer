@@ -1,0 +1,67 @@
+{
+  "schema_version": "retrain-v2-checkpoint-eval-manifest-v1",
+  "generated_at_utc": "2026-08-10T22:43:00Z",
+  "evaluation_scope": "standalone chk3 checkpoint-250 generation leg on the frozen Chapter 2 common test",
+  "claim_boundary": "Evaluation-only direct chk1-to-chk3 artifact. This is an out-of-task raw D-1 evidence-to-Minutes stress test and not a canonical chk2-to-chk3 incremental-effect claim.",
+  "evaluation_only": true,
+  "promotable_to_canonical_dag": false,
+  "training_performed": false,
+  "artifacts": [
+    {
+      "artifact_id": "eval-chk3-direct-chk1-cp200-sft-cp250",
+      "design_checkpoint_id": "chk-3-direct-cp250",
+      "intended_parent_id": "chk-1",
+      "verified_parent_artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+      "lineage_status": "verified_parent_matches_intended_parent",
+      "artifact_status": "evaluation_only",
+      "model_path": "output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_chk3_cp250_20260810_v1/models/chk3_cp250_merged",
+      "model_sha256": "7a608cd4436323f7bce7b35893ad527177c89c5a2768c8fd6939f632b11007ac",
+      "tokenizer_path": "output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_chk3_cp250_20260810_v1/models/chk3_cp250_merged",
+      "tokenizer_sha256": "7a608cd4436323f7bce7b35893ad527177c89c5a2768c8fd6939f632b11007ac",
+      "adapter_path": "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/checkpoint-250",
+      "adapter_sha256": "2f2f6786fcdd2ee06afa80bc3cc5304d8d9c94ee0e576a642c76cd8ba80c26e9",
+      "adapter_weights_sha256": "396bdefef55c4521918a84df8e27abf8c82752eeadef3dcbb81188ffca332f45",
+      "checkpoint_step": 250,
+      "usable_for_evaluation": true
+    }
+  ],
+  "bindings": {
+    "evaluation_config": {
+      "path": "configs/main/checkpoint_generation_eval_11.json",
+      "sha256": "0eb08f0a360927d4aab7a14ebb74cf939a7cd59c79aed474746af1bb800577ff"
+    },
+    "test_manifest": {
+      "path": "output/evaluation/main/checkpoint_generation/checkpoint_eval_11_v1/dataset/test_manifest.json",
+      "sha256": "e73bb3a29b56fe8152799611fa9aeb67e6c30573ec2f8eda8ac9082878ee35a9",
+      "payload_sha256": "4be304b880e46721587ada9a7294dcd161c8529a7dccbdf602768cd35bb3986e"
+    },
+    "parent_checkpoint_manifest": {
+      "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/evaluation_checkpoint_manifest.json",
+      "sha256": "4aa50c3153120534886cffb862be50426e2626028b1336f9f5d22076a27524cb",
+      "payload_sha256": "5d645361303268d14edb087db4812a328bb46343338e6bc2df4f9f2229140e38"
+    },
+    "selection_receipt": {
+      "path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/checkpoint_selection_receipt.json",
+      "sha256": "69853b5965c3b13aea71876d07c1d014efe8316a69edc183fb5a892051cd594f"
+    },
+    "authorization": {
+      "path": "docs/summary/20260810T223534Z/chk3_cp250_generation_comparison/authorization.json",
+      "sha256": "71dcf949ad2119b4e4bbbc1975910aa63df10e432c156dc6a1f084e5ee17ba78",
+      "authorization_sha256": "f61ace7e37dc1dff65cf4a57661ecf24a4ce42c49b4b3b4dc8c880aefba5e071"
+    },
+    "merge_attestation": {
+      "path": "output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_chk3_cp250_20260810_v1/models/chk3_cp250_merged/merge_attestation.json",
+      "sha256": "7bbc33a64939857bc24856d302feb6b3631bc82fbce8f690f3892c43c8f2a7e4",
+      "payload_sha256": "616e59c2d00ce8d145765c8df22ddb84e1a38f624af86b1bb9b6f762e9c34df1"
+    },
+    "exact_merge_evidence": {
+      "path": "docs/summary/20260810T223534Z/chk3_cp250_generation_comparison/chk3_cp250_exact_merge_lineage.json",
+      "sha256": "6c7b0b375aa3f0a175654b35a9748bc0dc5d0faf7d8e6f759fa5df665eba6125",
+      "payload_sha256": "841dcded5a27adac68796afe1be6f54aa2c9b25a8ada21abeb55a5cc91e4df7e"
+    }
+  },
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "7adfd56471b8c194b04e43510525914e9f8d2305c41a4f8348e91282af942e47"
+  }
+}

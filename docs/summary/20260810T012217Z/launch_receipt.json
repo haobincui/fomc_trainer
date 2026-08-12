@@ -1,0 +1,45 @@
+{
+  "schema_version": "chk1-full-sft-launch-v1",
+  "status": "running",
+  "launched_at_utc": "2026-08-10T01:28:12Z",
+  "launcher_pid": 515640,
+  "launcher_pgid": 515640,
+  "environment": "fomc_trainer",
+  "gpus": [0, 1],
+  "config": {
+    "path": "configs/retrain_v2/chk1_analysis_sft_clean_v2_override_full3ep_lr1e5_maxlen7168_20260810.yaml",
+    "sha256": "5f692bc2b80ed1c22ce547edb3b09c88339fcff19b40ebaf7386d37a0c1c67b3"
+  },
+  "output_dir": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e5_maxlen7168_20260810/adapters/chk1",
+  "log": "docs/summary/20260810T012217Z/training.log",
+  "runtime_config_sha256": "a5c19c6eaafde7086b156907a814d3741e58959c7a6d3d797c88a71612de787b",
+  "training_contract": {
+    "fresh_from_chk0": true,
+    "num_train_epochs": 3,
+    "optimizer_steps": 255,
+    "learning_rate": 0.00001,
+    "warmup_ratio": 0.05,
+    "warmup_steps": 13,
+    "max_length": 7168,
+    "actual_validated_max_total_tokens": 4019,
+    "eval_steps": 10,
+    "save_steps": 1,
+    "checkpoint_keep_last": 3,
+    "checkpoint_keep_every_n_steps": 10,
+    "effective_global_batch_size": 16
+  },
+  "startup_observation": {
+    "observed_step": 3,
+    "first_step_loss": 1.9994,
+    "first_step_grad_norm": 1.640625,
+    "first_checkpoint_complete": true,
+    "oom": false,
+    "non_finite_metrics": false,
+    "fatal_distributed_error": false
+  },
+  "scope": {
+    "stage": "chk1",
+    "semantic_override": true,
+    "downstream_stages_allowed": []
+  }
+}

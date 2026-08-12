@@ -1,0 +1,281 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "TOTALSL unit overlay data-quality audit",
+    "description": "Technical audit of the immutable Millions-to-Billions metadata repair used by the chk2 candidate dataset.",
+    "generatedAt": "2026-08-10T12:52:00Z",
+    "filters": [],
+    "cards": [
+      {
+        "id": "audit_metrics",
+        "description": "Exact population and transformation counts.",
+        "dataset": "audit_summary",
+        "sourceId": "independent_audit",
+        "metrics": [
+          {
+            "label": "All rows",
+            "field": "rows",
+            "format": "number"
+          },
+          {
+            "label": "Affected rows",
+            "field": "affected_rows",
+            "format": "number"
+          },
+          {
+            "label": "Changed entries",
+            "field": "entries",
+            "format": "number"
+          },
+          {
+            "label": "Byte-identical rows",
+            "field": "unchanged_rows",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "affected_rows_chart",
+        "title": "Affected rows by split",
+        "subtitle": "All 55 unit-repaired rows; exact evidence-entry counts remain in the audit table.",
+        "type": "bar",
+        "dataset": "split_audit",
+        "sourceId": "independent_audit",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "split",
+            "type": "nominal",
+            "label": "Split"
+          },
+          "y": {
+            "field": "affected_rows",
+            "type": "quantitative",
+            "label": "Affected rows"
+          },
+          "tooltip": [
+            {
+              "field": "entries",
+              "type": "quantitative",
+              "label": "TOTALSL entries",
+              "format": "number"
+            }
+          ]
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "split_audit_table",
+        "title": "Split-level invariant audit",
+        "subtitle": "All declared counts were independently recomputed from parent and overlay JSONL bytes.",
+        "dataset": "split_audit",
+        "sourceId": "independent_audit",
+        "columns": [
+          {
+            "field": "split",
+            "label": "Split",
+            "type": "text"
+          },
+          {
+            "field": "rows",
+            "label": "Rows",
+            "format": "number"
+          },
+          {
+            "field": "affected_rows",
+            "label": "Affected rows",
+            "format": "number"
+          },
+          {
+            "field": "entries",
+            "label": "TOTALSL entries",
+            "format": "number"
+          },
+          {
+            "field": "unchanged_rows",
+            "label": "Unchanged rows",
+            "format": "number"
+          },
+          {
+            "field": "status",
+            "label": "Status",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "parent_dataset",
+        "label": "Read-only parent analysis GRPO dataset",
+        "path": "dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/analysis_grpo"
+      },
+      {
+        "id": "overlay_manifest",
+        "label": "Immutable TOTALSL overlay manifest",
+        "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810/overlay_manifest.json"
+      },
+      {
+        "id": "independent_audit",
+        "label": "Independent field and byte invariant audit",
+        "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/totalsl_overlay_audit.json",
+        "query": {
+          "engine": "sqlite",
+          "language": "SQL",
+          "executed_at": "2026-08-10T12:52:00Z",
+          "description": "Materializes the independently verified headline and split counts exposed in the report.",
+          "sql": "WITH split_audit(split, rows, affected_rows, entries, unchanged_rows, status) AS (VALUES ('train',493,30,46,463,'passed'),('validation',199,12,12,187,'passed'),('test',190,13,13,177,'passed')), audit_summary(rows, affected_rows, entries, unchanged_rows) AS (VALUES (882,55,71,827)) SELECT 'summary' AS row_type, NULL AS split, rows, affected_rows, entries, unchanged_rows, 'passed' AS status FROM audit_summary UNION ALL SELECT 'split' AS row_type, split, rows, affected_rows, entries, unchanged_rows, status FROM split_audit"
+        }
+      },
+      {
+        "id": "source_notes",
+        "label": "Definitions, evidence boundary and visualization decision",
+        "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/totalsl_overlay_source_notes.md"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "independent_audit",
+        "body": "## The overlay passed every declared data invariant\n\nThe published overlay contains **882 rows** with the original `493 / 199 / 190` train, validation and test split sizes. Exactly **55 rows** changed, covering **71 TOTALSL evidence entries**. The remaining **827 rows are byte-for-byte identical** to the read-only parent. No IDs, order, dates, numeric values, evidence IDs or source hashes moved. The dataset is suitable for the planned chk2 candidate under this narrowly defined unit-repair contract."
+      },
+      {
+        "id": "metrics",
+        "type": "metric-strip",
+        "cardIds": [
+          "audit_metrics"
+        ]
+      },
+      {
+        "id": "key_findings",
+        "type": "markdown",
+        "sourceId": "overlay_manifest",
+        "body": "## The repair is limited to one metadata field and its prompt mirror\n\nFor every evidence object with `series_id = TOTALSL`, `units` changed from `Millions of Dollars` to `Billions of Dollars`. Each affected prompt contained exactly one embedded copy of `provided_data`, and that copy was synchronized. All other fields were preserved. The output was published atomically with no-overwrite semantics and sealed read-only."
+      },
+      {
+        "id": "affected_rows_visual",
+        "type": "chart",
+        "chartId": "affected_rows_chart"
+      },
+      {
+        "id": "audit_table",
+        "type": "table",
+        "tableId": "split_audit_table"
+      },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "sourceId": "parent_dataset",
+        "body": "## Scope and definitions\n\nAn **affected row** contains at least one `provided_data.evidence` object whose `series_id` is exactly `TOTALSL` and whose source unit is exactly `Millions of Dollars`. An **entry** is one such evidence object. **Byte-identical** compares each complete JSONL row, including serialization and newline bytes. Validation is stored as `eval.jsonl` in the release while the training interface names the split `validation`."
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "sourceId": "independent_audit",
+        "body": "## Methodology and robustness checks\n\nThe versioned builder first verifies the parent manifest and all three split hashes. It reconstructs each affected row, allows only the declared unit substitution, verifies the unique prompt mirror, and rejects any field drift. An independent second pass reparsed both datasets and recomputed split counts, unique IDs, allowed field differences, prompt synchronization, read-only modes, symlink absence and byte equality for unaffected rows. The related test suite completed **23 tests with zero failures**, and static analysis passed."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "sourceId": "source_notes",
+        "body": "## Evidence boundary and limitations\n\nThis audit proves a deterministic metadata transformation against the local sealed parent. It is not a statistical estimate and does not independently re-download the upstream series. It also does not certify model targets or guarantee model quality. The chart shows only the split distribution; the exact audit table and immutable hashes remain authoritative."
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "sourceId": "overlay_manifest",
+        "body": "## Recommended use\n\nBind downstream chk2 candidate configuration to the overlay manifest SHA-256 `00a825755444b83ea3c3f3d0878b394acbcc2af85ab231ec714aa64f742de410` and output payload SHA-256 `d8587373d3a922300732799b397a1f1294c4b6fb7114948f0309dcfd31546fe2`. Treat any later byte change as a new release rather than modifying this directory."
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "sourceId": "source_notes",
+        "body": "## Further questions\n\nThe remaining semantic question is whether other monetary series carry inconsistent scale metadata. That requires a separate series-wide unit audit and is outside this overlay's fixed TOTALSL-only scope."
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T12:52:00Z",
+    "status": "ready",
+    "datasets": {
+      "audit_summary": [
+        {
+          "rows": 882,
+          "affected_rows": 55,
+          "entries": 71,
+          "unchanged_rows": 827
+        }
+      ],
+      "split_audit": [
+        {
+          "split": "train",
+          "rows": 493,
+          "affected_rows": 30,
+          "entries": 46,
+          "unchanged_rows": 463,
+          "status": "passed"
+        },
+        {
+          "split": "validation",
+          "rows": 199,
+          "affected_rows": 12,
+          "entries": 12,
+          "unchanged_rows": 187,
+          "status": "passed"
+        },
+        {
+          "split": "test",
+          "rows": 190,
+          "affected_rows": 13,
+          "entries": 13,
+          "unchanged_rows": 177,
+          "status": "passed"
+        }
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {
+      "id": "parent_dataset",
+      "label": "Read-only parent analysis GRPO dataset",
+      "path": "dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/analysis_grpo"
+    },
+    {
+      "id": "overlay_manifest",
+      "label": "Immutable TOTALSL overlay manifest",
+      "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810/overlay_manifest.json"
+    },
+    {
+      "id": "independent_audit",
+      "label": "Independent field and byte invariant audit",
+      "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/totalsl_overlay_audit.json",
+      "query": {
+        "engine": "sqlite",
+        "language": "SQL",
+        "executed_at": "2026-08-10T12:52:00Z",
+        "description": "Materializes the independently verified headline and split counts exposed in the report.",
+        "sql": "WITH split_audit(split, rows, affected_rows, entries, unchanged_rows, status) AS (VALUES ('train',493,30,46,463,'passed'),('validation',199,12,12,187,'passed'),('test',190,13,13,177,'passed')), audit_summary(rows, affected_rows, entries, unchanged_rows) AS (VALUES (882,55,71,827)) SELECT 'summary' AS row_type, NULL AS split, rows, affected_rows, entries, unchanged_rows, 'passed' AS status FROM audit_summary UNION ALL SELECT 'split' AS row_type, split, rows, affected_rows, entries, unchanged_rows, status FROM split_audit"
+      }
+    },
+    {
+      "id": "source_notes",
+      "label": "Definitions, evidence boundary and visualization decision",
+      "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/totalsl_overlay_source_notes.md"
+    }
+  ],
+  "package_info": {
+    "originUrl": "artifact://totalsl-overlay-data-quality-audit",
+    "controls": {
+      "edit": false,
+      "refresh": false
+    }
+  }
+}

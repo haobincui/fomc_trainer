@@ -1,0 +1,63 @@
+{
+  "authorization_basis": {
+    "kind": "explicit_user_instruction",
+    "received_at_utc": "2026-08-10T19:39:52Z",
+    "summary": "Stop chk2, review chk3 data, and directly train chk3 with parameters based on chk1."
+  },
+  "bindings": {
+    "dataset_release_manifest": {
+      "path": "dataset/processed/retrain_v2/chk3_minutes_clean_v3_20260805/release_manifest.json",
+      "sha256": "4c5787945460431179e6b73a23b19a72bced14fc76022ecc1dad52d119abd1d7"
+    },
+    "full_config": {
+      "path": "configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_full3ep_lr1e6_20260810.yaml",
+      "sha256": "a54da7a9a4c89afacff94d6c59765a771a3efbcb41a663a87268a33a79b0b033"
+    },
+    "parent_model": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+    },
+    "smoke_config": {
+      "path": "configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_smoke20_lr1e6_20260810.yaml",
+      "sha256": "a3e6cefd755604fd9c80d6a0798d669635d0423299a18561b3bcf5281ee525e9"
+    }
+  },
+  "created_at_utc": "2026-08-10T19:46:21Z",
+  "executed_smoke": {
+    "config_sha256_at_launch": "f092e2aa2b1f9d2b8c9af53068c820d7d7238705a5b1944b4e3db293f48d7162",
+    "note": "The config later gained only standalone release-binding fields. The executed smoke receipt remains legacy_unbound and non-promotable.",
+    "resolved_runtime_config": {
+      "path": "output/training/retrain_v2/chk3_direct_chk1_cp200_smoke20_lr1e6_20260810/adapters/chk3/resolved_runtime_config.json",
+      "sha256": "b676bde1b17381fa51592bacae9b4183c8bad488b2efd6ff297a19d7a0a87367"
+    },
+    "trainer_state": {
+      "path": "output/training/retrain_v2/chk3_direct_chk1_cp200_smoke20_lr1e6_20260810/adapters/chk3/trainer_state.json",
+      "sha256": "ca7063ab62fe79e6693b0824ad1b4f3419ae8bbb7807b87b8a9ff9ce5b382637"
+    }
+  },
+  "preserved_prior_scope_fact": {
+    "merge_attestation_path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1/merge_attestation.json",
+    "merge_attestation_sha256": "bce783ee21582a5eadb291859e552e23e4897b32063765182f00d818e936abcf",
+    "statement": "The existing attestation authorized chk2-parent use only; this additive record does not modify or reinterpret that historical receipt."
+  },
+  "risk_acknowledgements": [
+    "direct branch is not the canonical chk2-derived chk3 DAG",
+    "dataset release is standalone and dag_bindable=false",
+    "targets are synthetic Minutes-style prose rather than official Minutes",
+    "extended audit found widespread reasoning meta/draft contamination",
+    "smoke artifact is diagnostic and not promotable"
+  ],
+  "schema_version": "chk1-cp200-to-chk3-direct-authorization-v1",
+  "scope": {
+    "allowed_operations": [
+      "chk3_direct_sft_smoke",
+      "chk3_direct_sft_full_only_after_smoke_gate"
+    ],
+    "artifact_role": "standalone_chk3_direct_from_chk1",
+    "canonical_chk3_promotion_allowed": false,
+    "chk4_use_allowed": false,
+    "source_stage": "chk1_cp200",
+    "target_stage": "chk3_direct"
+  },
+  "status": "authorized"
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "attempt": 1,
+    "run": "deepseek_high",
+    "reasoning_effort": "high",
+    "timeout_seconds": 420,
+    "last_completed_step": 1,
+    "exit_reason": "DeepSeek judge failed after 2 attempts",
+    "error_class": "_RetryableProviderResponseError",
+    "oom": false,
+    "runtime_safety_triggered": false
+  },
+  {
+    "attempt": 2,
+    "run": "deepseek_low_resume_cp1",
+    "reasoning_effort": "low",
+    "timeout_seconds": 420,
+    "last_completed_step": 4,
+    "exit_reason": "DeepSeek judge failed after 2 attempts",
+    "error_class": "_RetryableProviderResponseError",
+    "oom": false,
+    "runtime_safety_triggered": false
+  },
+  {
+    "attempt": 3,
+    "run": "deepseek_low600_resume_cp4",
+    "reasoning_effort": "low",
+    "timeout_seconds": 600,
+    "last_completed_step": 40,
+    "exit_reason": "DeepSeek judge failed after 2 attempts",
+    "error_class": "_RetryableProviderResponseError",
+    "oom": false,
+    "runtime_safety_triggered": false
+  }
+]

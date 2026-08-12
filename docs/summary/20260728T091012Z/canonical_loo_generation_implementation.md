@@ -12,10 +12,14 @@ The frozen model roles are:
 |---|---|
 | Indicator analysis model | `../fomc_trainer_back/fomc_trainer/output/merged/llama_grpo_20250515` |
 | Indicator analysis tokenizer | `models/DeepSeek-R1-Distill-Llama-8B` |
-| Minutes generation model | `../fomc_trainer_back/fomc_trainer/output/merged/llama_sft_synthetic_20250526` |
+| Minutes generation model | `output/checkpoints/recovered/llama_sft_synthetic_20250526_2_cp1668_recovered_v1_20260729/model` |
 | Minutes generation tokenizer | the tokenizer bundled with the Minutes model |
 
-The paths are defaults, not identity claims. At run time, the complete model
+The Minutes default is the provenance-verified recovery of the surviving
+checkpoint-1668 adapter merged with its declared analysis-SFT parent. The
+historical `llama_sft_synthetic_20250526` directory is excluded because its
+model payload was overwritten by decision-GRPO weights. The paths are defaults,
+not identity claims. At run time, the complete model
 and tokenizer directory trees are hashed and written to the frozen experiment
 specification.
 
@@ -175,12 +179,40 @@ analysis block for every meeting-indicator pair. It:
 - excludes actual Minutes from the prompt;
 - fingerprints the source ledger, population, roster, model, and tokenizer
   before and after generation;
-- rejects context overflow, silent prompt-token changes, input truncation,
-  token-limit completion, and incomplete output;
+- rejects context overflow, silent prompt-token changes, input truncation, and
+  incomplete output;
+- uses a frozen 8,192-token technical generation limit while its dedicated
+  system prompt requires concise final-answer-only prose to stay within 4,096
+  tokens, leaving overflow tolerance without requesting a longer answer;
+- excludes chain-of-thought, padding, headings, and preambles from the
+  requested response;
+- permits at most two otherwise valid token-limit finishes, recording their
+  sample IDs and token metadata in every affected row and in the analysis
+  manifest; a third such finish fails the stage before artifacts are published;
 - writes `indicator_analysis.jsonl` and `analysis_manifest.json`; and
 - refuses to overwrite an existing run.
 
-### 2. Full, deletion, and neutral prompts
+### 2. Deterministic final-answer projection
+
+`jobs.generation.project_indicator_analysis` preserves the immutable raw
+analysis JSONL and creates a separate `minutes_analysis.jsonl`. It accepts only
+a well-formed DeepSeek completion with exactly one `</think>` delimiter,
+non-empty reasoning before it, and a non-empty final answer after it. Only the
+final answer is projected. Plain-text fallback, token truncation, a second
+generation model, and generative summarization are forbidden.
+
+The projection manifest binds the raw analysis manifest and output, every
+canonical raw-row hash, every extracted-answer hash, the frozen Minutes
+tokenizer, and per-answer token counts. The release finalizer independently
+repeats the extraction and rejects any mismatch.
+
+The existing 13-meeting pilot was replayed through this implementation without
+model inference: all 338 analyses projected successfully, final answers ranged
+from 51 to 312 Minutes-tokenizer tokens, and all 2,106 exported prompt rows
+passed the frozen context gate. The maximum chat-template prompt was 5,091
+tokens, leaving a minimum 3,101-token context margin.
+
+### 3. Full, deletion, and neutral prompts
 
 `jobs.generation.loo_prompt_builder` constructs 26 fixed-order indicator blocks
 for each meeting and then creates:
@@ -195,6 +227,15 @@ count as their full-prompt counterparts. The builder also proves that only one
 declared span changed and that its prefix, suffix, indicator label, and block
 delimiters were preserved.
 
+The builder uses only the projected `minutes_analysis` field. It applies the
+real Minutes tokenizer chat template, including the frozen system prompt and
+generation prefix, to every exported row. Prompt construction fails before
+artifact publication unless:
+
+```text
+chat_prompt_tokens + 8,192 <= 16,384
+```
+
 Actual Minutes, references, gold answers, and target-text fields are forbidden
 from these prompt artifacts.
 
@@ -207,14 +248,14 @@ For one population, the prompt inventory is:
 | Exact-deletion prompts | 1,014 |
 | Neutral-replacement prompts | 1,014 |
 
-### 3. Frozen experiment specification
+### 4. Frozen experiment specification
 
 `jobs.generation.build_loo_generation_spec` fingerprints both models, both
 tokenizers, the source ledger, analysis artifacts, prompt artifacts, rosters,
 population, and configuration. It seals the payload with a canonical JSON
 digest and writes an immutable `loo-generation-spec-v1` file.
 
-### 4. Minutes generation
+### 5. Minutes generation
 
 `jobs.generation.mask_generation` runs four generation cells:
 
@@ -246,7 +287,9 @@ prompt_tokens + max_new_tokens <= max_model_len
 ```
 
 After inference, the consumed prompt-token count must equal the preflight
-count. Length-limited or unknown finish reasons are rejected.
+count. Unknown finish reasons are always rejected. Length-limited finishes are
+rejected by default; the explicitly documented operational partial-shard
+policy may retain and exclude them from scoring.
 
 ### 5. Generation release validation
 
@@ -270,8 +313,14 @@ It performs source fetch, snapshot sealing, both 338-row ledger builds,
 raw-evidence replay validation, pilot generation, formal generation, and final
 workflow sealing. It prints the run ID, PID, log path, and workflow directory
 before returning. No API key is needed. Before any download or background
-launch, it imports PyTorch, Transformers, vLLM, and the project generation
-module and requires at least one visible CUDA GPU. On this host it selects
+launch, it resolves physical GPU `1` through `nvidia-smi`, sets
+`CUDA_VISIBLE_DEVICES=1`, and requires exactly one logical CUDA device. It also
+verifies that logical `cuda:0` has the UUID reported by `nvidia-smi` for
+physical GPU `1`. The numeric selector is required by the pinned vLLM runtime.
+This pin is reapplied by the inner launcher, propagates to all `nohup` workers
+and vLLM children, and cannot be overridden by a caller-supplied CUDA device
+list. vLLM tensor parallelism is fixed at `1`. The launcher then imports
+PyTorch, Transformers, vLLM, and the project generation module. On this host it selects
 `~/.conda/envs/llama_factory/bin/python` when `LOO_PYTHON` is unset because the
 base Python does not contain a complete PyTorch installation.
 
@@ -297,14 +346,45 @@ LOO_RESUME                   # reuse only verified immutable source cache
 LOO_OFFLINE                  # require an already complete snapshot manifest
 LOO_ANALYSIS_MODEL
 LOO_ANALYSIS_TOKENIZER
-LOO_MINUTES_MODEL
-LOO_MINUTES_TOKENIZER
-CUDA_VISIBLE_DEVICES
+LOO_MINUTES_MODEL            # must equal the manifest-registered frozen path
+LOO_MINUTES_TOKENIZER        # must equal the manifest-registered frozen path
+LOO_REUSE_ANALYSIS_MANIFEST  # optional immutable raw pilot analysis manifest
+LOO_INTERVENTION_INDICATORS  # comma-separated pilot compute shard
+LOO_MINUTES_TOKEN_LIMIT_POLICY  # error (default) or exclude
 ```
+
+The inner worker performs a fail-closed checkpoint provenance preflight before
+Minutes generation. It verifies the sealed manifest file and payload digests,
+requires the selected `eval-minutes-sft-from-chk1` record to be usable, hashes
+the complete runtime model and tokenizer directory trees, and matches those
+hashes to the frozen manifest record. Consequently, a path override cannot
+silently select the corrupted historical `llama_sft_synthetic_20250526`
+directory or another merely loadable checkpoint.
 
 Set `LOO_FOREGROUND=1` to run synchronously for debugging. The launcher refuses
 to reuse an existing workflow unless `LOO_RESUME=1`; partial generation
 directories are never silently resumed.
+
+`LOO_INTERVENTION_INDICATORS` filters only generated deletion and neutral
+cells. It does not shrink the evidence roster: raw analysis, projected
+analysis, and the `None` baseline retain all 26 indicator blocks. The launcher
+automatically includes the baseline, validates IDs against the frozen roster,
+restricts this mode to the pilot population, and writes
+`intervention_shard_manifest.json` instead of a canonical release. That
+manifest records `status=partial_complete` and
+`standalone_canonical_release=false`. Omitted cells must later be generated
+under the identical specification before the ordinary finalizer can seal a
+complete canonical release. Non-canonical legacy seven-indicator workbooks
+cannot substitute for omitted canonical cells.
+
+The default Minutes token-limit policy is `error`. An operational partial shard
+may opt in to `LOO_MINUTES_TOKEN_LIMIT_POLICY=exclude`. This retains the raw
+token-limit completion, marks it `excluded_token_limit_finish`, continues
+later generation, and propagates a sample-level exclusion inventory into the
+generation and shard manifests. The paired evaluator never sends a marked row
+to the embedding scorer. If any exclusion is observed, the shard status is
+`partial_complete_with_generation_exclusions`; it is a complete-case,
+non-canonical result and cannot be sealed by the full canonical finalizer.
 
 ## Run layout
 
@@ -334,7 +414,8 @@ output/evaluation/main/canonical_loo/workflows/<run_id>/
 │   └── formal_test_13/...
 └── generations/
     ├── pilot_eval_13/
-    │   ├── analysis/
+    │   ├── analysis_raw/
+    │   ├── analysis_projection/
     │   ├── prompts/
     │   ├── generations/
     │   ├── generation_spec.json

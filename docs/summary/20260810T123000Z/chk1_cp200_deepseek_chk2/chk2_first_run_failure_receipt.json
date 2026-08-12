@@ -1,0 +1,65 @@
+{
+  "schema_version": "chk2-deepseek-candidate-failure-receipt-v1",
+  "run_id": "chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810",
+  "status": "failed_closed",
+  "failed_at_utc": "2026-08-10T13:59:58Z",
+  "completed_optimizer_steps": 1,
+  "failed_during_optimizer_step": 2,
+  "failure": {
+    "exception": "JudgeInfrastructureError",
+    "sanitized_message": "DeepSeek judge failed after 2 attempts: error_class=_RetryableProviderResponseError",
+    "http_or_auth_failure_observed": false,
+    "oom_observed": false,
+    "nan_observed": false,
+    "diagnostic_precision": "The original implementation retained only the retryable error class, so incomplete versus structured-output failure cannot be determined retroactively.",
+    "most_likely_cause": "The high-effort hidden reasoning and visible JSON shared the 16384-token output budget and the provider likely returned incomplete responses after reaching that budget.",
+    "most_likely_cause_is_inference": true
+  },
+  "evidence": {
+    "logical_requests_completed": 2,
+    "candidate_rewards_completed": 8,
+    "first_request": {
+      "attempts": 1,
+      "latency_seconds": 120.07266691979021,
+      "input_tokens": 6021,
+      "output_tokens": 14343,
+      "reasoning_tokens": 13639,
+      "output_budget_utilization": 0.87567138671875
+    },
+    "second_request": {
+      "attempts": 2,
+      "first_attempt_status": "retryable_error",
+      "first_attempt_latency_seconds": 140.83754219580442,
+      "successful_attempt_latency_seconds": 54.163342461921275,
+      "successful_attempt_output_tokens": 6734,
+      "successful_attempt_reasoning_tokens": 5843
+    },
+    "step_1": {
+      "loss": 0.1457,
+      "reward_mean": 0.8297641575336456,
+      "reward_std": 0.16128847002983093,
+      "completion_clipped_ratio": 0.0,
+      "grad_norm": 1.1953125,
+      "step_time_seconds": 439.89776744740084
+    }
+  },
+  "preserved_checkpoint": {
+    "path": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/checkpoint-1",
+    "directory_fingerprint_sha256": "c59fc57f1b8920201633de074f26497929c3a7a9ed18c39d69880c15c975ab61",
+    "file_count": 12,
+    "total_bytes": 356058416,
+    "adapter_model_sha256": "72314c3ddbb9dc8acb6a1f2aa99e0bb2b4de7e63daaa141f650b4c2d54f54b39"
+  },
+  "bindings": {
+    "config_sha256": "19cc611b4f3210904993050723a56f3139a90c54d995b3f058a841c35e2720f4",
+    "reward_module_sha256": "d9e0868a51e82bab49bee01fd52d5a82dd16f816083a60f337eece5e7fcdabdb",
+    "terminal_training_log_sha256": "d03a108db7d904e9bce91f9135f08b8775005372da5d8a6ec6e7371136a75bd1"
+  },
+  "safety": {
+    "api_key_recorded": false,
+    "raw_evidence_recorded": false,
+    "raw_candidate_recorded": false,
+    "automatic_restart_performed": false,
+    "training_parameters_changed": false
+  }
+}

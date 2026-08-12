@@ -1,0 +1,135 @@
+{
+  "schema_version": "chk4-grpo-smoke-diagnostic-v1",
+  "generated_at": "2026-08-11T17:23:28Z",
+  "decision": "full_grpo_blocked",
+  "population": {
+    "model": "chk4 pre-2009 balanced Decision-SFT checkpoint-38 exact merge",
+    "smoke_steps_observed": 1,
+    "generations_per_smoke": 8,
+    "step_1_target_groups": [
+      "hold",
+      "hike"
+    ]
+  },
+  "controlled_change": {
+    "field": "max_completion_length",
+    "v1": 1024,
+    "v2": 1536,
+    "all_other_training_and_sampling_parameters_unchanged": true
+  },
+  "runs": [
+    {
+      "version": "v1 cap1024",
+      "max_completion_length": 1024,
+      "clipped_count": 5,
+      "clipped_rate": 0.625,
+      "single_boundary_count": 3,
+      "single_boundary_rate": 0.375,
+      "parseable_prediction_count": 3,
+      "parseable_prediction_rate": 0.375,
+      "reward_mean": 0.1546875,
+      "loss": -0.0974,
+      "grad_norm": 0.1630859375,
+      "peak_allocated_gib": 11.332155227661133,
+      "peak_reserved_gib": 11.9296875,
+      "status": "failed_closed_at_step_1"
+    },
+    {
+      "version": "v2 cap1536",
+      "max_completion_length": 1536,
+      "clipped_count": 1,
+      "clipped_rate": 0.125,
+      "single_boundary_count": 7,
+      "single_boundary_rate": 0.875,
+      "parseable_prediction_count": 5,
+      "parseable_prediction_rate": 0.625,
+      "reward_mean": 0.1546875,
+      "loss": 0.0049,
+      "grad_norm": 0.1875,
+      "peak_allocated_gib": 12.570802688598633,
+      "peak_reserved_gib": 13.958984375,
+      "status": "failed_closed_at_step_1"
+    }
+  ],
+  "direction_groups": [
+    {
+      "version": "v1 cap1024",
+      "direction": "hold",
+      "reward_rows": 4,
+      "direction_correct_nonzero_count": 2,
+      "direction_correct_rate": 0.5,
+      "reward_mean": 0.309375,
+      "reward_std": 0.4103518878657682,
+      "clipped_count": 2,
+      "gate_passed": true
+    },
+    {
+      "version": "v1 cap1024",
+      "direction": "hike",
+      "reward_rows": 4,
+      "direction_correct_nonzero_count": 0,
+      "direction_correct_rate": 0.0,
+      "reward_mean": 0.0,
+      "reward_std": 0.0,
+      "clipped_count": 3,
+      "gate_passed": false
+    },
+    {
+      "version": "v2 cap1536",
+      "direction": "hold",
+      "reward_rows": 4,
+      "direction_correct_nonzero_count": 2,
+      "direction_correct_rate": 0.5,
+      "reward_mean": 0.309375,
+      "reward_std": 0.4103518878657682,
+      "clipped_count": 1,
+      "gate_passed": true
+    },
+    {
+      "version": "v2 cap1536",
+      "direction": "hike",
+      "reward_rows": 4,
+      "direction_correct_nonzero_count": 0,
+      "direction_correct_rate": 0.0,
+      "reward_mean": 0.0,
+      "reward_std": 0.0,
+      "clipped_count": 0,
+      "gate_passed": false
+    }
+  ],
+  "evidence": {
+    "v1": {
+      "reward": {
+        "path": "output/training/retrain_v2/chk4_from_pre2009_cp38_selected_grpo_smoke_v1_20260811/adapters/chk4_grpo/reward.jsonl",
+        "sha256": "627c34ff9029a46a5979e2ac0efb0f6e1939438a95b49827a1de639b041cdab4"
+      },
+      "step_gate": {
+        "path": "output/training/retrain_v2/chk4_from_pre2009_cp38_selected_grpo_smoke_v1_20260811/adapters/chk4_grpo/chk4_smoke_step_gate.jsonl",
+        "sha256": "c71c47850e12a5760d5191c5aafb7f9d31f1241c08f4818dcf103e522bbdbf11"
+      },
+      "runtime_safety": {
+        "path": "output/training/retrain_v2/chk4_from_pre2009_cp38_selected_grpo_smoke_v1_20260811/adapters/chk4_grpo/runtime_safety.jsonl",
+        "sha256": "0855e1a7bffffbbdaf3cb6d01a60c3e5ac420ec836b00e587ba4211cd168b2ec"
+      }
+    },
+    "v2": {
+      "reward": {
+        "path": "output/training/retrain_v2/chk4_from_pre2009_cp38_selected_grpo_smoke_cap1536_v2_20260811/adapters/chk4_grpo/reward.jsonl",
+        "sha256": "5b80741e2f9d222ea803bf683882869f85ecf6a4a3e0524bf41d82a106f1ce3f"
+      },
+      "step_gate": {
+        "path": "output/training/retrain_v2/chk4_from_pre2009_cp38_selected_grpo_smoke_cap1536_v2_20260811/adapters/chk4_grpo/chk4_smoke_step_gate.jsonl",
+        "sha256": "b2b421b416788968a76c8e92025b0f9e83b74e51e1ca2fc6cbd2de3d53216160"
+      },
+      "runtime_safety": {
+        "path": "output/training/retrain_v2/chk4_from_pre2009_cp38_selected_grpo_smoke_cap1536_v2_20260811/adapters/chk4_grpo/runtime_safety.jsonl",
+        "sha256": "e7ee7d025c4b7fb8ea1496377e3a1da53d22f9dca1c518c31ea7ce737ee232c3"
+      }
+    }
+  },
+  "limitations": [
+    "The trainer did not persist completion text before the immediate callback failure, so the exact tails of truncated generations cannot be inspected.",
+    "Each smoke observed only one optimizer step and four generations per target direction; the gate is a safety screen, not an accuracy estimate.",
+    "The pre-2009 augmentation has no independent pre-2009 validation split."
+  ]
+}

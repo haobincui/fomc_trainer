@@ -1,0 +1,302 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk2 新训练：Reward / Loss 诊断",
+    "description": "基于 fresh run 最新完整 checkpoint-55 的训练指标、reward 分量和运行稳定性诊断。",
+    "generatedAt": "2026-08-07T22:30:00Z",
+    "cards": [
+      {
+        "id": "progress_card",
+        "description": "截至最新完整 checkpoint 的训练进度。",
+        "dataset": "summary",
+        "sourceId": "trainer_state",
+        "metrics": [
+          { "label": "Completed steps", "field": "completed_steps", "format": "number" },
+          { "label": "Progress", "field": "progress", "format": "percent" }
+        ]
+      },
+      {
+        "id": "reward_card",
+        "description": "Reward 的整体水平和近期变化。",
+        "dataset": "summary",
+        "sourceId": "trainer_state",
+        "metrics": [
+          { "label": "Mean reward", "field": "reward_mean", "format": "number" },
+          { "label": "Last-10 reward", "field": "reward_last10", "format": "number" },
+          { "label": "First-10 → last-10", "field": "reward_relative_change", "format": "percent", "signed": true }
+        ]
+      },
+      {
+        "id": "optimization_card",
+        "description": "GRPO 优化信号；loss 是有符号策略 surrogate，不是 SFT 交叉熵。",
+        "dataset": "summary",
+        "sourceId": "trainer_state",
+        "metrics": [
+          { "label": "Last-10 loss", "field": "loss_last10", "format": "number" },
+          { "label": "Last-10 KL", "field": "kl_last10", "format": "number" },
+          { "label": "Last-10 grad norm", "field": "grad_norm_last10", "format": "number" }
+        ]
+      },
+      {
+        "id": "runtime_card",
+        "description": "当前 run 的运行稳定性和输出截断情况。",
+        "dataset": "summary",
+        "sourceId": "training_logs",
+        "metrics": [
+          { "label": "OOM events", "field": "oom_events", "format": "number" },
+          { "label": "Watchdog restarts", "field": "watchdog_restarts", "format": "number" },
+          { "label": "Last-10 clipped ratio", "field": "clipped_ratio_last10", "format": "percent" }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "reward_trend_chart",
+        "title": "Reward 到 step 55 仍未形成上升趋势",
+        "subtitle": "每 5 step 采样；同时显示单步值与 10-step 滚动均值。",
+        "headerMarkdown": "滚动均值在 step 27 左右达到阶段峰值，之后回落；首 10 与末 10 的均值几乎相同。",
+        "type": "line",
+        "dataset": "reward_trend",
+        "sourceId": "trainer_state",
+        "encodings": {
+          "x": { "field": "step", "type": "quantitative", "label": "Step" },
+          "y": { "field": "value", "type": "quantitative", "label": "Reward" },
+          "color": { "field": "series", "type": "nominal", "label": "Series" }
+        },
+        "yAxisTitle": "Reward",
+        "valueFormat": "number",
+        "layout": "full"
+      },
+      {
+        "id": "loss_trend_chart",
+        "title": "Loss 波动上移，但低 KL 不支持“已经发散”的判断",
+        "subtitle": "GRPO loss 可正可负；应与 reward、KL、梯度和截断率联合阅读。",
+        "headerMarkdown": "末 10 step 平均 loss 为 0.178，较首 10 step 的 -0.006 上升；同期末 10 step KL 仅 0.000382。",
+        "type": "line",
+        "dataset": "loss_trend",
+        "sourceId": "trainer_state",
+        "encodings": {
+          "x": { "field": "step", "type": "quantitative", "label": "Step" },
+          "y": { "field": "value", "type": "quantitative", "label": "Loss" },
+          "color": { "field": "series", "type": "nominal", "label": "Series" }
+        },
+        "yAxisTitle": "Signed GRPO loss",
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "reward_components_table",
+        "title": "Reward 分量：格式和数字改善，事实质量仍是瓶颈",
+        "subtitle": "使用前 10 step 与末 10 step 的 completion-level 均值。",
+        "dataset": "reward_components",
+        "sourceId": "reward_log",
+        "columns": [
+          { "field": "metric", "label": "Metric", "type": "text" },
+          { "field": "first10", "label": "First 10", "format": "number" },
+          { "field": "last10", "label": "Last 10", "format": "number" },
+          { "field": "reading", "label": "Interpretation", "type": "text" }
+        ],
+        "layout": "full"
+      }
+    ],
+    "sources": [
+      {
+        "id": "trainer_state",
+        "label": "Fresh chk2 checkpoint-55 trainer state",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-55/trainer_state.json"
+      },
+      {
+        "id": "reward_log",
+        "label": "Fresh chk2 reward v3 log",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/reward.jsonl"
+      },
+      {
+        "id": "training_logs",
+        "label": "Fresh chk2 trainer and watchdog logs",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/logs"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# chk2 新训练：Reward / Loss 诊断"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "trainer_state",
+        "body": "## Technical summary\n\n截至最新完整 **checkpoint-55 / 247（22.3%）**，reward 没有出现持续改善：首 10 step 均值为 **0.1703**，末 10 step 为 **0.1676**（-1.5%），整体线性斜率接近 0。GRPO loss 的末 10 step 均值升至 **0.1781**，但这是有符号策略 surrogate；同时 KL 仍仅 **0.000382**、梯度有限且非零，因此目前更准确的结论是 **优化信号噪声较大、策略变化很小，而不是 loss 已明确发散**。"
+      },
+      {
+        "id": "metrics",
+        "type": "metric-strip",
+        "cardIds": ["progress_card", "reward_card", "optimization_card", "runtime_card"]
+      },
+      {
+        "id": "key_findings",
+        "type": "markdown",
+        "sourceId": "reward_log",
+        "body": "## Key findings\n\n- **Reward 横盘且波动明显。** 55 个完整 step 的平均 reward 为 0.1819；10-step 滚动均值曾升至约 0.244，随后回落到 0.168。\n- **近期 loss 更偏正，但单独没有收敛含义。** 末 10 step loss 范围为 -0.2454 至 0.6684；KL 和 grad norm 没有显示爆炸。\n- **表面合同改善，事实正确性未跟上。** 末 10 step well-formed 达 100%、answer numeric score 0.964、截断率 0%，但 major answer errors 仍约 1.99/条，Judge 综合分只有 0.10。\n- **reward 分布仍偏低。** 前 55 step 的 440 个完成样本中，37.3% reward 为 0，43.2% 不高于 0.05；只有 7.5% 达到 0.5。\n- **训练稳定性是当前显著风险。** 日志累计 18 次 CUDA OOM、watchdog 23 次重启；当前进程仍在 GPU1 运行，但 step 56 的多次未完成尝试未纳入本报告趋势。"
+      },
+      { "id": "reward_chart", "type": "chart", "chartId": "reward_trend_chart", "layout": "full" },
+      { "id": "loss_chart", "type": "chart", "chartId": "loss_trend_chart", "layout": "full" },
+      { "id": "components", "type": "table", "tableId": "reward_components_table", "layout": "full" },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "sourceId": "trainer_state",
+        "body": "## Scope, data, and definitions\n\n范围仅包含 fresh run 中已经形成完整 `trainer_state.json` 的 **step 1–55**。Reward 和 loss 的主趋势来自 checkpoint-55；reward 分量来自对应的前 440 条 completion 日志。正在执行且尚未产生 checkpoint-56 的尝试被排除，以免失败重试造成重复计数。这里的 `loss` 是 TRL/GRPO 训练日志中的策略目标值，不是 SFT eval loss，也不能直接解释为语言模型困惑度。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "sourceId": "trainer_state",
+        "body": "## Methodology\n\n对 step-level reward、loss、KL、entropy、grad norm、completion clipped ratio 和 zero-reward-std 比例计算整体、首 10、末 10 和 10-step 滚动统计；对 completion-level reward v3 日志按 step 截取前 55 step，比较前后窗口的 Judge、数字、结构、简洁度、推理效率和事实 violation。趋势图每 5 step 取一个单步观测，并保留对应的 10-step 滚动均值。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "sourceId": "training_logs",
+        "body": "## Limitations\n\n当前只完成 22.3%，尚不足以判断最终策略质量；训练频繁 OOM/重启，wall-clock 时间和未完成尝试会偏离 step-level 曲线。Judge 分数依赖本地 Qwen Judge 的 rubric 和输出解析。报告没有重新生成固定 validation prompts，因此结论限于在线训练 reward，不能替代 v9/v10 同 prompt、同 seed 的最终模型对比。"
+      },
+      {
+        "id": "recommendations",
+        "type": "markdown",
+        "sourceId": "reward_log",
+        "body": "## Recommended next steps\n\n1. **暂不把当前 loss 上升当作发散并立即停训**；继续观察至少到下一个稳定窗口，但以 reward/Judge fidelity 为主判断。\n2. **把 major answer factual error 作为首要改进对象。** 当前 numeric、structure 和 well-formed 已较好，继续优化这些分量对真实质量的边际价值有限。\n3. **优先解决 OOM 重启。** 18 次 OOM 会显著拖慢训练并让 step 56 反复重算；如果下一次仍 OOM，应降低峰值显存而不是继续无条件重启。\n4. **设置诊断触发线。** 到 step 80–100 若末 20 reward 仍不高于前 20、Judge score 仍约 0.1，且 major answer errors 不下降，应视为本轮没有有效改善并重新审视 prompt/reward 权重。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## Further questions\n\n- 是否需要我把当前 run 与上一轮 v9 的相同步数窗口做严格对照？\n- 是否要在 step 80 或 100 自动生成一次同口径复盘，并在 OOM 再发生时先诊断峰值来源？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-07T22:30:00Z",
+    "status": "ready",
+    "datasets": {
+      "summary": [
+        {
+          "completed_steps": 55,
+          "progress": 0.222672,
+          "reward_mean": 0.181941,
+          "reward_last10": 0.167644,
+          "reward_relative_change": -0.015371,
+          "loss_last10": 0.17806,
+          "kl_last10": 0.000381831,
+          "grad_norm_last10": 0.547174,
+          "oom_events": 18,
+          "watchdog_restarts": 23,
+          "clipped_ratio_last10": 0.0
+        }
+      ],
+      "reward_trend": [
+        { "step": 5, "series": "Step reward", "value": 0.088534 },
+        { "step": 5, "series": "10-step rolling mean", "value": 0.151366 },
+        { "step": 10, "series": "Step reward", "value": 0.134261 },
+        { "step": 10, "series": "10-step rolling mean", "value": 0.170261 },
+        { "step": 15, "series": "Step reward", "value": 0.067629 },
+        { "step": 15, "series": "10-step rolling mean", "value": 0.172255 },
+        { "step": 20, "series": "Step reward", "value": 0.352774 },
+        { "step": 20, "series": "10-step rolling mean", "value": 0.204079 },
+        { "step": 25, "series": "Step reward", "value": 0.121818 },
+        { "step": 25, "series": "10-step rolling mean", "value": 0.232572 },
+        { "step": 30, "series": "Step reward", "value": 0.10704 },
+        { "step": 30, "series": "10-step rolling mean", "value": 0.184887 },
+        { "step": 35, "series": "Step reward", "value": 0.179836 },
+        { "step": 35, "series": "10-step rolling mean", "value": 0.148859 },
+        { "step": 40, "series": "Step reward", "value": 0.193468 },
+        { "step": 40, "series": "10-step rolling mean", "value": 0.145739 },
+        { "step": 45, "series": "Step reward", "value": 0.108414 },
+        { "step": 45, "series": "10-step rolling mean", "value": 0.203662 },
+        { "step": 50, "series": "Step reward", "value": 0.072167 },
+        { "step": 50, "series": "10-step rolling mean", "value": 0.195341 },
+        { "step": 55, "series": "Step reward", "value": 0.134424 },
+        { "step": 55, "series": "10-step rolling mean", "value": 0.167644 }
+      ],
+      "loss_trend": [
+        { "step": 5, "series": "Step loss", "value": -0.208 },
+        { "step": 5, "series": "10-step rolling mean", "value": -0.06772 },
+        { "step": 10, "series": "Step loss", "value": 0.2548 },
+        { "step": 10, "series": "10-step rolling mean", "value": -0.00571 },
+        { "step": 15, "series": "Step loss", "value": 0.5525 },
+        { "step": 15, "series": "10-step rolling mean", "value": 0.07916 },
+        { "step": 20, "series": "Step loss", "value": 0.2263 },
+        { "step": 20, "series": "10-step rolling mean", "value": 0.06345 },
+        { "step": 25, "series": "Step loss", "value": -0.3268 },
+        { "step": 25, "series": "10-step rolling mean", "value": 0.04098 },
+        { "step": 30, "series": "Step loss", "value": 0.0762 },
+        { "step": 30, "series": "10-step rolling mean", "value": 0.04957 },
+        { "step": 35, "series": "Step loss", "value": 0.0285 },
+        { "step": 35, "series": "10-step rolling mean", "value": 0.0759 },
+        { "step": 40, "series": "Step loss", "value": 0.1093 },
+        { "step": 40, "series": "10-step rolling mean", "value": 0.11355 },
+        { "step": 45, "series": "Step loss", "value": 0.1632 },
+        { "step": 45, "series": "10-step rolling mean", "value": 0.08556 },
+        { "step": 50, "series": "Step loss", "value": -0.1346 },
+        { "step": 50, "series": "10-step rolling mean", "value": 0.09853 },
+        { "step": 55, "series": "Step loss", "value": 0.0099 },
+        { "step": 55, "series": "10-step rolling mean", "value": 0.17806 }
+      ],
+      "reward_components": [
+        { "metric": "Judge score (normalized)", "first10": 0.067344, "last10": 0.1, "reading": "Improved, but remains very low" },
+        { "metric": "Answer numeric score", "first10": 0.909001, "last10": 0.964321, "reading": "Improved" },
+        { "metric": "Structure score", "first10": 0.9625, "last10": 1.0, "reading": "Contract is now consistently valid" },
+        { "metric": "Answer concision", "first10": 0.902264, "last10": 0.914222, "reading": "Small improvement" },
+        { "metric": "Reasoning efficiency", "first10": 0.29875, "last10": 0.338704, "reading": "Improved, still modest" },
+        { "metric": "Well-formed fraction", "first10": 0.9625, "last10": 1.0, "reading": "Improved to 100%" },
+        { "metric": "Major answer errors / completion", "first10": 1.95, "last10": 1.9875, "reading": "No improvement; primary bottleneck" },
+        { "metric": "Reasoning tokens", "first10": 691.6, "last10": 663.05, "reading": "About 4% shorter" }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "trainer_state",
+      "label": "Fresh chk2 checkpoint-55 trainer state",
+      "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-55/trainer_state.json",
+      "query": {
+        "engine": "local-file",
+        "sql": "SELECT * FROM trainer_state.log_history WHERE step <= 55 ORDER BY step",
+        "description": "Reads step-level metrics from the latest fully written trainer state.",
+        "executed_at": "2026-08-07T22:29:00Z",
+        "tables_used": ["trainer_state.log_history"]
+      }
+    },
+    {
+      "id": "reward_log",
+      "label": "Fresh chk2 reward v3 log",
+      "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/reward.jsonl",
+      "query": {
+        "engine": "local-file",
+        "sql": "SELECT * FROM reward_v3_jsonl WHERE completed_step BETWEEN 1 AND 55",
+        "description": "Reads reward v3 components for the 440 completions belonging to completed steps 1 through 55.",
+        "executed_at": "2026-08-07T22:29:00Z",
+        "tables_used": ["reward_v3_jsonl"]
+      }
+    },
+    {
+      "id": "training_logs",
+      "label": "Fresh chk2 trainer and watchdog logs",
+      "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/logs",
+      "query": {
+        "engine": "local-file",
+        "sql": "SELECT event_type, COUNT(*) FROM training_logs GROUP BY event_type",
+        "description": "Counts CUDA OOM events and watchdog restarts in the current fresh run logs.",
+        "executed_at": "2026-08-07T22:29:00Z",
+        "tables_used": ["chk2.log", "watchdog.log"]
+      }
+    }
+  ],
+  "package_info": {
+    "originUrl": "artifact://chk2-reward-loss-20260807-223000",
+    "controls": { "edit": false, "refresh": false }
+  }
+}

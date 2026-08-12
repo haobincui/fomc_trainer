@@ -1,0 +1,261 @@
+{
+  "base_group_id": "g4_unemployment_causal_meta",
+  "binding": {
+    "base_group_id": "g4_unemployment_causal_meta",
+    "binding_sha256": "1ef5bb6b9ec01f134676cb7954f053f76422da0f7360798c8c39adf3132470a2",
+    "candidate_sha256": [
+      "5c0f61482ee7bd13450ebe7884783fd3230fd0ecb763e2b560016c5d4f285c5b",
+      "650a1685a66e79e730f2fd241644a40024f43e35932ef14ddb88d3a232272b30",
+      "08b87744ba5f3d466e488efa969b31f61cdc5dfa0cc65896e343872c82584362",
+      "3ae6a4fe98cf3886b5b56c4944466d35e61d92e9737e0ae9022ade525ff470af"
+    ],
+    "completion_sha256": [
+      "054d6349e28b6987b920fe14559f371690a4724230d93ad0200b08261667c596",
+      "f5eb20810c22979da8e454efa9690216026a71122cfd157d10d0308bc782531a",
+      "fbebef1ad1bebe8fb8ddb25549864c2fe0a46ae383e13f3c4355329494d51380",
+      "2f41425e94087c5ed120de87adbc808fee0e7b78a7c86b270d9355e94c89a0d1"
+    ],
+    "evidence_sha256": "2703144721cc73711985b6e55d9cdaab926d8da03181d391d6e84f89b4ea6416",
+    "group_id": "g4_unemployment_causal_meta_permuted_2031",
+    "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+    "labels": [
+      "unemployment_meta_style",
+      "unemployment_supported",
+      "unemployment_wrong_number",
+      "unemployment_unsupported_cause"
+    ],
+    "max_output_tokens": 16384,
+    "model": "deepseek-v4-flash",
+    "order_variant": "permuted_2031",
+    "reasoning_effort": "low",
+    "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+    "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+    "source_kind": "deterministic_diagnostic"
+  },
+  "candidates": [
+    {
+      "candidate_id": "candidate_0",
+      "candidate_sha256": "5c0f61482ee7bd13450ebe7884783fd3230fd0ecb763e2b560016c5d4f285c5b",
+      "completion_sha256": "054d6349e28b6987b920fe14559f371690a4724230d93ad0200b08261667c596",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 1.0,
+        "reasoning_efficiency": 1.0,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "unemployment_meta_style",
+      "penalties": {
+        "applied": 0.0,
+        "major_answer_error": 0,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": false,
+        "unbounded": 0.0
+      },
+      "reasoning_repetition_rate": 0.0,
+      "reasoning_tokens": 10,
+      "reward": 1.0,
+      "reward_before_penalty": 1.0,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 4,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 4
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": []
+    },
+    {
+      "candidate_id": "candidate_1",
+      "candidate_sha256": "650a1685a66e79e730f2fd241644a40024f43e35932ef14ddb88d3a232272b30",
+      "completion_sha256": "f5eb20810c22979da8e454efa9690216026a71122cfd157d10d0308bc782531a",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 1.0,
+        "reasoning_efficiency": 1.0,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "unemployment_supported",
+      "penalties": {
+        "applied": 0.0,
+        "major_answer_error": 0,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": false,
+        "unbounded": 0.0
+      },
+      "reasoning_repetition_rate": 0.0,
+      "reasoning_tokens": 24,
+      "reward": 1.0,
+      "reward_before_penalty": 1.0,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 4,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 4
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": []
+    },
+    {
+      "candidate_id": "candidate_2",
+      "candidate_sha256": "08b87744ba5f3d466e488efa969b31f61cdc5dfa0cc65896e343872c82584362",
+      "completion_sha256": "fbebef1ad1bebe8fb8ddb25549864c2fe0a46ae383e13f3c4355329494d51380",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 0.0,
+        "judge_score": 0.4625,
+        "reasoning_efficiency": 1.0,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "unemployment_wrong_number",
+      "penalties": {
+        "applied": 0.2,
+        "major_answer_error": 1,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": false,
+        "unbounded": 0.2
+      },
+      "reasoning_repetition_rate": 0.0,
+      "reasoning_tokens": 24,
+      "reward": 0.28124999999999994,
+      "reward_before_penalty": 0.48124999999999996,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 1,
+        "fomc_style": 4,
+        "policy_relevance": 3,
+        "trend_reasoning": 1,
+        "uncertainty_calibration": 2
+      },
+      "unsupported_answer_number_count": 1,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": [
+        {
+          "candidate_quote_chars": 45,
+          "candidate_quote_sha256": "ae236883dcbdca0bf17c650c4171306bc936d03274de35368887d1ec913905bb",
+          "kind": "numerical",
+          "section": "answer",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "candidate_id": "candidate_3",
+      "candidate_sha256": "3ae6a4fe98cf3886b5b56c4944466d35e61d92e9737e0ae9022ade525ff470af",
+      "completion_sha256": "2f41425e94087c5ed120de87adbc808fee0e7b78a7c86b270d9355e94c89a0d1",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 0.7375,
+        "reasoning_efficiency": 1.0,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "unemployment_unsupported_cause",
+      "penalties": {
+        "applied": 0.04,
+        "major_answer_error": 0,
+        "major_think_error": 1,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": false,
+        "unbounded": 0.04
+      },
+      "reasoning_repetition_rate": 0.0,
+      "reasoning_tokens": 33,
+      "reward": 0.8287500000000001,
+      "reward_before_penalty": 0.8687500000000001,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 2,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 1
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": [
+        {
+          "candidate_quote_chars": 55,
+          "candidate_quote_sha256": "c6fa64b3cc17ed9f46d6c74e64518976e1025807a143381eb59b1140ca8667c8",
+          "kind": "causal",
+          "section": "think",
+          "severity": "major"
+        }
+      ]
+    }
+  ],
+  "group_id": "g4_unemployment_causal_meta_permuted_2031",
+  "order_variant": "permuted_2031",
+  "payload_sha256": "ce254e261aa4bcc041e80930a11e9bf910537361a8177f53958f9d6733fd00ca",
+  "provider": {
+    "attempt_metrics": [
+      {
+        "attempt": 1,
+        "http_status": 200,
+        "latency_seconds": 20.718354030977935,
+        "status": "completed"
+      }
+    ],
+    "attempts": 1,
+    "hidden_reasoning_sha256": "e6402f913096943a5240e988a48340c55b52dbabeddf99aacd49bd762ce4994c",
+    "latency_seconds": 20.71836083009839,
+    "response_id_sha256": "795f6a7bb2435dc8ab37023f2083f6f857c6ac5b5003234c06e52ff375eeefc0",
+    "returned_model": "deepseek-v4-flash",
+    "usage": {
+      "cached_input_tokens": 2432,
+      "input_tokens": 3180,
+      "output_tokens": 2733,
+      "reasoning_tokens": 2306,
+      "total_tokens": 5913
+    },
+    "visible_response_sha256": "69760fc15bae7e2f14f4acd50067160888e707e01f5c890f3ea27a3fe4f9771b"
+  },
+  "schema_version": "chk2-deepseek-low-judge-group-cache-v1",
+  "source_kind": "deterministic_diagnostic"
+}

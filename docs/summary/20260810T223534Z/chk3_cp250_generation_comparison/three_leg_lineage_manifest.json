@@ -1,0 +1,52 @@
+{
+  "schema_version": "retrain-v2-eval-lineage-v1",
+  "evaluation_only": true,
+  "promotable_to_canonical_dag": false,
+  "checkpoints": {
+    "eval-chk0-base": {
+      "artifact_id": "eval-chk0-base",
+      "parent_artifact_id": null
+    },
+    "eval-chk1-clean-v2-lr1e6-cp200": {
+      "artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+      "parent_artifact_id": "eval-chk0-base",
+      "exact_merge_subject_artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+      "exact_merge_evidence": {
+        "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_exact_merge_lineage.json",
+        "sha256": "a09010d8e79b5ad9df3329596c8308bc32d9afb9d5d85e4c51872d17acca49d5",
+        "payload_sha256": "09234146493643b64b93b8afb1db8cd31f5b86216112a3f7466d3475a139ea3d"
+      }
+    },
+    "eval-chk3-direct-chk1-cp200-sft-cp250": {
+      "artifact_id": "eval-chk3-direct-chk1-cp200-sft-cp250",
+      "parent_artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+      "exact_merge_subject_artifact_id": "eval-chk3-direct-chk1-cp200-sft-cp250",
+      "exact_merge_evidence": {
+        "path": "docs/summary/20260810T223534Z/chk3_cp250_generation_comparison/chk3_cp250_exact_merge_lineage.json",
+        "sha256": "6c7b0b375aa3f0a175654b35a9748bc0dc5d0faf7d8e6f759fa5df665eba6125",
+        "payload_sha256": "841dcded5a27adac68796afe1be6f54aa2c9b25a8ada21abeb55a5cc91e4df7e"
+      }
+    }
+  },
+  "bindings": {
+    "parent_lineage_manifest": {
+      "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/evaluation_lineage_manifest.json",
+      "sha256": "a475b83c39d5114960ba23e20ad7d02d8e14306a14aab7d42df583903e250a07",
+      "payload_sha256": "157b3877f0ccfcc20a32c5df52bb4d919c3b5b424dee0e60ad5fb927b80daf37"
+    },
+    "parent_checkpoint_manifest": {
+      "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/evaluation_checkpoint_manifest.json",
+      "sha256": "4aa50c3153120534886cffb862be50426e2626028b1336f9f5d22076a27524cb",
+      "payload_sha256": "5d645361303268d14edb087db4812a328bb46343338e6bc2df4f9f2229140e38"
+    },
+    "chk3_checkpoint_manifest": {
+      "path": "docs/summary/20260810T223534Z/chk3_cp250_generation_comparison/chk3_checkpoint_manifest.json",
+      "sha256": "8d1ba8dc8ecdd4de6702e27abd9807ee9de270468203672914cea677651cd350",
+      "payload_sha256": "7adfd56471b8c194b04e43510525914e9f8d2305c41a4f8348e91282af942e47"
+    }
+  },
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "11414439a48787b30e12bf76ccfe72095541c86c332751c2f456ba7f3fb8b893"
+  }
+}

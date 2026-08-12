@@ -1,0 +1,32 @@
+{
+  "cap_rate": 0.125,
+  "cases": 8,
+  "catastrophic_cases": 1,
+  "contract_valid_rate": 1.0,
+  "created_at_utc": "2026-08-10T00:44:38Z",
+  "elapsed_seconds": 330.429,
+  "eos_rate": 0.875,
+  "finite_rate": 1.0,
+  "greedy_cases": 2,
+  "max_full_token_4gram_repetition": 0.22310757,
+  "max_tail_token_4gram_repetition": 0.19056974,
+  "mean_full_token_4gram_repetition": 0.13644344749999998,
+  "mean_tail_token_4gram_repetition": 0.106109075,
+  "model_label": "chk1_smoke_cp8",
+  "peak_allocated_gib": 6.509,
+  "peak_reserved_gib": 7.4,
+  "periodic_tail_rate": 0.0,
+  "results": {
+    "path": "/tmp/chk1_clean_v2_diag_cp8/results.jsonl",
+    "rows": 8,
+    "sha256": "776d6a69411155fa3ced608552a16fdff5992ca8c8ddd90985dc78ee84dc0aab"
+  },
+  "runtime_versions": {
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6"
+  },
+  "sample_manifest_sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246",
+  "sampled_cases": 6,
+  "schema_version": "chk1-sft-degeneration-probe-v1",
+  "status": "complete"
+}

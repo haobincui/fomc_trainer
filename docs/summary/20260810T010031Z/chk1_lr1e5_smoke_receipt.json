@@ -1,0 +1,67 @@
+{
+  "schema_version": "chk1-lr-only-smoke-result-v1",
+  "created_at_utc": "2026-08-10T01:19:10Z",
+  "status": "passed",
+  "scope": {
+    "stage": "chk1",
+    "operation": "sft_smoke_test",
+    "max_steps": 10,
+    "formal_training_started": false,
+    "downstream_stages_allowed": []
+  },
+  "single_variable_change": {
+    "learning_rate_old": 0.00005,
+    "learning_rate_new": 0.00001,
+    "other_changed_fields": [
+      "output_dir",
+      "peft_merged_model_path"
+    ],
+    "config_sha256": "4fcc470ce5545963fc361c3c6a26733b8d3dd7c6a552a6187ce7f44ef024b4dc"
+  },
+  "training": {
+    "global_step": 10,
+    "world_size": 2,
+    "train_loss": 1.9279187202453614,
+    "step_10_train_loss": 1.8578,
+    "eval_loss": 1.8019356727600098,
+    "adapter_sha256": "81c7775e427cdeffe23f8809dac42bb5f191e5508e81950018d2e4f670b36426",
+    "resolved_runtime_config_sha256": "782a18fb3545708975502009551046e6d77469bd13ce3a607b3294252824b870",
+    "trainer_state_sha256": "590db15921e85e9d06043abf18510954ebd1a30cab89384ade14f97261980741",
+    "loss_history_sha256": "adf483de248df3848d69eec73f6f7c50da2299de9ff35234ef6d160090a88634"
+  },
+  "probe": {
+    "cases": 8,
+    "sampled_cases": 6,
+    "greedy_cases": 2,
+    "max_new_tokens": 3072,
+    "finite_rate": 1.0,
+    "eos_rate": 1.0,
+    "contract_valid_rate": 1.0,
+    "cap_rate": 0.0,
+    "periodic_tail_rate": 0.0,
+    "catastrophic_cases": 0,
+    "mean_full_token_4gram_repetition": 0.09475892,
+    "max_full_token_4gram_repetition": 0.22435897,
+    "results_sha256": "a59c707e5222a44adaec36baba3200d8d4b29da4787e5310d04f5fcf8c360119",
+    "summary_sha256": "e964ca45272d6ed800a8df3a07e810bd57c9e0f79d66933ed18396fa93909516"
+  },
+  "comparison": {
+    "status": "passed",
+    "baseline": "chk0",
+    "mean_repetition_delta": 0.01203963,
+    "max_per_case_repetition_delta": 0.12551218,
+    "contract_valid_rate_drop": 0.0,
+    "comparison_sha256": "9ff4e4f2074ee66f44ae08f0afb10fdd34b7f2d5162b853fd0ff8d83403ab631"
+  },
+  "historical_lr5e5_failure_replay": {
+    "sample_id": "chk1-analysis-2024-07-31-229179952b21dcd5",
+    "raw_generated_tokens": 3072,
+    "hit_eos": false,
+    "contract_valid": false,
+    "full_token_4gram_repetition": 0.92310199,
+    "tail_token_4gram_repetition": 0.96474045,
+    "completion_sha256": "b454d4f37ad1b3f235c213144f388e6feacc8303a00a55221da0c7a57e4a2e4f",
+    "replay_completed_all_cases": false,
+    "stop_reason": "first case exactly reproduced the archived failure; redundant long-loop replay stopped"
+  }
+}

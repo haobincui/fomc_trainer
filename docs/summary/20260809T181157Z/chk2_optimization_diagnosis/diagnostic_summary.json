@@ -1,0 +1,46 @@
+{
+  "evaluation_contract": {
+    "chk2_prompt_cap": 2560,
+    "chk2_training_temperature": 0.7,
+    "chk2_training_top_p": 0.9,
+    "intended_chk2_task": "atomic evidence -> concise analysis",
+    "old_max_new_tokens": 8192,
+    "old_task": "all evidence -> Minutes section",
+    "old_temperature": 0.0,
+    "old_top_p": 1.0
+  },
+  "schema_version": "chk2-optimization-diagnosis-v1",
+  "sft_contract": {
+    "all_sequences_end_with_eos": true,
+    "completion_tokens_max": 1784,
+    "completion_tokens_p50": 1123.0,
+    "completion_tokens_p95": 1401.4999999999993,
+    "double_bos_reproduced": true,
+    "evidence_identifier_answers": 193,
+    "json_like_answers": 42,
+    "malformed_short_answers": 1,
+    "max_full_training_tokens": 4181,
+    "plain_text_contract_violations": 201,
+    "reasoning_tokens_max": 1600,
+    "reasoning_tokens_p50": 996.0,
+    "reasoning_tokens_p95": 1216.8999999999999,
+    "rows": 1743
+  },
+  "stress_test": {
+    "answer_boundaries": 0,
+    "facts_p50": 650.0,
+    "length_finished": 99,
+    "prompt_tokens_p50": 12402.0,
+    "rows": 99,
+    "strict_periodic_suffixes": 93
+  },
+  "training_domain_cp150_window": {
+    "answer_boundaries": 78,
+    "best_rolling20_end_step": 150,
+    "clipped": 2,
+    "nonempty_answers": 78,
+    "reward_mean": 0.25958000918617474,
+    "reward_median": 0.25,
+    "rows": 80
+  }
+}

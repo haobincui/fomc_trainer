@@ -1,0 +1,1340 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk1 checkpoint 选择：推荐 checkpoint-200",
+    "description": "结合完整 train/eval loss 曲线与固定 8-case 退化探针，选择进入 chk2 的 chk1 checkpoint。",
+    "generatedAt": "2026-08-10T12:30:00Z",
+    "cards": [
+      {
+        "id": "selected_checkpoint_card",
+        "description": "同时满足最低 eval loss 与生成稳定性门禁。",
+        "dataset": "headline",
+        "sourceId": "selection_snapshot_source",
+        "metrics": [
+          {
+            "label": "推荐 checkpoint",
+            "field": "selected_checkpoint",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "best_eval_card",
+        "description": "整个 255-step run 的最低 periodic eval loss。",
+        "dataset": "headline",
+        "sourceId": "loss_snapshot_source",
+        "metrics": [
+          {
+            "label": "cp200 eval loss",
+            "field": "selected_eval_loss",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "repetition_card",
+        "description": "cp200 固定 8-case token 4-gram 平均重复率。",
+        "dataset": "headline",
+        "sourceId": "probe_snapshot_source",
+        "metrics": [
+          {
+            "label": "cp200 mean repetition",
+            "field": "selected_mean_repetition",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "post200_card",
+        "description": "cp255 相对 cp200 的 eval loss 变化；正值表示变差。",
+        "dataset": "headline",
+        "sourceId": "loss_snapshot_source",
+        "metrics": [
+          {
+            "label": "cp200→255 eval Δ",
+            "field": "post200_eval_change",
+            "format": "number",
+            "signed": true
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "loss_trend_chart",
+        "title": "Train 与 eval loss",
+        "subtitle": "steps 10–255；train 为 trailing-10 optimizer-step 均值，eval 为 199 条 validation 样本。",
+        "intent": "trend",
+        "question": "训练后半程是否继续改善验证损失，或出现分叉？",
+        "rationale": "26 个有序评估点足以识别收敛平台和持续反弹。",
+        "type": "line",
+        "dataset": "loss_series",
+        "sourceId": "loss_snapshot_source",
+        "encodings": {
+          "x": {
+            "field": "step",
+            "type": "quantitative",
+            "label": "Optimizer step"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "label": "Loss"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "label": "Series"
+          },
+          "tooltip": [
+            {
+              "field": "epoch",
+              "type": "quantitative",
+              "label": "Epoch"
+            }
+          ]
+        },
+        "layout": "full"
+      },
+      {
+        "id": "repetition_chart",
+        "title": "固定探针平均重复率",
+        "subtitle": "冻结的 8 条 prompts 与 seeds；较低更好，所有 chk1 checkpoint 均通过硬门禁。",
+        "intent": "comparison",
+        "question": "哪个通过 loss 门槛的 checkpoint 具有更低生成重复风险？",
+        "rationale": "五个可比模型适合使用直接类别柱状比较。",
+        "type": "bar",
+        "dataset": "repetition_rows",
+        "sourceId": "probe_snapshot_source",
+        "encodings": {
+          "x": {
+            "field": "checkpoint_label",
+            "type": "nominal",
+            "label": "Model checkpoint"
+          },
+          "y": {
+            "field": "mean_repetition",
+            "type": "quantitative",
+            "label": "Mean token 4-gram repetition"
+          },
+          "tooltip": [
+            {
+              "field": "max_repetition",
+              "type": "quantitative",
+              "label": "Max repetition"
+            },
+            {
+              "field": "eval_loss",
+              "type": "quantitative",
+              "label": "Eval loss"
+            }
+          ]
+        },
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "selection_table",
+        "title": "Checkpoint 决策对照",
+        "subtitle": "排名同时考虑 validation loss、硬门禁与相对 chk0 重复率。",
+        "dataset": "selection_rows",
+        "sourceId": "selection_snapshot_source",
+        "defaultSort": {
+          "field": "rank",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "rank",
+            "label": "Rank",
+            "format": "number"
+          },
+          {
+            "field": "checkpoint",
+            "label": "Checkpoint",
+            "format": "number"
+          },
+          {
+            "field": "eval_loss",
+            "label": "Eval loss",
+            "format": "number"
+          },
+          {
+            "field": "eval_delta_vs_cp200",
+            "label": "Eval Δ vs cp200",
+            "format": "number",
+            "movement": true
+          },
+          {
+            "field": "mean_repetition",
+            "label": "Mean repetition",
+            "format": "number"
+          },
+          {
+            "field": "max_case_delta_vs_chk0",
+            "label": "Max case Δ vs chk0",
+            "format": "number"
+          },
+          {
+            "field": "hard_gate",
+            "label": "Gate",
+            "type": "text"
+          },
+          {
+            "field": "decision",
+            "label": "Decision",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "recent_eval_table",
+        "title": "收敛平台期评估",
+        "subtitle": "steps 170–255；用于判断 cp200 后是否仍有验证收益。",
+        "dataset": "recent_eval",
+        "sourceId": "loss_snapshot_source",
+        "defaultSort": {
+          "field": "step",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "step",
+            "label": "Step",
+            "format": "number"
+          },
+          {
+            "field": "epoch",
+            "label": "Epoch",
+            "format": "number"
+          },
+          {
+            "field": "train_loss_rolling20",
+            "label": "Train loss（trailing 20）",
+            "format": "number"
+          },
+          {
+            "field": "eval_loss",
+            "label": "Eval loss",
+            "format": "number"
+          },
+          {
+            "field": "is_final_eval",
+            "label": "Final eval",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "loss_snapshot_source",
+        "label": "完整训练与评估 loss 快照",
+        "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/loss_snapshot.jsonl"
+      },
+      {
+        "id": "probe_snapshot_source",
+        "label": "固定生成退化探针快照",
+        "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/probe_snapshot.jsonl"
+      },
+      {
+        "id": "selection_snapshot_source",
+        "label": "Checkpoint 决策对照",
+        "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/selection_snapshot.jsonl"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# chk1 checkpoint 选择：推荐 checkpoint-200"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "body": "## checkpoint-200 在拟合收益与生成稳定性之间最优\n\n**建议将 `checkpoint-200` 作为 chk1 merge 输入并进入 chk2。** 它取得全程最低 eval loss `1.686099`，固定 8-case 探针全部通过；继续训练到 checkpoint-255 没有带来 validation 收益，平均重复率却从 `0.1347` 升至 `0.1410`。\n\n这不是显著过拟合：cp200→cp255 的 eval 变化只有 `+0.000032`（`+0.0019%`）。更准确的判断是训练在 cp200 后进入平台，继续更新只增加了软性生成风险，没有可测的拟合回报。\n\n**质量选择已经明确，但当前尚不能直接启动 chk2。** 这次 SFT 使用的语义 override 收据明确限定为 chk1，`downstream_stages_allowed=[]`；clean 数据语义审核也仍为 failed。进入 chk2 前必须获得新的下游例外授权，或先让正常语义门禁通过。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "cardIds": [
+          "selected_checkpoint_card",
+          "best_eval_card",
+          "repetition_card",
+          "post200_card"
+        ]
+      },
+      {
+        "id": "loss_finding",
+        "type": "markdown",
+        "sourceId": "loss_snapshot_source",
+        "body": "## Eval loss 在 step 200 达到最低点，之后只有噪声级波动\n\n每轮平均 train loss 为 `1.8727 → 1.7477 → 1.7132`，训练目标持续改善。Eval loss 则在 step 200 达到 `1.686099`；step 190 到最终评估的完整范围仅为 `0.000153`（约 `0.0091%`）。因此没有持续的 train/eval 分叉，但也没有理由为 cp200 之后的 55 次更新支付额外行为风险。"
+      },
+      {
+        "id": "loss_chart_block",
+        "type": "chart",
+        "chartId": "loss_trend_chart",
+        "layout": "full"
+      },
+      {
+        "id": "plateau_table_block",
+        "type": "table",
+        "tableId": "recent_eval_table",
+        "layout": "full"
+      },
+      {
+        "id": "behavior_finding",
+        "type": "markdown",
+        "sourceId": "probe_snapshot_source",
+        "body": "## 四个 checkpoint 都没有硬退化，但 cp255 的软性重复风险最高\n\ncp80、cp150、cp200、cp255 均为 8/8 EOS、8/8 合同有效，且没有触顶、周期尾部或 catastrophic case。cp200 的平均 repetition 为 `0.1347`，低于 cp255 的 `0.1410`；相对 chk0 的平均增量分别为 `+0.0519` 和 `+0.0583`。这不足以判定 cp255 退化，却在 loss 已无收益时支持更早停止。"
+      },
+      {
+        "id": "repetition_chart_block",
+        "type": "chart",
+        "chartId": "repetition_chart",
+        "layout": "full"
+      },
+      {
+        "id": "selection_finding",
+        "type": "markdown",
+        "sourceId": "selection_snapshot_source",
+        "body": "## checkpoint-200 是主选，checkpoint-150 是保守备选\n\ncp200 同时拥有最低 eval loss和通过的生成门禁。cp150 的最坏单样本重复增量更低，但 eval loss 高 `0.01268`，只有在极端重视最坏单例风险时才值得回退。cp80 明显欠拟合；cp255 与 cp200 验证表现近似相同，但没有更优的行为指标。"
+      },
+      {
+        "id": "selection_table_block",
+        "type": "table",
+        "tableId": "selection_table",
+        "layout": "full"
+      },
+      {
+        "id": "definitions",
+        "type": "markdown",
+        "body": "## 范围与指标定义\n\n- 训练为两张 A30、LR `1e-6`、gradient accumulation `8`、3 epochs，共 255 optimizer steps。\n- Train loss 图使用每个评估点之前 10 个 optimizer steps 的算术均值；候选表同时保留 trailing-20 均值用于降低 batch 噪声。\n- Eval loss 来自完整 199-row validation split；cp255 使用训练结束后的最终独立 eval。\n- 退化探针固定 6 条 sampled 与 2 条 greedy 输出、相同 prompts、seeds、chk0 baseline 和 3072-token 上限。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## 选择方法\n\n先用完整 loss 历史确定拟合前沿和平台起点，再只在已运行固定生成探针的checkpoint 间比较。硬门禁要求 finite、EOS、合法 `</think>`/answer、无触顶、无周期尾部、无 catastrophic repetition；通过后再用 eval loss、平均 repetition 和最大逐样本增量做软排序。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 限制与稳健性\n\n**结论对已知无限重复模式具有直接证据，但不是全面质量认证。** 探针只有8 条，validation 也只有一个 split；train 与 eval 运行模式不同，二者绝对差值不应被当作泛化 gap。cp200 的优势主要是 Pareto 选择：最低 eval、硬门禁通过，并且不承担 cp255 的额外无收益更新。\n\n**下游合规限制是执行阻断，不是模型质量指标。** 当前 override 授权仅覆盖chk1 SFT，且该训练缺少 canonical run/training/merge receipt；在解除下游限制并补齐 lineage 前，不应把任何 checkpoint 当作正式 chk2 parent。"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## 下一步\n\n1. 先取得明确的 chk2 下游 override 授权，或完成正常 clean-release 语义审核。\n2. 为 `checkpoint-200` 建立版本化 promotion/training receipt，绑定 adapter SHA256 `7a515556…9b9a9`。\n3. 以 `checkpoint-200` 和 chk0 做独立、非破坏性的 adapter merge，并验证精确 tensor lineage 与 tokenizer/chat-template。\n4. chk2 使用全新输出目录，从 merged cp200 启动；不要从旧 chk2 run resume。\n5. 保留 checkpoint-150 作为保守回退，但不要让 cp255 仅因是最终 step 而自动进入 chk2。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## 进一步问题\n\nchk2 GRPO 是否会在保持 cp200 终止稳定性的同时提高 grounded reward，需要用同一组冻结生成探针和 v3 reward 监控继续验证。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T12:30:00Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "selected_checkpoint": 200,
+          "selected_eval_loss": 1.6860989332199097,
+          "selected_mean_repetition": 0.13466412375,
+          "post200_eval_change": 3.24249267578125e-05,
+          "probe_pass_rate": 1.0
+        }
+      ],
+      "loss_rows": [
+        {
+          "step": 10,
+          "epoch": 0.11816838995568685,
+          "train_loss_raw": 1.9419,
+          "train_loss_rolling10": 1.9558300000000002,
+          "train_loss_rolling20": 1.9558300000000002,
+          "eval_loss": 1.9033335447311401,
+          "eval_accuracy": 0.5834170293807983,
+          "is_final_eval": false
+        },
+        {
+          "step": 20,
+          "epoch": 0.2363367799113737,
+          "train_loss_raw": 1.8552,
+          "train_loss_rolling10": 1.9459700000000002,
+          "train_loss_rolling20": 1.9509,
+          "eval_loss": 1.882495641708374,
+          "eval_accuracy": 0.5849130988121033,
+          "is_final_eval": false
+        },
+        {
+          "step": 30,
+          "epoch": 0.35450516986706054,
+          "train_loss_raw": 1.8547,
+          "train_loss_rolling10": 1.9238000000000004,
+          "train_loss_rolling20": 1.934885,
+          "eval_loss": 1.860953688621521,
+          "eval_accuracy": 0.5867963433265686,
+          "is_final_eval": false
+        },
+        {
+          "step": 40,
+          "epoch": 0.4726735598227474,
+          "train_loss_raw": 1.8815,
+          "train_loss_rolling10": 1.87422,
+          "train_loss_rolling20": 1.89901,
+          "eval_loss": 1.840117335319519,
+          "eval_accuracy": 0.5885963654518127,
+          "is_final_eval": false
+        },
+        {
+          "step": 50,
+          "epoch": 0.5908419497784343,
+          "train_loss_raw": 1.8514,
+          "train_loss_rolling10": 1.8549799999999999,
+          "train_loss_rolling20": 1.8645999999999998,
+          "eval_loss": 1.820456624031067,
+          "eval_accuracy": 0.5903628307580948,
+          "is_final_eval": false
+        },
+        {
+          "step": 60,
+          "epoch": 0.7090103397341211,
+          "train_loss_raw": 1.8412,
+          "train_loss_rolling10": 1.8357500000000002,
+          "train_loss_rolling20": 1.8453649999999997,
+          "eval_loss": 1.8020044565200806,
+          "eval_accuracy": 0.5918768835067749,
+          "is_final_eval": false
+        },
+        {
+          "step": 70,
+          "epoch": 0.827178729689808,
+          "train_loss_raw": 1.8203,
+          "train_loss_rolling10": 1.8302500000000002,
+          "train_loss_rolling20": 1.8330000000000002,
+          "eval_loss": 1.7850476503372192,
+          "eval_accuracy": 0.5931153899431229,
+          "is_final_eval": false
+        },
+        {
+          "step": 80,
+          "epoch": 0.9453471196454948,
+          "train_loss_raw": 1.8051,
+          "train_loss_rolling10": 1.8029199999999999,
+          "train_loss_rolling20": 1.816585,
+          "eval_loss": 1.7691165208816528,
+          "eval_accuracy": 0.594791733622551,
+          "is_final_eval": false
+        },
+        {
+          "step": 90,
+          "epoch": 1.0590841949778433,
+          "train_loss_raw": 1.7574,
+          "train_loss_rolling10": 1.7711200000000002,
+          "train_loss_rolling20": 1.7870199999999996,
+          "eval_loss": 1.754563570022583,
+          "eval_accuracy": 0.59591521859169,
+          "is_final_eval": false
+        },
+        {
+          "step": 100,
+          "epoch": 1.1772525849335302,
+          "train_loss_raw": 1.7994,
+          "train_loss_rolling10": 1.78232,
+          "train_loss_rolling20": 1.7767199999999999,
+          "eval_loss": 1.7425792217254639,
+          "eval_accuracy": 0.596988867521286,
+          "is_final_eval": false
+        },
+        {
+          "step": 110,
+          "epoch": 1.2954209748892171,
+          "train_loss_raw": 1.6365,
+          "train_loss_rolling10": 1.7518,
+          "train_loss_rolling20": 1.7670599999999996,
+          "eval_loss": 1.732396125793457,
+          "eval_accuracy": 0.5976740247011185,
+          "is_final_eval": false
+        },
+        {
+          "step": 120,
+          "epoch": 1.413589364844904,
+          "train_loss_raw": 1.7542,
+          "train_loss_rolling10": 1.76503,
+          "train_loss_rolling20": 1.758415,
+          "eval_loss": 1.7231615781784058,
+          "eval_accuracy": 0.5985163301229477,
+          "is_final_eval": false
+        },
+        {
+          "step": 130,
+          "epoch": 1.5317577548005907,
+          "train_loss_raw": 1.8334,
+          "train_loss_rolling10": 1.7456399999999999,
+          "train_loss_rolling20": 1.7553349999999999,
+          "eval_loss": 1.7145569324493408,
+          "eval_accuracy": 0.5993830561637878,
+          "is_final_eval": false
+        },
+        {
+          "step": 140,
+          "epoch": 1.6499261447562779,
+          "train_loss_raw": 1.6777,
+          "train_loss_rolling10": 1.7462400000000002,
+          "train_loss_rolling20": 1.7459399999999998,
+          "eval_loss": 1.7063945531845093,
+          "eval_accuracy": 0.6002435326576233,
+          "is_final_eval": false
+        },
+        {
+          "step": 150,
+          "epoch": 1.7680945347119645,
+          "train_loss_raw": 1.728,
+          "train_loss_rolling10": 1.73917,
+          "train_loss_rolling20": 1.7427050000000004,
+          "eval_loss": 1.6987818479537964,
+          "eval_accuracy": 0.6010865849256516,
+          "is_final_eval": false
+        },
+        {
+          "step": 160,
+          "epoch": 1.8862629246676514,
+          "train_loss_raw": 1.7534,
+          "train_loss_rolling10": 1.7223999999999997,
+          "train_loss_rolling20": 1.7307849999999998,
+          "eval_loss": 1.6923211812973022,
+          "eval_accuracy": 0.6018666386604309,
+          "is_final_eval": false
+        },
+        {
+          "step": 170,
+          "epoch": 2.0,
+          "train_loss_raw": 1.7986,
+          "train_loss_rolling10": 1.72557,
+          "train_loss_rolling20": 1.723985,
+          "eval_loss": 1.6880370378494263,
+          "eval_accuracy": 0.6023204123973847,
+          "is_final_eval": false
+        },
+        {
+          "step": 180,
+          "epoch": 2.1181683899556867,
+          "train_loss_raw": 1.7245,
+          "train_loss_rolling10": 1.7316600000000002,
+          "train_loss_rolling20": 1.728615,
+          "eval_loss": 1.6865694522857666,
+          "eval_accuracy": 0.6025567138195038,
+          "is_final_eval": false
+        },
+        {
+          "step": 190,
+          "epoch": 2.236336779911374,
+          "train_loss_raw": 1.6314,
+          "train_loss_rolling10": 1.69169,
+          "train_loss_rolling20": 1.711675,
+          "eval_loss": 1.6862519979476929,
+          "eval_accuracy": 0.6027726453542709,
+          "is_final_eval": false
+        },
+        {
+          "step": 200,
+          "epoch": 2.3545051698670605,
+          "train_loss_raw": 1.7227,
+          "train_loss_rolling10": 1.72956,
+          "train_loss_rolling20": 1.7106249999999998,
+          "eval_loss": 1.6860989332199097,
+          "eval_accuracy": 0.6026851499080658,
+          "is_final_eval": false
+        },
+        {
+          "step": 210,
+          "epoch": 2.4726735598227476,
+          "train_loss_raw": 1.6986,
+          "train_loss_rolling10": 1.6948599999999998,
+          "train_loss_rolling20": 1.71221,
+          "eval_loss": 1.6862226724624634,
+          "eval_accuracy": 0.602710389494896,
+          "is_final_eval": false
+        },
+        {
+          "step": 220,
+          "epoch": 2.5908419497784343,
+          "train_loss_raw": 1.7219,
+          "train_loss_rolling10": 1.7095300000000002,
+          "train_loss_rolling20": 1.7021950000000001,
+          "eval_loss": 1.6861882209777832,
+          "eval_accuracy": 0.6027664875984192,
+          "is_final_eval": false
+        },
+        {
+          "step": 230,
+          "epoch": 2.709010339734121,
+          "train_loss_raw": 1.7498,
+          "train_loss_rolling10": 1.72472,
+          "train_loss_rolling20": 1.717125,
+          "eval_loss": 1.686177372932434,
+          "eval_accuracy": 0.6026550078392029,
+          "is_final_eval": false
+        },
+        {
+          "step": 240,
+          "epoch": 2.827178729689808,
+          "train_loss_raw": 1.6553,
+          "train_loss_rolling10": 1.70409,
+          "train_loss_rolling20": 1.7144049999999997,
+          "eval_loss": 1.6861122846603394,
+          "eval_accuracy": 0.6026280879974365,
+          "is_final_eval": false
+        },
+        {
+          "step": 250,
+          "epoch": 2.945347119645495,
+          "train_loss_raw": 1.7787,
+          "train_loss_rolling10": 1.70574,
+          "train_loss_rolling20": 1.7049149999999997,
+          "eval_loss": 1.6862155199050903,
+          "eval_accuracy": 0.6028331524133682,
+          "is_final_eval": false
+        },
+        {
+          "step": 255,
+          "epoch": 3.0,
+          "train_loss_raw": 1.7533,
+          "train_loss_rolling10": 1.72286,
+          "train_loss_rolling20": 1.714265,
+          "eval_loss": 1.6861313581466675,
+          "eval_accuracy": null,
+          "is_final_eval": true
+        }
+      ],
+      "loss_series": [
+        {
+          "step": 10,
+          "epoch": 0.11816838995568685,
+          "eval_accuracy": 0.5834170293807983,
+          "series": "Train loss（trailing 10）",
+          "value": 1.9558300000000002
+        },
+        {
+          "step": 10,
+          "epoch": 0.11816838995568685,
+          "eval_accuracy": 0.5834170293807983,
+          "series": "Eval loss",
+          "value": 1.9033335447311401
+        },
+        {
+          "step": 20,
+          "epoch": 0.2363367799113737,
+          "eval_accuracy": 0.5849130988121033,
+          "series": "Train loss（trailing 10）",
+          "value": 1.9459700000000002
+        },
+        {
+          "step": 20,
+          "epoch": 0.2363367799113737,
+          "eval_accuracy": 0.5849130988121033,
+          "series": "Eval loss",
+          "value": 1.882495641708374
+        },
+        {
+          "step": 30,
+          "epoch": 0.35450516986706054,
+          "eval_accuracy": 0.5867963433265686,
+          "series": "Train loss（trailing 10）",
+          "value": 1.9238000000000004
+        },
+        {
+          "step": 30,
+          "epoch": 0.35450516986706054,
+          "eval_accuracy": 0.5867963433265686,
+          "series": "Eval loss",
+          "value": 1.860953688621521
+        },
+        {
+          "step": 40,
+          "epoch": 0.4726735598227474,
+          "eval_accuracy": 0.5885963654518127,
+          "series": "Train loss（trailing 10）",
+          "value": 1.87422
+        },
+        {
+          "step": 40,
+          "epoch": 0.4726735598227474,
+          "eval_accuracy": 0.5885963654518127,
+          "series": "Eval loss",
+          "value": 1.840117335319519
+        },
+        {
+          "step": 50,
+          "epoch": 0.5908419497784343,
+          "eval_accuracy": 0.5903628307580948,
+          "series": "Train loss（trailing 10）",
+          "value": 1.8549799999999999
+        },
+        {
+          "step": 50,
+          "epoch": 0.5908419497784343,
+          "eval_accuracy": 0.5903628307580948,
+          "series": "Eval loss",
+          "value": 1.820456624031067
+        },
+        {
+          "step": 60,
+          "epoch": 0.7090103397341211,
+          "eval_accuracy": 0.5918768835067749,
+          "series": "Train loss（trailing 10）",
+          "value": 1.8357500000000002
+        },
+        {
+          "step": 60,
+          "epoch": 0.7090103397341211,
+          "eval_accuracy": 0.5918768835067749,
+          "series": "Eval loss",
+          "value": 1.8020044565200806
+        },
+        {
+          "step": 70,
+          "epoch": 0.827178729689808,
+          "eval_accuracy": 0.5931153899431229,
+          "series": "Train loss（trailing 10）",
+          "value": 1.8302500000000002
+        },
+        {
+          "step": 70,
+          "epoch": 0.827178729689808,
+          "eval_accuracy": 0.5931153899431229,
+          "series": "Eval loss",
+          "value": 1.7850476503372192
+        },
+        {
+          "step": 80,
+          "epoch": 0.9453471196454948,
+          "eval_accuracy": 0.594791733622551,
+          "series": "Train loss（trailing 10）",
+          "value": 1.8029199999999999
+        },
+        {
+          "step": 80,
+          "epoch": 0.9453471196454948,
+          "eval_accuracy": 0.594791733622551,
+          "series": "Eval loss",
+          "value": 1.7691165208816528
+        },
+        {
+          "step": 90,
+          "epoch": 1.0590841949778433,
+          "eval_accuracy": 0.59591521859169,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7711200000000002
+        },
+        {
+          "step": 90,
+          "epoch": 1.0590841949778433,
+          "eval_accuracy": 0.59591521859169,
+          "series": "Eval loss",
+          "value": 1.754563570022583
+        },
+        {
+          "step": 100,
+          "epoch": 1.1772525849335302,
+          "eval_accuracy": 0.596988867521286,
+          "series": "Train loss（trailing 10）",
+          "value": 1.78232
+        },
+        {
+          "step": 100,
+          "epoch": 1.1772525849335302,
+          "eval_accuracy": 0.596988867521286,
+          "series": "Eval loss",
+          "value": 1.7425792217254639
+        },
+        {
+          "step": 110,
+          "epoch": 1.2954209748892171,
+          "eval_accuracy": 0.5976740247011185,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7518
+        },
+        {
+          "step": 110,
+          "epoch": 1.2954209748892171,
+          "eval_accuracy": 0.5976740247011185,
+          "series": "Eval loss",
+          "value": 1.732396125793457
+        },
+        {
+          "step": 120,
+          "epoch": 1.413589364844904,
+          "eval_accuracy": 0.5985163301229477,
+          "series": "Train loss（trailing 10）",
+          "value": 1.76503
+        },
+        {
+          "step": 120,
+          "epoch": 1.413589364844904,
+          "eval_accuracy": 0.5985163301229477,
+          "series": "Eval loss",
+          "value": 1.7231615781784058
+        },
+        {
+          "step": 130,
+          "epoch": 1.5317577548005907,
+          "eval_accuracy": 0.5993830561637878,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7456399999999999
+        },
+        {
+          "step": 130,
+          "epoch": 1.5317577548005907,
+          "eval_accuracy": 0.5993830561637878,
+          "series": "Eval loss",
+          "value": 1.7145569324493408
+        },
+        {
+          "step": 140,
+          "epoch": 1.6499261447562779,
+          "eval_accuracy": 0.6002435326576233,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7462400000000002
+        },
+        {
+          "step": 140,
+          "epoch": 1.6499261447562779,
+          "eval_accuracy": 0.6002435326576233,
+          "series": "Eval loss",
+          "value": 1.7063945531845093
+        },
+        {
+          "step": 150,
+          "epoch": 1.7680945347119645,
+          "eval_accuracy": 0.6010865849256516,
+          "series": "Train loss（trailing 10）",
+          "value": 1.73917
+        },
+        {
+          "step": 150,
+          "epoch": 1.7680945347119645,
+          "eval_accuracy": 0.6010865849256516,
+          "series": "Eval loss",
+          "value": 1.6987818479537964
+        },
+        {
+          "step": 160,
+          "epoch": 1.8862629246676514,
+          "eval_accuracy": 0.6018666386604309,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7223999999999997
+        },
+        {
+          "step": 160,
+          "epoch": 1.8862629246676514,
+          "eval_accuracy": 0.6018666386604309,
+          "series": "Eval loss",
+          "value": 1.6923211812973022
+        },
+        {
+          "step": 170,
+          "epoch": 2.0,
+          "eval_accuracy": 0.6023204123973847,
+          "series": "Train loss（trailing 10）",
+          "value": 1.72557
+        },
+        {
+          "step": 170,
+          "epoch": 2.0,
+          "eval_accuracy": 0.6023204123973847,
+          "series": "Eval loss",
+          "value": 1.6880370378494263
+        },
+        {
+          "step": 180,
+          "epoch": 2.1181683899556867,
+          "eval_accuracy": 0.6025567138195038,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7316600000000002
+        },
+        {
+          "step": 180,
+          "epoch": 2.1181683899556867,
+          "eval_accuracy": 0.6025567138195038,
+          "series": "Eval loss",
+          "value": 1.6865694522857666
+        },
+        {
+          "step": 190,
+          "epoch": 2.236336779911374,
+          "eval_accuracy": 0.6027726453542709,
+          "series": "Train loss（trailing 10）",
+          "value": 1.69169
+        },
+        {
+          "step": 190,
+          "epoch": 2.236336779911374,
+          "eval_accuracy": 0.6027726453542709,
+          "series": "Eval loss",
+          "value": 1.6862519979476929
+        },
+        {
+          "step": 200,
+          "epoch": 2.3545051698670605,
+          "eval_accuracy": 0.6026851499080658,
+          "series": "Train loss（trailing 10）",
+          "value": 1.72956
+        },
+        {
+          "step": 200,
+          "epoch": 2.3545051698670605,
+          "eval_accuracy": 0.6026851499080658,
+          "series": "Eval loss",
+          "value": 1.6860989332199097
+        },
+        {
+          "step": 210,
+          "epoch": 2.4726735598227476,
+          "eval_accuracy": 0.602710389494896,
+          "series": "Train loss（trailing 10）",
+          "value": 1.6948599999999998
+        },
+        {
+          "step": 210,
+          "epoch": 2.4726735598227476,
+          "eval_accuracy": 0.602710389494896,
+          "series": "Eval loss",
+          "value": 1.6862226724624634
+        },
+        {
+          "step": 220,
+          "epoch": 2.5908419497784343,
+          "eval_accuracy": 0.6027664875984192,
+          "series": "Train loss（trailing 10）",
+          "value": 1.7095300000000002
+        },
+        {
+          "step": 220,
+          "epoch": 2.5908419497784343,
+          "eval_accuracy": 0.6027664875984192,
+          "series": "Eval loss",
+          "value": 1.6861882209777832
+        },
+        {
+          "step": 230,
+          "epoch": 2.709010339734121,
+          "eval_accuracy": 0.6026550078392029,
+          "series": "Train loss（trailing 10）",
+          "value": 1.72472
+        },
+        {
+          "step": 230,
+          "epoch": 2.709010339734121,
+          "eval_accuracy": 0.6026550078392029,
+          "series": "Eval loss",
+          "value": 1.686177372932434
+        },
+        {
+          "step": 240,
+          "epoch": 2.827178729689808,
+          "eval_accuracy": 0.6026280879974365,
+          "series": "Train loss（trailing 10）",
+          "value": 1.70409
+        },
+        {
+          "step": 240,
+          "epoch": 2.827178729689808,
+          "eval_accuracy": 0.6026280879974365,
+          "series": "Eval loss",
+          "value": 1.6861122846603394
+        },
+        {
+          "step": 250,
+          "epoch": 2.945347119645495,
+          "eval_accuracy": 0.6028331524133682,
+          "series": "Train loss（trailing 10）",
+          "value": 1.70574
+        },
+        {
+          "step": 250,
+          "epoch": 2.945347119645495,
+          "eval_accuracy": 0.6028331524133682,
+          "series": "Eval loss",
+          "value": 1.6862155199050903
+        },
+        {
+          "step": 255,
+          "epoch": 3.0,
+          "eval_accuracy": null,
+          "series": "Train loss（trailing 10）",
+          "value": 1.72286
+        },
+        {
+          "step": 255,
+          "epoch": 3.0,
+          "eval_accuracy": null,
+          "series": "Eval loss",
+          "value": 1.6861313581466675
+        }
+      ],
+      "recent_eval": [
+        {
+          "step": 170,
+          "epoch": 2.0,
+          "train_loss_raw": 1.7986,
+          "train_loss_rolling10": 1.72557,
+          "train_loss_rolling20": 1.723985,
+          "eval_loss": 1.6880370378494263,
+          "eval_accuracy": 0.6023204123973847,
+          "is_final_eval": false
+        },
+        {
+          "step": 180,
+          "epoch": 2.1181683899556867,
+          "train_loss_raw": 1.7245,
+          "train_loss_rolling10": 1.7316600000000002,
+          "train_loss_rolling20": 1.728615,
+          "eval_loss": 1.6865694522857666,
+          "eval_accuracy": 0.6025567138195038,
+          "is_final_eval": false
+        },
+        {
+          "step": 190,
+          "epoch": 2.236336779911374,
+          "train_loss_raw": 1.6314,
+          "train_loss_rolling10": 1.69169,
+          "train_loss_rolling20": 1.711675,
+          "eval_loss": 1.6862519979476929,
+          "eval_accuracy": 0.6027726453542709,
+          "is_final_eval": false
+        },
+        {
+          "step": 200,
+          "epoch": 2.3545051698670605,
+          "train_loss_raw": 1.7227,
+          "train_loss_rolling10": 1.72956,
+          "train_loss_rolling20": 1.7106249999999998,
+          "eval_loss": 1.6860989332199097,
+          "eval_accuracy": 0.6026851499080658,
+          "is_final_eval": false
+        },
+        {
+          "step": 210,
+          "epoch": 2.4726735598227476,
+          "train_loss_raw": 1.6986,
+          "train_loss_rolling10": 1.6948599999999998,
+          "train_loss_rolling20": 1.71221,
+          "eval_loss": 1.6862226724624634,
+          "eval_accuracy": 0.602710389494896,
+          "is_final_eval": false
+        },
+        {
+          "step": 220,
+          "epoch": 2.5908419497784343,
+          "train_loss_raw": 1.7219,
+          "train_loss_rolling10": 1.7095300000000002,
+          "train_loss_rolling20": 1.7021950000000001,
+          "eval_loss": 1.6861882209777832,
+          "eval_accuracy": 0.6027664875984192,
+          "is_final_eval": false
+        },
+        {
+          "step": 230,
+          "epoch": 2.709010339734121,
+          "train_loss_raw": 1.7498,
+          "train_loss_rolling10": 1.72472,
+          "train_loss_rolling20": 1.717125,
+          "eval_loss": 1.686177372932434,
+          "eval_accuracy": 0.6026550078392029,
+          "is_final_eval": false
+        },
+        {
+          "step": 240,
+          "epoch": 2.827178729689808,
+          "train_loss_raw": 1.6553,
+          "train_loss_rolling10": 1.70409,
+          "train_loss_rolling20": 1.7144049999999997,
+          "eval_loss": 1.6861122846603394,
+          "eval_accuracy": 0.6026280879974365,
+          "is_final_eval": false
+        },
+        {
+          "step": 250,
+          "epoch": 2.945347119645495,
+          "train_loss_raw": 1.7787,
+          "train_loss_rolling10": 1.70574,
+          "train_loss_rolling20": 1.7049149999999997,
+          "eval_loss": 1.6862155199050903,
+          "eval_accuracy": 0.6028331524133682,
+          "is_final_eval": false
+        },
+        {
+          "step": 255,
+          "epoch": 3.0,
+          "train_loss_raw": 1.7533,
+          "train_loss_rolling10": 1.72286,
+          "train_loss_rolling20": 1.714265,
+          "eval_loss": 1.6861313581466675,
+          "eval_accuracy": null,
+          "is_final_eval": true
+        }
+      ],
+      "epoch_rows": [
+        {
+          "epoch": 1,
+          "start_step": 1,
+          "end_step": 85,
+          "mean_train_loss": 1.8726588235294117,
+          "median_train_loss": 1.8713
+        },
+        {
+          "epoch": 2,
+          "start_step": 86,
+          "end_step": 170,
+          "mean_train_loss": 1.7476952941176471,
+          "median_train_loss": 1.7446
+        },
+        {
+          "epoch": 3,
+          "start_step": 171,
+          "end_step": 255,
+          "mean_train_loss": 1.713234117647059,
+          "median_train_loss": 1.7153
+        }
+      ],
+      "probe_rows": [
+        {
+          "checkpoint": 80,
+          "status": "passed",
+          "mean_repetition": 0.12193187875,
+          "max_repetition": 0.26996805,
+          "mean_delta_vs_chk0": 0.03921259,
+          "max_case_delta_vs_chk0": 0.17112126,
+          "eos_rate": 1.0,
+          "contract_valid_rate": 1.0,
+          "cap_rate": 0.0,
+          "periodic_tail_rate": 0.0,
+          "catastrophic_cases": 0,
+          "results_sha256": "c191d10c555c66893efa61d0f70062d5d008d7c1f9238ec3d9c5f7e2de44f903",
+          "comparison_path": "docs/summary/20260810T101500Z/chk1_lr1e6_cp80_vs_chk0_comparison.json",
+          "comparison_sha256": "55a27c5fd8871c82525ce1a063db7a0089aabf080fe68b5ecfad0649aa78f1da"
+        },
+        {
+          "checkpoint": 150,
+          "status": "passed",
+          "mean_repetition": 0.136407005,
+          "max_repetition": 0.215625,
+          "mean_delta_vs_chk0": 0.05368772,
+          "max_case_delta_vs_chk0": 0.11859502,
+          "eos_rate": 1.0,
+          "contract_valid_rate": 1.0,
+          "cap_rate": 0.0,
+          "periodic_tail_rate": 0.0,
+          "catastrophic_cases": 0,
+          "results_sha256": "d8e46c634dff9d7393ee3fa51c6788ce4aa621b26991f46b4fdd7c691c35dafe",
+          "comparison_path": "docs/summary/20260810T110300Z/chk1_lr1e6_cp150_vs_chk0_comparison.json",
+          "comparison_sha256": "95b126ad0866fefa02421588cc65c666880e20d7bfb3d9d3d26d12c63e67267b"
+        },
+        {
+          "checkpoint": 200,
+          "status": "passed",
+          "mean_repetition": 0.13466412375,
+          "max_repetition": 0.24300442,
+          "mean_delta_vs_chk0": 0.05194484,
+          "max_case_delta_vs_chk0": 0.14415763,
+          "eos_rate": 1.0,
+          "contract_valid_rate": 1.0,
+          "cap_rate": 0.0,
+          "periodic_tail_rate": 0.0,
+          "catastrophic_cases": 0,
+          "results_sha256": "d10f313c138887c68e8cb2046e6134e0b83e054f84055076b5faba4cc4813c5b",
+          "comparison_path": "docs/summary/20260810T113500Z/chk1_lr1e6_cp200_vs_chk0_comparison.json",
+          "comparison_sha256": "7e778176b3923b0c97ec2c06f4aaca29ec75d0010bef85bed4391e273d25d345"
+        },
+        {
+          "checkpoint": 255,
+          "status": "passed",
+          "mean_repetition": 0.14099574625000003,
+          "max_repetition": 0.26996805,
+          "mean_delta_vs_chk0": 0.05827646,
+          "max_case_delta_vs_chk0": 0.17112126,
+          "eos_rate": 1.0,
+          "contract_valid_rate": 1.0,
+          "cap_rate": 0.0,
+          "periodic_tail_rate": 0.0,
+          "catastrophic_cases": 0,
+          "results_sha256": "f78beec0b80d24fcc65e196eca1c37bc35bb39c21909f8bb42b67ba068002835",
+          "comparison_path": "docs/summary/20260810T121200Z/chk1_lr1e6_cp255_vs_chk0_comparison.json",
+          "comparison_sha256": "83958b81f9e5447d3dfab3c1e098f9df9f80229048e06618beb7e49bf53dd39a"
+        }
+      ],
+      "repetition_rows": [
+        {
+          "checkpoint_label": "chk0",
+          "checkpoint": 0,
+          "mean_repetition": 0.0827192875,
+          "max_repetition": 0.14251497,
+          "eval_loss": null,
+          "hard_gate": "baseline"
+        },
+        {
+          "checkpoint_label": "cp80",
+          "checkpoint": 80,
+          "mean_repetition": 0.12193187875,
+          "max_repetition": 0.26996805,
+          "eval_loss": 1.7691165208816528,
+          "hard_gate": "passed"
+        },
+        {
+          "checkpoint_label": "cp150",
+          "checkpoint": 150,
+          "mean_repetition": 0.136407005,
+          "max_repetition": 0.215625,
+          "eval_loss": 1.6987818479537964,
+          "hard_gate": "passed"
+        },
+        {
+          "checkpoint_label": "cp200",
+          "checkpoint": 200,
+          "mean_repetition": 0.13466412375,
+          "max_repetition": 0.24300442,
+          "eval_loss": 1.6860989332199097,
+          "hard_gate": "passed"
+        },
+        {
+          "checkpoint_label": "cp255",
+          "checkpoint": 255,
+          "mean_repetition": 0.14099574625000003,
+          "max_repetition": 0.26996805,
+          "eval_loss": 1.6861313581466675,
+          "hard_gate": "passed"
+        }
+      ],
+      "selection_rows": [
+        {
+          "rank": 1,
+          "checkpoint": 200,
+          "eval_loss": 1.6860989332199097,
+          "eval_delta_vs_cp200": 0.0,
+          "train_loss_rolling20": 1.7106249999999998,
+          "mean_repetition": 0.13466412375,
+          "max_repetition": 0.24300442,
+          "mean_delta_vs_chk0": 0.05194484,
+          "max_case_delta_vs_chk0": 0.14415763,
+          "hard_gate": "passed",
+          "decision": "推荐进入 chk2"
+        },
+        {
+          "rank": 2,
+          "checkpoint": 255,
+          "eval_loss": 1.6861313581466675,
+          "eval_delta_vs_cp200": 3.24249267578125e-05,
+          "train_loss_rolling20": 1.714265,
+          "mean_repetition": 0.14099574625000003,
+          "max_repetition": 0.26996805,
+          "mean_delta_vs_chk0": 0.05827646,
+          "max_case_delta_vs_chk0": 0.17112126,
+          "hard_gate": "passed",
+          "decision": "安全但无额外拟合收益"
+        },
+        {
+          "rank": 3,
+          "checkpoint": 150,
+          "eval_loss": 1.6987818479537964,
+          "eval_delta_vs_cp200": 0.012682914733886719,
+          "train_loss_rolling20": 1.7427050000000004,
+          "mean_repetition": 0.136407005,
+          "max_repetition": 0.215625,
+          "mean_delta_vs_chk0": 0.05368772,
+          "max_case_delta_vs_chk0": 0.11859502,
+          "hard_gate": "passed",
+          "decision": "保守备选"
+        },
+        {
+          "rank": 4,
+          "checkpoint": 80,
+          "eval_loss": 1.7691165208816528,
+          "eval_delta_vs_cp200": 0.08301758766174316,
+          "train_loss_rolling20": 1.816585,
+          "mean_repetition": 0.12193187875,
+          "max_repetition": 0.26996805,
+          "mean_delta_vs_chk0": 0.03921259,
+          "max_case_delta_vs_chk0": 0.17112126,
+          "hard_gate": "passed",
+          "decision": "行为稳定但明显欠拟合"
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "loss_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260810T123000Z/chk1_checkpoint_selection/loss_snapshot.jsonl') ORDER BY step",
+        "description": "Reads the reviewed full-run loss snapshot derived from Trainer state.",
+        "executed_at": "2026-08-10T12:30:00Z",
+        "tables_used": [
+          "docs/summary/20260810T123000Z/chk1_checkpoint_selection/loss_snapshot.jsonl",
+          "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/trainer_state.json"
+        ],
+        "filters": [
+          "all periodic evaluations from step 10 through 250",
+          "final standalone evaluation at step 255"
+        ],
+        "metric_definitions": [
+          "Train rolling loss is the arithmetic mean of preceding optimizer-step losses.",
+          "Eval loss is computed over the complete 199-row validation split."
+        ]
+      }
+    },
+    {
+      "id": "probe_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260810T123000Z/chk1_checkpoint_selection/probe_snapshot.jsonl') ORDER BY checkpoint",
+        "description": "Reads reviewed fixed-generation probe summaries.",
+        "executed_at": "2026-08-10T12:30:00Z",
+        "tables_used": [
+          "docs/summary/20260810T123000Z/chk1_checkpoint_selection/probe_snapshot.jsonl"
+        ],
+        "filters": [
+          "checkpoints 80, 150, 200, and 255",
+          "six sampled plus two greedy cases",
+          "3072-token generation cap",
+          "comparison against frozen chk0 baseline"
+        ],
+        "metric_definitions": [
+          "Mean repetition is mean token 4-gram repetition across eight cases.",
+          "Hard pass requires no cap, no periodic tail, no catastrophic case, and no contract-rate drop."
+        ]
+      }
+    },
+    {
+      "id": "selection_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260810T123000Z/chk1_checkpoint_selection/selection_snapshot.jsonl') ORDER BY rank",
+        "description": "Reads the reviewed checkpoint ranking that combines loss and probe evidence.",
+        "executed_at": "2026-08-10T12:30:00Z",
+        "tables_used": [
+          "docs/summary/20260810T123000Z/chk1_checkpoint_selection/selection_snapshot.jsonl"
+        ],
+        "filters": [
+          "only checkpoints with completed fixed probes"
+        ],
+        "metric_definitions": [
+          "Ranking prioritizes hard-gate pass, then eval loss and soft repetition risk."
+        ]
+      }
+    }
+  ]
+}

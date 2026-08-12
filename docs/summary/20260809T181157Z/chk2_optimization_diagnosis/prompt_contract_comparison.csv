@@ -1,0 +1,4 @@
+corpus,task,rows,prompt_p50,prompt_max,facts_p50,facts_max,series_p50,target_tokens_p50,target_paragraphs_p50
+chk1 SFT,atomic evidence → concise analysis,1743,1536.0,2661,9.0,18,3.0,118.0,1.0
+chk2 GRPO,atomic evidence → concise analysis,882,1249.0,2364,9.0,18,3.0,,
+旧 33-row stress,all evidence → Minutes section,33,12402.0,12475,650.0,651,93.0,971.0,8.0

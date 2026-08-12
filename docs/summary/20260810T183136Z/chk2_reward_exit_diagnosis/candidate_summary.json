@@ -1,0 +1,17 @@
+[
+  {"metric": "completed candidate rows", "value": 320, "unit": "rows", "interpretation": "40 unique optimizer steps × 8 completions"},
+  {"metric": "mean final reward", "value": 0.7324262956, "unit": "score", "interpretation": "Mean across the canonical 320 completions"},
+  {"metric": "median final reward", "value": 0.8050737187, "unit": "score", "interpretation": "Distribution is left-tailed by factual penalties"},
+  {"metric": "mean judge score", "value": 0.8029687500, "unit": "score", "interpretation": "Five-rubric weighted base component"},
+  {"metric": "mean answer numeric score", "value": 0.9696169285, "unit": "score", "interpretation": "Numeric grounding is generally strong"},
+  {"metric": "mean structure score", "value": 1.0000000000, "unit": "score", "interpretation": "All 320 completions satisfied the boundary/answer contract"},
+  {"metric": "mean answer concision", "value": 0.9703431015, "unit": "score", "interpretation": "Final answers are usually concise"},
+  {"metric": "mean reasoning efficiency", "value": 0.5579106677, "unit": "score", "interpretation": "Weakest positive component"},
+  {"metric": "mean applied penalty", "value": 0.1378750000, "unit": "score", "interpretation": "Factual/causal violations materially reduce reward"},
+  {"metric": "penalized completions", "value": 246, "unit": "rows", "interpretation": "76.9% of completions received a non-zero penalty"},
+  {"metric": "major answer-error completions", "value": 92, "unit": "rows", "interpretation": "28.8% contained at least one major answer error"},
+  {"metric": "unsupported-answer-number completions", "value": 32, "unit": "rows", "interpretation": "75 unsupported answer-number occurrences across 32 rows"},
+  {"metric": "reasoning above 512 tokens", "value": 146, "unit": "rows", "interpretation": "45.6% exceeded the prompt's requested reasoning budget"},
+  {"metric": "target leakage", "value": 0, "unit": "rows", "interpretation": "No target leakage was recorded"},
+  {"metric": "zero reward", "value": 0, "unit": "rows", "interpretation": "No completed candidate was forced to zero"}
+]

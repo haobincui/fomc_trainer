@@ -1,0 +1,92 @@
+{
+  "aggregate_deltas": {
+    "mean_full_repetition": 0.03185531,
+    "mean_tail_repetition": 0.03185531
+  },
+  "aggregate_failures": [],
+  "baseline": {
+    "boundary_valid_rate": 1.0,
+    "cap_rate": 0.0,
+    "cases": 3,
+    "date_preservation_rate": 1.0,
+    "eos_rate": 1.0,
+    "max_full_token_4gram_repetition": 0.14927769,
+    "max_tail_token_4gram_repetition": 0.14927769,
+    "mean_full_token_4gram_repetition": 0.12572027333333333,
+    "mean_tail_token_4gram_repetition": 0.12572027333333333,
+    "model_label": "chk1-cp200-base",
+    "numeric_preservation_rate": 1.0,
+    "periodic_tail_rate": 0.0,
+    "quality_valid_rate": 1.0,
+    "sample_manifest_sha256": "112ca6804c5c906b0e3c6bd33e309b196bc2800ee9ee6293e223a3e266c1f9a7",
+    "schema_version": "chk3-sft-degeneration-probe-v1",
+    "single_paragraph_final_rate": 1.0,
+    "status": "complete"
+  },
+  "candidate": {
+    "boundary_valid_rate": 1.0,
+    "cap_rate": 0.0,
+    "cases": 3,
+    "date_preservation_rate": 1.0,
+    "eos_rate": 1.0,
+    "max_full_token_4gram_repetition": 0.17546362,
+    "max_tail_token_4gram_repetition": 0.17546362,
+    "mean_full_token_4gram_repetition": 0.15757558000000002,
+    "mean_tail_token_4gram_repetition": 0.15757558000000002,
+    "model_label": "chk3-direct-full-cp200",
+    "numeric_preservation_rate": 1.0,
+    "periodic_tail_rate": 0.0,
+    "quality_valid_rate": 1.0,
+    "sample_manifest_sha256": "112ca6804c5c906b0e3c6bd33e309b196bc2800ee9ee6293e223a3e266c1f9a7",
+    "schema_version": "chk3-sft-degeneration-probe-v1",
+    "single_paragraph_final_rate": 1.0,
+    "status": "complete"
+  },
+  "case_deltas": [
+    {
+      "baseline_quality_valid": true,
+      "candidate_quality_valid": true,
+      "full_repetition_delta": 0.02618593,
+      "length_bucket": "medium",
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34",
+      "tail_repetition_delta": 0.02618593
+    },
+    {
+      "baseline_quality_valid": true,
+      "candidate_quality_valid": true,
+      "full_repetition_delta": 0.0224306,
+      "length_bucket": "long",
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571",
+      "tail_repetition_delta": 0.0224306
+    },
+    {
+      "baseline_quality_valid": true,
+      "candidate_quality_valid": true,
+      "full_repetition_delta": 0.04694939,
+      "length_bucket": "short",
+      "sample_id": "chk3-validation-95449edf60f02092d2887172",
+      "tail_repetition_delta": 0.04694939
+    }
+  ],
+  "case_failures": [],
+  "inputs": {
+    "baseline_results": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/chk1_base_v2/results.jsonl",
+      "sha256": "0fc612b842fad4de8fa8813607189a710b4b351769ecad0f7935f9d595ab27e2"
+    },
+    "candidate_results": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/chk3_full_cp200_selection_v1/results.jsonl",
+      "sha256": "5cc6da12a75e709512438033ab642622c8453a52c6340d9c37bcf12e0b81c105"
+    }
+  },
+  "sample_manifest_sha256": "112ca6804c5c906b0e3c6bd33e309b196bc2800ee9ee6293e223a3e266c1f9a7",
+  "schema_version": "chk3-sft-degeneration-comparison-v1",
+  "status": "passed",
+  "thresholds": {
+    "candidate_quality_valid_rate": 1.0,
+    "full_4gram_repetition": 0.5,
+    "mean_repetition_delta_limit": 0.1,
+    "per_case_repetition_delta_limit": 0.2,
+    "tail_4gram_repetition": 0.6
+  }
+}

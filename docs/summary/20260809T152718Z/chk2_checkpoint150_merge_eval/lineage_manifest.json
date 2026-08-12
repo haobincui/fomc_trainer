@@ -1,0 +1,23 @@
+{
+  "checkpoints": {
+    "eval-chk0-base": {
+      "artifact_id": "eval-chk0-base",
+      "parent_artifact_id": null
+    },
+    "eval-chk1-compressed-sft": {
+      "artifact_id": "eval-chk1-compressed-sft",
+      "exact_merge_evidence": "docs/summary/20260809T152718Z/chk2_checkpoint150_merge_eval/chk1_exact_merge_lineage.json",
+      "parent_artifact_id": "eval-chk0-base"
+    },
+    "eval-chk2-reward-v3-cp150": {
+      "artifact_id": "eval-chk2-reward-v3-cp150",
+      "exact_merge_evidence": "docs/summary/20260809T152718Z/chk2_checkpoint150_merge_eval/chk2_cp150_exact_merge_lineage.json",
+      "parent_artifact_id": "eval-chk1-compressed-sft"
+    }
+  },
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "54febd37e8e3e13ee8e9ccac2b16dc1b0cd2e2456ccf407e87fad130d3b59c86"
+  },
+  "schema_version": "retrain-v2-eval-lineage-v1"
+}

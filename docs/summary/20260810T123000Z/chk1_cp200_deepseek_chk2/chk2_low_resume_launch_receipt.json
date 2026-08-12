@@ -1,0 +1,25 @@
+{
+  "api_key_recorded": false,
+  "api_key_source": "DEEPSEEK_API_KEY",
+  "binding_path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low_resume_launch_binding.json",
+  "binding_sha256": "5f71a7d53194c4a880f14bc151d2519c49024cc9264db55066008f4822b911ad",
+  "command_sha256": "91aea418d952600e0dcdc53b2437772c6ca5ba4bd7f124c8b2e43d0f3f81b95e",
+  "config_path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810.yaml",
+  "cuda_visible_devices": "1",
+  "disk_free_bytes_at_launch": 350391406592,
+  "downstream_stages_allowed": [
+    "chk2"
+  ],
+  "gpu1_free_mib_at_launch": 24036,
+  "local_judge_started": false,
+  "physical_policy_gpu": 1,
+  "resume_from_checkpoint": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/checkpoint-1",
+  "resume_global_step": 1,
+  "run_root": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "schema_version": "chk2-deepseek-low-resume-launch-receipt-v1",
+  "session_name": "fomc_chk2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "started_at_utc": "2026-08-10T14:41:54.426490Z",
+  "status": "started",
+  "training_log": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/logs/train.log",
+  "world_size": 1
+}

@@ -1,0 +1,922 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk2 Reward 诊断（checkpoint 162）",
+    "description": "Canonical reward trend, Judge behavior, and penalty diagnostics for chk2.",
+    "generatedAt": "2026-08-09T11:41:27Z",
+    "cards": [
+      {
+        "id": "progress_card",
+        "description": "Durable optimization progress at the analysis cutoff.",
+        "dataset": "headline",
+        "sourceId": "trainer_state_source",
+        "metrics": [
+          {
+            "label": "训练进度",
+            "field": "progress",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "overall_reward_card",
+        "description": "Mean of the 162 canonical per-step rewards.",
+        "dataset": "headline",
+        "sourceId": "trainer_state_source",
+        "metrics": [
+          {
+            "label": "全程平均 reward",
+            "field": "overall_reward",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "last10_reward_card",
+        "description": "Final ten steps compared with steps 143-152.",
+        "dataset": "headline",
+        "sourceId": "analysis_snapshot_source",
+        "metrics": [
+          {
+            "label": "最近 10 step",
+            "field": "last10_reward",
+            "format": "number"
+          },
+          {
+            "label": "前 10 step",
+            "field": "prior10_reward",
+            "format": "number"
+          },
+          {
+            "label": "变化",
+            "field": "last10_delta",
+            "format": "number",
+            "signed": true
+          }
+        ]
+      },
+      {
+        "id": "judge_zero_card",
+        "description": "Share of canonical completions receiving zero on every Judge rubric dimension.",
+        "dataset": "headline",
+        "sourceId": "analysis_snapshot_source",
+        "metrics": [
+          {
+            "label": "Judge 五项全 0",
+            "field": "judge_all_zero_rate",
+            "format": "percent"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "reward_trend_chart",
+        "title": "10-step mean reward by training block",
+        "subtitle": "Complete 10-step blocks through step 160; the final block fell to 0.124 after peaking at 0.242 in steps 131-140.",
+        "intent": "trend",
+        "question": "Has canonical chk2 reward improved as training progresses?",
+        "rationale": "Sixteen ordered blocks are sufficient to show the noisy, non-monotonic trajectory without overplotting per-step variation.",
+        "type": "line",
+        "dataset": "reward_blocks",
+        "sourceId": "trainer_state_source",
+        "encodings": {
+          "x": {
+            "field": "block_end",
+            "type": "quantitative",
+            "label": "Step（10-step block end）"
+          },
+          "y": {
+            "field": "reward_mean",
+            "type": "quantitative",
+            "label": "Mean reward"
+          },
+          "tooltip": [
+            {
+              "field": "reward_median",
+              "type": "quantitative",
+              "label": "Median reward"
+            },
+            {
+              "field": "reward_below_010_rate",
+              "type": "quantitative",
+              "label": "Steps below 0.10",
+              "format": "percent"
+            },
+            {
+              "field": "completion_length_mean",
+              "type": "quantitative",
+              "label": "Mean completion tokens"
+            }
+          ]
+        },
+        "valueFormat": "number",
+        "layout": "full"
+      },
+      {
+        "id": "judge_pattern_chart",
+        "title": "Judge rubric output pattern",
+        "subtitle": "Across 1,280 canonical completions; 91.7% received zero on all five dimensions.",
+        "intent": "comparison",
+        "question": "Does the Judge use the intended 0-4 rubric range?",
+        "rationale": "A sorted categorical comparison makes rubric collapse visible more clearly than averages alone.",
+        "type": "bar",
+        "dataset": "judge_patterns",
+        "sourceId": "analysis_snapshot_source",
+        "encodings": {
+          "x": {
+            "field": "pattern",
+            "type": "nominal",
+            "label": "Rubric pattern"
+          },
+          "y": {
+            "field": "share",
+            "type": "quantitative",
+            "label": "Share of completions",
+            "format": "percent"
+          },
+          "tooltip": [
+            {
+              "field": "completion_count",
+              "type": "quantitative",
+              "label": "Completions"
+            },
+            {
+              "field": "total_completions",
+              "type": "quantitative",
+              "label": "Total"
+            }
+          ]
+        },
+        "valueFormat": "percent",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "window_table",
+        "title": "20-step reward windows",
+        "subtitle": "Complete 20-step windows through step 160; rows follow training order.",
+        "dataset": "window_rows",
+        "sourceId": "analysis_snapshot_source",
+        "defaultSort": {
+          "field": "step_end",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "step_end",
+            "label": "End step",
+            "format": "number"
+          },
+          {
+            "field": "window",
+            "label": "Window",
+            "type": "text"
+          },
+          {
+            "field": "reward_mean",
+            "label": "Mean reward",
+            "format": "number"
+          },
+          {
+            "field": "reward_median",
+            "label": "Median reward",
+            "format": "number"
+          },
+          {
+            "field": "completion_zero_reward_rate",
+            "label": "Zero reward",
+            "format": "percent"
+          },
+          {
+            "field": "judge_all_zero_rate",
+            "label": "Judge all-zero",
+            "format": "percent"
+          },
+          {
+            "field": "penalty_mean",
+            "label": "Mean penalty",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "driver_table",
+        "title": "Drivers of the latest 10-step decline",
+        "subtitle": "Steps 153-162 versus 143-152; contribution is on the pre-clip reward scale.",
+        "dataset": "drivers",
+        "sourceId": "analysis_snapshot_source",
+        "defaultSort": {
+          "field": "contribution",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "driver",
+            "label": "Driver",
+            "type": "text"
+          },
+          {
+            "field": "prior_value",
+            "label": "Steps 143-152",
+            "format": "number"
+          },
+          {
+            "field": "current_value",
+            "label": "Steps 153-162",
+            "format": "number"
+          },
+          {
+            "field": "contribution",
+            "label": "Reward contribution",
+            "format": "number",
+            "movement": true
+          }
+        ]
+      },
+      {
+        "id": "recent_steps_table",
+        "title": "Recent per-step metrics",
+        "subtitle": "The ten durable steps ending at checkpoint 162.",
+        "dataset": "recent_steps",
+        "sourceId": "analysis_snapshot_source",
+        "defaultSort": {
+          "field": "step",
+          "direction": "asc"
+        },
+        "density": "dense",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "step",
+            "label": "Step",
+            "format": "number"
+          },
+          {
+            "field": "reward",
+            "label": "Reward",
+            "format": "number"
+          },
+          {
+            "field": "loss",
+            "label": "GRPO loss",
+            "format": "number"
+          },
+          {
+            "field": "reward_std",
+            "label": "Reward std",
+            "format": "number"
+          },
+          {
+            "field": "completion_zero_reward_rate",
+            "label": "Zero completions",
+            "format": "percent"
+          },
+          {
+            "field": "major_answer_error_mean",
+            "label": "Major answer errors",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "trainer_state_source",
+        "label": "checkpoint-162 canonical trainer state",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-162/trainer_state.json"
+      },
+      {
+        "id": "analysis_snapshot_source",
+        "label": "Reconciled chk2 reward analysis snapshot",
+        "path": "docs/summary/20260809T112950Z/analysis_snapshot.json"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# chk2 Reward 诊断（checkpoint 162）"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## 技术结论\n\n**当前 reward 仍有训练信号，但没有显示持续改善。** `162` 个有效 step 的平均 reward 为 `0.1726`，线性趋势每 100 step 仅 `+0.0035`；最近 10 step 从前 10 step 的 `0.1862` 降到 `0.1487`（`-0.0375`，约 `-20.1%`）。\n\n**主要问题在 Judge，而不是格式或截断。** `91.7%` 的 completion 五项 rubric 全为 0，只有 `1.2%` 真正用到 1–3；结构合格率为 `97.3%`，目标泄漏为 0，最近五步平均截断率仅 `2.5%`。当前 reward 实际上更像“结构/数字基础分减去事实惩罚”，而不是细粒度的 0–4 语义评价。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "cardIds": [
+          "progress_card",
+          "overall_reward_card",
+          "last10_reward_card",
+          "judge_zero_card"
+        ]
+      },
+      {
+        "id": "trend_finding",
+        "type": "markdown",
+        "sourceId": "trainer_state_source",
+        "body": "## Reward 总体横盘，最近窗口回落\n\n完整 10-step block 均值在 `0.124–0.242` 间震荡，没有形成单调上升。steps 121–140 一度升至 `0.2239`，但 steps 141–160 回落到 `0.1657`；最新 steps 153–162 为 `0.1487`。这可以描述为近期退化信号，但不能直接归因于模型，因为每个 step 使用不同 prompt，且没有同一 validation prompt 的固定种子对照。"
+      },
+      {
+        "id": "reward_trend",
+        "type": "chart",
+        "chartId": "reward_trend_chart"
+      },
+      {
+        "id": "window_evidence",
+        "type": "table",
+        "tableId": "window_table"
+      },
+      {
+        "id": "judge_finding",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## Judge 的 0–4 rubric 实际退化为二元输出\n\n在 `1296` 个有效 completion 中，五项全 0 有 `1188` 条，五项全 4 有 `91` 条，任何一项使用 1–3 的只有 `15` 条。与此同时，全部 `6285` 条原始 violation 都指向 answer，think 为 0 条。这与“完整审查 think + answer，并使用完整 0–4 量表”的设计目标不一致。"
+      },
+      {
+        "id": "judge_pattern",
+        "type": "chart",
+        "chartId": "judge_pattern_chart"
+      },
+      {
+        "id": "penalty_finding",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## 最近下降主要来自事实惩罚增大\n\nsteps 153–162 相比 143–152，平均 major answer error 从 `1.688` 变为 `2.275`，平均 penalty 从 `0.294` 变为 `0.351`；零 reward completion 从 `31.2%` 变为 `47.5%`。惩罚变化对 reward 的贡献为 `-0.057`；其他变化来自 numeric grounding 和 Judge base score。"
+      },
+      {
+        "id": "driver_evidence",
+        "type": "table",
+        "tableId": "driver_table"
+      },
+      {
+        "id": "recent_evidence",
+        "type": "table",
+        "tableId": "recent_steps_table"
+      },
+      {
+        "id": "scope_definitions",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## 范围与指标定义\n\n分析快照固定在 checkpoint 162（162/247 step）。每个 durable step 包含两个四生成 group，共 8 个 completion。step reward 是这 8 个 grounded_analysis_v3 reward 的均值；completion zero rate 是其中最终 reward 等于 0 的比例；Judge all-zero 表示五项 rubric 均为 0。GRPO loss 是策略目标，不应像监督学习 loss 那样按绝对值判断收敛。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## 重启日志已被严格对齐\n\ncheckpoint trainer state 提供 `162` 个唯一有效 step。reward/loss history 各有 `217` 行，其中 `55` 行来自 step 56 重跑。completion 日志共有 `2360` 行；通过反向匹配“连续 8 条 completion reward 的均值必须复现 durable step reward”，保留 `1296` 行并排除 `1064` 行失败重启记录。全部 `162` 个 step 均在 `1e-6` 容差内复现。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 不确定性与稳健性限制\n\n本报告能确认 reward 的形状和 Judge 输出分布，但不能仅凭训练序列证明模型能力下降：prompt 随 step 改变，completion/evidence 原文按设计未写入 reward 日志，因此无法复核每条 factual violation 是否正确。按 meeting date 做重复样本对照时，最近窗口在 17 个可比日期中有 11 个低于此前均值，说明回落不完全是日期组合造成的；topic 难度差异仍未被控制。"
+      },
+      {
+        "id": "recommendations",
+        "type": "markdown",
+        "body": "## 建议的下一步\n\n1. 用 checkpoint 140、150、160 在同一批 validation prompts 和固定 generation seeds 上做 replay；先确认能力变化，再决定是否继续或回退。\n\n2. 优先修 Judge prompt/输出：要求五项独立打分，并明确“一条事实错误不应自动把五项全部置 0”；同时检查为什么 think section 从未产生 violation。\n\n3. 对同一 factual claim 避免 rubric 降分与 penalty 重复惩罚。当前 penalty 平均消耗约 69% 的 base，最近 10 step 有 43.8% completion 触及 0.50 上限。\n\n4. 在 Judge 修订前，不要仅以当前 reward 上升或下降决定 chk2 晋级；当前信号足以继续产生梯度，但目标质量不足以证明 grounded analysis 正在改善。"
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## 仍需回答的问题\n\n- 固定 validation prompts 下，checkpoint 162 是否优于 140/150/160？\n- Judge 的全 0 输出来自模型判断、schema 约束，还是 prompt 对“unsupported”的解释过严？\n- think 完全没有 violation 是内容确实可靠，还是 Judge 没有审查该 section？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-09T11:41:27Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "checkpoint": 162,
+          "max_steps": 247,
+          "progress": 0.6558704453441295,
+          "overall_reward": 0.17257999210405728,
+          "last10_reward": 0.14867647551000118,
+          "prior10_reward": 0.18617160692811013,
+          "last10_delta": -0.03749513141810895,
+          "last10_zero_reward_rate": 0.475,
+          "judge_all_zero_rate": 0.9166666666666666,
+          "zero_std_group_fraction": 0.037037037037037035
+        }
+      ],
+      "reward_blocks": [
+        {
+          "block_end": 10,
+          "block_label": "1-10",
+          "reward_mean": 0.1702605021186173,
+          "reward_median": 0.15701468056067824,
+          "reward_below_010_rate": 0.3,
+          "reward_std_mean": 0.13272700179368258,
+          "completion_length_mean": 918.7875,
+          "loss_mean": -0.0057099999999999955,
+          "judge_all_zero_rate": 0.9125,
+          "completion_zero_reward_rate": 0.3375,
+          "penalty_mean": 0.316
+        },
+        {
+          "block_end": 20,
+          "block_label": "11-20",
+          "reward_mean": 0.20407927134074272,
+          "reward_median": 0.20780027098953724,
+          "reward_below_010_rate": 0.3,
+          "reward_std_mean": 0.16263415617868304,
+          "completion_length_mean": 885.35,
+          "loss_mean": 0.06344999999999999,
+          "judge_all_zero_rate": 0.9,
+          "completion_zero_reward_rate": 0.3,
+          "penalty_mean": 0.30300000000000005
+        },
+        {
+          "block_end": 30,
+          "block_label": "21-30",
+          "reward_mean": 0.18488663155585527,
+          "reward_median": 0.17523541674017906,
+          "reward_below_010_rate": 0.1,
+          "reward_std_mean": 0.18823351450264453,
+          "completion_length_mean": 966.075,
+          "loss_mean": 0.04957,
+          "judge_all_zero_rate": 0.875,
+          "completion_zero_reward_rate": 0.4125,
+          "penalty_mean": 0.32775
+        },
+        {
+          "block_end": 40,
+          "block_label": "31-40",
+          "reward_mean": 0.14573863600380718,
+          "reward_median": 0.13535922206938267,
+          "reward_below_010_rate": 0.2,
+          "reward_std_mean": 0.1534657404758036,
+          "completion_length_mean": 773.15,
+          "loss_mean": 0.11355,
+          "judge_all_zero_rate": 0.95,
+          "completion_zero_reward_rate": 0.4625,
+          "penalty_mean": 0.35100000000000003
+        },
+        {
+          "block_end": 50,
+          "block_label": "41-50",
+          "reward_mean": 0.19534089348744602,
+          "reward_median": 0.1863345392048359,
+          "reward_below_010_rate": 0.2,
+          "reward_std_mean": 0.1677444280590862,
+          "completion_length_mean": 903.775,
+          "loss_mean": 0.09852999999999999,
+          "judge_all_zero_rate": 0.875,
+          "completion_zero_reward_rate": 0.35,
+          "penalty_mean": 0.33325
+        },
+        {
+          "block_end": 60,
+          "block_label": "51-60",
+          "reward_mean": 0.16491898531094193,
+          "reward_median": 0.18773278640583158,
+          "reward_below_010_rate": 0.3,
+          "reward_std_mean": 0.17696992876008152,
+          "completion_length_mean": 815.325,
+          "loss_mean": 0.17034,
+          "judge_all_zero_rate": 0.925,
+          "completion_zero_reward_rate": 0.4,
+          "penalty_mean": 0.3435
+        },
+        {
+          "block_end": 70,
+          "block_label": "61-70",
+          "reward_mean": 0.15964711206033827,
+          "reward_median": 0.1287755612283945,
+          "reward_below_010_rate": 0.2,
+          "reward_std_mean": 0.14580106865614653,
+          "completion_length_mean": 752.6,
+          "loss_mean": 0.08618,
+          "judge_all_zero_rate": 0.925,
+          "completion_zero_reward_rate": 0.45,
+          "penalty_mean": 0.34550000000000003
+        },
+        {
+          "block_end": 80,
+          "block_label": "71-80",
+          "reward_mean": 0.1284058703109622,
+          "reward_median": 0.11930941045284271,
+          "reward_below_010_rate": 0.3,
+          "reward_std_mean": 0.13833797685801982,
+          "completion_length_mean": 800.7125,
+          "loss_mean": 0.07555999999999999,
+          "judge_all_zero_rate": 0.975,
+          "completion_zero_reward_rate": 0.4625,
+          "penalty_mean": 0.344
+        },
+        {
+          "block_end": 90,
+          "block_label": "81-90",
+          "reward_mean": 0.12900964613072574,
+          "reward_median": 0.12245593219995499,
+          "reward_below_010_rate": 0.3,
+          "reward_std_mean": 0.11769618727266788,
+          "completion_length_mean": 840.8875,
+          "loss_mean": 0.01705,
+          "judge_all_zero_rate": 0.95,
+          "completion_zero_reward_rate": 0.5,
+          "penalty_mean": 0.35975
+        },
+        {
+          "block_end": 100,
+          "block_label": "91-100",
+          "reward_mean": 0.15900734635069966,
+          "reward_median": 0.16031114757061005,
+          "reward_below_010_rate": 0.2,
+          "reward_std_mean": 0.1504277590662241,
+          "completion_length_mean": 912.2375,
+          "loss_mean": 0.05575,
+          "judge_all_zero_rate": 0.9,
+          "completion_zero_reward_rate": 0.4,
+          "penalty_mean": 0.32625000000000004
+        },
+        {
+          "block_end": 110,
+          "block_label": "101-110",
+          "reward_mean": 0.1989717067219317,
+          "reward_median": 0.21386979520320892,
+          "reward_below_010_rate": 0.1,
+          "reward_std_mean": 0.13078606463968753,
+          "completion_length_mean": 694.1625,
+          "loss_mean": 0.06067,
+          "judge_all_zero_rate": 0.95,
+          "completion_zero_reward_rate": 0.275,
+          "penalty_mean": 0.28850000000000003
+        },
+        {
+          "block_end": 120,
+          "block_label": "111-120",
+          "reward_mean": 0.1404300330206752,
+          "reward_median": 0.11716854758560658,
+          "reward_below_010_rate": 0.3,
+          "reward_std_mean": 0.14562598653137684,
+          "completion_length_mean": 829.4875,
+          "loss_mean": 0.10841,
+          "judge_all_zero_rate": 0.95,
+          "completion_zero_reward_rate": 0.475,
+          "penalty_mean": 0.35425
+        },
+        {
+          "block_end": 130,
+          "block_label": "121-130",
+          "reward_mean": 0.20548968203365803,
+          "reward_median": 0.1950974501669407,
+          "reward_below_010_rate": 0.1,
+          "reward_std_mean": 0.16298420615494252,
+          "completion_length_mean": 866.9875,
+          "loss_mean": 0.11209,
+          "judge_all_zero_rate": 0.9125,
+          "completion_zero_reward_rate": 0.3375,
+          "penalty_mean": 0.3095
+        },
+        {
+          "block_end": 140,
+          "block_label": "131-140",
+          "reward_mean": 0.2424029367044568,
+          "reward_median": 0.23804263025522232,
+          "reward_below_010_rate": 0.1,
+          "reward_std_mean": 0.1977334164083004,
+          "completion_length_mean": 807.625,
+          "loss_mean": 0.02633,
+          "judge_all_zero_rate": 0.8125,
+          "completion_zero_reward_rate": 0.2375,
+          "penalty_mean": 0.30425
+        },
+        {
+          "block_end": 150,
+          "block_label": "141-150",
+          "reward_mean": 0.20747887585312128,
+          "reward_median": 0.17849139124155045,
+          "reward_below_010_rate": 0.1,
+          "reward_std_mean": 0.16863057799637318,
+          "completion_length_mean": 907.725,
+          "loss_mean": 0.25709,
+          "judge_all_zero_rate": 0.9125,
+          "completion_zero_reward_rate": 0.3,
+          "penalty_mean": 0.28725
+        },
+        {
+          "block_end": 160,
+          "block_label": "151-160",
+          "reward_mean": 0.12384880552999675,
+          "reward_median": 0.10306778363883495,
+          "reward_below_010_rate": 0.4,
+          "reward_std_mean": 0.14806722849607468,
+          "completion_length_mean": 856.9625,
+          "loss_mean": 0.053200000000000004,
+          "judge_all_zero_rate": 0.95,
+          "completion_zero_reward_rate": 0.525,
+          "penalty_mean": 0.36125
+        }
+      ],
+      "judge_patterns": [
+        {
+          "pattern": "五项全部为 0",
+          "completion_count": 1188,
+          "share": 0.9166666666666666,
+          "total_completions": 1296
+        },
+        {
+          "pattern": "五项全部为 4",
+          "completion_count": 91,
+          "share": 0.07021604938271606,
+          "total_completions": 1296
+        },
+        {
+          "pattern": "至少一项使用 1–3",
+          "completion_count": 15,
+          "share": 0.011574074074074073,
+          "total_completions": 1296
+        },
+        {
+          "pattern": "0/4 混合",
+          "completion_count": 2,
+          "share": 0.0015432098765432098,
+          "total_completions": 1296
+        }
+      ],
+      "window_rows": [
+        {
+          "step_end": 20,
+          "window": "1-20",
+          "reward_mean": 0.18716988672968,
+          "reward_median": 0.15701468056067824,
+          "completion_zero_reward_rate": 0.31875,
+          "judge_all_zero_rate": 0.90625,
+          "answer_numeric_mean": 0.9296290290701659,
+          "penalty_mean": 0.3095
+        },
+        {
+          "step_end": 40,
+          "window": "21-40",
+          "reward_mean": 0.16531263377983124,
+          "reward_median": 0.149640129879117,
+          "completion_zero_reward_rate": 0.4375,
+          "judge_all_zero_rate": 0.9125,
+          "answer_numeric_mean": 0.9013000721100104,
+          "penalty_mean": 0.33937500000000004
+        },
+        {
+          "step_end": 60,
+          "window": "41-60",
+          "reward_mean": 0.18012993939919397,
+          "reward_median": 0.1863345392048359,
+          "completion_zero_reward_rate": 0.375,
+          "judge_all_zero_rate": 0.9,
+          "answer_numeric_mean": 0.97592108861689,
+          "penalty_mean": 0.338375
+        },
+        {
+          "step_end": 80,
+          "window": "61-80",
+          "reward_mean": 0.14402649118565022,
+          "reward_median": 0.12006921507418156,
+          "completion_zero_reward_rate": 0.45625,
+          "judge_all_zero_rate": 0.95,
+          "answer_numeric_mean": 0.9421782961545089,
+          "penalty_mean": 0.34475
+        },
+        {
+          "step_end": 100,
+          "window": "81-100",
+          "reward_mean": 0.1440084962407127,
+          "reward_median": 0.1464713290333748,
+          "completion_zero_reward_rate": 0.45,
+          "judge_all_zero_rate": 0.925,
+          "answer_numeric_mean": 0.8665810729766399,
+          "penalty_mean": 0.343
+        },
+        {
+          "step_end": 120,
+          "window": "101-120",
+          "reward_mean": 0.16970086987130345,
+          "reward_median": 0.1878904402256012,
+          "completion_zero_reward_rate": 0.375,
+          "judge_all_zero_rate": 0.95,
+          "answer_numeric_mean": 0.9393491712762547,
+          "penalty_mean": 0.321375
+        },
+        {
+          "step_end": 140,
+          "window": "121-140",
+          "reward_mean": 0.2239463093690574,
+          "reward_median": 0.20571373123675585,
+          "completion_zero_reward_rate": 0.2875,
+          "judge_all_zero_rate": 0.8625,
+          "answer_numeric_mean": 0.9496728210783507,
+          "penalty_mean": 0.306875
+        },
+        {
+          "step_end": 160,
+          "window": "141-160",
+          "reward_mean": 0.165663840691559,
+          "reward_median": 0.14360753074288368,
+          "completion_zero_reward_rate": 0.4125,
+          "judge_all_zero_rate": 0.93125,
+          "answer_numeric_mean": 0.9188962924340226,
+          "penalty_mean": 0.32425000000000004
+        }
+      ],
+      "drivers": [
+        {
+          "driver": "Judge rubric",
+          "contribution": 0.006562499999999999,
+          "prior_value": 0.061875,
+          "current_value": 0.075
+        },
+        {
+          "driver": "Answer numeric grounding",
+          "contribution": 0.003048063033351006,
+          "prior_value": 0.9053375270562771,
+          "current_value": 0.9175297791896811
+        },
+        {
+          "driver": "Structure",
+          "contribution": 0.0,
+          "prior_value": 0.9625,
+          "current_value": 0.9625
+        },
+        {
+          "driver": "Answer concision",
+          "contribution": 0.0002245754331224148,
+          "prior_value": 0.9038451819492748,
+          "current_value": 0.9083366906117231
+        },
+        {
+          "driver": "Reasoning efficiency",
+          "contribution": -0.00043057130380329267,
+          "prior_value": 0.36083004369026417,
+          "current_value": 0.3522186176141983
+        },
+        {
+          "driver": "Applied factual penalty",
+          "contribution": -0.056999999999999995,
+          "prior_value": 0.29375,
+          "current_value": 0.35075
+        }
+      ],
+      "recent_steps": [
+        {
+          "step": 153,
+          "reward": 0.21363390982151031,
+          "loss": 0.0849,
+          "reward_std": 0.20428268983960152,
+          "completion_zero_reward_rate": 0.25,
+          "judge_all_zero_rate": 0.875,
+          "major_answer_error_mean": 2.25,
+          "penalty_mean": 0.29
+        },
+        {
+          "step": 154,
+          "reward": 0.10465964674949646,
+          "loss": 0.1753,
+          "reward_std": 0.13706154003739357,
+          "completion_zero_reward_rate": 0.5,
+          "judge_all_zero_rate": 1.0,
+          "major_answer_error_mean": 2.375,
+          "penalty_mean": 0.35
+        },
+        {
+          "step": 155,
+          "reward": 0.1723013035953045,
+          "loss": 0.4044,
+          "reward_std": 0.10814262554049492,
+          "completion_zero_reward_rate": 0.375,
+          "judge_all_zero_rate": 1.0,
+          "major_answer_error_mean": 1.75,
+          "penalty_mean": 0.3175
+        },
+        {
+          "step": 156,
+          "reward": 0.04182223742827773,
+          "loss": 0.4666,
+          "reward_std": 0.08364447485655546,
+          "completion_zero_reward_rate": 0.75,
+          "judge_all_zero_rate": 1.0,
+          "major_answer_error_mean": 2.875,
+          "penalty_mean": 0.375
+        },
+        {
+          "step": 157,
+          "reward": 0.07210280001163483,
+          "loss": -0.2185,
+          "reward_std": 0.13224948197603226,
+          "completion_zero_reward_rate": 0.625,
+          "judge_all_zero_rate": 1.0,
+          "major_answer_error_mean": 2.625,
+          "penalty_mean": 0.4
+        },
+        {
+          "step": 158,
+          "reward": 0.14003141224384308,
+          "loss": -0.2123,
+          "reward_std": 0.28006282448768616,
+          "completion_zero_reward_rate": 0.75,
+          "judge_all_zero_rate": 0.875,
+          "major_answer_error_mean": 3.125,
+          "penalty_mean": 0.41
+        },
+        {
+          "step": 159,
+          "reward": 0.28194814920425415,
+          "loss": -0.363,
+          "reward_std": 0.2276221513748169,
+          "completion_zero_reward_rate": 0.25,
+          "judge_all_zero_rate": 0.75,
+          "major_answer_error_mean": 1.25,
+          "penalty_mean": 0.3125
+        },
+        {
+          "step": 160,
+          "reward": 0.10147592052817345,
+          "loss": 0.048,
+          "reward_std": 0.14658811688423157,
+          "completion_zero_reward_rate": 0.625,
+          "judge_all_zero_rate": 1.0,
+          "major_answer_error_mean": 3.125,
+          "penalty_mean": 0.3875
+        },
+        {
+          "step": 161,
+          "reward": 0.21192680299282074,
+          "loss": 0.1905,
+          "reward_std": 0.2064973060041666,
+          "completion_zero_reward_rate": 0.25,
+          "judge_all_zero_rate": 0.875,
+          "major_answer_error_mean": 1.25,
+          "penalty_mean": 0.2675
+        },
+        {
+          "step": 162,
+          "reward": 0.1468625725246966,
+          "loss": 0.055,
+          "reward_std": 0.1453892858698964,
+          "completion_zero_reward_rate": 0.375,
+          "judge_all_zero_rate": 0.875,
+          "major_answer_error_mean": 2.125,
+          "penalty_mean": 0.3975
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "trainer_state_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT log.* FROM read_json_auto('output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-162/trainer_state.json') AS state, UNNEST(state.log_history) AS rows(log) WHERE log.reward IS NOT NULL AND log.step BETWEEN 1 AND 162",
+        "description": "Reads the durable per-step metrics saved with checkpoint 162.",
+        "executed_at": "2026-08-09T11:41:27Z",
+        "tables_used": [
+          "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-162/trainer_state.json"
+        ],
+        "filters": [
+          "steps 1 through 162",
+          "rows containing reward"
+        ],
+        "metric_definitions": [
+          "Step reward is the mean grounded_analysis_v3 reward across eight completions.",
+          "frac_reward_zero_std is the fraction of two four-generation groups with zero within-group reward variance."
+        ]
+      }
+    },
+    {
+      "id": "analysis_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260809T112950Z/analysis_snapshot.json')",
+        "description": "Reverse-matches eight completion records per durable step and computes the diagnostic datasets.",
+        "executed_at": "2026-08-09T11:41:27Z",
+        "tables_used": [
+          "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-162/trainer_state.json",
+          "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/reward.jsonl"
+        ],
+        "filters": [
+          "checkpoint 162 snapshot",
+          "eight completions per canonical step",
+          "exclude failed-restart and duplicate append records"
+        ],
+        "metric_definitions": [
+          "Completion zero rate is the share of canonical completion rewards equal to zero.",
+          "Judge all-zero rate is the share with all five rubric dimensions equal to zero.",
+          "Driver contributions apply the configured reward weights; penalty contribution is the negative change in applied penalty."
+        ]
+      }
+    }
+  ]
+}

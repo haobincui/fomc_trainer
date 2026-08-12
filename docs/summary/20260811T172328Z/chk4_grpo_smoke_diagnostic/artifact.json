@@ -1,0 +1,452 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk4 pre-2009 GRPO 启动诊断",
+    "description": "cp38 两次 GPU1 smoke 的受控对比与 full GRPO 启动判定",
+    "generatedAt": "2026-08-11T17:23:28Z",
+    "sources": [
+      {
+        "id": "smoke_diagnostic",
+        "label": "chk4 GRPO smoke diagnostic metrics",
+        "path": "docs/summary/20260811T172328Z/chk4_grpo_smoke_diagnostic/diagnostic_metrics.json",
+        "query": {
+          "description": "Reconciled metrics from the immutable reward, immediate step-gate, and runtime-safety JSONL files for the cap1024 and cap1536 smoke runs.",
+          "executed_at": "2026-08-11T17:23:28Z",
+          "language": "json",
+          "filters": [
+            "optimizer step = 1",
+            "target groups = hold and hike",
+            "four generations per target direction",
+            "same cp38 exact-merged model and seed 31416"
+          ],
+          "metric_definitions": [
+            "clipped_rate = capped completions / 8 generated completions",
+            "single_boundary_rate = completions with exactly one </think> boundary / 8 generated completions",
+            "parseable_prediction_rate = reward rows with a schema-valid decision prediction / 8 generated completions",
+            "direction_correct_rate = direction-correct rows with positive semantic reward / 4 rows in the target-direction group"
+          ]
+        }
+      }
+    ],
+    "cards": [
+      {
+        "id": "clip_card",
+        "description": "The cap1536 retry brought clipping below the 25% safety threshold.",
+        "dataset": "headline",
+        "sourceId": "smoke_diagnostic",
+        "metrics": [
+          {
+            "label": "v2 截断率",
+            "field": "v2_clip_rate",
+            "format": "percent"
+          },
+          {
+            "label": "v1 基线",
+            "field": "v1_clip_rate",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "hike_card",
+        "description": "Neither smoke produced a positive direction-correct reward in the hike group.",
+        "dataset": "headline",
+        "sourceId": "smoke_diagnostic",
+        "metrics": [
+          {
+            "label": "v2 hike 正确信号率",
+            "field": "v2_hike_correct_rate",
+            "format": "percent"
+          },
+          {
+            "label": "通过要求",
+            "field": "hike_gate_min_rate",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "reward_card",
+        "description": "Aggregate reward did not improve after the cap-only retry.",
+        "dataset": "headline",
+        "sourceId": "smoke_diagnostic",
+        "metrics": [
+          {
+            "label": "v2 平均 reward",
+            "field": "v2_reward_mean",
+            "format": "number"
+          },
+          {
+            "label": "v1 基线",
+            "field": "v1_reward_mean",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "delivery_chart",
+        "title": "Smoke delivery rates by completion cap",
+        "subtitle": "Each run contains eight generations; rates are recomputed from sealed reward and safety logs.",
+        "showDescription": true,
+        "intent": "comparison",
+        "question": "Did raising max completion length from 1024 to 1536 repair delivery without resolving the hike-direction failure?",
+        "rationale": "Grouped bars compare same-scale rates for the only controlled configuration change.",
+        "comparisonContext": {
+          "baseline": "cap1024 v1",
+          "denominator": "eight generated completions per smoke",
+          "grain": "smoke version by delivery metric",
+          "unit": "rate"
+        },
+        "type": "bar",
+        "dataset": "delivery_rates",
+        "sourceId": "smoke_diagnostic",
+        "encodings": {
+          "x": {
+            "field": "metric",
+            "type": "nominal",
+            "label": "Delivery metric"
+          },
+          "y": {
+            "field": "rate",
+            "type": "quantitative",
+            "format": "percent",
+            "label": "Rate"
+          },
+          "color": {
+            "field": "version",
+            "type": "nominal",
+            "label": "Smoke version"
+          },
+          "tooltip": [
+            {
+              "field": "numerator",
+              "type": "quantitative",
+              "label": "Rows"
+            },
+            {
+              "field": "denominator",
+              "type": "quantitative",
+              "label": "Denominator"
+            },
+            {
+              "field": "max_completion_length",
+              "type": "quantitative",
+              "label": "Completion cap"
+            }
+          ]
+        },
+        "valueFormat": "percent",
+        "layout": "full",
+        "labels": {
+          "values": "all"
+        },
+        "legend": {
+          "position": "bottom",
+          "sort": "spec",
+          "title": "Smoke"
+        },
+        "settings": {
+          "groupMode": "grouped",
+          "showValues": true,
+          "sort": "custom"
+        },
+        "surface": {
+          "surface": "card",
+          "interactiveLegend": true,
+          "showControls": true,
+          "viewMode": "both"
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "direction_table",
+        "title": "Direction-level smoke gate evidence",
+        "subtitle": "Four generations per direction group at optimizer step 1.",
+        "showDescription": true,
+        "dataset": "direction_metrics",
+        "defaultSort": {
+          "field": "sort_order",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "sourceId": "smoke_diagnostic",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "sort_order",
+            "label": "Order",
+            "format": "number"
+          },
+          {
+            "field": "version",
+            "label": "Smoke",
+            "type": "text"
+          },
+          {
+            "field": "direction",
+            "label": "Target direction",
+            "type": "text"
+          },
+          {
+            "field": "direction_correct_rate",
+            "label": "Correct nonzero rate",
+            "format": "percent"
+          },
+          {
+            "field": "reward_mean",
+            "label": "Reward mean",
+            "format": "number"
+          },
+          {
+            "field": "reward_std",
+            "label": "Reward std",
+            "format": "number"
+          },
+          {
+            "field": "clipped_count",
+            "label": "Clipped rows",
+            "format": "number"
+          },
+          {
+            "field": "gate_status",
+            "label": "Direction gate",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "# chk4 pre-2009 GRPO 启动诊断"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "smoke_diagnostic",
+        "body": "## 技术结论\n\n**full GRPO 不应启动。** cap1536 把截断率从 62.5% 降到 12.5%，说明长度问题已修复；但 hike 组在两次 smoke 中都为 0/4 正确非零、reward 标准差为 0。loss 与梯度均有限，阻塞来自方向决策塌缩，而不是 reward 接口、显存或优化器故障。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "layout": "full",
+        "cardIds": [
+          "clip_card",
+          "hike_card",
+          "reward_card"
+        ]
+      },
+      {
+        "id": "delivery_finding",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "smoke_diagnostic",
+        "body": "## 提高 cap 修复了交付，但没有产生 hike 信号\n\n受控重试只把 `max_completion_length` 从 1024 改为 1536。单一 `</think>` 边界率从 37.5% 升到 87.5%，可解析决策率从 37.5% 升到 62.5%，同时截断率降至门槛内；但 v2 的 hike 四条中三条预测 hold，另一条不可解析。"
+      },
+      {
+        "id": "delivery_chart_block",
+        "type": "chart",
+        "layout": "full",
+        "chartId": "delivery_chart"
+      },
+      {
+        "id": "direction_finding",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "smoke_diagnostic",
+        "body": "## hold 有学习信号，hike 没有组内优势\n\n两次 smoke 的 hold 组都得到 2/4 正确非零，均值 0.3094、标准差 0.4104；hike 组始终 0/4、均值与标准差均为 0。继续 full 会让至少一个目标方向在首步没有 GRPO 组内优势信号。"
+      },
+      {
+        "id": "direction_table_block",
+        "type": "table",
+        "layout": "full",
+        "tableId": "direction_table"
+      },
+      {
+        "id": "scope_definitions",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 范围与指标定义\n\n本报告比较同一 cp38 精确合并模型、同一 pre-2009 增强 release、同一 seed 31416 和相同采样/优化参数下的两个 smoke。每个 smoke 的第 1 步包含 hold 与 hike 各四条生成。`correct nonzero` 要求方向正确且语义 reward 大于零；方向门还要求组内 reward 标准差大于零。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 受控重试方法\n\ncp38 先通过 15 条分方向生成门禁并完成 exact merge。v1 在 1024 cap 下首步失败后，v2 使用新配置、新输出目录和新授权；授权固定绑定 v1 的 reward、step-gate、runtime-safety 与日志哈希。两次运行都固定 GPU1、world size 1、四代采样和即时 fail-closed callback。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "smoke_diagnostic",
+        "body": "## 限制与稳健性\n\n训练器在即时 callback 失败前没有保存 completion 全文，因此无法检查截断尾部；结论依赖封存的解析结果、边界计数和 clip 指标。每个方向只有四条生成，smoke 是安全门而非准确率估计。pre-2009 增强数据也没有独立的 pre-2009 validation split。"
+      },
+      {
+        "id": "recommended_next_step",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 建议下一步\n\n不要继续提高 cap，也不要换 seed 或降低门槛。下一步需要一个新的、明确授权的训练方案来恢复 hike/cut 的方向区分，例如针对少数动作的额外 SFT 或重新设计可审计的方向监督；完成后应重新跑同一分方向 smoke，再决定是否授权 full GRPO。"
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## 待决定问题\n\n需要选择下一阶段是：新增少数类定向 SFT、调整数据 exposure，还是修改 reward/课程顺序。三者都会改变训练语义，不能在当前 full 授权下自行假定。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-11T17:23:28Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "v1_clip_rate": 0.625,
+          "v2_clip_rate": 0.125,
+          "v2_hike_correct_rate": 0.0,
+          "hike_gate_min_rate": 0.25,
+          "v1_reward_mean": 0.1546875,
+          "v2_reward_mean": 0.1546875
+        }
+      ],
+      "delivery_rates": [
+        {
+          "metric": "Clipped",
+          "metric_order": 1,
+          "version": "v1 cap1024",
+          "rate": 0.625,
+          "numerator": 5,
+          "denominator": 8,
+          "max_completion_length": 1024,
+          "reward_mean": 0.1546875,
+          "loss": -0.0974,
+          "grad_norm": 0.1630859375
+        },
+        {
+          "metric": "Clipped",
+          "metric_order": 1,
+          "version": "v2 cap1536",
+          "rate": 0.125,
+          "numerator": 1,
+          "denominator": 8,
+          "max_completion_length": 1536,
+          "reward_mean": 0.1546875,
+          "loss": 0.0049,
+          "grad_norm": 0.1875
+        },
+        {
+          "metric": "Single boundary",
+          "metric_order": 2,
+          "version": "v1 cap1024",
+          "rate": 0.375,
+          "numerator": 3,
+          "denominator": 8,
+          "max_completion_length": 1024,
+          "reward_mean": 0.1546875,
+          "loss": -0.0974,
+          "grad_norm": 0.1630859375
+        },
+        {
+          "metric": "Single boundary",
+          "metric_order": 2,
+          "version": "v2 cap1536",
+          "rate": 0.875,
+          "numerator": 7,
+          "denominator": 8,
+          "max_completion_length": 1536,
+          "reward_mean": 0.1546875,
+          "loss": 0.0049,
+          "grad_norm": 0.1875
+        },
+        {
+          "metric": "Parseable decision",
+          "metric_order": 3,
+          "version": "v1 cap1024",
+          "rate": 0.375,
+          "numerator": 3,
+          "denominator": 8,
+          "max_completion_length": 1024,
+          "reward_mean": 0.1546875,
+          "loss": -0.0974,
+          "grad_norm": 0.1630859375
+        },
+        {
+          "metric": "Parseable decision",
+          "metric_order": 3,
+          "version": "v2 cap1536",
+          "rate": 0.625,
+          "numerator": 5,
+          "denominator": 8,
+          "max_completion_length": 1536,
+          "reward_mean": 0.1546875,
+          "loss": 0.0049,
+          "grad_norm": 0.1875
+        }
+      ],
+      "direction_metrics": [
+        {
+          "sort_order": 1,
+          "version": "v1 cap1024",
+          "direction": "hold",
+          "direction_correct_rate": 0.5,
+          "reward_mean": 0.309375,
+          "reward_std": 0.4103518878657682,
+          "clipped_count": 2,
+          "gate_status": "passed"
+        },
+        {
+          "sort_order": 2,
+          "version": "v1 cap1024",
+          "direction": "hike",
+          "direction_correct_rate": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "clipped_count": 3,
+          "gate_status": "failed"
+        },
+        {
+          "sort_order": 3,
+          "version": "v2 cap1536",
+          "direction": "hold",
+          "direction_correct_rate": 0.5,
+          "reward_mean": 0.309375,
+          "reward_std": 0.4103518878657682,
+          "clipped_count": 1,
+          "gate_status": "passed"
+        },
+        {
+          "sort_order": 4,
+          "version": "v2 cap1536",
+          "direction": "hike",
+          "direction_correct_rate": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "clipped_count": 0,
+          "gate_status": "failed"
+        }
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {
+      "id": "smoke_diagnostic",
+      "label": "chk4 GRPO smoke diagnostic metrics",
+      "path": "docs/summary/20260811T172328Z/chk4_grpo_smoke_diagnostic/diagnostic_metrics.json",
+      "query": {
+        "description": "Reconciled metrics from immutable reward, immediate step-gate, and runtime-safety JSONL evidence.",
+        "executed_at": "2026-08-11T17:23:28Z",
+        "language": "json"
+      }
+    }
+  ]
+}

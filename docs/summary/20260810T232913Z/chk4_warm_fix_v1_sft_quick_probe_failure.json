@@ -1,0 +1,220 @@
+{
+  "schema_version": "chk4-warm-fix-v1-sft-quick-probe-failure-v1",
+  "created_at_utc": "2026-08-10T23:29:13Z",
+  "status": "failed_generation_gate",
+  "promotion_authorized": false,
+  "grpo_authorized": false,
+  "scope": {
+    "branch_id": "chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810",
+    "stage": "decision_sft",
+    "profile": "warm_fix_v1",
+    "operation": "single-GPU SFT followed by a safely stopped quick generation probe",
+    "data_modified": false,
+    "model_or_adapter_modified_by_audit": false
+  },
+  "bindings": {
+    "training_config": {
+      "path": "configs/retrain_v2/chk4_decision_sft_from_chk1_cp200_warm_fix_v1_20260810.yaml",
+      "sha256": "82353d2e51de3e0ec89c2cddb4258da8b750c7b4910920ec2ca2ccf0671ed2f6"
+    },
+    "release_manifest": {
+      "path": "dataset/processed/retrain_v2/chk4_decision_warmstart_grpo_core_v3_20260810/release_manifest.json",
+      "sha256": "8b05dce09bcb0a0b27ee240da1e5d730be93921ce19e650a3b3e8b2689adb893"
+    },
+    "parent_model": {
+      "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_core_v3_20260810/parent/merged/chk1",
+      "artifact_sha256": "6ad91dbb1571485df995c2443b97149badc3b8b6a6528aff82f6e2e8c824df1e"
+    },
+    "adapter": {
+      "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/adapters/chk4_sft",
+      "artifact_sha256_at_probe_launch": "54358acb0fa3aa4443c95d4c4070dccb4970fa973293c87b1b8c19c630153393",
+      "artifact_file_count_at_probe_launch": 52,
+      "artifact_total_bytes_at_probe_launch": 1253339103,
+      "adapter_model_sha256": "9295f20480881c9b90a23456ed2404bb796dfd369762e832c608b115f4ee7235",
+      "adapter_config_sha256": "3ba1b1d0330144ea69076f8ff57ddd437993cd231877c6772654e3f46c834cb5"
+    },
+    "training_receipts": {
+      "resolved_runtime_config": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/adapters/chk4_sft/resolved_runtime_config.json",
+        "sha256": "b0702275af9bf16f592f5c70819ecd52338b801743367a8d4cb371ca85e45014"
+      },
+      "trainer_state": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/adapters/chk4_sft/trainer_state.json",
+        "sha256": "e60450de0fa4c3070c0cd2655a755ae90027d53099a961b3c5c6d6d0d985f9a6"
+      },
+      "train_results": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/adapters/chk4_sft/train_results.json",
+        "sha256": "aa6309a678c81cc650d88c9ce44e391b6d8151e41981cc692b862307ffab84ae"
+      },
+      "eval_results": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/adapters/chk4_sft/eval_results.json",
+        "sha256": "ad454a62908feda8ee40125c18a51033fc35f73ad896d75a082e96a15309790f"
+      },
+      "loss_history": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/adapters/chk4_sft/loss_history.jsonl",
+        "sha256": "3617468ab85508447395bf98242ca81f489a210b00681105434ccdc581e23fbf"
+      },
+      "training_log": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_v1_20260810/logs/sft.log",
+        "sha256": "18edbe0ede2fced5f2fdb5dcafb5d13e526324b982dd2bf0c77b4ba6d9cdace3"
+      }
+    },
+    "probe": {
+      "script": {
+        "path": "jobs/retrain_v2/probe_chk4_decision_sft_generation.py",
+        "sha256": "f9d2ceedc59a5750dd0dcddfb794c09dd7639c8a2ff28f68091d0105e377c7e1"
+      },
+      "sample_manifest": {
+        "path": "output/eval/retrain_v2/chk4_decision_sft_generation_probe_warm_fix_v1_20260810/sample_manifest.json",
+        "sha256": "1a6d39638ccd90d3eb2471d9b09e34380269409354736cc70c745e29ceb21872"
+      },
+      "launch": {
+        "path": "output/eval/retrain_v2/chk4_decision_sft_generation_probe_warm_fix_v1_20260810/quick_adapter_v1/launch.json",
+        "sha256": "2c56b7707f4721177d7ad3e157d04eb8a98f4971f1e90f7656c4c7c2621b8d72"
+      },
+      "partial_results": {
+        "path": "output/eval/retrain_v2/chk4_decision_sft_generation_probe_warm_fix_v1_20260810/quick_adapter_v1/results.jsonl",
+        "sha256": "de4a537061e437b201838b0cf20e45a5a00e9dca35fa486adaef67ea899d8f89",
+        "rows": 5,
+        "complete_groups": 1,
+        "summary_json_present": false,
+        "termination": "safely stopped by the controlling workflow after the first complete group failed 5/5"
+      }
+    }
+  },
+  "training": {
+    "device_contract": {
+      "cuda_visible_devices": "1",
+      "world_size": 1,
+      "n_gpu": 1,
+      "physical_gpu": 1,
+      "runtime_device": "cuda:0"
+    },
+    "hyperparameters": {
+      "learning_rate": 0.000005,
+      "max_steps": 12,
+      "warmup_steps": 2,
+      "lr_scheduler_type": "cosine",
+      "gradient_accumulation_steps": 8,
+      "per_device_train_batch_size": 1,
+      "effective_batch_size": 8,
+      "completion_only_loss": true,
+      "max_length": 3072,
+      "load_in_4bit": true,
+      "lora_r": 32,
+      "lora_alpha": 64
+    },
+    "outcome": {
+      "completed": true,
+      "global_step": 12,
+      "epoch": 0.6808510638297872,
+      "runtime_seconds": 100.4752,
+      "train_loss_reported": 2.042760580778122,
+      "mean_train_loss_steps_1_6": 2.1034666666666664,
+      "mean_train_loss_steps_7_12": 1.98205,
+      "logged_learning_rate_sum": 0.00003,
+      "logged_learning_rate_mean": 0.0000025,
+      "eval": [
+        {
+          "step": 6,
+          "loss": 2.0254154205322266,
+          "mean_token_accuracy": 0.5509736056511219
+        },
+        {
+          "step": 12,
+          "loss": 1.9925161600112915,
+          "mean_token_accuracy": 0.5561752181786758
+        }
+      ],
+      "non_finite_loss_or_gradient_observed": false,
+      "oom_observed": false
+    }
+  },
+  "quick_probe": {
+    "mode": "quick",
+    "max_new_tokens": 1024,
+    "sample_temperature": 0.7,
+    "sample_top_p": 0.9,
+    "sample_id": "dec-4b867d2ad3a89e8af08268c3",
+    "length_bucket": "short",
+    "prompt_token_count": 433,
+    "cases": 5,
+    "greedy_cases": 1,
+    "sampled_cases": 4,
+    "metrics": {
+      "contract_valid": 0,
+      "delivery_valid": 0,
+      "plain_json": 0,
+      "positive_reward": 0,
+      "exact_decision": 0,
+      "hit_eos": 3,
+      "cap_reached": 2,
+      "exactly_one_think_boundary": 3,
+      "repetition_valid": 5,
+      "markdown_fenced_answer": 3,
+      "sampled_group_reward_mean": 0.0,
+      "sampled_group_reward_std": 0.0,
+      "zero_reward_group": true,
+      "zero_std_group": true,
+      "completion_token_counts": [
+        1024,
+        886,
+        1024,
+        933,
+        856
+      ],
+      "completion_token_mean": 944.6,
+      "completion_token_median": 933,
+      "full_4gram_repetition_mean": 0.082561076,
+      "full_4gram_repetition_max": 0.13320274,
+      "tail_4gram_repetition_mean": 0.08221344,
+      "tail_4gram_repetition_max": 0.24505929
+    },
+    "failure_counts": {
+      "answer_not_plain_single_json": 3,
+      "think_boundary_count_not_one": 2,
+      "missing_terminal_eos": 2,
+      "completion_length_cap": 2
+    },
+    "case_completion_sha256": [
+      "9039353ba73a83ed2ff01eff2536026ac9c63b77d801c95f35380b613c642767",
+      "959404e239def5f2b5d7bc451fc23eb0a1ffce35e803df4e35c4bb58bc99a316",
+      "2edd129f522026a4136154914709f8b7c12862f818202ff5cc3a7ea64a52024e",
+      "9b42f51f199a66ac155663544191c1e340f4455410c43ea3b20544390466b94a",
+      "c4a7b5bc0d380d3463a1233e5a508fb30064ee24977cee68da97e2b2805daa02"
+    ],
+    "gate_conclusion": "failed: the first complete group produced zero valid plain-JSON decisions and zero reward in all five cases"
+  },
+  "gpu_isolation": {
+    "gpu0_untouched_by_chk4": true,
+    "evidence": [
+      "The SFT resolved runtime records CUDA_VISIBLE_DEVICES=1, world_size=1 and one NVIDIA A30.",
+      "The probe launch records CUDA_VISIBLE_DEVICES=1.",
+      "At the post-stop snapshot GPU0 remained occupied by the pre-existing unrelated llama_factory process PID 1224210 using 23850 MiB, while GPU1 had no compute process and 24036 MiB free.",
+      "No audit command started, stopped, signalled, or modified a GPU process."
+    ],
+    "post_stop_snapshot": {
+      "gpu0": {
+        "uuid": "GPU-ba3a7f4c-74c8-4922-364d-031c5187624c",
+        "used_memory_mib": 23873,
+        "free_memory_mib": 177,
+        "utilization_percent": 97,
+        "compute_pid": 1224210,
+        "compute_process": "/home/haobin_cui/.conda/envs/llama_factory/bin/python",
+        "compute_process_memory_mib": 23850
+      },
+      "gpu1": {
+        "uuid": "GPU-0d2b981c-7a91-ad4c-7015-89445a0283a1",
+        "used_memory_mib": 14,
+        "free_memory_mib": 24036,
+        "utilization_percent": 0,
+        "compute_processes": []
+      }
+    }
+  },
+  "conclusion": {
+    "loss_interpretation": "The finite loss and improved validation loss show that optimization ran, but they do not establish the required generation behavior.",
+    "generation_interpretation": "The first complete quick group is a decisive format/length failure: two completions reached the 1024-token cap without a boundary or EOS, and three reached a boundary but emitted Markdown-fenced JSON.",
+    "next_stage": "Do not merge or start Decision-GRPO from this adapter. Preserve it only as failed diagnostic evidence."
+  }
+}

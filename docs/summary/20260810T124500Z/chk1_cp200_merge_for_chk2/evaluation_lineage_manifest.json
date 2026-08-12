@@ -1,0 +1,18 @@
+{
+  "checkpoints": {
+    "eval-chk0-base": {
+      "artifact_id": "eval-chk0-base",
+      "parent_artifact_id": null
+    },
+    "eval-chk1-clean-v2-lr1e6-cp200": {
+      "artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+      "exact_merge_evidence": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_exact_merge_lineage.json",
+      "parent_artifact_id": "eval-chk0-base"
+    }
+  },
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "157b3877f0ccfcc20a32c5df52bb4d919c3b5b424dee0e60ad5fb927b80daf37"
+  },
+  "schema_version": "retrain-v2-eval-lineage-v1"
+}

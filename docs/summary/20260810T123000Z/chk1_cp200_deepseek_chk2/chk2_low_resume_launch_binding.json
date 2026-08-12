@@ -1,0 +1,59 @@
+{
+  "schema_version": "chk2-deepseek-low-resume-launch-binding-v1",
+  "run_id": "chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "session_name": "fomc_chk2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "artifacts": {
+    "authorization": {
+      "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low_resume_authorization.json",
+      "sha256": "dc75b156776ea669833d67fec081201b3f475519fe42837bad11e87132667482"
+    },
+    "benchmark_summary": {
+      "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low_judge_benchmark_v1/benchmark_summary.json",
+      "sha256": "30172fd9d30579b0d3d8dd1d0ed27e651eaef9b75284b6167c53f89d5ea24794"
+    },
+    "config": {
+      "path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810.yaml",
+      "sha256": "623ab06227d1c9b445b41ed1b2970559f552cd219ce4ea6db37afe54fbce4185"
+    },
+    "dataset_overlay": {
+      "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810",
+      "sha256": "8fb5d5827df69d16c03dc77042e3fdb5cef79dcc701be7e145252a9ce0c93351"
+    },
+    "high_source_config": {
+      "path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_high_totalsl_v1_20260810.yaml",
+      "sha256": "19cc611b4f3210904993050723a56f3139a90c54d995b3f058a841c35e2720f4"
+    },
+    "launch_module": {
+      "path": "jobs/retrain_v2/start_chk2_deepseek_low_resume.py",
+      "sha256": "a847eb34364b9bcb08d2c470470c278dc515ee40d7f5f4622b22677f427c9bc4"
+    },
+    "launcher_wrapper": {
+      "path": "run/retrain_v2/start_chk2_cp200_deepseek_low_resume_cp1.sh",
+      "sha256": "71767e6b916213048777cfd69a1d90233a554e8ae5d375aa4e6074f9864a7cfd"
+    },
+    "merged_chk1": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+    },
+    "overlay_manifest": {
+      "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810/overlay_manifest.json",
+      "sha256": "00a825755444b83ea3c3f3d0878b394acbcc2af85ab231ec714aa64f742de410"
+    },
+    "resume_checkpoint": {
+      "path": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/checkpoint-1",
+      "sha256": "c59fc57f1b8920201633de074f26497929c3a7a9ed18c39d69880c15c975ab61"
+    },
+    "reward_module": {
+      "path": "src/open_r1/trainer/rewards/reward_funcs/analysis_reward_v3_deepseek_low.py",
+      "sha256": "6ee8f46821f0293a997d4ac659b1aa4687e3430e6cc899e3986caa89d30a1fbf"
+    },
+    "reward_registry": {
+      "path": "src/open_r1/trainer/rewards/reward_register.py",
+      "sha256": "9a4f8ab47bb386653cfe502d9044a0ea4b50b960c102955edd23ee9a359bb948"
+    },
+    "trainer": {
+      "path": "src/open_r1/trainer/trainer.py",
+      "sha256": "ff756ccbe7d9291c93e5a8917db5167b2a18da096588a4925d2d96195bec8ffe"
+    }
+  }
+}

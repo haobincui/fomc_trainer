@@ -1,0 +1,32 @@
+{
+  "cap_rate": 0.125,
+  "cases": 8,
+  "catastrophic_cases": 3,
+  "contract_valid_rate": 0.875,
+  "created_at_utc": "2026-08-10T09:10:59Z",
+  "elapsed_seconds": 683.212,
+  "eos_rate": 0.875,
+  "finite_rate": 1.0,
+  "greedy_cases": 2,
+  "max_full_token_4gram_repetition": 0.8172043,
+  "max_tail_token_4gram_repetition": 0.88148874,
+  "mean_full_token_4gram_repetition": 0.4086075812500001,
+  "mean_tail_token_4gram_repetition": 0.35586882375,
+  "model_label": "chk1_clean_v2_full3ep_lr1e5_cp255",
+  "peak_allocated_gib": 6.509,
+  "peak_reserved_gib": 7.4,
+  "periodic_tail_rate": 0.125,
+  "results": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T085859Z/chk1_full3ep_cp255_probe/results.jsonl",
+    "rows": 8,
+    "sha256": "9deaf7638088eee3c09810b4ec003df83822b19dd6596ffb2083bdf7c07a799d"
+  },
+  "runtime_versions": {
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6"
+  },
+  "sample_manifest_sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246",
+  "sampled_cases": 6,
+  "schema_version": "chk1-sft-degeneration-probe-v1",
+  "status": "complete"
+}

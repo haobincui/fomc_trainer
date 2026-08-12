@@ -1,0 +1,308 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "CHK0、CHK1 与 CHK3 cp318 六项评分卡",
+    "description": "基于 sealed native analysis-to-Minutes N12 与非 identity N11 零惩罚语义评分，对 CHK0、CHK1 和 exact-merged CHK3 cp318 做六项可审计比较。",
+    "generatedAt": "2026-08-11T11:18:22Z",
+    "cards": [
+      {
+        "id": "structure_card",
+        "description": "结构/交付（N12）：cp318 12/12，CHK1 12/12，CHK0 11/12。",
+        "dataset": "headline_scores",
+        "sourceId": "six_metric_scorecard",
+        "metrics": [
+          {"label": "CHK3 cp318（/100）", "field": "structure_chk3", "format": "number"},
+          {"label": "CHK1（/100）", "field": "structure_chk1", "format": "number"},
+          {"label": "CHK0（/100）", "field": "structure_chk0", "format": "number"}
+        ]
+      },
+      {
+        "id": "numeric_card",
+        "description": "数值保真（N12）：cp318 12/12，CHK1 12/12，CHK0 9/12。",
+        "dataset": "headline_scores",
+        "sourceId": "six_metric_scorecard",
+        "metrics": [
+          {"label": "CHK3 cp318（/100）", "field": "numeric_chk3", "format": "number"},
+          {"label": "CHK1（/100）", "field": "numeric_chk1", "format": "number"},
+          {"label": "CHK0（/100）", "field": "numeric_chk0", "format": "number"}
+        ]
+      },
+      {
+        "id": "date_card",
+        "description": "日期保真（N12）：cp318 12/12，CHK1 12/12，CHK0 10/12。",
+        "dataset": "headline_scores",
+        "sourceId": "six_metric_scorecard",
+        "metrics": [
+          {"label": "CHK3 cp318（/100）", "field": "date_chk3", "format": "number"},
+          {"label": "CHK1（/100）", "field": "date_chk1", "format": "number"},
+          {"label": "CHK0（/100）", "field": "date_chk0", "format": "number"}
+        ]
+      },
+      {
+        "id": "degeneration_card",
+        "description": "无退化（N12）：cp318 12/12，CHK1 12/12，CHK0 11/12。",
+        "dataset": "headline_scores",
+        "sourceId": "six_metric_scorecard",
+        "metrics": [
+          {"label": "CHK3 cp318（/100）", "field": "degeneration_chk3", "format": "number"},
+          {"label": "CHK1（/100）", "field": "degeneration_chk1", "format": "number"},
+          {"label": "CHK0（/100）", "field": "degeneration_chk0", "format": "number"}
+        ]
+      },
+      {
+        "id": "cos_card",
+        "description": "MPNet cosine（非 identity N11、零惩罚）：eligible 为 cp318 11/11、CHK1 11/11、CHK0 8/11。",
+        "dataset": "headline_scores",
+        "sourceId": "six_metric_scorecard",
+        "metrics": [
+          {"label": "CHK3 cp318（/100）", "field": "cos_chk3", "format": "number"},
+          {"label": "CHK1（/100）", "field": "cos_chk1", "format": "number"},
+          {"label": "CHK0（/100）", "field": "cos_chk0", "format": "number"}
+        ]
+      },
+      {
+        "id": "bert_card",
+        "description": "BERTScore-F1（非 identity N11、零惩罚）：eligible 为 cp318 11/11、CHK1 11/11、CHK0 8/11。",
+        "dataset": "headline_scores",
+        "sourceId": "six_metric_scorecard",
+        "metrics": [
+          {"label": "CHK3 cp318（/100）", "field": "bert_chk3", "format": "number"},
+          {"label": "CHK1（/100）", "field": "bert_chk1", "format": "number"},
+          {"label": "CHK0（/100）", "field": "bert_chk0", "format": "number"}
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "six_metric_comparison_chart",
+        "title": "六项测试的 0–100 对照",
+        "subtitle": "Generation 使用 N12；COS/BERT 使用非 identity N11，核心门禁失败样本的语义分固定为 0。",
+        "headerMarkdown": "柱高仅是可比的展示分：generation rate × 100；semantic mean × 100。**未计算加权综合分。**",
+        "type": "bar",
+        "dataset": "scorecard_long",
+        "sourceId": "six_metric_scorecard",
+        "encodings": {
+          "x": {"field": "metric", "type": "ordinal", "label": "测试"},
+          "y": {"field": "display_score", "type": "quantitative", "label": "评分（0–100）", "format": "number"},
+          "color": {"field": "model", "type": "nominal", "label": "模型"},
+          "tooltip": [
+            {"field": "raw_score_text", "type": "nominal", "label": "原始分数"},
+            {"field": "cohort", "type": "nominal", "label": "主分母"},
+            {"field": "eligibility_note", "type": "nominal", "label": "门禁/有效行"}
+          ]
+        },
+        "yAxisTitle": "评分（0–100）",
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "exact_score_table",
+        "title": "六项测试精确评分",
+        "subtitle": "每格均保留原始分数及其 0–100 展示分；语义列为非 identity N11 的零惩罚均值。",
+        "dataset": "scorecard_exact",
+        "sourceId": "six_metric_scorecard",
+        "defaultSort": {"field": "model", "direction": "asc"},
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "model", "label": "模型", "type": "text"},
+          {"field": "structure", "label": "结构/交付：raw → /100", "type": "text"},
+          {"field": "numeric", "label": "数值保真：raw → /100", "type": "text"},
+          {"field": "date", "label": "日期保真：raw → /100", "type": "text"},
+          {"field": "degeneration", "label": "无退化：raw → /100", "type": "text"},
+          {"field": "cos", "label": "MPNet COS：raw → /100", "type": "text"},
+          {"field": "bert", "label": "BERTScore-F1：raw → /100", "type": "text"}
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "six_metric_scorecard",
+        "label": "Sealed CHK0/CHK1/CHK3 six-metric scorecard",
+        "path": "output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json')",
+          "description": "Reads the sealed nested six-metric scorecard; the bounded report datasets are deterministic wide and long projections of its summaries.",
+          "executed_at": "2026-08-11T11:18:22Z",
+          "tables_used": ["output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json"]
+        }
+      },
+      {"id": "sealed_n12", "label": "Sealed native analysis-to-Minutes N12 sample", "path": "docs/summary/20260811T003000Z/chk3_native_analysis_to_minutes_cp250_eval/samples_n12.json"},
+      {"id": "chk0_generation", "label": "CHK0 sealed generation manifest", "path": "output/evaluation/main/chk3_native_analysis_to_minutes_n12_cp250_20260811_v1/chk0/manifest.json"},
+      {"id": "chk1_generation", "label": "CHK1 sealed generation manifest", "path": "output/evaluation/main/chk3_native_analysis_to_minutes_n12_cp250_20260811_v1/chk1/manifest.json"},
+      {"id": "chk3_generation", "label": "CHK3 cp318 exact-merged sealed generation manifest", "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/native_n12_merged/cp318/manifest.json"},
+      {"id": "merged_semantic", "label": "Existing CHK1/CHK3 exact-merged BERTScore and MPNet evidence", "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/semantic/merged_finalists_bert_mpnet_v1.json"}
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# CHK0、CHK1 与 CHK3 cp318 六项评分卡"
+      },
+      {
+        "id": "executive_summary",
+        "type": "markdown",
+        "sourceId": "six_metric_scorecard",
+        "body": "## Executive Summary\n\n- **选择 CHK3 checkpoint-318。** exact-merged cp318 的四项 generation 测试全部为 12/12（100 分），与 CHK1 持平，并修复 CHK0 在结构、数值、日期和退化门禁上的失败。\n- **cp318 的两项语义分点估计也最高。** MPNet COS 为 97.2733，较 CHK1 高 2.8688 分；BERTScore-F1 为 97.5129，较 CHK1 高 0.6773 分。\n- **结论可用于本轮 checkpoint 选择，但不能外推为总体效果。** 四项 generation 使用诊断 N12；COS/BERT 主视图排除 1 条 identity 样本，并对未通过核心门禁的语义行固定计 0。"
+      },
+      {
+        "id": "headline_metric_strip",
+        "type": "metric-strip",
+        "cardIds": ["structure_card", "numeric_card", "date_card", "degeneration_card", "cos_card", "bert_card"]
+      },
+      {
+        "id": "findings",
+        "type": "markdown",
+        "sourceId": "six_metric_scorecard",
+        "body": "## cp318 保住 CHK1 的硬门禁，同时提升 COS 与 BERT\n\n**与 CHK1 相比，cp318 的四项 generation 分不变，MPNet COS 提升 2.8688 分，BERTScore-F1 提升 0.6773 分。** 与 CHK0 相比，六项分别提升 8.3333、25.0000、16.6667、8.3333、27.3596 和 26.7087 分。图中所有柱都使用同一 0–100 展示尺度；这只是逐指标比较，不代表一个综合总分。统一六项评分在 CPU 上完成。"
+      },
+      {
+        "id": "comparison_visual",
+        "type": "chart",
+        "chartId": "six_metric_comparison_chart",
+        "layout": "full"
+      },
+      {
+        "id": "exact_values_heading",
+        "type": "markdown",
+        "sourceId": "six_metric_scorecard",
+        "body": "## 原始分数与展示分保持一一对应\n\n**Generation 四项保留通过数/12；COS 与 BERT 保留 N11 零惩罚均值。** 0–100 分只做线性换算：rate × 100 或 semantic mean × 100，因此不会掩盖分母、门禁或失败样本。"
+      },
+      {
+        "id": "exact_values_table",
+        "type": "table",
+        "tableId": "exact_score_table",
+        "layout": "full"
+      },
+      {
+        "id": "definitions",
+        "type": "markdown",
+        "sourceId": "six_metric_scorecard",
+        "body": "## 六项测试怎样计算\n\n- **结构/交付：** delivery valid 与 native structure valid 同时成立；要求正常 EOS、未触顶、唯一 `</think>`/精确边界、reasoning 与 answer 非空、final 为单段，并满足原生 Minutes 输出结构。\n- **数值保真：** `source_analysis → answer` 的数值多重集完全一致。\n- **日期保真：** `source_analysis → answer` 的抽取日期集合完全一致。\n- **无退化：** 无严格周期尾循环，全文 token 4-gram 重复率 `< 0.50`，尾部重复率 `< 0.60`。\n- **MPNet COS / BERTScore-F1：** 比较 `answer` 与 `reference_minutes`。主视图为非 identity N11；凡预注册核心门禁失败，两个语义分都固定为 0。"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## 将 cp318 固定为当前 CHK3 选择点\n\n1. 保留当前 exact-merged cp318 与 sealed N12 作为可复现回归基线。\n2. 在任何正式晋升或下游训练前，按同一六项合同扩展到冻结 N30，再运行完整 held-out 190。\n3. 对扩展集继续先执行四项 generation 硬门禁，再计算零惩罚 COS/BERT。"
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## 后续还需回答的问题\n\n- cp318 相对 CHK1 的语义增量在更大、冻结的 held-out 样本上是否仍然存在？\n- COS/BERT 的相似度提升是否伴随真实事实正确性与 Minutes 可用性的提升？这需要独立事实核验或人工评分。"
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "body": "## 解释边界\n\n- N12 是确定性诊断样本，不授权统计显著性或总体推断。\n- reference_minutes 是合成 teacher targets，而不是官方 Minutes。\n- MPNet cosine 与 BERTScore-F1 衡量文本相似度，不等同于事实正确性。\n- 语义主视图排除 1 条 normalized-identity 样本；CHK0 在剩余 N11 中仅 8 条通过核心门禁，另外 3 条按规则计 0。\n- 本评分卡统一在 CPU 上重算语义分；与先前 GPU sealed semantic evidence 的最大绝对漂移不超过 `6e-8`，0–100 展示分四位小数完全一致。\n- legacy signed-surface 检查仅作诊断，不属于本评分卡的四项 generation 指标。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-11T11:18:22Z",
+    "status": "ready",
+    "datasets": {
+      "headline_scores": [
+        {
+          "structure_chk0": 91.66666666666667,
+          "structure_chk1": 100,
+          "structure_chk3": 100,
+          "numeric_chk0": 75,
+          "numeric_chk1": 100,
+          "numeric_chk3": 100,
+          "date_chk0": 83.33333333333333,
+          "date_chk1": 100,
+          "date_chk3": 100,
+          "degeneration_chk0": 91.66666666666667,
+          "degeneration_chk1": 100,
+          "degeneration_chk3": 100,
+          "cos_chk0": 69.91372812878002,
+          "cos_chk1": 94.40443895079873,
+          "cos_chk3": 97.27327877824958,
+          "bert_chk0": 70.80414078452371,
+          "bert_chk1": 96.83556719259782,
+          "bert_chk3": 97.51288403164257
+        }
+      ],
+      "scorecard_long": [
+        {"model": "CHK0", "metric": "结构/交付", "metric_order": 1, "family": "generation", "cohort": "N12", "raw_score": 0.9166666666666666, "display_score": 91.66666666666667, "raw_score_text": "11/12 = 0.9166666667", "eligibility_note": "N12 全样本"},
+        {"model": "CHK1", "metric": "结构/交付", "metric_order": 1, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK3 cp318", "metric": "结构/交付", "metric_order": 1, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK0", "metric": "数值保真", "metric_order": 2, "family": "generation", "cohort": "N12", "raw_score": 0.75, "display_score": 75, "raw_score_text": "9/12 = 0.7500000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK1", "metric": "数值保真", "metric_order": 2, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK3 cp318", "metric": "数值保真", "metric_order": 2, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK0", "metric": "日期保真", "metric_order": 3, "family": "generation", "cohort": "N12", "raw_score": 0.8333333333333334, "display_score": 83.33333333333333, "raw_score_text": "10/12 = 0.8333333333", "eligibility_note": "N12 全样本"},
+        {"model": "CHK1", "metric": "日期保真", "metric_order": 3, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK3 cp318", "metric": "日期保真", "metric_order": 3, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK0", "metric": "无退化", "metric_order": 4, "family": "generation", "cohort": "N12", "raw_score": 0.9166666666666666, "display_score": 91.66666666666667, "raw_score_text": "11/12 = 0.9166666667", "eligibility_note": "N12 全样本"},
+        {"model": "CHK1", "metric": "无退化", "metric_order": 4, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK3 cp318", "metric": "无退化", "metric_order": 4, "family": "generation", "cohort": "N12", "raw_score": 1, "display_score": 100, "raw_score_text": "12/12 = 1.0000000000", "eligibility_note": "N12 全样本"},
+        {"model": "CHK0", "metric": "MPNet COS", "metric_order": 5, "family": "semantic", "cohort": "非 identity N11", "raw_score": 0.6991372812878002, "display_score": 69.91372812878002, "raw_score_text": "mean = 0.6991372813", "eligibility_note": "8/11 eligible；3 条计 0"},
+        {"model": "CHK1", "metric": "MPNet COS", "metric_order": 5, "family": "semantic", "cohort": "非 identity N11", "raw_score": 0.9440443895079873, "display_score": 94.40443895079873, "raw_score_text": "mean = 0.9440443895", "eligibility_note": "11/11 eligible；0 条计 0"},
+        {"model": "CHK3 cp318", "metric": "MPNet COS", "metric_order": 5, "family": "semantic", "cohort": "非 identity N11", "raw_score": 0.9727327877824957, "display_score": 97.27327877824958, "raw_score_text": "mean = 0.9727327878", "eligibility_note": "11/11 eligible；0 条计 0"},
+        {"model": "CHK0", "metric": "BERTScore-F1", "metric_order": 6, "family": "semantic", "cohort": "非 identity N11", "raw_score": 0.7080414078452371, "display_score": 70.80414078452371, "raw_score_text": "mean = 0.7080414078", "eligibility_note": "8/11 eligible；3 条计 0"},
+        {"model": "CHK1", "metric": "BERTScore-F1", "metric_order": 6, "family": "semantic", "cohort": "非 identity N11", "raw_score": 0.9683556719259783, "display_score": 96.83556719259782, "raw_score_text": "mean = 0.9683556719", "eligibility_note": "11/11 eligible；0 条计 0"},
+        {"model": "CHK3 cp318", "metric": "BERTScore-F1", "metric_order": 6, "family": "semantic", "cohort": "非 identity N11", "raw_score": 0.9751288403164257, "display_score": 97.51288403164257, "raw_score_text": "mean = 0.9751288403", "eligibility_note": "11/11 eligible；0 条计 0"}
+      ],
+      "scorecard_exact": [
+        {
+          "model": "CHK0",
+          "structure": "11/12 = 0.9166666667 → 91.6667",
+          "numeric": "9/12 = 0.7500000000 → 75.0000",
+          "date": "10/12 = 0.8333333333 → 83.3333",
+          "degeneration": "11/12 = 0.9166666667 → 91.6667",
+          "cos": "0.6991372813 → 69.9137",
+          "bert": "0.7080414078 → 70.8041"
+        },
+        {
+          "model": "CHK1",
+          "structure": "12/12 = 1.0000000000 → 100.0000",
+          "numeric": "12/12 = 1.0000000000 → 100.0000",
+          "date": "12/12 = 1.0000000000 → 100.0000",
+          "degeneration": "12/12 = 1.0000000000 → 100.0000",
+          "cos": "0.9440443895 → 94.4044",
+          "bert": "0.9683556719 → 96.8356"
+        },
+        {
+          "model": "CHK3 cp318",
+          "structure": "12/12 = 1.0000000000 → 100.0000",
+          "numeric": "12/12 = 1.0000000000 → 100.0000",
+          "date": "12/12 = 1.0000000000 → 100.0000",
+          "degeneration": "12/12 = 1.0000000000 → 100.0000",
+          "cos": "0.9727327878 → 97.2733",
+          "bert": "0.9751288403 → 97.5129"
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "six_metric_scorecard",
+      "label": "Sealed CHK0/CHK1/CHK3 six-metric scorecard",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json')",
+        "description": "Reads the sealed nested six-metric scorecard; the bounded report datasets are deterministic wide and long projections of its summaries.",
+        "executed_at": "2026-08-11T11:18:22Z",
+        "tables_used": ["output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json"]
+      }
+    },
+    {"id": "sealed_n12", "label": "Sealed native analysis-to-Minutes N12 sample", "path": "docs/summary/20260811T003000Z/chk3_native_analysis_to_minutes_cp250_eval/samples_n12.json"},
+    {"id": "chk0_generation", "label": "CHK0 sealed generation manifest", "path": "output/evaluation/main/chk3_native_analysis_to_minutes_n12_cp250_20260811_v1/chk0/manifest.json"},
+    {"id": "chk1_generation", "label": "CHK1 sealed generation manifest", "path": "output/evaluation/main/chk3_native_analysis_to_minutes_n12_cp250_20260811_v1/chk1/manifest.json"},
+    {"id": "chk3_generation", "label": "CHK3 cp318 exact-merged sealed generation manifest", "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/native_n12_merged/cp318/manifest.json"},
+    {"id": "merged_semantic", "label": "Existing CHK1/CHK3 exact-merged BERTScore and MPNet evidence", "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/semantic/merged_finalists_bert_mpnet_v1.json"}
+  ],
+  "package_info": {
+    "originUrl": "artifact://chk0-chk1-chk3-six-metric-scorecard",
+    "controls": {"edit": false, "refresh": false, "persistence": false, "copyAsImage": false}
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "portable-report-delivery-v1",
+  "status": "delivered",
+  "generated_at": "2026-08-10T22:31:01Z",
+  "artifact": {
+    "path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/artifact.json",
+    "sha256": "c974faee3665dc59569a2cc13757db4464097f358ec23743e509333ea14d7ad9"
+  },
+  "html": {
+    "path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/report.html",
+    "sha256": "b608c96b51b4531fd63a6dae5d0ca14758ca5db0162a770d6202226150d9f42f",
+    "bytes": 435756
+  },
+  "stages": {
+    "validation": "passed",
+    "package": "passed",
+    "verification": "structural_only"
+  },
+  "counts": {
+    "blocks": 16,
+    "charts": 2,
+    "metrics": 4,
+    "tables": 1
+  },
+  "browser_verification": {
+    "status": "not_run",
+    "reason": "No installed Chromium headless-shell executable was available; the portable builder completed structural verification without downloading a browser."
+  }
+}

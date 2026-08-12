@@ -1,0 +1,34 @@
+{
+  "schema_version": "chk3-cp250-evaluation-merge-result-v1",
+  "status": "verified",
+  "base_model": {
+    "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+    "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+  },
+  "adapter": {
+    "path": "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/checkpoint-250",
+    "directory_sha256": "2f2f6786fcdd2ee06afa80bc3cc5304d8d9c94ee0e576a642c76cd8ba80c26e9",
+    "weights_sha256": "396bdefef55c4521918a84df8e27abf8c82752eeadef3dcbb81188ffca332f45"
+  },
+  "merged_model": {
+    "path": "output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_chk3_cp250_20260810_v1/models/chk3_cp250_merged",
+    "sha256": "7a608cd4436323f7bce7b35893ad527177c89c5a2768c8fd6939f632b11007ac",
+    "bytes": 16077925439
+  },
+  "exact_verification": {
+    "conclusion": "exact_base_plus_adapter_merge_verified",
+    "model_tensor_count": 291,
+    "adapted_model_tensor_count": 224,
+    "unchanged_model_tensor_count": 67,
+    "adapter_tensor_count": 448,
+    "mismatch_count": 0,
+    "evidence_path": "docs/summary/20260810T223534Z/chk3_cp250_generation_comparison/chk3_cp250_exact_merge_lineage.json",
+    "evidence_sha256": "6c7b0b375aa3f0a175654b35a9748bc0dc5d0faf7d8e6f759fa5df665eba6125",
+    "payload_sha256": "841dcded5a27adac68796afe1be6f54aa2c9b25a8ada21abeb55a5cc91e4df7e"
+  },
+  "scope": {
+    "evaluation_only": true,
+    "promotable_to_canonical_dag": false,
+    "downstream_training_allowed": false
+  }
+}

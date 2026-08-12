@@ -1,0 +1,65 @@
+{
+  "artifacts": [
+    {
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "artifact_id": "eval-chk0-base",
+      "design_checkpoint_id": "chk-0",
+      "intended_parent_id": null,
+      "lineage_status": "verified_root_artifact",
+      "model_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "model_sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "tokenizer_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "tokenizer_sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "usable_for_evaluation": true,
+      "verified_parent_artifact_id": null
+    },
+    {
+      "adapter_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200",
+      "adapter_sha256": "fa454f73071b3989bf7c9ea3aaabb5a599196396a3ecb369d8956b849bacdc2f",
+      "artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+      "design_checkpoint_id": "chk-1",
+      "intended_parent_id": "chk-0",
+      "lineage_status": "verified_parent_matches_intended_parent",
+      "model_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "model_sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+      "tokenizer_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "tokenizer_sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+      "usable_for_evaluation": true,
+      "verified_parent_artifact_id": "eval-chk0-base"
+    }
+  ],
+  "bindings": {
+    "evaluation_config": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/configs/main/checkpoint_generation_eval_11.json",
+      "sha256": "0eb08f0a360927d4aab7a14ebb74cf939a7cd59c79aed474746af1bb800577ff"
+    },
+    "exact_merge_evidence": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_exact_merge_lineage.json",
+      "payload_sha256": "09234146493643b64b93b8afb1db8cd31f5b86216112a3f7466d3475a139ea3d",
+      "sha256": "a09010d8e79b5ad9df3329596c8308bc32d9afb9d5d85e4c51872d17acca49d5"
+    },
+    "promotion_manifest": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/promotion_manifest.json",
+      "payload_sha256": "293b591af4af618f40156fca57ed3176329833dc5b993d5ffa00ad2427c3489b",
+      "sha256": "ba0487cbea4082424b4f016ee01aac342a306eb3aeb3b94d7b560d685f56ebef"
+    },
+    "test_manifest": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/checkpoint_eval_11_v1/dataset/test_manifest.json",
+      "payload_sha256": "4be304b880e46721587ada9a7294dcd161c8529a7dccbdf602768cd35bb3986e",
+      "sha256": "e73bb3a29b56fe8152799611fa9aeb67e6c30573ec2f8eda8ac9082878ee35a9"
+    }
+  },
+  "claim_boundary": "Adjacent chk0-to-chk1 common-test comparison on the frozen Chapter 2 raw D-1 evidence-to-Minutes stress benchmark. It estimates only the first post-training edge and is out-of-task for an atomic-analysis chk1.",
+  "evaluation_scope": "current chk0 -> clean-v2 LR1e-6 selected chk1 checkpoint-200",
+  "generated_at_utc": "2026-08-10T13:10:48Z",
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "5d645361303268d14edb087db4812a328bb46343338e6bc2df4f9f2229140e38"
+  },
+  "lineage_evidence": {
+    "eval-chk1-clean-v2-lr1e6-cp200": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_exact_merge_lineage.json"
+  },
+  "schema_version": "retrain-v2-checkpoint-eval-manifest-v1",
+  "training_performed": false
+}

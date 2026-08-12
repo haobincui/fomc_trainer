@@ -1,0 +1,4977 @@
+{
+  "comparison": {
+    "baseline_artifact_id": "eval-chk0-base",
+    "candidate_artifact_id": "eval-chk1-clean-v2-lr1e6-cp200",
+    "common_input_validation_sources_sha256": "aee3bb95a0dc48d4ffc1b0931b48acdb4a995a4968f0aaa7f72e5f242bff1d4c",
+    "common_run_binding_sha256": "ffa5330cdb76de9b98465be85807aab2f9b9cddbc8025be3ded33f61b6319021",
+    "difference_definition": "candidate_minus_baseline",
+    "matrix": {
+      "artifact_count": 2,
+      "paired_sample_keys_identical": true,
+      "rows_per_artifact": 33,
+      "sample_ids_sha256": "0744fe09a63518076196fcf24292fe44876fa26c88267386ec369bf8bf27a081",
+      "total_rows": 66
+    }
+  },
+  "conclusion_boundary": {
+    "benchmark": "Frozen Chapter 2 raw D-1 point-in-time evidence to official Minutes stress benchmark, 33 section rows across 11 meetings.",
+    "candidate_product_task": "chk1 is trained for point-in-time evidence to atomic FOMC analysis, so similarity to official Minutes is an out-of-task stress signal.",
+    "human_or_llm_judge_used_by_this_summary": false,
+    "inference_unit": "Paired differences are formed on common eligible sample rows, then aggregated and bootstrapped by meeting_id; 33 rows are not 33 independent meeting clusters.",
+    "metric_limits": [
+      "BERTScore, MPNet cosine, and ROUGE-L measure reference similarity, not factual correctness.",
+      "rule_covered_unsupported_rate covers only declared numeric, direction, policy-stance, and custom rules; it is not exhaustive factuality or NLI.",
+      "Direction and policy-stance consistency must be interpreted together with their coverage and eligible-pair counts.",
+      "Length ratio is descriptive; its candidate-minus-baseline sign is not inherently beneficial or harmful."
+    ],
+    "not_supported": [
+      "causal attribution of metric changes to training",
+      "automatic promotion of chk1 or readiness for chk2",
+      "generalization beyond the frozen 11-meeting benchmark",
+      "claims based on length-tolerant results while omitting strict invalid counts"
+    ],
+    "primary_analysis": "strict-final-answer-v2; invalid outputs remain visible in the declared 2 x 33 matrix.",
+    "robustness_analysis": "length-tolerant-open-tags-v1 is diagnostic only and cannot replace the strict result.",
+    "scoring_or_generation_run_by_this_summary": false
+  },
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "7ca80ccefc2ce2ede1828d7881b28a30f7b4b80bb5077284a25f430ed15c9c6c"
+  },
+  "policies": {
+    "length_tolerant": {
+      "analysis_role": "diagnostic_robustness_only",
+      "inference": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 20260729,
+        "bootstrap_unit": "meeting_id",
+        "confidence": 0.95
+      },
+      "policy_id": "length-tolerant-open-tags-v1",
+      "source_artifacts": {
+        "audit": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores_length_tolerant/audit.json",
+          "payload_sha256": "44faf6d6fa349456e9b116a421b6c1a589bbeaa0d90493bb0ef6900844d58c00",
+          "sha256": "00c0d750736595602bd94d9c163f5b4ccbb749d8eb0a5d2b229156889d4162d7"
+        },
+        "claim_checks": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores_length_tolerant/claim_checks.jsonl",
+          "row_count": 29959,
+          "sha256": "d347175bb25f50324f8b3635b8d244c1e719df6f347c9a400e8e019d4dbebbc7"
+        },
+        "contrasts": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores_length_tolerant/contrasts.jsonl",
+          "row_count": 44,
+          "sha256": "bf7bbb10dd61753192fa37cbff06a8aa6f52dfcce9576655d7ad00ab2b4c88c4"
+        },
+        "input_validation": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores_length_tolerant/input_validation.json",
+          "payload_sha256": "654ffeeb87930679a3490fdc70c8d5abb5ef92602ca2a6064c5016b5d00e1920",
+          "sha256": "b26ec358dfa258a5fc44c764de41aa9da9cf22e37374c433302d2c93db8e6b19"
+        },
+        "row_scores": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores_length_tolerant/row_scores.jsonl",
+          "row_count": 66,
+          "sha256": "ce8dbc549cb577cdfd0e7c526985880d288d0a64afde37fc9c4b1d01483ee016"
+        },
+        "summary": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores_length_tolerant/summary.jsonl",
+          "row_count": 160,
+          "sha256": "3a0c6e54a9e41c8a7f9e3a8b149edbf3421aabd9ec9d079fb86dd58cc67aa49e"
+        }
+      },
+      "subsets": {
+        "all_11_meetings": {
+          "invalid_counts": {
+            "eval-chk0-base": {
+              "n_invalid_output": 0,
+              "n_missing_input": 0,
+              "n_rows_total": 33,
+              "n_valid_output": 33,
+              "valid_output_rate": 1.0
+            },
+            "eval-chk1-clean-v2-lr1e6-cp200": {
+              "n_invalid_output": 0,
+              "n_missing_input": 0,
+              "n_rows_total": 33,
+              "n_valid_output": 33,
+              "valid_output_rate": 1.0
+            }
+          },
+          "metric_groups": {
+            "directional": {
+              "direction_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": null,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "paired_baseline_mean": null,
+                  "paired_candidate_mean": null
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 33,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 33,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "benefit_oriented_estimate": null,
+                  "ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": null,
+                  "inference_status": "insufficient_meeting_clusters",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 0,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 0,
+                  "n_pairs_ineligible": 33,
+                  "p_value": null,
+                  "p_value_holm": null
+                }
+              },
+              "direction_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "policy_stance_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": null,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "paired_baseline_mean": null,
+                  "paired_candidate_mean": null
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 33,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 33,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "benefit_oriented_estimate": null,
+                  "ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": null,
+                  "inference_status": "insufficient_meeting_clusters",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 0,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 0,
+                  "n_pairs_ineligible": 33,
+                  "p_value": null,
+                  "p_value_holm": null
+                }
+              },
+              "policy_stance_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 21,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 21,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 7,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 21,
+                  "n_pairs_ineligible": 12,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "factual_numeric": {
+              "evidence_value_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.001673738447931996,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.0037762237762237762,
+                    "upper": 0.008937299259879905
+                  },
+                  "paired_baseline_mean": 0.0015381034735873446,
+                  "paired_candidate_mean": 0.0032118419215193404
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.004102206037689909
+                    },
+                    "mean": 0.0015381034735873446,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.009635525764558022
+                    },
+                    "mean": 0.0032118419215193404,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0037762237762237762,
+                    "upper": 0.008937299259879905
+                  },
+                  "benefit_oriented_estimate": 0.001673738447931996,
+                  "ci_95": {
+                    "lower": -0.0037762237762237762,
+                    "upper": 0.008937299259879905
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.15060749414197122,
+                  "estimate": 0.001673738447931996,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "novel_number_rate": {
+                "headline": {
+                  "candidate_minus_baseline": -0.00032808398950131233,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.000984251968503937,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.00032808398950131233,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0014958863126402395
+                    },
+                    "mean": 0.0006551864263040419,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 13,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0821917808219178
+                    },
+                    "mean": 0.0273972602739726,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 13,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": 0.000984251968503937
+                  },
+                  "benefit_oriented_estimate": 0.00032808398950131233,
+                  "ci_95": {
+                    "lower": -0.000984251968503937,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.408248290463863,
+                  "estimate": -0.00032808398950131233,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 6,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 10,
+                  "n_pairs_ineligible": 23,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "numeric_value_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0003360215053763345,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0010080645161290036
+                  },
+                  "paired_baseline_mean": 0.9996639784946236,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.9985041136873598,
+                      "upper": 1.0
+                    },
+                    "mean": 0.9993380099886603,
+                    "median": 1.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 11,
+                    "n_rows_ineligible": 22,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.9075342465753424,
+                      "upper": 1.0
+                    },
+                    "mean": 0.9691780821917808,
+                    "median": 1.0,
+                    "n_meetings": 8,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 10,
+                    "n_rows_ineligible": 23,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0010080645161290036
+                  },
+                  "benefit_oriented_estimate": 0.0003360215053763345,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0010080645161290036
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.408248290463863,
+                  "estimate": 0.0003360215053763345,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 6,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 8,
+                  "n_pairs_ineligible": 25,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rule_covered_unsupported_rate": {
+                "headline": {
+                  "candidate_minus_baseline": -0.011792320319065094,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.03855629139072849,
+                    "upper": 0.00295857988165682
+                  },
+                  "paired_baseline_mean": 0.8451256536523983,
+                  "paired_candidate_mean": 0.8333333333333334
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.6714950719839967,
+                      "upper": 0.9937807862697109
+                    },
+                    "mean": 0.8618766550808115,
+                    "median": 0.9993377483443708,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 13,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.5185185185185186,
+                      "upper": 0.9629629629629629
+                    },
+                    "mean": 0.7777777777777778,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 13,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.00295857988165682,
+                    "upper": 0.03855629139072849
+                  },
+                  "benefit_oriented_estimate": 0.011792320319065094,
+                  "ci_95": {
+                    "lower": -0.03855629139072849,
+                    "upper": 0.00295857988165682
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.36631501549548773,
+                  "estimate": -0.011792320319065094,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 6,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 10,
+                  "n_pairs_ineligible": 23,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "time_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 2,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 3,
+                    "n_rows_ineligible": 30,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 3,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 4,
+                    "n_rows_ineligible": 29,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 2,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 3,
+                  "n_pairs_ineligible": 30,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "unit_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0019400233606470068,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.00391240994841821,
+                    "upper": -0.00011037527593818985
+                  },
+                  "paired_baseline_mean": 0.043606690027313676,
+                  "paired_candidate_mean": 0.041666666666666664
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 9.46073793755913e-05,
+                      "upper": 0.1156560702080449
+                    },
+                    "mean": 0.0427815762809194,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 11,
+                    "n_rows_ineligible": 22,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.09375
+                    },
+                    "mean": 0.03125,
+                    "median": 0.0,
+                    "n_meetings": 8,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 10,
+                    "n_rows_ineligible": 23,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.00391240994841821,
+                    "upper": -0.00011037527593818985
+                  },
+                  "benefit_oriented_estimate": -0.0019400233606470068,
+                  "ci_95": {
+                    "lower": -0.00391240994841821,
+                    "upper": -0.00011037527593818985
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.6993158412173467,
+                  "estimate": -0.0019400233606470068,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 6,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 8,
+                  "n_pairs_ineligible": 25,
+                  "p_value": 0.25,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "semantic": {
+              "bertscore_f1": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0008563132543751698,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.0031352996410682578,
+                    "upper": 0.0014401542134997146
+                  },
+                  "paired_baseline_mean": 0.14478749175768396,
+                  "paired_candidate_mean": 0.1439311785033088
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.1366214315510846,
+                      "upper": 0.15350188369781828
+                    },
+                    "mean": 0.14478749175768396,
+                    "median": 0.14070817611778777,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.13556077386823556,
+                      "upper": 0.15291286632132686
+                    },
+                    "mean": 0.1439311785033088,
+                    "median": 0.1388591619906947,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0031352996410682578,
+                    "upper": 0.0014401542134997146
+                  },
+                  "benefit_oriented_estimate": -0.0008563132543751698,
+                  "ci_95": {
+                    "lower": -0.0031352996410682578,
+                    "upper": 0.0014401542134997146
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.21018718640173042,
+                  "estimate": -0.0008563132543751698,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.5,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_precision": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0015819208052452146,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.00420613955089854,
+                    "upper": 0.0008476078755582259
+                  },
+                  "paired_baseline_mean": 0.14043117760508372,
+                  "paired_candidate_mean": 0.1388492567998385
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.13254031247575646,
+                      "upper": 0.14886661650904293
+                    },
+                    "mean": 0.14043117760508372,
+                    "median": 0.136598460554293,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.13071767453466987,
+                      "upper": 0.14760645035417275
+                    },
+                    "mean": 0.1388492567998385,
+                    "median": 0.13462543417765344,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.00420613955089854,
+                    "upper": 0.0008476078755582259
+                  },
+                  "benefit_oriented_estimate": -0.0015819208052452146,
+                  "ci_95": {
+                    "lower": -0.00420613955089854,
+                    "upper": 0.0008476078755582259
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.35365197348332916,
+                  "estimate": -0.0015819208052452146,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.2763671875,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_recall": {
+                "headline": {
+                  "candidate_minus_baseline": 1.1087193042388163e-05,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.002068303855070689,
+                    "upper": 0.0022234717526803177
+                  },
+                  "paired_baseline_mean": 0.14955431214667955,
+                  "paired_candidate_mean": 0.14956539933972193
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.14111337168180416,
+                      "upper": 0.15864297397050925
+                    },
+                    "mean": 0.14955431214667955,
+                    "median": 0.1452113056496942,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.140877718000971,
+                      "upper": 0.15890449378136237
+                    },
+                    "mean": 0.14956539933972193,
+                    "median": 0.14419435201799083,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.002068303855070689,
+                    "upper": 0.0022234717526803177
+                  },
+                  "benefit_oriented_estimate": 1.1087193042388163e-05,
+                  "ci_95": {
+                    "lower": -0.002068303855070689,
+                    "upper": 0.0022234717526803177
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.002932871070680295,
+                  "estimate": 1.1087193042388163e-05,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.9931640625,
+                  "p_value_holm": 1.0
+                }
+              },
+              "mpnet_cosine": {
+                "headline": {
+                  "candidate_minus_baseline": 0.005986560394190954,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.0022986550324202893,
+                    "upper": 0.013869697078169315
+                  },
+                  "paired_baseline_mean": 0.04245554020666043,
+                  "paired_candidate_mean": 0.048442100600851384
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.035892224936277195,
+                      "upper": 0.04905707443997677
+                    },
+                    "mean": 0.04245554020666043,
+                    "median": 0.04352365011488236,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.03965161539114872,
+                      "upper": 0.056544634345495795
+                    },
+                    "mean": 0.048442100600851384,
+                    "median": 0.05005167361722366,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0022986550324202893,
+                    "upper": 0.013869697078169315
+                  },
+                  "benefit_oriented_estimate": 0.005986560394190954,
+                  "ci_95": {
+                    "lower": -0.0022986550324202893,
+                    "upper": 0.013869697078169315
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.4187124354599587,
+                  "estimate": 0.005986560394190954,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.1923828125,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "surface": {
+              "format_compliance": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "generated_token_count": {
+                "headline": {
+                  "candidate_minus_baseline": -66.96969696969691,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -232.52121212121202,
+                    "upper": 96.37045454545445
+                  },
+                  "paired_baseline_mean": 6261.636363636364,
+                  "paired_candidate_mean": 6194.666666666668
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 6019.362878787879,
+                      "upper": 6502.637121212121
+                    },
+                    "mean": 6261.636363636364,
+                    "median": 6339.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 6038.423484848486,
+                      "upper": 6372.039393939394
+                    },
+                    "mean": 6194.666666666668,
+                    "median": 6102.666666666667,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -232.52121212121202,
+                    "upper": 96.37045454545445
+                  },
+                  "benefit_oriented_estimate": -66.96969696969691,
+                  "ci_95": {
+                    "lower": -232.52121212121202,
+                    "upper": 96.37045454545445
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.22691070927944257,
+                  "estimate": -66.96969696969691,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.4609375,
+                  "p_value_holm": 1.0
+                }
+              },
+              "length_ratio": {
+                "headline": {
+                  "candidate_minus_baseline": -0.00023101971056674583,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.2854859100024187,
+                    "upper": 0.3260631710657986
+                  },
+                  "paired_baseline_mean": 7.587171291662017,
+                  "paired_candidate_mean": 7.586940271951448
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 6.949438110832147,
+                      "upper": 8.284414813519206
+                    },
+                    "mean": 7.587171291662017,
+                    "median": 7.353478224065451,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 7.143926370707086,
+                      "upper": 8.10480067941031
+                    },
+                    "mean": 7.586940271951448,
+                    "median": 7.388417331721559,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.2854859100024187,
+                    "upper": 0.3260631710657986
+                  },
+                  "benefit_oriented_estimate": -0.00023101971056674583,
+                  "ci_95": {
+                    "lower": -0.2854859100024187,
+                    "upper": 0.3260631710657986
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.0004232218043897178,
+                  "estimate": -0.00023101971056674583,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "repetition_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.002365087533202021,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0005148547961816861,
+                    "upper": 0.004485103233973792
+                  },
+                  "paired_baseline_mean": 0.9840026824227247,
+                  "paired_candidate_mean": 0.9863677699559266
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.9814301892594766,
+                      "upper": 0.9861923927572233
+                    },
+                    "mean": 0.9840026824227247,
+                    "median": 0.9848209779390565,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.9853673961854297,
+                      "upper": 0.9873640610219475
+                    },
+                    "mean": 0.9863677699559266,
+                    "median": 0.9862503041215923,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.004485103233973792,
+                    "upper": -0.0005148547961816861
+                  },
+                  "benefit_oriented_estimate": -0.002365087533202021,
+                  "ci_95": {
+                    "lower": 0.0005148547961816861,
+                    "upper": 0.004485103233973792
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.6648132632082052,
+                  "estimate": 0.002365087533202021,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.068359375,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rouge_l_f1": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0022314331260444606,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.005355101133052745,
+                    "upper": 0.0007102780926978258
+                  },
+                  "paired_baseline_mean": 0.02675340545034137,
+                  "paired_candidate_mean": 0.024521972324296912
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.024794908260804153,
+                      "upper": 0.028771482161839196
+                    },
+                    "mean": 0.02675340545034137,
+                    "median": 0.026040934670222917,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.022107613875204223,
+                      "upper": 0.027010539004350465
+                    },
+                    "mean": 0.024521972324296912,
+                    "median": 0.023542953489281926,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.005355101133052745,
+                    "upper": 0.0007102780926978258
+                  },
+                  "benefit_oriented_estimate": -0.0022314331260444606,
+                  "ci_95": {
+                    "lower": -0.005355101133052745,
+                    "upper": 0.0007102780926978258
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.4140377604047081,
+                  "estimate": -0.0022314331260444606,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.1962890625,
+                  "p_value_holm": 1.0
+                }
+              }
+            }
+          },
+          "population": {
+            "bootstrap_unit": "meeting_id",
+            "meetings": 11,
+            "rows": 33
+          }
+        },
+        "prospective_only_9_meetings": {
+          "invalid_counts": {
+            "eval-chk0-base": {
+              "n_invalid_output": 0,
+              "n_missing_input": 0,
+              "n_rows_total": 27,
+              "n_valid_output": 27,
+              "valid_output_rate": 1.0
+            },
+            "eval-chk1-clean-v2-lr1e6-cp200": {
+              "n_invalid_output": 0,
+              "n_missing_input": 0,
+              "n_rows_total": 27,
+              "n_valid_output": 27,
+              "valid_output_rate": 1.0
+            }
+          },
+          "metric_groups": {
+            "directional": {
+              "direction_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": null,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "paired_baseline_mean": null,
+                  "paired_candidate_mean": null
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 27,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 27,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "benefit_oriented_estimate": null,
+                  "ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": null,
+                  "inference_status": "insufficient_meeting_clusters",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 0,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 0,
+                  "n_pairs_ineligible": 27,
+                  "p_value": null,
+                  "p_value_holm": null
+                }
+              },
+              "direction_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "policy_stance_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": null,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "paired_baseline_mean": null,
+                  "paired_candidate_mean": null
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 27,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": null,
+                      "upper": null
+                    },
+                    "mean": null,
+                    "median": null,
+                    "n_meetings": 0,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 0,
+                    "n_rows_ineligible": 27,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "benefit_oriented_estimate": null,
+                  "ci_95": {
+                    "lower": null,
+                    "upper": null
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": null,
+                  "inference_status": "insufficient_meeting_clusters",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 0,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 0,
+                  "n_pairs_ineligible": 27,
+                  "p_value": null,
+                  "p_value_holm": null
+                }
+              },
+              "policy_stance_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 15,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 15,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 5,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 15,
+                  "n_pairs_ineligible": 12,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "factual_numeric": {
+              "evidence_value_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0021026603822302745,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.004615384615384615,
+                    "upper": 0.01092336576207544
+                  },
+                  "paired_baseline_mean": 0.0018229241885155862,
+                  "paired_candidate_mean": 0.0039255845707458605
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.004899847265438664
+                    },
+                    "mean": 0.0018229241885155862,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.011776753712237582
+                    },
+                    "mean": 0.0039255845707458605,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.004615384615384615,
+                    "upper": 0.01092336576207544
+                  },
+                  "benefit_oriented_estimate": 0.0021026603822302745,
+                  "ci_95": {
+                    "lower": -0.004615384615384615,
+                    "upper": 0.01092336576207544
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.16986484116660766,
+                  "estimate": 0.0021026603822302745,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "novel_number_rate": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0004921259842519685,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.0014763779527559055,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0004921259842519685,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0019643814156738264
+                    },
+                    "mean": 0.0009172609968256586,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 9,
+                    "n_rows_ineligible": 18,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.10567514677103718
+                    },
+                    "mean": 0.03522504892367906,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 10,
+                    "n_rows_ineligible": 17,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": 0.0014763779527559055
+                  },
+                  "benefit_oriented_estimate": 0.0004921259842519685,
+                  "ci_95": {
+                    "lower": -0.0014763779527559055,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.5,
+                  "estimate": -0.0004921259842519685,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 4,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 7,
+                  "n_pairs_ineligible": 20,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "numeric_value_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0005040322580645018,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0015120967741935054
+                  },
+                  "paired_baseline_mean": 0.9994959677419355,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.9980260935652762,
+                      "upper": 1.0
+                    },
+                    "mean": 0.9990732139841244,
+                    "median": 1.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 7,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.8767123287671232,
+                      "upper": 1.0
+                    },
+                    "mean": 0.958904109589041,
+                    "median": 1.0,
+                    "n_meetings": 6,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 7,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0015120967741935054
+                  },
+                  "benefit_oriented_estimate": 0.0005040322580645018,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0015120967741935054
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.5,
+                  "estimate": 0.0005040322580645018,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 4,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 5,
+                  "n_pairs_ineligible": 22,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rule_covered_unsupported_rate": {
+                "headline": {
+                  "candidate_minus_baseline": -0.01785404339250493,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.058000000000000024,
+                    "upper": 0.00443786982248523
+                  },
+                  "paired_baseline_mean": 0.767854043392505,
+                  "paired_candidate_mean": 0.75
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.5488000000000001,
+                      "upper": 0.9912931007775952
+                    },
+                    "mean": 0.806759767444262,
+                    "median": 0.9564655038879767,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 9,
+                    "n_rows_ineligible": 18,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.42857142857142855,
+                      "upper": 0.9523809523809524
+                    },
+                    "mean": 0.7142857142857143,
+                    "median": 1.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 10,
+                    "n_rows_ineligible": 17,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.00443786982248523,
+                    "upper": 0.058000000000000024
+                  },
+                  "benefit_oriented_estimate": 0.01785404339250493,
+                  "ci_95": {
+                    "lower": -0.058000000000000024,
+                    "upper": 0.00443786982248523
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.44914874192639287,
+                  "estimate": -0.01785404339250493,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 4,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 7,
+                  "n_pairs_ineligible": 20,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "time_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 2,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 3,
+                    "n_rows_ineligible": 24,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 3,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 4,
+                    "n_rows_ineligible": 23,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 2,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 3,
+                  "n_pairs_ineligible": 24,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "unit_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": -0.002744472127063225,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.00548894425412645,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.06524447212706322,
+                  "paired_candidate_mean": 0.0625
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.161786047960137
+                    },
+                    "mean": 0.05976175646216133,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 7,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.125
+                    },
+                    "mean": 0.041666666666666664,
+                    "median": 0.0,
+                    "n_meetings": 6,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 7,
+                    "n_rows_ineligible": 20,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.00548894425412645,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": -0.002744472127063225,
+                  "ci_95": {
+                    "lower": -0.00548894425412645,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.8608022247350614,
+                  "estimate": -0.002744472127063225,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 4,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 5,
+                  "n_pairs_ineligible": 22,
+                  "p_value": 0.5,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "semantic": {
+              "bertscore_f1": {
+                "headline": {
+                  "candidate_minus_baseline": -0.00035602193250699094,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.0025598144840687015,
+                    "upper": 0.0021150941209330154
+                  },
+                  "paired_baseline_mean": 0.14390415152153918,
+                  "paired_candidate_mean": 0.1435481295890322
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.13467182788065016,
+                      "upper": 0.15384139020144888
+                    },
+                    "mean": 0.14390415152153918,
+                    "median": 0.14070817611778777,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.1335632901407393,
+                      "upper": 0.1542091957626427
+                    },
+                    "mean": 0.1435481295890322,
+                    "median": 0.13859306722537282,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0025598144840687015,
+                    "upper": 0.0021150941209330154
+                  },
+                  "benefit_oriented_estimate": -0.00035602193250699094,
+                  "ci_95": {
+                    "lower": -0.0025598144840687015,
+                    "upper": 0.0021150941209330154
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.09323654920651452,
+                  "estimate": -0.00035602193250699094,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.7734375,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_precision": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0008318283644387867,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.0029662053872650004,
+                    "upper": 0.0015605845625266124
+                  },
+                  "paired_baseline_mean": 0.13955272330472193,
+                  "paired_candidate_mean": 0.13872089494028314
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.13065887857594938,
+                      "upper": 0.1491489897736623
+                    },
+                    "mean": 0.13955272330472193,
+                    "median": 0.136598460554293,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.1289199193484024,
+                      "upper": 0.14920497552592785
+                    },
+                    "mean": 0.13872089494028314,
+                    "median": 0.13382132344545425,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0029662053872650004,
+                    "upper": 0.0015605845625266124
+                  },
+                  "benefit_oriented_estimate": -0.0008318283644387867,
+                  "ci_95": {
+                    "lower": -0.0029662053872650004,
+                    "upper": 0.0015605845625266124
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.22409564907374155,
+                  "estimate": -0.0008318283644387867,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.51953125,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_recall": {
+                "headline": {
+                  "candidate_minus_baseline": 0.00020422796598300783,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.00209623985335477,
+                    "upper": 0.002778391121250506
+                  },
+                  "paired_baseline_mean": 0.1486603827654702,
+                  "paired_candidate_mean": 0.14886461073145318
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.13903532776057168,
+                      "upper": 0.15905395448179752
+                    },
+                    "mean": 0.1486603827654702,
+                    "median": 0.1452113056496942,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.13861836883173323,
+                      "upper": 0.15981077935695626
+                    },
+                    "mean": 0.14886461073145318,
+                    "median": 0.1439468390588494,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.00209623985335477,
+                    "upper": 0.002778391121250506
+                  },
+                  "benefit_oriented_estimate": 0.00020422796598300783,
+                  "ci_95": {
+                    "lower": -0.00209623985335477,
+                    "upper": 0.002778391121250506
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.05154218855705033,
+                  "estimate": 0.00020422796598300783,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.9140625,
+                  "p_value_holm": 1.0
+                }
+              },
+              "mpnet_cosine": {
+                "headline": {
+                  "candidate_minus_baseline": 0.008623197104030332,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0010646149035920874,
+                    "upper": 0.016370297187479666
+                  },
+                  "paired_baseline_mean": 0.04203372621086944,
+                  "paired_candidate_mean": 0.05065692331489978
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.03399785664815259,
+                      "upper": 0.05001932367725581
+                    },
+                    "mean": 0.04203372621086944,
+                    "median": 0.042870533859257855,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.04139306550072092,
+                      "upper": 0.05861130730770466
+                    },
+                    "mean": 0.05065692331489978,
+                    "median": 0.05005167361722366,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0010646149035920874,
+                    "upper": 0.016370297187479666
+                  },
+                  "benefit_oriented_estimate": 0.008623197104030332,
+                  "ci_95": {
+                    "lower": 0.0010646149035920874,
+                    "upper": 0.016370297187479666
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.701240537383485,
+                  "estimate": 0.008623197104030332,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.05859375,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "surface": {
+              "format_compliance": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "generated_token_count": {
+                "headline": {
+                  "candidate_minus_baseline": -124.9259259259259,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -301.11111111111103,
+                    "upper": 59.853703703703815
+                  },
+                  "paired_baseline_mean": 6267.814814814814,
+                  "paired_candidate_mean": 6142.888888888889
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 5980.333333333333,
+                      "upper": 6543.672222222222
+                    },
+                    "mean": 6267.814814814814,
+                    "median": 6339.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 5986.033333333333,
+                      "upper": 6331.224074074074
+                    },
+                    "mean": 6142.888888888889,
+                    "median": 6047.333333333333,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -301.11111111111103,
+                    "upper": 59.853703703703815
+                  },
+                  "benefit_oriented_estimate": -124.9259259259259,
+                  "ci_95": {
+                    "lower": -301.11111111111103,
+                    "upper": 59.853703703703815
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.4226521594845409,
+                  "estimate": -124.9259259259259,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.21875,
+                  "p_value_holm": 1.0
+                }
+              },
+              "length_ratio": {
+                "headline": {
+                  "candidate_minus_baseline": -0.12341489544356093,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.3946783539187123,
+                    "upper": 0.23653381872552356
+                  },
+                  "paired_baseline_mean": 7.78218068705301,
+                  "paired_candidate_mean": 7.65876579160945
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 7.078911625185203,
+                      "upper": 8.539125373040383
+                    },
+                    "mean": 7.78218068705301,
+                    "median": 7.5147504685430375,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 7.159447178122658,
+                      "upper": 8.258107558699734
+                    },
+                    "mean": 7.65876579160945,
+                    "median": 7.388417331721559,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.3946783539187123,
+                    "upper": 0.23653381872552356
+                  },
+                  "benefit_oriented_estimate": -0.12341489544356093,
+                  "ci_95": {
+                    "lower": -0.3946783539187123,
+                    "upper": 0.23653381872552356
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.23502349470961087,
+                  "estimate": -0.12341489544356093,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.51171875,
+                  "p_value_holm": 1.0
+                }
+              },
+              "repetition_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0021633762297974656,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 5.2438071443557804e-05,
+                    "upper": 0.004532468800638484
+                  },
+                  "paired_baseline_mean": 0.98381208801149,
+                  "paired_candidate_mean": 0.9859754642412875
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.9808500770002752,
+                      "upper": 0.9864182733432467
+                    },
+                    "mean": 0.98381208801149,
+                    "median": 0.9848209779390565,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.9849742743693432,
+                      "upper": 0.9870815883041814
+                    },
+                    "mean": 0.9859754642412875,
+                    "median": 0.9857658195130234,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.004532468800638484,
+                    "upper": -5.2438071443557804e-05
+                  },
+                  "benefit_oriented_estimate": -0.0021633762297974656,
+                  "ci_95": {
+                    "lower": 5.2438071443557804e-05,
+                    "upper": 0.004532468800638484
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": 0.5880966269198092,
+                  "estimate": 0.0021633762297974656,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.15625,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rouge_l_f1": {
+                "headline": {
+                  "candidate_minus_baseline": -0.0005192515418101583,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.003230884553082058,
+                    "upper": 0.0019101956304124533
+                  },
+                  "paired_baseline_mean": 0.025890396173687005,
+                  "paired_candidate_mean": 0.025371144631876848
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.023970737420849396,
+                      "upper": 0.028039225410525365
+                    },
+                    "mean": 0.025890396173687005,
+                    "median": 0.02582621355692404,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.022634748076490012,
+                      "upper": 0.02799750774936492
+                    },
+                    "mean": 0.025371144631876848,
+                    "median": 0.027406707838094124,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.003230884553082058,
+                    "upper": 0.0019101956304124533
+                  },
+                  "benefit_oriented_estimate": -0.0005192515418101583,
+                  "ci_95": {
+                    "lower": -0.003230884553082058,
+                    "upper": 0.0019101956304124533
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.121823175593037,
+                  "estimate": -0.0005192515418101583,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.7265625,
+                  "p_value_holm": 1.0
+                }
+              }
+            }
+          },
+          "population": {
+            "bootstrap_unit": "meeting_id",
+            "meetings": 9,
+            "rows": 27
+          }
+        }
+      }
+    },
+    "strict": {
+      "analysis_role": "primary",
+      "inference": {
+        "bootstrap_samples": 10000,
+        "bootstrap_seed": 20260729,
+        "bootstrap_unit": "meeting_id",
+        "confidence": 0.95
+      },
+      "policy_id": "strict-final-answer-v2",
+      "source_artifacts": {
+        "audit": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores/audit.json",
+          "payload_sha256": "e1017cbfe750db5e8543842a441a25f16e1e2fcf9d07c4616f512d41c02746b5",
+          "sha256": "4aaf140384e56128d52daa55aa75eb22c6a8c3411376931884e28132df003c10"
+        },
+        "claim_checks": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores/claim_checks.jsonl",
+          "row_count": 29959,
+          "sha256": "d347175bb25f50324f8b3635b8d244c1e719df6f347c9a400e8e019d4dbebbc7"
+        },
+        "contrasts": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores/contrasts.jsonl",
+          "row_count": 44,
+          "sha256": "25f018204172532f1fb0357a6461840179f2814347fcf04af45dc7254ca0e83f"
+        },
+        "input_validation": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores/input_validation.json",
+          "payload_sha256": "107b285ec4b9df1d6a4edb054fbe9723d14afea33db76a1ce53bada17472a0e4",
+          "sha256": "e989a19017ab2805021abc17ac3b31107c887c8475572ee423641e2eb1ea6880"
+        },
+        "row_scores": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores/row_scores.jsonl",
+          "row_count": 66,
+          "sha256": "64defdaea6febb901db69d9d04cc5d6d4b301a7b51ae23c7aaa24021e0fcdb06"
+        },
+        "summary": {
+          "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_cp200_20260810_v1/scores/summary.jsonl",
+          "row_count": 156,
+          "sha256": "68cf3691d0732c6842b707ef8dcd7147041f4bf58c251cbe763570b7ab832857"
+        }
+      },
+      "subsets": {
+        "all_11_meetings": {
+          "invalid_counts": {
+            "eval-chk0-base": {
+              "n_invalid_output": 33,
+              "n_missing_input": 0,
+              "n_rows_total": 33,
+              "n_valid_output": 0,
+              "valid_output_rate": 0.0
+            },
+            "eval-chk1-clean-v2-lr1e6-cp200": {
+              "n_invalid_output": 33,
+              "n_missing_input": 0,
+              "n_rows_total": 33,
+              "n_valid_output": 0,
+              "valid_output_rate": 0.0
+            }
+          },
+          "metric_groups": {
+            "directional": {
+              "direction_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "direction_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "policy_stance_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 21,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 21,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 7,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 21,
+                  "n_pairs_ineligible": 12,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "policy_stance_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 21,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 7,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 21,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 7,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 21,
+                  "n_pairs_ineligible": 12,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "factual_numeric": {
+              "evidence_value_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "novel_number_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": -0.0
+                  },
+                  "benefit_oriented_estimate": -0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "numeric_value_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rule_covered_unsupported_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": -0.0
+                  },
+                  "benefit_oriented_estimate": -0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "time_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "unit_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "semantic": {
+              "bertscore_f1": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_precision": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_recall": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "mpnet_cosine": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "surface": {
+              "format_compliance": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "generated_token_count": {
+                "headline": {
+                  "candidate_minus_baseline": -66.96969696969691,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -232.52121212121202,
+                    "upper": 96.37045454545445
+                  },
+                  "paired_baseline_mean": 6261.636363636364,
+                  "paired_candidate_mean": 6194.666666666668
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 6019.362878787879,
+                      "upper": 6502.637121212121
+                    },
+                    "mean": 6261.636363636364,
+                    "median": 6339.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 6038.423484848486,
+                      "upper": 6372.039393939394
+                    },
+                    "mean": 6194.666666666668,
+                    "median": 6102.666666666667,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -232.52121212121202,
+                    "upper": 96.37045454545445
+                  },
+                  "benefit_oriented_estimate": -66.96969696969691,
+                  "ci_95": {
+                    "lower": -232.52121212121202,
+                    "upper": 96.37045454545445
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.22691070927944257,
+                  "estimate": -66.96969696969691,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.4609375,
+                  "p_value_holm": 1.0
+                }
+              },
+              "length_ratio": {
+                "headline": {
+                  "candidate_minus_baseline": -0.00023101971056674583,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.2854859100024187,
+                    "upper": 0.3260631710657986
+                  },
+                  "paired_baseline_mean": 7.587171291662017,
+                  "paired_candidate_mean": 7.586940271951448
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 6.949438110832147,
+                      "upper": 8.284414813519206
+                    },
+                    "mean": 7.587171291662017,
+                    "median": 7.353478224065451,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 7.143926370707086,
+                      "upper": 8.10480067941031
+                    },
+                    "mean": 7.586940271951448,
+                    "median": 7.388417331721559,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.2854859100024187,
+                    "upper": 0.3260631710657986
+                  },
+                  "benefit_oriented_estimate": -0.00023101971056674583,
+                  "ci_95": {
+                    "lower": -0.2854859100024187,
+                    "upper": 0.3260631710657986
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.0004232218043897178,
+                  "estimate": -0.00023101971056674583,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "repetition_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": -0.0
+                  },
+                  "benefit_oriented_estimate": -0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rouge_l_f1": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 11,
+                    "n_meetings_total": 11,
+                    "n_rows_eligible": 33,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 33
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 33,
+                  "n_meetings": 11,
+                  "n_meetings_total": 11,
+                  "n_pairs_eligible": 33,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            }
+          },
+          "population": {
+            "bootstrap_unit": "meeting_id",
+            "meetings": 11,
+            "rows": 33
+          }
+        },
+        "prospective_only_9_meetings": {
+          "invalid_counts": {
+            "eval-chk0-base": {
+              "n_invalid_output": 27,
+              "n_missing_input": 0,
+              "n_rows_total": 27,
+              "n_valid_output": 0,
+              "valid_output_rate": 0.0
+            },
+            "eval-chk1-clean-v2-lr1e6-cp200": {
+              "n_invalid_output": 27,
+              "n_missing_input": 0,
+              "n_rows_total": 27,
+              "n_valid_output": 0,
+              "valid_output_rate": 0.0
+            }
+          },
+          "metric_groups": {
+            "directional": {
+              "direction_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "direction_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "policy_stance_consistency": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 15,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 15,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 5,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 15,
+                  "n_pairs_ineligible": 12,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "policy_stance_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 15,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 5,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 15,
+                    "n_rows_ineligible": 12,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 5,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 15,
+                  "n_pairs_ineligible": 12,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "factual_numeric": {
+              "evidence_value_coverage": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "novel_number_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": -0.0
+                  },
+                  "benefit_oriented_estimate": -0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "numeric_value_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rule_covered_unsupported_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": -0.0
+                  },
+                  "benefit_oriented_estimate": -0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "time_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "unit_accuracy": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "semantic": {
+              "bertscore_f1": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_precision": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "bertscore_recall": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "mpnet_cosine": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            },
+            "surface": {
+              "format_compliance": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "generated_token_count": {
+                "headline": {
+                  "candidate_minus_baseline": -124.9259259259259,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -301.11111111111103,
+                    "upper": 59.853703703703815
+                  },
+                  "paired_baseline_mean": 6267.814814814814,
+                  "paired_candidate_mean": 6142.888888888889
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 5980.333333333333,
+                      "upper": 6543.672222222222
+                    },
+                    "mean": 6267.814814814814,
+                    "median": 6339.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 5986.033333333333,
+                      "upper": 6331.224074074074
+                    },
+                    "mean": 6142.888888888889,
+                    "median": 6047.333333333333,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -301.11111111111103,
+                    "upper": 59.853703703703815
+                  },
+                  "benefit_oriented_estimate": -124.9259259259259,
+                  "ci_95": {
+                    "lower": -301.11111111111103,
+                    "upper": 59.853703703703815
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.4226521594845409,
+                  "estimate": -124.9259259259259,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.21875,
+                  "p_value_holm": 1.0
+                }
+              },
+              "length_ratio": {
+                "headline": {
+                  "candidate_minus_baseline": -0.12341489544356093,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": -0.3946783539187123,
+                    "upper": 0.23653381872552356
+                  },
+                  "paired_baseline_mean": 7.78218068705301,
+                  "paired_candidate_mean": 7.65876579160945
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 7.078911625185203,
+                      "upper": 8.539125373040383
+                    },
+                    "mean": 7.78218068705301,
+                    "median": 7.5147504685430375,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 7.159447178122658,
+                      "upper": 8.258107558699734
+                    },
+                    "mean": 7.65876579160945,
+                    "median": 7.388417331721559,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "descriptive",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.3946783539187123,
+                    "upper": 0.23653381872552356
+                  },
+                  "benefit_oriented_estimate": -0.12341489544356093,
+                  "ci_95": {
+                    "lower": -0.3946783539187123,
+                    "upper": 0.23653381872552356
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": -0.23502349470961087,
+                  "estimate": -0.12341489544356093,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 0.51171875,
+                  "p_value_holm": 1.0
+                }
+              },
+              "repetition_rate": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 1.0,
+                  "paired_candidate_mean": 1.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 1.0,
+                      "upper": 1.0
+                    },
+                    "mean": 1.0,
+                    "median": 1.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "lower",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": -0.0,
+                    "upper": -0.0
+                  },
+                  "benefit_oriented_estimate": -0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              },
+              "rouge_l_f1": {
+                "headline": {
+                  "candidate_minus_baseline": 0.0,
+                  "candidate_minus_baseline_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "paired_baseline_mean": 0.0,
+                  "paired_candidate_mean": 0.0
+                },
+                "marginal_estimates": {
+                  "eval-chk0-base": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  },
+                  "eval-chk1-clean-v2-lr1e6-cp200": {
+                    "ci_95": {
+                      "lower": 0.0,
+                      "upper": 0.0
+                    },
+                    "mean": 0.0,
+                    "median": 0.0,
+                    "n_meetings": 9,
+                    "n_meetings_total": 9,
+                    "n_rows_eligible": 27,
+                    "n_rows_ineligible": 0,
+                    "n_rows_total": 27
+                  }
+                },
+                "metric_direction": "higher",
+                "paired_difference": {
+                  "benefit_oriented_ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "benefit_oriented_estimate": 0.0,
+                  "ci_95": {
+                    "lower": 0.0,
+                    "upper": 0.0
+                  },
+                  "definition": "candidate_minus_baseline_on_common_eligible_samples",
+                  "effect_size_paired_dz": null,
+                  "estimate": 0.0,
+                  "inference_status": "available",
+                  "n_common_samples_total": 27,
+                  "n_meetings": 9,
+                  "n_meetings_total": 9,
+                  "n_pairs_eligible": 27,
+                  "n_pairs_ineligible": 0,
+                  "p_value": 1.0,
+                  "p_value_holm": 1.0
+                }
+              }
+            }
+          },
+          "population": {
+            "bootstrap_unit": "meeting_id",
+            "meetings": 9,
+            "rows": 27
+          }
+        }
+      }
+    }
+  },
+  "schema_version": "chk0-chk1-cp200-generation-evaluation-summary-v1",
+  "status": "validated"
+}

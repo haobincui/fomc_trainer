@@ -1,0 +1,271 @@
+{
+  "schema_version": "chk3-checkpoint-selection-receipt-v1",
+  "created_at_utc": "2026-08-11T10:46:04Z",
+  "status": "complete",
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "67cd736e3ef4ed9d75304da39cb88a18324b01de74cf5349467b7ec28cb8137b"
+  },
+  "task_contract_id": "chk3-native-analysis-to-minutes",
+  "decision": {
+    "selected_checkpoint_step": 318,
+    "selected_model_label": "chk3-cp318-exact-merged",
+    "selected_model_path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/models/chk3_cp318_merged",
+    "selected_model_directory_sha256": "d7a33a5dcd48f8d85b3587d28426496bb259b88e6861d5ca722f4e57115f2146",
+    "scope": "evaluation_only",
+    "canonical_promotion_authorized": false,
+    "downstream_training_authorized": false,
+    "reason": "checkpoint-318 is the only exact-merged finalist that passes all 12 preregistered native generation gates and it improves both non-identity-N11 semantic point estimates versus the chk1 baseline."
+  },
+  "selection_policy": {
+    "precedence": [
+      "exact-merged native generation hard gates",
+      "non-identity-N11 BERTScore and MPNet point estimates",
+      "adapter-overlay sweep as checkpoint-screening evidence"
+    ],
+    "preregistered_core_components": [
+      "delivery",
+      "native_structure",
+      "numeric_multiset_fidelity",
+      "date_set_fidelity",
+      "degeneration_limits"
+    ],
+    "semantic_invalid_policy": "A preregistered-core-invalid row receives zero for every semantic metric.",
+    "semantic_candidate_text": "answer",
+    "semantic_reference_text": "reference_minutes",
+    "main_semantic_cohort": "non_identity_n11",
+    "statistical_inference_authorized": false,
+    "weighted_composite_authorized": false,
+    "extended_signed_surface_role": "diagnostic_only"
+  },
+  "adapter_overlay_sweep": [
+    {
+      "checkpoint_step": 170,
+      "cases": 12,
+      "hard_valid_cases": 10,
+      "eos_cases": 11,
+      "cap_cases": 1,
+      "periodic_tail_cases": 1,
+      "numeric_fidelity_cases": 11,
+      "date_fidelity_cases": 10,
+      "max_tail_token_4gram_repetition": 0.99608227,
+      "non_identity_n11_bertscore_f1": 0.8008566336198286,
+      "non_identity_n11_mpnet_cosine": 0.7969687472690236,
+      "result": "rejected",
+      "primary_failure": "delivery cap and strict periodic loop, with numeric/date fidelity failures"
+    },
+    {
+      "checkpoint_step": 200,
+      "cases": 12,
+      "hard_valid_cases": 12,
+      "eos_cases": 12,
+      "cap_cases": 0,
+      "periodic_tail_cases": 0,
+      "numeric_fidelity_cases": 12,
+      "date_fidelity_cases": 12,
+      "max_tail_token_4gram_repetition": 0.38491675,
+      "non_identity_n11_bertscore_f1": 0.9767040827057578,
+      "non_identity_n11_mpnet_cosine": 0.9723174680363048,
+      "result": "advanced_to_exact_merge",
+      "primary_failure": null
+    },
+    {
+      "checkpoint_step": 230,
+      "cases": 12,
+      "hard_valid_cases": 11,
+      "eos_cases": 12,
+      "cap_cases": 0,
+      "periodic_tail_cases": 0,
+      "numeric_fidelity_cases": 12,
+      "date_fidelity_cases": 11,
+      "max_tail_token_4gram_repetition": 0.46180964,
+      "non_identity_n11_bertscore_f1": 0.8885822404514659,
+      "non_identity_n11_mpnet_cosine": 0.8761505592953075,
+      "result": "rejected",
+      "primary_failure": "one date-fidelity failure"
+    },
+    {
+      "checkpoint_step": 318,
+      "cases": 12,
+      "hard_valid_cases": 12,
+      "eos_cases": 12,
+      "cap_cases": 0,
+      "periodic_tail_cases": 0,
+      "numeric_fidelity_cases": 12,
+      "date_fidelity_cases": 12,
+      "max_tail_token_4gram_repetition": 0.35095448,
+      "non_identity_n11_bertscore_f1": 0.97904587875713,
+      "non_identity_n11_mpnet_cosine": 0.9701662876389243,
+      "result": "advanced_to_exact_merge",
+      "primary_failure": null
+    }
+  ],
+  "exact_merged_replay": [
+    {
+      "run_id": "chk1_baseline",
+      "checkpoint_step": null,
+      "model_label": "chk1-clean-v2-lr1e6-cp200",
+      "cases": 12,
+      "preregistered_core_valid_cases": 12,
+      "penalized_cases": 0,
+      "non_identity_cases": 11,
+      "non_identity_bertscore_f1": 0.9683556394143538,
+      "non_identity_mpnet_cosine": 0.9440444003451954,
+      "bertscore_f1_delta_vs_chk1": 0,
+      "mpnet_cosine_delta_vs_chk1": 0,
+      "result": "baseline"
+    },
+    {
+      "run_id": "cp200",
+      "checkpoint_step": 200,
+      "model_label": "chk3-cp200-exact-merged",
+      "cases": 12,
+      "preregistered_core_valid_cases": 11,
+      "penalized_cases": 1,
+      "penalty_reason_counts": {
+        "date_set_not_preserved": 1
+      },
+      "failed_sample_id": "chk1-analysis-2023-07-26-59bbaffd1cb36046",
+      "failed_sample_note": "The generated answer retained mid-July but omitted four date surface values: June 30, July 17, May, and June.",
+      "non_identity_cases": 11,
+      "non_identity_bertscore_f1": 0.8870507912202314,
+      "non_identity_mpnet_cosine": 0.8809889284047213,
+      "bertscore_f1_delta_vs_chk1": -0.08130484819412231,
+      "mpnet_cosine_delta_vs_chk1": -0.06305547194047408,
+      "result": "rejected"
+    },
+    {
+      "run_id": "cp318",
+      "checkpoint_step": 318,
+      "model_label": "chk3-cp318-exact-merged",
+      "cases": 12,
+      "preregistered_core_valid_cases": 12,
+      "penalized_cases": 0,
+      "non_identity_cases": 11,
+      "non_identity_bertscore_f1": 0.9751288240606134,
+      "non_identity_mpnet_cosine": 0.9727328473871405,
+      "bertscore_f1_delta_vs_chk1": 0.006773184646259655,
+      "mpnet_cosine_delta_vs_chk1": 0.028688447041945023,
+      "bertscore_f1_pairwise_wins": 7,
+      "mpnet_cosine_pairwise_wins": 9,
+      "result": "selected"
+    }
+  ],
+  "merge_verification": {
+    "cp200": {
+      "conclusion": "exact_base_plus_adapter_merge_verified",
+      "model_tensor_count": 291,
+      "exact_adapted_model_tensor_count": 224,
+      "exact_unchanged_model_tensor_count": 67,
+      "adapter_tensor_count": 448,
+      "mismatch_count": 0,
+      "merged_model_directory_sha256": "5e18b378beca91c16236248ef70b399e13271f49af694973250d12d230ccec74"
+    },
+    "cp318": {
+      "conclusion": "exact_base_plus_adapter_merge_verified",
+      "model_tensor_count": 291,
+      "exact_adapted_model_tensor_count": 224,
+      "exact_unchanged_model_tensor_count": 67,
+      "adapter_tensor_count": 448,
+      "mismatch_count": 0,
+      "merged_model_directory_sha256": "d7a33a5dcd48f8d85b3587d28426496bb259b88e6861d5ca722f4e57115f2146"
+    }
+  },
+  "legacy_signed_surface_diagnostic": {
+    "cp318_stored_runner_quality_valid_cases": 10,
+    "cp318_preregistered_core_valid_cases": 12,
+    "interpretation": "The stored 10/12 quality count comes from the legacy signed-number surface checker and is not the preregistered promotion gate.",
+    "remaining_extended_diagnostic": "One otherwise valid row spells out an additional contextually supported 2024; it is reported but not independently zero-penalized."
+  },
+  "semantic_models": {
+    "bertscore": {
+      "repo_id": "FacebookAI/roberta-large",
+      "resolved_revision": "722cf37b1afa9454edce342e7895e588b6ff1d59",
+      "num_layers": 17,
+      "directory_sha256": "b970a47c99ab5d994a7bcd689ad86b48fb709076c5d309f6a39d5763478eab88"
+    },
+    "mpnet": {
+      "repo_id": "sentence-transformers/all-mpnet-base-v2",
+      "resolved_revision": "e8c3b32edf5434bc2275fc9bab85f82640a19130",
+      "directory_sha256": "1c8bfc2c3cb29e484b3ac3585c5166de44389c32cbfdc33d1f2b51634e37403f",
+      "independent_from_training_reward": true
+    },
+    "network_at_scoring_time": false
+  },
+  "evidence": [
+    {
+      "id": "sealed_n12",
+      "path": "docs/summary/20260811T003000Z/chk3_native_analysis_to_minutes_cp250_eval/samples_n12.json",
+      "file_sha256": "371d29601e343acf98cac6173663d842ead9acaa4a454991d512b3f00bf5ee77",
+      "payload_sha256": "691edd595422cb0c384728d88c86d361628da7914c8e22c32a9f6967b1e88ee6"
+    },
+    {
+      "id": "adapter_overlay_semantic",
+      "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/semantic/bert_mpnet_n12_v1.json",
+      "file_sha256": "4f51f6bb21665d56e04fe33b9de3bce50a893d4316f8203b3c12fd16b8eb323f",
+      "payload_sha256": "57bc9ad47d44e3b6997c91752c5ddbbbc82f8f12f95eee427691da880733b2a3"
+    },
+    {
+      "id": "cp170_generation_manifest",
+      "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/cp170/manifest.json",
+      "file_sha256": "45e66c293799ea1c0b342217d4e69dd5fe25d9c899bb46244a500fa6e12c8739",
+      "payload_sha256": "ccd173568ad2e45f4c14164bba89b349e7f791ed979ca698accef2eec0efaf0a"
+    },
+    {
+      "id": "cp200_generation_manifest",
+      "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/cp200/manifest.json",
+      "file_sha256": "cd5925e46bb5b5ff74e4170dae3fd19f90d84fb4373278ba4f17942faff5502e",
+      "payload_sha256": "37797e9e06ad48e481a28afc4339d3bc8b7c4b91e43afaa716e41a7c2c1a46ca"
+    },
+    {
+      "id": "cp230_generation_manifest",
+      "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/cp230/manifest.json",
+      "file_sha256": "abb6df5338aee55cbdc676718f4233aeecd427dc0c43c9888a55cf15ff51a3cb",
+      "payload_sha256": "4e85a334eecf6d37f8d3ea603155a6ba897dd72f314c4a482363a85e86427aa0"
+    },
+    {
+      "id": "cp318_generation_manifest",
+      "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/cp318/manifest.json",
+      "file_sha256": "1457829f5d68abf11e4052d7b3a57d4866e1d53becd16f3fb32f20f90b52f2c9",
+      "payload_sha256": "b206235de2751a670de9a5ac9a1965bedb3b4b811f79faaf338462a85dc70705"
+    },
+    {
+      "id": "cp200_exact_merged_generation_manifest",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/native_n12_merged/cp200/manifest.json",
+      "file_sha256": "616aa7aede53cf07d519f560368e478a6b2517df55d6dd398de891a9a6ef791f",
+      "payload_sha256": "28e5ad1db4ac18bb30f8239f894c9b65afa01c66bacf50eba9e755838a34232a"
+    },
+    {
+      "id": "cp318_exact_merged_generation_manifest",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/native_n12_merged/cp318/manifest.json",
+      "file_sha256": "8bc24bbf7827bf210ffffeb443c88740baf3e9773c66f9456fdaf13bbd4105c4",
+      "payload_sha256": "ce0e0410f1829d00f6958134290a70c74dae420cc25e5668943237f209c809aa"
+    },
+    {
+      "id": "exact_merged_semantic",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/semantic/merged_finalists_bert_mpnet_v1.json",
+      "file_sha256": "5fd3236b6491897d801fc00efc3058a776c80cc317579e277afb9e0457e454c6",
+      "payload_sha256": "906eba768bca18b6806726d889a3acab33e8fa3923433967a9b240edcdbca841"
+    },
+    {
+      "id": "cp200_exact_merge_lineage",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/lineage/chk3_cp200_exact_merge_lineage.json",
+      "file_sha256": "ac73cd0b721c507083fee687a55701e7ca026b44da1bb254cc16a28626fea0fc",
+      "payload_sha256": "2a5fda828506256bcef418d9f2723c23b50970242c0cf1fb10d8ed3d90e90431"
+    },
+    {
+      "id": "cp318_exact_merge_lineage",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/lineage/chk3_cp318_exact_merge_lineage.json",
+      "file_sha256": "599bd49bf093dbfcecedadb8901cfb65831aa58dc8fcf42b5e58f10cafd1f80e",
+      "payload_sha256": "032f3e496826ef4b45fd49d4a8d3f0f2ca0897f099b108f3c6f966658cb7f338"
+    }
+  ],
+  "limitations": [
+    "N12 is a deterministic diagnostic sample and does not authorize population inference.",
+    "The reference Minutes are synthetic teacher targets, not official FOMC Minutes.",
+    "BERTScore and MPNet measure reference similarity rather than factual correctness.",
+    "The non-identity view excludes one normalized-identity row.",
+    "The selected artifact is evaluation-only and does not authorize canonical DAG promotion or downstream training."
+  ],
+  "recommended_next_gate": "Run a larger frozen native analysis-to-Minutes evaluation (first N30, then the full held-out set) before any canonical promotion or downstream use."
+}

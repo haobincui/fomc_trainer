@@ -1,0 +1,75 @@
+{
+  "prompt_contract": {
+    "system_prompt_sha256": "879b7c4395d8fdf865742850eba88c6ff6730c2a74b3f1007ab4f1e128a1805c",
+    "training_config": "/home/haobin_cui/research_files_space_2/fomc_trainer/configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_smoke20_lr1e6_20260810.yaml",
+    "training_config_sha256": "f092e2aa2b1f9d2b8c9af53068c820d7d7238705a5b1944b4e3db293f48d7162",
+    "user_prompt_suffix_sha256": null
+  },
+  "samples": [
+    {
+      "analysis_sha256": "72f0972d02f74ab87442fd3e16fd6fed2fa23fc4b30f71e959aa013a2f39ed5f",
+      "length_bucket": "short",
+      "line_number": 80,
+      "prompt_sha256": "95449edf60f02092d288717268db5f2e69e93e092463c59e58ab8f7fe5e8068a",
+      "prompt_token_count": 300,
+      "response_sha256": "27854860a624efbdf78cd1e37eebd83d1955cd40a653db1a87834e87bf062a70",
+      "sample_id": "chk3-validation-95449edf60f02092d2887172",
+      "source_date_set_sha256": "156d610ee32ab356c6ab8794ce4607a564a30492d7a7a118d7d8eff0f63cbcff",
+      "source_date_values": 3,
+      "source_numeric_multiset_sha256": "0ffbd216a3900e8c88efa9ef60fae38d84d0e5839f00c65e4fc9973dcd9e56c4",
+      "source_numeric_occurrences": 1,
+      "source_quantile": 0.0
+    },
+    {
+      "analysis_sha256": "baf3df5098d0e5fa61cc7a845d628d57298cf107fb5b9b80e0b95963c0e5a565",
+      "length_bucket": "medium",
+      "line_number": 44,
+      "prompt_sha256": "2989048a123b98f4593d0b34efa9d7026cc93ba3dfa4efd298d42c4e780c4c89",
+      "prompt_token_count": 402,
+      "response_sha256": "dddae35929e51d5276406947d41fc49f700bdd2b10ab375eb957f3e7418ca8b6",
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34",
+      "source_date_set_sha256": "da726b501f20ac2294ea0c512dde7fc9b948dafedaabbd084e9d0a4c31698a0f",
+      "source_date_values": 5,
+      "source_numeric_multiset_sha256": "5a8d6a4bf5b10449d73cc85762dfbb409eb9109722ccb3f7ef0c70dc33cd7b83",
+      "source_numeric_occurrences": 9,
+      "source_quantile": 0.5
+    },
+    {
+      "analysis_sha256": "5e267418e61e930077761673524de75317bdfaa4eaa6be63913f80d26893b40b",
+      "length_bucket": "long",
+      "line_number": 133,
+      "prompt_sha256": "5fe1814988ed54de75825571da25e09dbcc8fcfa265bb344af38fdb7ed565bba",
+      "prompt_token_count": 560,
+      "response_sha256": "8c8714e728c5485501211e90216150dbacfbaabc23df697268cbe9a1b6d09747",
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571",
+      "source_date_set_sha256": "b1b3ee4475b8a6c8283c7552f67c3a7f4e4ddf60fde031a6efd7e765a3c7368a",
+      "source_date_values": 7,
+      "source_numeric_multiset_sha256": "083ca37efd98d6d54b6b34b9c65cad7472ed12150bc4b2449b0ccce2033639db",
+      "source_numeric_occurrences": 19,
+      "source_quantile": 1.0
+    }
+  ],
+  "schema_version": "chk3-sft-degeneration-samples-v1",
+  "selection": {
+    "algorithm": "validation-token-length-short-medium-long-v1",
+    "buckets": [
+      "short",
+      "medium",
+      "long"
+    ],
+    "rows": 3
+  },
+  "tokenizer": {
+    "files": {
+      "special_tokens_map.json": "59cda48bbe8bab9d61ffb410e6e3c07b6d98bff73cee7c88ff8b51f95f21ab1c",
+      "tokenizer.json": "d91915040cfac999d8c55f4b5bc6e67367c065e3a7a4e4b9438ce1f256addd86",
+      "tokenizer_config.json": "1430c0e4827806c372aff86a80b40563deed50e76ae945aa1a84152cd31d063b"
+    },
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1"
+  },
+  "validation_data": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/chk3_minutes_clean_v3_20260805/minutes_alignment/validation.jsonl",
+    "rows": 199,
+    "sha256": "689de4fbe23e6ef46e1cf71e12b29ace4a63755410fcf96e519b5f20a6926fcf"
+  }
+}

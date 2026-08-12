@@ -1,0 +1,965 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk1 训练过拟合诊断（截至 step 210）",
+    "description": "基于每 10 步 eval、对齐的 10-step train loss 均值和固定生成探针判断是否出现过拟合。",
+    "generatedAt": "2026-08-10T11:43:03Z",
+    "cards": [
+      {
+        "id": "progress_card",
+        "description": "训练快照进度。",
+        "dataset": "headline",
+        "sourceId": "loss_snapshot_source",
+        "metrics": [
+          {
+            "label": "训练进度",
+            "field": "progress",
+            "format": "percent"
+          }
+        ]
+      },
+      {
+        "id": "eval_card",
+        "description": "step 210 的完整 eval split loss。",
+        "dataset": "headline",
+        "sourceId": "loss_snapshot_source",
+        "metrics": [
+          {
+            "label": "当前 eval loss",
+            "field": "current_eval_loss",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "best_eval_card",
+        "description": "截至快照的最低 eval loss，出现在 step 200。",
+        "dataset": "headline",
+        "sourceId": "loss_snapshot_source",
+        "metrics": [
+          {
+            "label": "最低 eval loss",
+            "field": "best_eval_loss",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "probe_card",
+        "description": "checkpoint 80、150、200 固定 8-case 退化探针。",
+        "dataset": "headline",
+        "sourceId": "probe_snapshot_source",
+        "metrics": [
+          {
+            "label": "探针通过率",
+            "field": "probe_pass_rate",
+            "format": "percent"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "loss_trend_chart",
+        "title": "Train 与 eval loss",
+        "subtitle": "每 10 步对齐；train 为相邻 10 个 optimizer step 的均值，eval 为 199 条 validation 样本的完整评估。",
+        "intent": "trend",
+        "question": "Train loss 下降时，eval loss 是否反向上升？",
+        "rationale": "21 个有序评估点足以识别持续分叉；对 train loss 做 10-step 平滑以减少 batch 噪声。",
+        "type": "line",
+        "dataset": "loss_series",
+        "sourceId": "loss_snapshot_source",
+        "encodings": {
+          "x": {
+            "field": "step",
+            "type": "quantitative",
+            "label": "Optimizer step"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "label": "Loss"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "label": "Series"
+          },
+          "tooltip": [
+            {
+              "field": "epoch",
+              "type": "quantitative",
+              "label": "Epoch"
+            },
+            {
+              "field": "eval_accuracy",
+              "type": "quantitative",
+              "label": "Eval token accuracy"
+            }
+          ]
+        },
+        "yAxisTitle": "Loss",
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "recent_eval_table",
+        "title": "最近六次评估",
+        "subtitle": "steps 160–210；用于区分持续反弹与单点平台波动。",
+        "dataset": "recent_eval",
+        "sourceId": "loss_snapshot_source",
+        "defaultSort": {
+          "field": "step",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "step",
+            "label": "Step",
+            "format": "number"
+          },
+          {
+            "field": "epoch",
+            "label": "Epoch",
+            "format": "number"
+          },
+          {
+            "field": "train_loss_rolling10",
+            "label": "Train loss（10-step mean）",
+            "format": "number"
+          },
+          {
+            "field": "eval_loss",
+            "label": "Eval loss",
+            "format": "number"
+          },
+          {
+            "field": "eval_accuracy",
+            "label": "Eval token accuracy",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "probe_table",
+        "title": "固定生成退化探针",
+        "subtitle": "相同 8 条 prompts、seeds、3072-token 上限，并与冻结 chk0 baseline 严格比较。",
+        "dataset": "probe_rows",
+        "sourceId": "probe_snapshot_source",
+        "defaultSort": {
+          "field": "checkpoint",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "checkpoint",
+            "label": "Checkpoint",
+            "format": "number"
+          },
+          {
+            "field": "status",
+            "label": "Gate",
+            "type": "text"
+          },
+          {
+            "field": "mean_repetition",
+            "label": "Mean repetition",
+            "format": "number"
+          },
+          {
+            "field": "max_repetition",
+            "label": "Max repetition",
+            "format": "number"
+          },
+          {
+            "field": "mean_delta_vs_chk0",
+            "label": "Mean Δ vs chk0",
+            "format": "number"
+          },
+          {
+            "field": "max_case_delta_vs_chk0",
+            "label": "Max case Δ",
+            "format": "number"
+          },
+          {
+            "field": "catastrophic_cases",
+            "label": "Catastrophic",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "trainer_state_source",
+        "label": "checkpoint-210 trainer state",
+        "path": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-210/trainer_state.json"
+      },
+      {
+        "id": "loss_snapshot_source",
+        "label": "Loss diagnosis snapshot",
+        "path": "docs/summary/20260810T114303Z/chk1_overfit_diagnosis/loss_snapshot.jsonl"
+      },
+      {
+        "id": "probe_snapshot_source",
+        "label": "Degeneration probe snapshot",
+        "path": "docs/summary/20260810T114303Z/chk1_overfit_diagnosis/probe_snapshot.jsonl"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# chk1 训练过拟合诊断（截至 step 210）"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "loss_snapshot_source",
+        "body": "## 当前没有实质性过拟合证据，主要信号是接近收敛平台\n\n**Eval loss 从 step 10 的 `1.9033` 降至 step 210 的 `1.6862`（`-11.4%`），而 train loss 的 10-step 均值从 `1.9558` 降至 `1.6949`（`-13.3%`）。** 两者总体同向下降，没有形成 train 继续改善、eval 持续恶化的分叉。\n\nstep 200→210 的 eval loss 从 `1.68610` 微升到 `1.68622`，增幅只有 `0.007%`。这是 20 次相邻 eval 比较中唯一一次上升，单点幅度不足以认定过拟合；更合理的判断是 step 170 后收益快速变小、训练进入平台。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "cardIds": [
+          "progress_card",
+          "eval_card",
+          "best_eval_card",
+          "probe_card"
+        ]
+      },
+      {
+        "id": "loss_finding",
+        "type": "markdown",
+        "sourceId": "loss_snapshot_source",
+        "body": "## Loss 曲线尚未持续分叉\n\nstep 170→210，train rolling loss 下降 `0.0307`，eval loss 仍下降 `0.00181`；泛化收益明显慢于训练集收益，但方向尚未反转。绝对的 eval-minus-train gap 不应机械解读，因为训练阶段启用 dropout，而 eval 阶段关闭 dropout；这里以趋势是否连续反向为主要判据。"
+      },
+      {
+        "id": "loss_chart",
+        "type": "chart",
+        "chartId": "loss_trend_chart",
+        "layout": "full"
+      },
+      {
+        "id": "plateau_finding",
+        "type": "markdown",
+        "sourceId": "loss_snapshot_source",
+        "body": "## step 200 是当前最低 eval 点，但 step 210 的反弹可忽略\n\n最低 eval loss 为 step 200 的 `1.68610`。step 210 仅高 `0.00012`，同时 eval token accuracy 从 step 190 的阶段高点只回落约 `0.006` 个百分点。若 step 220 和 230 连续继续上升、而 train rolling loss 继续下降，届时才有更可信的早期过拟合信号。"
+      },
+      {
+        "id": "recent_table",
+        "type": "table",
+        "tableId": "recent_eval_table",
+        "layout": "full"
+      },
+      {
+        "id": "probe_finding",
+        "type": "markdown",
+        "sourceId": "probe_snapshot_source",
+        "body": "## 生成行为没有随训练单调退化\n\ncheckpoint 80、150、200 的固定 8-case 探针全部通过：EOS、`</think>`/answer 合同、长度上限和周期重复门槛均满足。平均 repetition 分别为 `0.1219`、`0.1364`、`0.1347`；cp200 没有继续高于 cp150，因此暂未看到无限重复随训练单调加剧。"
+      },
+      {
+        "id": "probe_evidence",
+        "type": "table",
+        "tableId": "probe_table",
+        "layout": "full"
+      },
+      {
+        "id": "definitions",
+        "type": "markdown",
+        "body": "## 范围与判据\n\n- 快照来自永久保留的 checkpoint-210；训练总计划为 255 steps、3 epochs。\n- Train loss 使用每个 eval step 之前 10 个 optimizer steps 的均值；eval loss 使用完整 validation split（199 条）。\n- 过拟合判据是连续多个评估点出现 train loss 下降而 eval loss 上升，并由固定生成探针确认行为质量同步恶化。\n- 本报告是训练中快照，不代表最终 checkpoint 的结论。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## 方法\n\n从 `trainer_state.log_history` 分离单步 train loss 与每 10 步 eval loss；在每个 eval step 计算 trailing-10 train mean，并检查 eval 转折次数、最近窗口变化和 train/eval 方向。固定生成探针使用冻结 prompts、seeds、chk0 baseline 和严格 repetition/合同门槛，避免只依赖 loss。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 限制与稳健性\n\n**当前只能排除明显的 loss 分叉和已知无限重复模式。** Validation 只有一个 split；8-case 探针覆盖有限；train 与 eval loss 的运行模式不同；尚未评估最终 checkpoint 或独立 test split。因此不能把“没有明显过拟合”解释成模型质量已经最优。"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## 建议\n\n1. 继续当前训练，不因 step 210 的单点 `+0.00012` 反弹而停止。\n2. 对 step 220、230 的 eval loss 做连续性检查；只有连续上升才升级为过拟合告警。\n3. 对最终 checkpoint-255 运行相同 8-case 探针；若失败，cp200 是当前已验证的安全回退点。\n4. 最终选择 checkpoint 时同时要求 eval loss、生成合同和 repetition 门槛通过。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## 待回答问题\n\n最终 checkpoint 是否继续保持 cp200 的生成稳定性，以及独立 test split 是否与 validation 曲线一致，仍需训练完成后验证。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T11:43:03Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "progress": 0.8235294117647058,
+          "current_eval_loss": 1.68622267,
+          "best_eval_loss": 1.68609893,
+          "probe_pass_rate": 1
+        }
+      ],
+      "loss_series": [
+        {
+          "step": 10,
+          "epoch": 0.118168,
+          "series": "Train loss（10-step mean）",
+          "value": 1.95583,
+          "eval_accuracy": 0.58341703
+        },
+        {
+          "step": 10,
+          "epoch": 0.118168,
+          "series": "Eval loss",
+          "value": 1.90333354,
+          "eval_accuracy": 0.58341703
+        },
+        {
+          "step": 20,
+          "epoch": 0.236337,
+          "series": "Train loss（10-step mean）",
+          "value": 1.94597,
+          "eval_accuracy": 0.5849131
+        },
+        {
+          "step": 20,
+          "epoch": 0.236337,
+          "series": "Eval loss",
+          "value": 1.88249564,
+          "eval_accuracy": 0.5849131
+        },
+        {
+          "step": 30,
+          "epoch": 0.354505,
+          "series": "Train loss（10-step mean）",
+          "value": 1.9238,
+          "eval_accuracy": 0.58679634
+        },
+        {
+          "step": 30,
+          "epoch": 0.354505,
+          "series": "Eval loss",
+          "value": 1.86095369,
+          "eval_accuracy": 0.58679634
+        },
+        {
+          "step": 40,
+          "epoch": 0.472674,
+          "series": "Train loss（10-step mean）",
+          "value": 1.87422,
+          "eval_accuracy": 0.58859637
+        },
+        {
+          "step": 40,
+          "epoch": 0.472674,
+          "series": "Eval loss",
+          "value": 1.84011734,
+          "eval_accuracy": 0.58859637
+        },
+        {
+          "step": 50,
+          "epoch": 0.590842,
+          "series": "Train loss（10-step mean）",
+          "value": 1.85498,
+          "eval_accuracy": 0.59036283
+        },
+        {
+          "step": 50,
+          "epoch": 0.590842,
+          "series": "Eval loss",
+          "value": 1.82045662,
+          "eval_accuracy": 0.59036283
+        },
+        {
+          "step": 60,
+          "epoch": 0.70901,
+          "series": "Train loss（10-step mean）",
+          "value": 1.83575,
+          "eval_accuracy": 0.59187688
+        },
+        {
+          "step": 60,
+          "epoch": 0.70901,
+          "series": "Eval loss",
+          "value": 1.80200446,
+          "eval_accuracy": 0.59187688
+        },
+        {
+          "step": 70,
+          "epoch": 0.827179,
+          "series": "Train loss（10-step mean）",
+          "value": 1.83025,
+          "eval_accuracy": 0.59311539
+        },
+        {
+          "step": 70,
+          "epoch": 0.827179,
+          "series": "Eval loss",
+          "value": 1.78504765,
+          "eval_accuracy": 0.59311539
+        },
+        {
+          "step": 80,
+          "epoch": 0.945347,
+          "series": "Train loss（10-step mean）",
+          "value": 1.80292,
+          "eval_accuracy": 0.59479173
+        },
+        {
+          "step": 80,
+          "epoch": 0.945347,
+          "series": "Eval loss",
+          "value": 1.76911652,
+          "eval_accuracy": 0.59479173
+        },
+        {
+          "step": 90,
+          "epoch": 1.059084,
+          "series": "Train loss（10-step mean）",
+          "value": 1.77112,
+          "eval_accuracy": 0.59591522
+        },
+        {
+          "step": 90,
+          "epoch": 1.059084,
+          "series": "Eval loss",
+          "value": 1.75456357,
+          "eval_accuracy": 0.59591522
+        },
+        {
+          "step": 100,
+          "epoch": 1.177253,
+          "series": "Train loss（10-step mean）",
+          "value": 1.78232,
+          "eval_accuracy": 0.59698887
+        },
+        {
+          "step": 100,
+          "epoch": 1.177253,
+          "series": "Eval loss",
+          "value": 1.74257922,
+          "eval_accuracy": 0.59698887
+        },
+        {
+          "step": 110,
+          "epoch": 1.295421,
+          "series": "Train loss（10-step mean）",
+          "value": 1.7518,
+          "eval_accuracy": 0.59767402
+        },
+        {
+          "step": 110,
+          "epoch": 1.295421,
+          "series": "Eval loss",
+          "value": 1.73239613,
+          "eval_accuracy": 0.59767402
+        },
+        {
+          "step": 120,
+          "epoch": 1.413589,
+          "series": "Train loss（10-step mean）",
+          "value": 1.76503,
+          "eval_accuracy": 0.59851633
+        },
+        {
+          "step": 120,
+          "epoch": 1.413589,
+          "series": "Eval loss",
+          "value": 1.72316158,
+          "eval_accuracy": 0.59851633
+        },
+        {
+          "step": 130,
+          "epoch": 1.531758,
+          "series": "Train loss（10-step mean）",
+          "value": 1.74564,
+          "eval_accuracy": 0.59938306
+        },
+        {
+          "step": 130,
+          "epoch": 1.531758,
+          "series": "Eval loss",
+          "value": 1.71455693,
+          "eval_accuracy": 0.59938306
+        },
+        {
+          "step": 140,
+          "epoch": 1.649926,
+          "series": "Train loss（10-step mean）",
+          "value": 1.74624,
+          "eval_accuracy": 0.60024353
+        },
+        {
+          "step": 140,
+          "epoch": 1.649926,
+          "series": "Eval loss",
+          "value": 1.70639455,
+          "eval_accuracy": 0.60024353
+        },
+        {
+          "step": 150,
+          "epoch": 1.768095,
+          "series": "Train loss（10-step mean）",
+          "value": 1.73917,
+          "eval_accuracy": 0.60108658
+        },
+        {
+          "step": 150,
+          "epoch": 1.768095,
+          "series": "Eval loss",
+          "value": 1.69878185,
+          "eval_accuracy": 0.60108658
+        },
+        {
+          "step": 160,
+          "epoch": 1.886263,
+          "series": "Train loss（10-step mean）",
+          "value": 1.7224,
+          "eval_accuracy": 0.60186664
+        },
+        {
+          "step": 160,
+          "epoch": 1.886263,
+          "series": "Eval loss",
+          "value": 1.69232118,
+          "eval_accuracy": 0.60186664
+        },
+        {
+          "step": 170,
+          "epoch": 2,
+          "series": "Train loss（10-step mean）",
+          "value": 1.72557,
+          "eval_accuracy": 0.60232041
+        },
+        {
+          "step": 170,
+          "epoch": 2,
+          "series": "Eval loss",
+          "value": 1.68803704,
+          "eval_accuracy": 0.60232041
+        },
+        {
+          "step": 180,
+          "epoch": 2.118168,
+          "series": "Train loss（10-step mean）",
+          "value": 1.73166,
+          "eval_accuracy": 0.60255671
+        },
+        {
+          "step": 180,
+          "epoch": 2.118168,
+          "series": "Eval loss",
+          "value": 1.68656945,
+          "eval_accuracy": 0.60255671
+        },
+        {
+          "step": 190,
+          "epoch": 2.236337,
+          "series": "Train loss（10-step mean）",
+          "value": 1.69169,
+          "eval_accuracy": 0.60277265
+        },
+        {
+          "step": 190,
+          "epoch": 2.236337,
+          "series": "Eval loss",
+          "value": 1.686252,
+          "eval_accuracy": 0.60277265
+        },
+        {
+          "step": 200,
+          "epoch": 2.354505,
+          "series": "Train loss（10-step mean）",
+          "value": 1.72956,
+          "eval_accuracy": 0.60268515
+        },
+        {
+          "step": 200,
+          "epoch": 2.354505,
+          "series": "Eval loss",
+          "value": 1.68609893,
+          "eval_accuracy": 0.60268515
+        },
+        {
+          "step": 210,
+          "epoch": 2.472674,
+          "series": "Train loss（10-step mean）",
+          "value": 1.69486,
+          "eval_accuracy": 0.60271039
+        },
+        {
+          "step": 210,
+          "epoch": 2.472674,
+          "series": "Eval loss",
+          "value": 1.68622267,
+          "eval_accuracy": 0.60271039
+        }
+      ],
+      "eval_rows": [
+        {
+          "step": 10,
+          "epoch": 0.118168,
+          "train_loss_rolling10": 1.95583,
+          "train_loss_median10": 1.95105,
+          "eval_loss": 1.90333354,
+          "gap_eval_minus_train_roll10": -0.05249646,
+          "eval_accuracy": 0.58341703
+        },
+        {
+          "step": 20,
+          "epoch": 0.236337,
+          "train_loss_rolling10": 1.94597,
+          "train_loss_median10": 1.9461,
+          "eval_loss": 1.88249564,
+          "gap_eval_minus_train_roll10": -0.06347436,
+          "eval_accuracy": 0.5849131
+        },
+        {
+          "step": 30,
+          "epoch": 0.354505,
+          "train_loss_rolling10": 1.9238,
+          "train_loss_median10": 1.9344,
+          "eval_loss": 1.86095369,
+          "gap_eval_minus_train_roll10": -0.06284631,
+          "eval_accuracy": 0.58679634
+        },
+        {
+          "step": 40,
+          "epoch": 0.472674,
+          "train_loss_rolling10": 1.87422,
+          "train_loss_median10": 1.8794,
+          "eval_loss": 1.84011734,
+          "gap_eval_minus_train_roll10": -0.03410266,
+          "eval_accuracy": 0.58859637
+        },
+        {
+          "step": 50,
+          "epoch": 0.590842,
+          "train_loss_rolling10": 1.85498,
+          "train_loss_median10": 1.8455,
+          "eval_loss": 1.82045662,
+          "gap_eval_minus_train_roll10": -0.03452338,
+          "eval_accuracy": 0.59036283
+        },
+        {
+          "step": 60,
+          "epoch": 0.70901,
+          "train_loss_rolling10": 1.83575,
+          "train_loss_median10": 1.833,
+          "eval_loss": 1.80200446,
+          "gap_eval_minus_train_roll10": -0.03374554,
+          "eval_accuracy": 0.59187688
+        },
+        {
+          "step": 70,
+          "epoch": 0.827179,
+          "train_loss_rolling10": 1.83025,
+          "train_loss_median10": 1.8273,
+          "eval_loss": 1.78504765,
+          "gap_eval_minus_train_roll10": -0.04520235,
+          "eval_accuracy": 0.59311539
+        },
+        {
+          "step": 80,
+          "epoch": 0.945347,
+          "train_loss_rolling10": 1.80292,
+          "train_loss_median10": 1.7932,
+          "eval_loss": 1.76911652,
+          "gap_eval_minus_train_roll10": -0.03380348,
+          "eval_accuracy": 0.59479173
+        },
+        {
+          "step": 90,
+          "epoch": 1.059084,
+          "train_loss_rolling10": 1.77112,
+          "train_loss_median10": 1.75905,
+          "eval_loss": 1.75456357,
+          "gap_eval_minus_train_roll10": -0.01655643,
+          "eval_accuracy": 0.59591522
+        },
+        {
+          "step": 100,
+          "epoch": 1.177253,
+          "train_loss_rolling10": 1.78232,
+          "train_loss_median10": 1.7824,
+          "eval_loss": 1.74257922,
+          "gap_eval_minus_train_roll10": -0.03974078,
+          "eval_accuracy": 0.59698887
+        },
+        {
+          "step": 110,
+          "epoch": 1.295421,
+          "train_loss_rolling10": 1.7518,
+          "train_loss_median10": 1.77375,
+          "eval_loss": 1.73239613,
+          "gap_eval_minus_train_roll10": -0.01940387,
+          "eval_accuracy": 0.59767402
+        },
+        {
+          "step": 120,
+          "epoch": 1.413589,
+          "train_loss_rolling10": 1.76503,
+          "train_loss_median10": 1.76025,
+          "eval_loss": 1.72316158,
+          "gap_eval_minus_train_roll10": -0.04186842,
+          "eval_accuracy": 0.59851633
+        },
+        {
+          "step": 130,
+          "epoch": 1.531758,
+          "train_loss_rolling10": 1.74564,
+          "train_loss_median10": 1.7357,
+          "eval_loss": 1.71455693,
+          "gap_eval_minus_train_roll10": -0.03108307,
+          "eval_accuracy": 0.59938306
+        },
+        {
+          "step": 140,
+          "epoch": 1.649926,
+          "train_loss_rolling10": 1.74624,
+          "train_loss_median10": 1.75065,
+          "eval_loss": 1.70639455,
+          "gap_eval_minus_train_roll10": -0.03984545,
+          "eval_accuracy": 0.60024353
+        },
+        {
+          "step": 150,
+          "epoch": 1.768095,
+          "train_loss_rolling10": 1.73917,
+          "train_loss_median10": 1.7252,
+          "eval_loss": 1.69878185,
+          "gap_eval_minus_train_roll10": -0.04038815,
+          "eval_accuracy": 0.60108658
+        },
+        {
+          "step": 160,
+          "epoch": 1.886263,
+          "train_loss_rolling10": 1.7224,
+          "train_loss_median10": 1.73555,
+          "eval_loss": 1.69232118,
+          "gap_eval_minus_train_roll10": -0.03007882,
+          "eval_accuracy": 0.60186664
+        },
+        {
+          "step": 170,
+          "epoch": 2,
+          "train_loss_rolling10": 1.72557,
+          "train_loss_median10": 1.72475,
+          "eval_loss": 1.68803704,
+          "gap_eval_minus_train_roll10": -0.03753296,
+          "eval_accuracy": 0.60232041
+        },
+        {
+          "step": 180,
+          "epoch": 2.118168,
+          "train_loss_rolling10": 1.73166,
+          "train_loss_median10": 1.7422,
+          "eval_loss": 1.68656945,
+          "gap_eval_minus_train_roll10": -0.04509055,
+          "eval_accuracy": 0.60255671
+        },
+        {
+          "step": 190,
+          "epoch": 2.236337,
+          "train_loss_rolling10": 1.69169,
+          "train_loss_median10": 1.683,
+          "eval_loss": 1.686252,
+          "gap_eval_minus_train_roll10": -0.005438,
+          "eval_accuracy": 0.60277265
+        },
+        {
+          "step": 200,
+          "epoch": 2.354505,
+          "train_loss_rolling10": 1.72956,
+          "train_loss_median10": 1.7312,
+          "eval_loss": 1.68609893,
+          "gap_eval_minus_train_roll10": -0.04346107,
+          "eval_accuracy": 0.60268515
+        },
+        {
+          "step": 210,
+          "epoch": 2.472674,
+          "train_loss_rolling10": 1.69486,
+          "train_loss_median10": 1.6985,
+          "eval_loss": 1.68622267,
+          "gap_eval_minus_train_roll10": -0.00863733,
+          "eval_accuracy": 0.60271039
+        }
+      ],
+      "recent_eval": [
+        {
+          "step": 160,
+          "epoch": 1.886263,
+          "train_loss_rolling10": 1.7224,
+          "train_loss_median10": 1.73555,
+          "eval_loss": 1.69232118,
+          "gap_eval_minus_train_roll10": -0.03007882,
+          "eval_accuracy": 0.60186664
+        },
+        {
+          "step": 170,
+          "epoch": 2,
+          "train_loss_rolling10": 1.72557,
+          "train_loss_median10": 1.72475,
+          "eval_loss": 1.68803704,
+          "gap_eval_minus_train_roll10": -0.03753296,
+          "eval_accuracy": 0.60232041
+        },
+        {
+          "step": 180,
+          "epoch": 2.118168,
+          "train_loss_rolling10": 1.73166,
+          "train_loss_median10": 1.7422,
+          "eval_loss": 1.68656945,
+          "gap_eval_minus_train_roll10": -0.04509055,
+          "eval_accuracy": 0.60255671
+        },
+        {
+          "step": 190,
+          "epoch": 2.236337,
+          "train_loss_rolling10": 1.69169,
+          "train_loss_median10": 1.683,
+          "eval_loss": 1.686252,
+          "gap_eval_minus_train_roll10": -0.005438,
+          "eval_accuracy": 0.60277265
+        },
+        {
+          "step": 200,
+          "epoch": 2.354505,
+          "train_loss_rolling10": 1.72956,
+          "train_loss_median10": 1.7312,
+          "eval_loss": 1.68609893,
+          "gap_eval_minus_train_roll10": -0.04346107,
+          "eval_accuracy": 0.60268515
+        },
+        {
+          "step": 210,
+          "epoch": 2.472674,
+          "train_loss_rolling10": 1.69486,
+          "train_loss_median10": 1.6985,
+          "eval_loss": 1.68622267,
+          "gap_eval_minus_train_roll10": -0.00863733,
+          "eval_accuracy": 0.60271039
+        }
+      ],
+      "probe_rows": [
+        {
+          "checkpoint": 80,
+          "status": "passed",
+          "mean_repetition": 0.12193187875,
+          "max_repetition": 0.26996805,
+          "mean_delta_vs_chk0": 0.03921259,
+          "max_case_delta_vs_chk0": 0.17112126,
+          "eos_rate": 1,
+          "contract_valid_rate": 1,
+          "cap_rate": 0,
+          "catastrophic_cases": 0,
+          "periodic_tail_rate": 0
+        },
+        {
+          "checkpoint": 150,
+          "status": "passed",
+          "mean_repetition": 0.136407005,
+          "max_repetition": 0.215625,
+          "mean_delta_vs_chk0": 0.05368772,
+          "max_case_delta_vs_chk0": 0.11859502,
+          "eos_rate": 1,
+          "contract_valid_rate": 1,
+          "cap_rate": 0,
+          "catastrophic_cases": 0,
+          "periodic_tail_rate": 0
+        },
+        {
+          "checkpoint": 200,
+          "status": "passed",
+          "mean_repetition": 0.13466412375,
+          "max_repetition": 0.24300442,
+          "mean_delta_vs_chk0": 0.05194484,
+          "max_case_delta_vs_chk0": 0.14415763,
+          "eos_rate": 1,
+          "contract_valid_rate": 1,
+          "cap_rate": 0,
+          "catastrophic_cases": 0,
+          "periodic_tail_rate": 0
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "trainer_state_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "WITH logs AS (SELECT log.* FROM read_json_auto('output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-210/trainer_state.json') AS state, UNNEST(state.log_history) AS rows(log)), train AS (SELECT step, loss FROM logs WHERE loss IS NOT NULL), eval AS (SELECT step, epoch, eval_loss, eval_mean_token_accuracy FROM logs WHERE eval_loss IS NOT NULL) SELECT e.step, e.epoch, AVG(t.loss) AS train_loss_rolling10, e.eval_loss, e.eval_mean_token_accuracy AS eval_accuracy FROM eval e JOIN train t ON t.step BETWEEN e.step - 9 AND e.step GROUP BY e.step, e.epoch, e.eval_loss, e.eval_mean_token_accuracy ORDER BY e.step",
+        "description": "Reads durable train/eval log history and aligns each full eval with the trailing ten optimizer-step train losses.",
+        "executed_at": "2026-08-10T11:43:03Z",
+        "tables_used": [
+          "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-210/trainer_state.json"
+        ],
+        "filters": [
+          "optimizer steps 1 through 210",
+          "evaluation rows every 10 steps"
+        ],
+        "metric_definitions": [
+          "Train loss is the arithmetic mean of the ten optimizer-step losses ending at each eval step.",
+          "Eval loss is the complete 199-row validation loss recorded by Trainer."
+        ]
+      }
+    },
+    {
+      "id": "loss_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT step, epoch, train_loss_rolling10, train_loss_median10, eval_loss, gap_eval_minus_train_roll10, eval_accuracy FROM read_json_auto('docs/summary/20260810T114303Z/chk1_overfit_diagnosis/loss_snapshot.jsonl') ORDER BY step",
+        "description": "Reads the reviewed loss-diagnosis snapshot derived from checkpoint-210 trainer state.",
+        "executed_at": "2026-08-10T11:43:03Z",
+        "tables_used": [
+          "docs/summary/20260810T114303Z/chk1_overfit_diagnosis/loss_snapshot.jsonl"
+        ],
+        "filters": [
+          "steps 10 through 210 at 10-step evaluation grain"
+        ],
+        "metric_definitions": [
+          "gap_eval_minus_train_roll10 equals eval loss minus trailing-10 train loss mean."
+        ]
+      }
+    },
+    {
+      "id": "probe_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT checkpoint, status, mean_repetition, max_repetition, mean_delta_vs_chk0, max_case_delta_vs_chk0, eos_rate, contract_valid_rate, cap_rate, catastrophic_cases, periodic_tail_rate FROM read_json_auto('docs/summary/20260810T114303Z/chk1_overfit_diagnosis/probe_snapshot.jsonl') ORDER BY checkpoint",
+        "description": "Reads reviewed strict-comparison summaries for checkpoints 80, 150, and 200.",
+        "executed_at": "2026-08-10T11:43:03Z",
+        "tables_used": [
+          "docs/summary/20260810T114303Z/chk1_overfit_diagnosis/probe_snapshot.jsonl"
+        ],
+        "filters": [
+          "fixed six sampled and two greedy cases per checkpoint",
+          "3072-token cap",
+          "comparison against frozen chk0 baseline"
+        ],
+        "metric_definitions": [
+          "Mean repetition is the mean token 4-gram repetition rate across eight cases.",
+          "Strict pass requires no cap, no periodic tail, no catastrophic case, zero contract-rate drop, mean delta at most 0.10, and per-case delta at most 0.20."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": "chk1-sft-semantic-override-authorization-v1",
+  "status": "authorized",
+  "authorization_basis": "explicit_user_instruction",
+  "authorized_at_utc": "2026-08-09T23:44:11Z",
+  "authorized_by": "workspace_user",
+  "user_instruction": "先绕过这个门禁，因为我现在只训练chk1，不碰chk2",
+  "scope": {
+    "stage": "chk1",
+    "operation": "sft_training",
+    "downstream_stages_allowed": []
+  },
+  "bindings": {
+    "candidate_id": "chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate",
+    "dataset_dir": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/analysis_sft",
+    "candidate_manifest_sha256": "41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700",
+    "deterministic_validation_receipt_sha256": "12c9f9f56c3946a98e3ca4eb4770818c30489b71c5cc498bbedb24edafef187b",
+    "semantic_audit_summary_sha256": "780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e",
+    "split_counts": {
+      "train": 1354,
+      "eval": 199,
+      "test": 190
+    }
+  },
+  "risk_acknowledgements": [
+    "semantic_audit_failed",
+    "semantic_audit_contains_blocking_violations",
+    "semantic_audit_contains_judge_errors",
+    "not_authorized_for_downstream_training"
+  ],
+  "authorization_sha256": "e1c4912bd7a1dc98beb8dd2c43bfbcd3aeb8364d2ac401600eea24815de71917"
+}

@@ -1,0 +1,88 @@
+{
+  "authorization_basis": {
+    "actor": "user",
+    "instruction": "Clear GPU1 and start the fresh chk2 training now using the merged checkpoint-200 parent, TOTALSL overlay, and DeepSeek High judge.",
+    "requested_at_utc": "2026-08-10T13:46:31Z"
+  },
+  "candidate_scope": {
+    "allowed": [
+      "fresh_chk2_candidate_training"
+    ],
+    "automatic_merge": false,
+    "canonical_dag": false,
+    "denied": [
+      "chk3",
+      "chk4"
+    ],
+    "resume_from_checkpoint": null
+  },
+  "dataset": {
+    "artifact_fingerprint_sha256": "8fb5d5827df69d16c03dc77042e3fdb5cef79dcc701be7e145252a9ce0c93351",
+    "attestation_sha256": "93285c16f0e5a1f6d698ed6d0032d8695bb533c23a6bf2dd548da0e7fd2186cf",
+    "manifest_sha256": "00a825755444b83ea3c3f3d0878b394acbcc2af85ab231ec714aa64f742de410",
+    "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810",
+    "rows": {
+      "test": 190,
+      "train": 493,
+      "validation": 199
+    }
+  },
+  "known_risk": {
+    "claim": "This is an explicitly authorized chk2 candidate override and does not relabel the historical chk1 source audits as passed.",
+    "deepseek_source_audit": {
+      "audited_rows": 237,
+      "failed_rows": 113,
+      "status": "semantic_failures"
+    },
+    "qwen_source_audit": {
+      "blocking_violations": 611,
+      "failed_rows": 234,
+      "judge_errors": 2,
+      "status": "failed"
+    }
+  },
+  "parent_model": {
+    "exact_lineage": {
+      "conclusion": "exact_base_plus_adapter_merge_verified",
+      "mismatch_count": 0,
+      "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_exact_merge_lineage.json",
+      "sha256": "a09010d8e79b5ad9df3329596c8308bc32d9afb9d5d85e4c51872d17acca49d5"
+    },
+    "load_smoke": {
+      "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/load_smoke.json",
+      "sha256": "a6df4694313691df990c42f39e7896989254ac2a628ce0ed2340d7d7a269ccb4",
+      "status": "passed"
+    },
+    "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+    "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+    "source_checkpoint": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200",
+      "sha256": "fa454f73071b3989bf7c9ea3aaabb5a599196396a3ecb369d8956b849bacdc2f"
+    }
+  },
+  "reward": {
+    "api": "responses",
+    "effort": "high",
+    "max_output_tokens": 16384,
+    "model": "deepseek-v4-flash",
+    "module": {
+      "path": "src/open_r1/trainer/rewards/reward_funcs/analysis_reward_v3_deepseek_high.py",
+      "sha256": "d9e0868a51e82bab49bee01fd52d5a82dd16f816083a60f337eece5e7fcdabdb"
+    },
+    "name": "grounded_analysis_v3_deepseek_high",
+    "registry": {
+      "path": "src/open_r1/trainer/rewards/reward_register.py",
+      "sha256": "6f28806c9839886ca94f8387b40ad59f0aab7671e63f001588d6a96177a8ce01"
+    }
+  },
+  "run": {
+    "config_path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_high_totalsl_v1_20260810.yaml",
+    "config_sha256": "19cc611b4f3210904993050723a56f3139a90c54d995b3f058a841c35e2720f4",
+    "output_dir": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2",
+    "physical_policy_gpu": 1,
+    "run_id": "chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810",
+    "world_size": 1
+  },
+  "schema_version": "chk2-deepseek-candidate-launch-authorization-v1",
+  "status": "authorized"
+}

@@ -1,0 +1,6 @@
+[
+  {"window": "steps 1-10", "start_step": 1, "end_step": 10, "mean_reward": 0.7760047853},
+  {"window": "steps 11-20", "start_step": 11, "end_step": 20, "mean_reward": 0.6923380196},
+  {"window": "steps 21-30", "start_step": 21, "end_step": 30, "mean_reward": 0.6822240807},
+  {"window": "steps 31-40", "start_step": 31, "end_step": 40, "mean_reward": 0.7791382998}
+]

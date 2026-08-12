@@ -1,0 +1,229 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk2 为什么一直停在 step 55",
+    "description": "对 fresh chk2 在 checkpoint-55 无限重启的根因诊断快照。",
+    "generatedAt": "2026-08-08T11:53:12Z",
+    "cards": [
+      {
+        "id": "checkpoint_card",
+        "description": "最新完成并可恢复的 checkpoint。",
+        "dataset": "summary",
+        "sourceId": "trainer_log",
+        "metrics": [{ "label": "Latest checkpoint", "field": "latest_checkpoint", "format": "number" }]
+      },
+      {
+        "id": "attempts_card",
+        "description": "已写入 runtime safety 日志、但未保存 checkpoint 的 step-56 尝试。",
+        "dataset": "summary",
+        "sourceId": "runtime_safety",
+        "metrics": [{ "label": "Step-56 attempts", "field": "step56_attempts", "format": "number" }]
+      },
+      {
+        "id": "gate_card",
+        "description": "由 22 GiB reserved-memory 门限触发的主动终止。",
+        "dataset": "summary",
+        "sourceId": "trainer_log",
+        "metrics": [{ "label": "Memory-gate failures", "field": "gate_failures", "format": "number" }]
+      },
+      {
+        "id": "restart_card",
+        "description": "当前 run 日志中的 watchdog 重启总数。",
+        "dataset": "summary",
+        "sourceId": "watchdog_log",
+        "metrics": [{ "label": "Watchdog restarts", "field": "watchdog_restarts", "format": "number" }]
+      }
+    ],
+    "charts": [
+      {
+        "id": "memory_comparison_chart",
+        "title": "Step 56 GPU memory and runtime gate",
+        "subtitle": "最近重复尝试的峰值，单位 GiB；物理 GPU 容量为 24 GiB。",
+        "type": "bar",
+        "dataset": "memory_comparison",
+        "sourceId": "runtime_safety",
+        "encodings": {
+          "x": { "field": "measure", "type": "nominal", "label": "Memory measure" },
+          "y": { "field": "value_gib", "type": "quantitative", "label": "GiB" },
+          "tooltip": [
+            { "field": "detail", "type": "nominal", "label": "Meaning" },
+            { "field": "value_gib", "type": "quantitative", "label": "GiB" }
+          ]
+        },
+        "yAxisTitle": "GiB",
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "failure_sequence_table",
+        "title": "重复失败序列",
+        "subtitle": "checkpoint-55 之后每轮 watchdog 启动都重复同一流程。",
+        "dataset": "failure_sequence",
+        "sourceId": "trainer_log",
+        "defaultSort": { "field": "order", "direction": "asc" },
+        "columns": [
+          { "field": "order", "label": "Order", "format": "number" },
+          { "field": "stage", "label": "Stage", "type": "text" },
+          { "field": "observed", "label": "Observed behavior", "type": "text" },
+          { "field": "consequence", "label": "Consequence", "type": "text" }
+        ],
+        "layout": "full"
+      }
+    ],
+    "sources": [
+      {
+        "id": "trainer_log",
+        "label": "Fresh chk2 trainer log",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/logs/chk2.log"
+      },
+      {
+        "id": "runtime_safety",
+        "label": "Fresh chk2 runtime safety log",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/runtime_safety.jsonl"
+      },
+      {
+        "id": "watchdog_log",
+        "label": "Fresh chk2 watchdog log",
+        "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/logs/watchdog.log"
+      },
+      {
+        "id": "callback_source",
+        "label": "Installed runtime safety callback",
+        "path": ".conda/envs/fomc_trainer/lib/python3.10/site-packages/open_r1/utils/callbacks.py"
+      }
+    ],
+    "blocks": [
+      { "id": "title", "type": "markdown", "body": "# chk2 为什么一直停在 step 55" },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "trainer_log",
+        "body": "## Technical summary\n\n训练没有卡死在生成或 Judge 阶段。每次从 **checkpoint-55** 恢复后，step 56 都能完成计算并进入日志回调；随后 `runtime_safety` 看到 PyTorch 的峰值 **reserved memory = 22.992 GiB**，超过硬编码的 **22 GiB** 门限，主动抛出 `RuntimeError`。异常发生在 checkpoint-56 写入之前，因此最新可恢复状态仍是 55；watchdog 又从 55 重启，形成无限循环。"
+      },
+      { "id": "metrics", "type": "metric-strip", "cardIds": ["checkpoint_card", "attempts_card", "gate_card", "restart_card"] },
+      {
+        "id": "key_finding",
+        "type": "markdown",
+        "sourceId": "runtime_safety",
+        "body": "## Reserved-memory 门限误杀了可完成的 step 56\n\n最近重复尝试的实际峰值 allocated memory 为 **19.653 GiB**，但 PyTorch allocator 的 reserved memory 为 **22.992 GiB**。回调比较的是 reserved 而不是 allocated；reserved 包含缓存，并不等于当时真实被张量占用的显存。它虽然超过 22 GiB 门限，但仍低于 A30 的 24 GiB 物理容量，而且本次退出是回调主动抛错，并非 CUDA OOM。"
+      },
+      { "id": "memory_chart", "type": "chart", "chartId": "memory_comparison_chart", "layout": "full" },
+      {
+        "id": "loop_interpretation",
+        "type": "markdown",
+        "sourceId": "trainer_log",
+        "body": "## Watchdog 正在放大同一个配置错误\n\n截至快照，runtime safety 已记录 **55 次 step-56 尝试**，trainer 日志中有 **54 次相同门限异常**，并有 **55 次从 checkpoint-55 恢复**。watchdog 的逻辑只检查 policy 进程是否消失，并不知道这是确定性配置失败，所以会持续重启并重算同一批数据。"
+      },
+      { "id": "sequence_table", "type": "table", "tableId": "failure_sequence_table", "layout": "full" },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "sourceId": "trainer_log",
+        "body": "## Scope, data, and metric definitions\n\n本诊断覆盖 fresh run 的 checkpoint 目录、trainer 日志、watchdog 日志和 runtime safety JSONL。`allocated` 是当前/峰值张量实际分配；`reserved` 是 PyTorch caching allocator 向 CUDA 保留的内存池；`checkpoint` 指 optimizer、scheduler、RNG 和 trainer state 已完整落盘的可恢复状态。重复的 step-56 reward/loss 日志不应纳入正式训练趋势。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "sourceId": "runtime_safety",
+        "body": "## Methodology\n\n以 checkpoint 目录确认持久化进度，以 traceback 确认退出点，以 runtime safety 每行记录确认 step、allocated/reserved memory、reward、loss 和 grad norm，再用 watchdog 时间戳核对退出后的自动重启。55 次 step-56 记录具有相同的显存峰值和相同门限异常，足以判定为确定性循环。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## Limitations and uncertainty\n\n本结论解释为什么无法超过 step 55，但不证明把门限放宽后后续所有 step 都不会发生真实 CUDA OOM。24 GiB 标称容量中仍需给驱动和 CUDA context 留余量；因此修复应区分 `allocated`、`reserved` 与设备实时 free memory，而不是简单取消所有运行保护。"
+      },
+      {
+        "id": "recommendations",
+        "type": "markdown",
+        "sourceId": "callback_source",
+        "body": "## Recommended next steps\n\n1. 先停止当前 watchdog 的无限重启，避免继续重复 step 56 和重复写 reward 日志。\n2. 修改 `runtime_safety`：取消硬编码的 `reserved > 22 GiB` 终止，或改成可配置门限并优先依据真实 CUDA OOM、allocated memory 与设备 free memory。\n3. 清理/归档 step-56 的重复 history 行，但不要改 checkpoint-55 的 trainer state。\n4. 从 checkpoint-55 只重启一次，确认 checkpoint-56 能完整写入后再恢复 watchdog。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## Further question\n\n是否授权我现在停止 watchdog、修复这个 22 GiB 硬门限、处理重复日志并从 checkpoint-55 单次重启？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-08T11:53:12Z",
+    "status": "ready",
+    "datasets": {
+      "summary": [
+        { "latest_checkpoint": 55, "step56_attempts": 55, "gate_failures": 54, "watchdog_restarts": 74 }
+      ],
+      "memory_comparison": [
+        { "measure": "Peak allocated", "value_gib": 19.6529, "detail": "Tensor memory actually allocated at the step-56 peak", "step": 56, "gpu": "A30 24 GiB" },
+        { "measure": "Runtime gate", "value_gib": 22.0, "detail": "Hard-coded callback termination threshold", "step": 56, "gpu": "A30 24 GiB" },
+        { "measure": "Peak reserved", "value_gib": 22.9922, "detail": "PyTorch caching allocator reserved pool; this triggers the error", "step": 56, "gpu": "A30 24 GiB" },
+        { "measure": "Physical capacity", "value_gib": 24.0, "detail": "Nominal memory capacity of the policy GPU", "step": 56, "gpu": "A30 24 GiB" }
+      ],
+      "failure_sequence": [
+        { "order": 1, "stage": "Resume", "observed": "Loads checkpoint-55 and skips 440 batches", "consequence": "Step 56 is recomputed" },
+        { "order": 2, "stage": "Generate and judge", "observed": "Step 56 reaches reward/loss logging", "consequence": "A duplicate step-56 history row is appended" },
+        { "order": 3, "stage": "Runtime safety callback", "observed": "Reserved 22.992 GiB exceeds hard-coded 22 GiB", "consequence": "RuntimeError terminates policy process" },
+        { "order": 4, "stage": "Checkpoint saving", "observed": "Callback exception occurs before checkpoint-56 is written", "consequence": "Latest durable checkpoint remains 55" },
+        { "order": 5, "stage": "Watchdog", "observed": "Detects missing process and starts the same command", "consequence": "Cycle returns to checkpoint-55" }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "trainer_log",
+      "label": "Fresh chk2 trainer log",
+      "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/logs/chk2.log",
+      "query": {
+        "engine": "local-file",
+        "sql": "SELECT event, step, message FROM chk2_log WHERE step >= 55 ORDER BY timestamp",
+        "description": "Inspects checkpoint resumes, tracebacks, and the repeated step-56 termination.",
+        "executed_at": "2026-08-08T11:53:12Z",
+        "tables_used": ["chk2.log"]
+      }
+    },
+    {
+      "id": "runtime_safety",
+      "label": "Fresh chk2 runtime safety log",
+      "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/runtime_safety.jsonl",
+      "query": {
+        "engine": "local-file",
+        "sql": "SELECT step, peak_allocated_gib, peak_reserved_gib, metrics FROM runtime_safety WHERE step = 56",
+        "description": "Reads memory peaks and training metrics for every repeated step-56 attempt.",
+        "executed_at": "2026-08-08T11:53:12Z",
+        "tables_used": ["runtime_safety.jsonl"]
+      }
+    },
+    {
+      "id": "watchdog_log",
+      "label": "Fresh chk2 watchdog log",
+      "path": "output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/logs/watchdog.log",
+      "query": {
+        "engine": "local-file",
+        "sql": "SELECT timestamp, state, pid FROM watchdog_log ORDER BY timestamp",
+        "description": "Counts automatic restarts after policy-process termination.",
+        "executed_at": "2026-08-08T11:53:12Z",
+        "tables_used": ["watchdog.log"]
+      }
+    },
+    {
+      "id": "callback_source",
+      "label": "Installed runtime safety callback",
+      "path": ".conda/envs/fomc_trainer/lib/python3.10/site-packages/open_r1/utils/callbacks.py",
+      "query": {
+        "engine": "python-source",
+        "sql": "SELECT line_number, source_text FROM callbacks_py WHERE line_number BETWEEN 274 AND 309",
+        "description": "Reviews the hard-coded 22 GiB reserved-memory check and exception.",
+        "executed_at": "2026-08-08T11:53:12Z",
+        "tables_used": ["open_r1.utils.callbacks.RuntimeSafetyCallback"]
+      }
+    }
+  ],
+  "package_info": {
+    "originUrl": "artifact://chk2-step55-stall-20260808-115312",
+    "controls": { "edit": false, "refresh": false }
+  }
+}

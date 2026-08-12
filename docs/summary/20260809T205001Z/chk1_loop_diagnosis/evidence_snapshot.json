@@ -1,0 +1,25 @@
+{
+  "schema_version": "chk1-loop-diagnosis-v1",
+  "generated_at": "2026-08-09T20:53:15Z",
+  "current_run": {
+    "sample_id": "2025-07-30::participants_views",
+    "prompt_tokens": 12475,
+    "output_tokens": 8192,
+    "finish_reason": "length",
+    "boundary": false,
+    "answer": false,
+    "repetition": 0.991084497671324,
+    "tail_repetition": 0.9946236559139785,
+    "dominant_sentence": "The 30-year rate was 4.51 percent.",
+    "dominant_sentence_count": 316,
+    "exact_periodic_suffix_tokens": 2268,
+    "exact_period_tokens": 12
+  },
+  "sft_target_audit": {
+    "rows": 1743,
+    "boundary_rows": 1743,
+    "strict_periodic_suffix_rows": 0,
+    "token_4gram_repetition_median": 0.08400809716599189,
+    "token_4gram_repetition_max": 0.28027210884353737
+  }
+}

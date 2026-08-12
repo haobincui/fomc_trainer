@@ -1,0 +1,52 @@
+{
+  "schema_version": "chk2-low600-resume-authorization-v1",
+  "authorized_at_utc": "2026-08-10T15:15:00Z",
+  "authorization_source": "explicit_user_instruction_in_current_conversation",
+  "instruction_summary": "Use the low-effort DeepSeek judge, increase the response timeout to 600 seconds, and start chk2 training.",
+  "scope": {
+    "stage": "chk2",
+    "run_kind": "versioned_candidate_resume",
+    "downstream_stages_allowed": [
+      "chk2"
+    ],
+    "automatic_chk3_or_chk4_promotion_allowed": false
+  },
+  "resume_source": {
+    "path": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/adapters/chk2/checkpoint-4",
+    "global_step": 4,
+    "directory_sha256": "24813c7aaad1adb53cc9c39e6f55ede0569598602c2a54ca60b11be27aa50083",
+    "adapter_sha256": "3131d8d1c1c871d004ca739bb389a176e107fc04170f5474ee0ba9747c3c5a98",
+    "complete_optimizer_scheduler_rng_state": true
+  },
+  "new_contract": {
+    "reward_name": "grounded_analysis_v3_deepseek_low_timeout600",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "low",
+    "judge_timeout_seconds": 600,
+    "judge_max_output_tokens": 16384,
+    "max_total_attempts": 2,
+    "backoff_seconds": 2.0,
+    "policy_gpu": 1,
+    "world_size": 1,
+    "local_qwen_judge": false
+  },
+  "bindings": {
+    "training_config": {
+      "path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810.yaml",
+      "sha256": "ea6bd87fc34c54d3d93fbb0d282396ddcd986482be10fa098abc052b4b61958d"
+    },
+    "reward_module_sha256": "0ac9e3cd2fd64db0300600926bfa9c76ed5d3b426ebc000b23787372a0283ccb",
+    "reward_registry_sha256": "c8bd4b9ad93e304ff27b7adb2942c488e05f22fbdb351b06a3b18fba882ea7a4",
+    "trainer_sha256": "5f18385e28d78f37442fdc102308585f0da099436f2c69c7196903005924be8c",
+    "merged_chk1_sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+    "dataset_overlay_sha256": "8fb5d5827df69d16c03dc77042e3fdb5cef79dcc701be7e145252a9ce0c93351",
+    "benchmark_summary_sha256": "30172fd9d30579b0d3d8dd1d0ed27e651eaef9b75284b6167c53f89d5ea24794",
+    "low420_failure_receipt_sha256": "341e779914205c930b33b4a38fdd1ec93b52d0a538479704b505cccb72858987"
+  },
+  "risk_acknowledgements": [
+    "The old 420-second run failed closed at optimizer step 5 after two retryable provider responses.",
+    "The old sanitized log cannot distinguish timeout from incomplete or schema-invalid provider output, so a 600-second timeout does not guarantee that the same class of failure cannot recur.",
+    "Two 600-second attempts plus backoff can block one logical Judge group for approximately 1202 seconds in the worst case.",
+    "The resumed lineage contains checkpoint-1 scored with high effort and checkpoint-2 onward scored with low effort; this is not a homogeneous effort ablation."
+  ]
+}

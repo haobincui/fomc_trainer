@@ -1,0 +1,45 @@
+{
+  "schema_version": "chk3-cp250-generation-comparison-authorization-v1",
+  "status": "authorized",
+  "authorized_at_utc": "2026-08-10T22:38:00Z",
+  "authorization_basis": "explicit_user_instruction",
+  "user_instruction": "现在使用gpu0，刚刚你选择的最佳cp250，跑一次generation的测试，跟chk0,chk1进行对比",
+  "scope": {
+    "source_stage": "standalone_chk3_direct_from_chk1",
+    "checkpoint_step": 250,
+    "allowed_operations": [
+      "merge_checkpoint_250_for_evaluation",
+      "run_frozen_generation_on_gpu0",
+      "compare_with_sealed_chk0_chk1_generations"
+    ],
+    "artifact_status": "evaluation_only",
+    "canonical_dag_promotable": false,
+    "downstream_training_allowed": false
+  },
+  "bindings": {
+    "base_model": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+    },
+    "adapter_checkpoint": {
+      "path": "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/checkpoint-250",
+      "directory_sha256": "2f2f6786fcdd2ee06afa80bc3cc5304d8d9c94ee0e576a642c76cd8ba80c26e9",
+      "adapter_model_sha256": "396bdefef55c4521918a84df8e27abf8c82752eeadef3dcbb81188ffca332f45"
+    },
+    "checkpoint_selection_receipt": {
+      "path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/checkpoint_selection_receipt.json",
+      "sha256": "69853b5965c3b13aea71876d07c1d014efe8316a69edc183fb5a892051cd594f"
+    },
+    "merge_config": {
+      "path": "configs/retrain_v2/chk3_direct_chk1_cp200_cp250_merge_for_generation_20260810.yaml",
+      "sha256": "fda329d407b9417469ca80d64937624d2548956448c10b694f97f98cd4e1ac51"
+    },
+    "merged_destination": "output/evaluation/main/checkpoint_generation/retrain_v2_chk0_chk1_chk3_cp250_20260810_v1/models/chk3_cp250_merged"
+  },
+  "risk_acknowledgements": [
+    "generation_benchmark_is_raw_d1_evidence_to_minutes_and_is_out_of_task_for_chk0_and_chk1",
+    "standalone_direct_chk1_to_chk3_branch_is_not_the_canonical_chk2_to_chk3_dag",
+    "evaluation_merge_must_not_replace_or_promote_a_canonical_chk3_model"
+  ],
+  "authorization_sha256": "f61ace7e37dc1dff65cf4a57661ecf24a4ce42c49b4b3b4dc8c880aefba5e071"
+}

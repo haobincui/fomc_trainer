@@ -1,0 +1,44 @@
+{
+  "schema_version": "chk2-52k-root-cause-evidence-v1",
+  "generated_at": "2026-08-09T20:33:53Z",
+  "headline": {
+    "prompt_tokens": 12475,
+    "completion_cap": 52000,
+    "output_tokens": 52000,
+    "context_limit": 65536,
+    "context_headroom": 1061,
+    "finish_reason": "length",
+    "has_boundary": false,
+    "has_answer": false,
+    "repetition": 0.9986004344919787,
+    "tail_repetition": 0.9990224828934506,
+    "first_exact_loop_token": 58,
+    "old_stress_rows": 99,
+    "old_strict_loop_rows": 93,
+    "in_domain_boundary_rows": 78,
+    "in_domain_rows": 80,
+    "stress_to_grpo_prompt_ratio": 9.929543634907926
+  },
+  "trl_mask_audit": {
+    "configured": true,
+    "semantics": "A completion whose final token is neither EOS nor PAD has its entire completion_mask zeroed before policy-loss computation.",
+    "reward_consequence": "Boundaryless text is first reclassified as a plain answer and can receive nonzero reward; the truncated completion then contributes no direct token-level policy gradient but remains in group reward normalization.",
+    "historical_rows_1_150": 600,
+    "boundaryless_truncated_rows": 14,
+    "boundaryless_reward_mean": 0.2586975906576429,
+    "boundary_present_reward_mean": 0.17551883653807732,
+    "boundaryless_positive_advantage_rows": 12,
+    "impact_boundary": "The loophole and group-normalization path are verified; an intervention run is still needed to estimate their causal effect on the final model."
+  },
+  "source_files": [
+    "output/evaluation/diagnostics/chk2_tp2_long_tokens_20260809T185409Z/artifact_attempt2/summary.json",
+    "output/evaluation/diagnostics/chk2_tp2_long_tokens_20260809T185409Z/artifact_attempt2/trajectory_analysis.json",
+    "docs/summary/20260809T181157Z/chk2_optimization_diagnosis/diagnostic_summary.json",
+    "docs/summary/20260809T181157Z/chk2_optimization_diagnosis/prompt_contract_comparison.csv",
+    "configs/retrain_v2/chk2_analysis_grpo_compressed_chk1_v1_20260805.yaml",
+    "src/open_r1/trainer/rewards/reward_funcs/analysis_reward_v3.py",
+    "src/open_r1/structured_response.py",
+    "models/DeepSeek-R1-Distill-Llama-8B/README.md",
+    "docs/summary/20260809T152718Z/chk2_checkpoint150_merge_eval/checkpoint_manifest.json"
+  ]
+}

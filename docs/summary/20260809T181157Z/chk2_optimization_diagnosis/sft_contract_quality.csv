@@ -1,0 +1,5 @@
+check,rows,rate
+JSON-like answer,42,0.024096385542168676
+Evidence identifier,193,0.11072862880091795
+Union contract violation,201,0.1153184165232358
+Malformed <10 chars,1,0.0005737234652897303

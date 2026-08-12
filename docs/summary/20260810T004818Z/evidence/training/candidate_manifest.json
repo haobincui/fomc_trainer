@@ -1,0 +1,149 @@
+{
+  "answer_repair_method_counts": {
+    "recover_content_answer_string": 24,
+    "recover_marked_final_answer_quote": 3,
+    "recover_nested_content_answer": 4,
+    "recover_reasoning_final_answer_json": 11,
+    "strip_inline_evidence_ids": 159,
+    "unchanged": 1542
+  },
+  "candidate_id": "chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate",
+  "changed_rows": 237,
+  "changed_sample_ids_sha256": "6d0a25032f2bad9a795da7376ffc15bfe4926a77b72d6819ffce4edb3a34c0b5",
+  "created_at_utc": "2026-08-09T21:55:36Z",
+  "immutable_candidate": true,
+  "quality_gates": {
+    "cross_split_duplicates": 0,
+    "plain_text_answers": "passed",
+    "reasoning_contract": "passed",
+    "source_prompt_and_data_hashes": "passed",
+    "stable_sample_id_hash_join": "passed",
+    "strict_periodic_tails": 0
+  },
+  "quality_status": "pending_semantic_audit",
+  "reasoning_repair_counts": {
+    "drop_repeated_answer_tail": 1,
+    "replace_fact_card_meta": 37,
+    "replace_provided_data_meta": 3,
+    "rewrite_fixed_final_answer_meta": 1
+  },
+  "repair_manifest": {
+    "path": "audits/repair_manifest.jsonl",
+    "rows": 1743,
+    "sha256": "cd7dee86792c8190a5daceb99612c36a0396506f7dfa4da551a6f41cbb6c3d0b"
+  },
+  "repair_manifest_rows": 1743,
+  "schema_version": "chk1-clean-sft-candidate-v2",
+  "semantic_audit_contract": {
+    "required_judge_errors": 0,
+    "required_rows": 237,
+    "required_validated_violation_counts": {
+      "causal": 0,
+      "factual": 0,
+      "numerical": 0,
+      "target_leakage": 0
+    },
+    "schema_version": "chk1-clean-sft-source-audit-v1"
+  },
+  "semantic_audit_input": {
+    "path": "audits/semantic_audit_input.jsonl",
+    "rows": 237,
+    "sha256": "34f63a7ac8b94a885f44851acbb5188c729aee8fcc5d90cbd2f8fdb592ecfdcb"
+  },
+  "sources": {
+    "base_release_manifest": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/base_release_manifest.json",
+      "sha256": "e0dd631097b0a79a7592599161c801b493866e4c48ae59935dd4a1017fbf2c52"
+    },
+    "base_split_files": {
+      "eval": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/analysis_sft/eval.jsonl",
+        "rows": 199,
+        "sha256": "38b82ac176bc50afb5fff46926cae438c155674071e52aa4a44efef92624a4e8"
+      },
+      "test": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/analysis_sft/test.jsonl",
+        "rows": 190,
+        "sha256": "19e93806fafbffc3a1eee239b6e16820e6aa626023114b86f1d6d988b0f3195a"
+      },
+      "train": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/analysis_sft/train.jsonl",
+        "rows": 1355,
+        "sha256": "fb7ac885d40d032bbabd75709c128ede596cecf6d50989abfab62f0a2bfdd04e"
+      }
+    },
+    "generation_handoff": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/generation_full_v7/generation_handoff.json",
+      "sha256": "cc8c44ee60f1ef2f44a9354d904f7c28691cb56d9febee53685cc7a204e6df29"
+    },
+    "generation_manifests": {
+      "eval": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/generation_full_v7/manifests/eval.jsonl",
+        "rows": 205,
+        "sha256": "b03aeb7a4e02b8df0cc8433a1c2d3ec7276e8c327647d24f7e73ea308ecf031e"
+      },
+      "test": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/generation_full_v7/manifests/test.jsonl",
+        "rows": 197,
+        "sha256": "f3c283753c1d5e8a9d6d5f22d4603d3de588ac42a14d12894f84983982f5bb04"
+      },
+      "train": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/generation_full_v7/manifests/train.jsonl",
+        "rows": 1713,
+        "sha256": "53c04c2e4513a70c17a26efa74acdfe7c07bdcab5237bdb0e33a091105d06231"
+      }
+    },
+    "source_release_manifest": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/chk1_reasoning_compressed_flash_max_v1_20260805/release_manifest.json",
+      "sha256": "778aacaf6f109d63c5ea1eef982abee60f8f32c1c61fae080d1992877e0f3b83"
+    },
+    "source_split_files": {
+      "eval": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/chk1_reasoning_compressed_flash_max_v1_20260805/analysis_sft/eval.jsonl",
+        "rows": 199,
+        "sha256": "29fd2e8dece01a5c2bdf8c5564426af210a70dece64e62ce9d1d44e5db0956dd"
+      },
+      "test": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/chk1_reasoning_compressed_flash_max_v1_20260805/analysis_sft/test.jsonl",
+        "rows": 190,
+        "sha256": "74758c4b4d496d8639d9ffb0058f837db40481c3f7adba9cd46461942c011679"
+      },
+      "train": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/chk1_reasoning_compressed_flash_max_v1_20260805/analysis_sft/train.jsonl",
+        "rows": 1354,
+        "sha256": "83df6f1936f4e7e0cb85956b2c301e5207f8ee5507bcb89281db8eeeb97b8158"
+      }
+    },
+    "teacher_cache": {
+      "recovery_binding_sha256": "0270afeb6824919a922335332106cd50976a1095f14606cb2906602ff9adcd8c",
+      "recovery_files": 42,
+      "root": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/deepseek_teacher_cache_v5"
+    },
+    "tokenizer": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/provenance/tokenizer_bundle",
+      "tokenizer_json_sha256": "b9c9eb63a8e03059914880f918cd28a880dec8b6e15e4461e1ff677e3743dbb8"
+    }
+  },
+  "split_counts": {
+    "eval": 199,
+    "test": 190,
+    "train": 1354
+  },
+  "split_files": {
+    "eval": {
+      "path": "analysis_sft/eval.jsonl",
+      "rows": 199,
+      "sha256": "e1622d22d5b14023128d4d3f4e3f377d40d8d5eb5cfeb1d5e3877af671af6eb4"
+    },
+    "test": {
+      "path": "analysis_sft/test.jsonl",
+      "rows": 190,
+      "sha256": "60462438d7e72b39cd45a30e8964fb5b04c7f00d1b2749bc3db96459598300b1"
+    },
+    "train": {
+      "path": "analysis_sft/train.jsonl",
+      "rows": 1354,
+      "sha256": "f3f4b37ae225c4d4b8971212da9faaf0467cda80c0a301ffa4dc8bd9c6a32ddc"
+    }
+  }
+}

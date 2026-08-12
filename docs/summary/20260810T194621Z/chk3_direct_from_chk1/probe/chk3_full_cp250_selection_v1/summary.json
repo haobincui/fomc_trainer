@@ -1,0 +1,31 @@
+{
+  "boundary_valid_rate": 1.0,
+  "cap_rate": 0.0,
+  "cases": 3,
+  "created_at_utc": "2026-08-10T22:14:33Z",
+  "date_preservation_rate": 1.0,
+  "eos_rate": 1.0,
+  "max_full_token_4gram_repetition": 0.17364532,
+  "max_tail_token_4gram_repetition": 0.17364532,
+  "mean_full_token_4gram_repetition": 0.13928234666666664,
+  "mean_tail_token_4gram_repetition": 0.13928234666666664,
+  "model_label": "chk3-direct-full-cp250",
+  "numeric_preservation_rate": 1.0,
+  "peak_allocated_gib": 5.857,
+  "peak_reserved_gib": 7.402,
+  "periodic_tail_rate": 0.0,
+  "quality_valid_rate": 1.0,
+  "results": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/chk3_full_cp250_selection_v1/results.jsonl",
+    "rows": 3,
+    "sha256": "c519ca6da29baa6bea3eb9e8cf7d11769ad6ea9f7710dab4a3b1d5e1f9a7e413"
+  },
+  "runtime_versions": {
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6"
+  },
+  "sample_manifest_sha256": "112ca6804c5c906b0e3c6bd33e309b196bc2800ee9ee6293e223a3e266c1f9a7",
+  "schema_version": "chk3-sft-degeneration-probe-v1",
+  "single_paragraph_final_rate": 1.0,
+  "status": "complete"
+}

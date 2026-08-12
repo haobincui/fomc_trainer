@@ -1,0 +1,59 @@
+{
+  "schema_version": "chk2-deepseek-low600-resume-launch-binding-v1",
+  "run_id": "chk2_clean_v2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810",
+  "session_name": "fomc_chk2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810",
+  "artifacts": {
+    "authorization": {
+      "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low600_resume_cp4_authorization.json",
+      "sha256": "fb7ce07c7af7848608b39a62573a1641dc03ec6b88d89cd45fa40721e2ec69d8"
+    },
+    "benchmark_summary": {
+      "path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low_judge_benchmark_v1/benchmark_summary.json",
+      "sha256": "30172fd9d30579b0d3d8dd1d0ed27e651eaef9b75284b6167c53f89d5ea24794"
+    },
+    "config": {
+      "path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810.yaml",
+      "sha256": "ea6bd87fc34c54d3d93fbb0d282396ddcd986482be10fa098abc052b4b61958d"
+    },
+    "dataset_overlay": {
+      "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810",
+      "sha256": "8fb5d5827df69d16c03dc77042e3fdb5cef79dcc701be7e145252a9ce0c93351"
+    },
+    "launch_module": {
+      "path": "jobs/retrain_v2/start_chk2_deepseek_low600_resume.py",
+      "sha256": "b64a1e332aedd89489f621daa25e11067fa324f944acd9d00f98b90a121d3359"
+    },
+    "launcher_wrapper": {
+      "path": "run/retrain_v2/start_chk2_cp200_deepseek_low600_resume_cp4.sh",
+      "sha256": "2d395936409eb7c653db1de20136ef2a7cfecdb91e0bf4868b796c3b84396043"
+    },
+    "merged_chk1": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+    },
+    "overlay_manifest": {
+      "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810/overlay_manifest.json",
+      "sha256": "00a825755444b83ea3c3f3d0878b394acbcc2af85ab231ec714aa64f742de410"
+    },
+    "resume_checkpoint": {
+      "path": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/adapters/chk2/checkpoint-4",
+      "sha256": "24813c7aaad1adb53cc9c39e6f55ede0569598602c2a54ca60b11be27aa50083"
+    },
+    "reward_module": {
+      "path": "src/open_r1/trainer/rewards/reward_funcs/analysis_reward_v3_deepseek_low.py",
+      "sha256": "0ac9e3cd2fd64db0300600926bfa9c76ed5d3b426ebc000b23787372a0283ccb"
+    },
+    "reward_registry": {
+      "path": "src/open_r1/trainer/rewards/reward_register.py",
+      "sha256": "c8bd4b9ad93e304ff27b7adb2942c488e05f22fbdb351b06a3b18fba882ea7a4"
+    },
+    "source_low_config": {
+      "path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810.yaml",
+      "sha256": "623ab06227d1c9b445b41ed1b2970559f552cd219ce4ea6db37afe54fbce4185"
+    },
+    "trainer": {
+      "path": "src/open_r1/trainer/trainer.py",
+      "sha256": "5f18385e28d78f37442fdc102308585f0da099436f2c69c7196903005924be8c"
+    }
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "configuration": {
+    "answer_token_range": [
+      16,
+      512
+    ],
+    "expected_split_counts": {
+      "eval": 199,
+      "test": 190,
+      "train": 1354
+    },
+    "max_length": 4608,
+    "reasoning_token_range": [
+      512,
+      2400
+    ]
+  },
+  "content_binding_sha256": "ad9ae883f72061e815ce20afa768212d4ef60e160e90671559ab23834034180c",
+  "contracts": {
+    "data": "chk1-clean-sft-data-contract-v2",
+    "tokenization": "chk1-sft-single-bos-completion-mask-v1"
+  },
+  "counts": {
+    "expected_rows": 1743,
+    "issue_rows_or_groups": 0,
+    "observed_rows": 1743,
+    "order_unchanged": 1743,
+    "prompt_hashes_unchanged": 1743,
+    "provided_data_hashes_unchanged": 1743,
+    "split_counts": {
+      "eval": 199,
+      "test": 190,
+      "train": 1354
+    },
+    "truncated_rows": 0,
+    "valid_rows": 1743
+  },
+  "cross_split_duplicate_group_counts": {},
+  "inputs": {
+    "clean_release": {
+      "manifests": [
+        {
+          "name": "candidate_manifest.json",
+          "sha256": "41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700"
+        }
+      ],
+      "release_id": "chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate",
+      "splits": {
+        "eval": {
+          "bytes": 2942798,
+          "sha256": "e1622d22d5b14023128d4d3f4e3f377d40d8d5eb5cfeb1d5e3877af671af6eb4"
+        },
+        "test": {
+          "bytes": 2740336,
+          "sha256": "60462438d7e72b39cd45a30e8964fb5b04c7f00d1b2749bc3db96459598300b1"
+        },
+        "train": {
+          "bytes": 18788015,
+          "sha256": "f3f4b37ae225c4d4b8971212da9faaf0467cda80c0a301ffa4dc8bd9c6a32ddc"
+        }
+      }
+    },
+    "repair_manifest": {
+      "rows": 1743,
+      "sample_ids_sha256": "e3ec34a76fa720488e9aee50ad39b6bd53114fa6ddcc5220078ffc7139d4b8db",
+      "sha256": "cd7dee86792c8190a5daceb99612c36a0396506f7dfa4da551a6f41cbb6c3d0b"
+    },
+    "source_release": {
+      "manifests": [
+        {
+          "name": "release_manifest.json",
+          "sha256": "778aacaf6f109d63c5ea1eef982abee60f8f32c1c61fae080d1992877e0f3b83"
+        }
+      ],
+      "release_id": "chk1_reasoning_compressed_flash_max_v1_20260805",
+      "splits": {
+        "eval": {
+          "bytes": 2948048,
+          "sha256": "29fd2e8dece01a5c2bdf8c5564426af210a70dece64e62ce9d1d44e5db0956dd"
+        },
+        "test": {
+          "bytes": 2745334,
+          "sha256": "74758c4b4d496d8639d9ffb0058f837db40481c3f7adba9cd46461942c011679"
+        },
+        "train": {
+          "bytes": 18822729,
+          "sha256": "83df6f1936f4e7e0cb85956b2c301e5207f8ee5507bcb89281db8eeeb97b8158"
+        }
+      }
+    },
+    "tokenizer": {
+      "binding_sha256": "6c9b764ad58e4bb6a4daec4f942d5c295a7e805dae179cbc0745df8e3af048b2",
+      "files": [
+        {
+          "bytes": 9084480,
+          "name": "tokenizer.json",
+          "sha256": "b9c9eb63a8e03059914880f918cd28a880dec8b6e15e4461e1ff677e3743dbb8"
+        },
+        {
+          "bytes": 3072,
+          "name": "tokenizer_config.json",
+          "sha256": "5a773d1f7a8716f53f414040cbbf94ddf5f55f4f00bc3b4cc8fd8d6b64369777"
+        }
+      ],
+      "model_id": "DeepSeek-R1-Distill-Llama-8B",
+      "tokenizer_bundle_sha256": "6c9b764ad58e4bb6a4daec4f942d5c295a7e805dae179cbc0745df8e3af048b2"
+    }
+  },
+  "issue_counts": {},
+  "issues": [],
+  "quality_gates": {
+    "cross_split_duplicates": true,
+    "no_truncation_at_max_length": true,
+    "prompt_hashes_unchanged": true,
+    "provided_data_hashes_unchanged": true,
+    "repair_manifest_binding": true,
+    "schema_and_target_contract": true,
+    "single_bos_final_eos_and_mask": true,
+    "split_counts_and_order": true,
+    "strict_periodic_tails": true
+  },
+  "schema_version": "chk1-clean-sft-validator-v1",
+  "status": "passed",
+  "token_statistics": {
+    "distributions": {
+      "answer": {
+        "max": 279,
+        "min": 19,
+        "p50": 114,
+        "p95": 187
+      },
+      "completion": {
+        "max": 1771,
+        "min": 562,
+        "p50": 1115,
+        "p95": 1355
+      },
+      "prompt": {
+        "max": 2661,
+        "min": 821,
+        "p50": 1536,
+        "p95": 2268
+      },
+      "reasoning": {
+        "max": 1600,
+        "min": 517,
+        "p50": 996,
+        "p95": 1216
+      },
+      "total": {
+        "max": 4019,
+        "min": 1418,
+        "p50": 2565,
+        "p95": 3435
+      }
+    },
+    "max_total_tokens": 4019
+  },
+  "validation_sha256": "692b6b97f5dd8fa56bd563367d8ea86bde4be37a6c4890cf8d3fbcdc653b8f96",
+  "validator": {
+    "source_sha256": "e9ed60b92f123d0e1741523388cb5fc7fee423a1d141e21e7a8d05798f593b6e",
+    "version": "chk1-clean-sft-validator-v1"
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "artifact_id": "chk1-clean-v2-lr1e6-cp200-merged-for-chk2",
+  "authorization": {
+    "authorization_sha256": "c8b400ec48be0fd31929f07dea3d30422a2c2638306ab55f4e2e264cb161cb3c",
+    "file_sha256": "e4e80fbfdd805b3691b3b05fbf3e3f26353eeef399fb7a08f156260e7f0ca554",
+    "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_to_chk2_authorization.json",
+    "scope": {
+      "allowed_operations": [
+        "merge_checkpoint_200",
+        "use_merged_checkpoint_200_as_chk2_parent"
+      ],
+      "downstream_stages_allowed": [
+        "chk2"
+      ],
+      "further_downstream_stages_allowed": [],
+      "source_stage": "chk1",
+      "target_stage": "chk2"
+    }
+  },
+  "canonical_training_receipt": {
+    "reason": "The selected source is a historical nested checkpoint, not the canonical adapter root; retroactive receipt creation would misstate the actual training path.",
+    "status": "unavailable_not_applicable"
+  },
+  "exact_tensor_lineage": {
+    "conclusion": "exact_base_plus_adapter_merge_verified",
+    "file_sha256": "a09010d8e79b5ad9df3329596c8308bc32d9afb9d5d85e4c51872d17acca49d5",
+    "mismatch_count": 0,
+    "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/chk1_cp200_exact_merge_lineage.json",
+    "payload_sha256": "09234146493643b64b93b8afb1db8cd31f5b86216112a3f7466d3475a139ea3d"
+  },
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "4b310f7345707ad5906f1972444c7b0a48b05ca1c6c0acb53f592b641f53e092"
+  },
+  "load_smoke": {
+    "file_sha256": "a6df4694313691df990c42f39e7896989254ac2a628ce0ed2340d7d7a269ccb4",
+    "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/load_smoke.json",
+    "payload_sha256": "865fa3f7411f83b7308d67a396431573e46af6dfc8ab14cc5f7ccaffc65de334",
+    "status": "passed"
+  },
+  "merge_attestation": {
+    "canonical_payload_sha256": "39aa1b1c46724659a9cfbcc5f4a08538e10e11d290237c653864ba9dafeede9a",
+    "file_sha256": "bce783ee21582a5eadb291859e552e23e4897b32063765182f00d818e936abcf",
+    "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1/merge_attestation.json"
+  },
+  "model_fingerprint": {
+    "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+    "file_count": 14,
+    "kind": "directory",
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+    "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+    "total_bytes": 16077912659
+  },
+  "model_path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+  "promotion_manifest": {
+    "file_sha256": "ba0487cbea4082424b4f016ee01aac342a306eb3aeb3b94d7b560d685f56ebef",
+    "path": "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/promotion_manifest.json",
+    "payload_sha256": "293b591af4af618f40156fca57ed3176329833dc5b993d5ffa00ad2427c3489b"
+  },
+  "schema_version": "chk1-cp200-merged-checkpoint-manifest-v1",
+  "scope": {
+    "allowed_stage": "chk2",
+    "further_downstream_stages_allowed": []
+  },
+  "semantic_audit": {
+    "claim_boundary": "Explicit user override permits this model only as a chk2 parent; no semantic-audit pass is claimed.",
+    "status": "failed",
+    "summary": {
+      "counts": {
+        "blocking_violations": 611,
+        "completed": 235,
+        "expected": 237,
+        "failed": 234,
+        "judge_errors": 2,
+        "passed": 1
+      },
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_qwen_source_audit/summary.json",
+      "sha256": "780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e",
+      "status": "failed"
+    }
+  },
+  "source_adapter": {
+    "adapter_weights_sha256": "7a5155562d9482028e0acb777a7b5758e4283f8463c0c39a0cade4062959b9a9",
+    "checkpoint_step": 200,
+    "fingerprint": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 13,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200",
+      "sha256": "fa454f73071b3989bf7c9ea3aaabb5a599196396a3ecb369d8956b849bacdc2f",
+      "total_bytes": 356124842
+    },
+    "path": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200"
+  },
+  "status": "ready_for_chk2_parent_under_explicit_override",
+  "verified_parent": {
+    "artifact_id": "chk0-deepseek-r1-distill-llama-8b",
+    "fingerprint": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 83,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "total_bytes": 32134256893
+    },
+    "path": "models/DeepSeek-R1-Distill-Llama-8B"
+  }
+}

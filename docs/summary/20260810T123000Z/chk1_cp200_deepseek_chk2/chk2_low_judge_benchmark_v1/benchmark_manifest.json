@@ -1,0 +1,377 @@
+{
+  "dataset": {
+    "files": [
+      {
+        "name": "train.jsonl",
+        "sha256": "6d7a16249bd81bbcdcdcfd8897d5d87f1d30aa0b31a9891d2e628f4de304a815"
+      },
+      {
+        "name": "eval.jsonl",
+        "sha256": "bf7ca73a2f8a648965d1d97ff8d6a12610fa280337e41db77ebe912f7bbeda9c"
+      },
+      {
+        "name": "test.jsonl",
+        "sha256": "0a48000bb7757e3842a3f22be0eae69725b2e24e0388a8f276e0477418f0fa6c"
+      }
+    ],
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810"
+  },
+  "groups": [
+    {
+      "base_group_id": "g1_ffr_canary",
+      "binding_sha256": "94b6ca23b52c8533649dbd25e552bac1721138f60ee2aa6e4a2ef634d924bc00",
+      "candidate_sha256": [
+        "8f67bb7ed585bce5eecb8badbe47a448d2a29bfa1cb1d0a043cd342efab6962d",
+        "3c7a6f1056c3c5a02c0926f21929536a3abed9547b0551051db258bb42f25e04",
+        "f1f90173081956a699d93ec1e6f71d0a33842867a4cc9f04793e67ce88aab198",
+        "8ed4f430497058820cd22e64fa84cd974da80a7bf59f206341627e35bb1ee897"
+      ],
+      "completion_sha256": [
+        "dcaa4a0192160fed02ea68aaf89a9e63dae2ac23c2419cd7ade0984af0d9e444",
+        "f26b284729b5ab213d9ba2420eb34a3b91d98c0df2142d7fc147424c2c61acfb",
+        "165aafd8ca632db92f23bf76de6b406e2a373b2107a1e2897f8c6189fb25ff37",
+        "e1ae3e9e2880f1563aa2f0a0e15af3e17f070a6d1fc98c34fc5785321ba128ea"
+      ],
+      "evidence_sha256": "d1c31ab176d91554e5b839db0c24a703db21b4e28214621e314e78616e1e6531",
+      "group_id": "g1_ffr_canary_original",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "supported",
+        "think_error",
+        "answer_error",
+        "missing_boundary"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "original",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g1_ffr_canary",
+      "binding_sha256": "755a08bbe156038eb54bd4d4a554995b2e781b83277c05d73e5ef1d12e1ce24f",
+      "candidate_sha256": [
+        "f1f90173081956a699d93ec1e6f71d0a33842867a4cc9f04793e67ce88aab198",
+        "8f67bb7ed585bce5eecb8badbe47a448d2a29bfa1cb1d0a043cd342efab6962d",
+        "8ed4f430497058820cd22e64fa84cd974da80a7bf59f206341627e35bb1ee897",
+        "3c7a6f1056c3c5a02c0926f21929536a3abed9547b0551051db258bb42f25e04"
+      ],
+      "completion_sha256": [
+        "165aafd8ca632db92f23bf76de6b406e2a373b2107a1e2897f8c6189fb25ff37",
+        "dcaa4a0192160fed02ea68aaf89a9e63dae2ac23c2419cd7ade0984af0d9e444",
+        "e1ae3e9e2880f1563aa2f0a0e15af3e17f070a6d1fc98c34fc5785321ba128ea",
+        "f26b284729b5ab213d9ba2420eb34a3b91d98c0df2142d7fc147424c2c61acfb"
+      ],
+      "evidence_sha256": "d1c31ab176d91554e5b839db0c24a703db21b4e28214621e314e78616e1e6531",
+      "group_id": "g1_ffr_canary_permuted_2031",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "answer_error",
+        "supported",
+        "missing_boundary",
+        "think_error"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "permuted_2031",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g2_real_step_00001",
+      "binding_sha256": "2e8460bc79b39bc93cb21554a2ed50584d543d19740772246678a5e0dd860580",
+      "candidate_sha256": [
+        "bef0c8bd8b64055391125a7c98a5d6a5ae07384e939f1b988d1ff36701be8774",
+        "f9297b75c530bde0b33ab9da39701fbdb9aa61825c253e4b99cd286bf399b820",
+        "cfd95ebe6903c61087454ccdad6aaec1b26d3b1ef197c898a93e9d4b2e4959a9",
+        "0acfa0dac5da91f80e5de0e87565f392a8c24a4987bd3d6db62641517335ddd7"
+      ],
+      "completion_sha256": [
+        "9aca47597e4a18c55c1717ab42a9fe21f8446fbc82d20d9eb63920355c065dea",
+        "5e086f053f0e3fd452981d1d680ed9a8da57b4dc770cda12c837c1904765c0b5",
+        "d2bae37b248bf28927d2e0d7844ef377a3ebe54f9819707ea60d9ac0b53c8819",
+        "4c430629a0ce2cfbf2adfb7dd659135ce72f4145b57dfa9c2ec8d6fb88dfb8d5"
+      ],
+      "evidence_sha256": "b28b745c5e52d6ee0d476d70422cefb0c2bd241177c0bdfe9c434647ecaef32c",
+      "group_id": "g2_real_step_00001_original",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "real_candidate_0",
+        "real_candidate_1",
+        "real_candidate_2",
+        "real_candidate_3"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "original",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "real_step1_completion"
+    },
+    {
+      "base_group_id": "g2_real_step_00001",
+      "binding_sha256": "fad67124354286566571b039306267f8655de1c67ac427835b97bedb23f7efdb",
+      "candidate_sha256": [
+        "cfd95ebe6903c61087454ccdad6aaec1b26d3b1ef197c898a93e9d4b2e4959a9",
+        "bef0c8bd8b64055391125a7c98a5d6a5ae07384e939f1b988d1ff36701be8774",
+        "0acfa0dac5da91f80e5de0e87565f392a8c24a4987bd3d6db62641517335ddd7",
+        "f9297b75c530bde0b33ab9da39701fbdb9aa61825c253e4b99cd286bf399b820"
+      ],
+      "completion_sha256": [
+        "d2bae37b248bf28927d2e0d7844ef377a3ebe54f9819707ea60d9ac0b53c8819",
+        "9aca47597e4a18c55c1717ab42a9fe21f8446fbc82d20d9eb63920355c065dea",
+        "4c430629a0ce2cfbf2adfb7dd659135ce72f4145b57dfa9c2ec8d6fb88dfb8d5",
+        "5e086f053f0e3fd452981d1d680ed9a8da57b4dc770cda12c837c1904765c0b5"
+      ],
+      "evidence_sha256": "b28b745c5e52d6ee0d476d70422cefb0c2bd241177c0bdfe9c434647ecaef32c",
+      "group_id": "g2_real_step_00001_permuted_2031",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "real_candidate_2",
+        "real_candidate_0",
+        "real_candidate_3",
+        "real_candidate_1"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "permuted_2031",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "real_step1_completion"
+    },
+    {
+      "base_group_id": "g3_totalsl_scale",
+      "binding_sha256": "0166d037de57bac24cc7a82b90c9651d12a889232da1598c7013412a7e0761e4",
+      "candidate_sha256": [
+        "b4b1de028f68e0ae565b935f05300ca0c757a32028008fd4de28dcdaafc32518",
+        "72b619f8e28bcc120a46097e271c8b2ff688b633757488c7aa9676bb941a3f8a",
+        "7e301a4ebad19f1b0ea82b3c24916ccecbed031a1c06b99e45afaa0c695870d9",
+        "90bc1067272c67468b34f48cf43b786d850197c13c894b198ab417990682504d"
+      ],
+      "completion_sha256": [
+        "2cd49e405c2736c73aabf4083aa110a60f6311d7c500207839803447b399b24f",
+        "c136142324453404bc142e5429c1bc3dde7100e048fd37f96d154a602ba63717",
+        "c93bd5bfbd5d7223d6b3598c5ff1d61b5a4605e4c53756473945d7d74da7912a",
+        "be2cd4c9a29c92416014e2aca4ad316f392ddc0fa27412946495f3339f7d99e7"
+      ],
+      "evidence_sha256": "5f5aaaa34dbccfc06cb4506885b01172a06f1d80ca188b58afb7bf9a81a10780",
+      "group_id": "g3_totalsl_scale_original",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "totalsl_exact_billions",
+        "totalsl_equivalent_trillions",
+        "totalsl_wrong_millions",
+        "totalsl_wrong_billions"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "original",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g3_totalsl_scale",
+      "binding_sha256": "14c33d5dcccd6938a2e05dbf8ebb189bda697139c5673e9c614fb974dd5d128f",
+      "candidate_sha256": [
+        "7e301a4ebad19f1b0ea82b3c24916ccecbed031a1c06b99e45afaa0c695870d9",
+        "b4b1de028f68e0ae565b935f05300ca0c757a32028008fd4de28dcdaafc32518",
+        "90bc1067272c67468b34f48cf43b786d850197c13c894b198ab417990682504d",
+        "72b619f8e28bcc120a46097e271c8b2ff688b633757488c7aa9676bb941a3f8a"
+      ],
+      "completion_sha256": [
+        "c93bd5bfbd5d7223d6b3598c5ff1d61b5a4605e4c53756473945d7d74da7912a",
+        "2cd49e405c2736c73aabf4083aa110a60f6311d7c500207839803447b399b24f",
+        "be2cd4c9a29c92416014e2aca4ad316f392ddc0fa27412946495f3339f7d99e7",
+        "c136142324453404bc142e5429c1bc3dde7100e048fd37f96d154a602ba63717"
+      ],
+      "evidence_sha256": "5f5aaaa34dbccfc06cb4506885b01172a06f1d80ca188b58afb7bf9a81a10780",
+      "group_id": "g3_totalsl_scale_permuted_2031",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "totalsl_wrong_millions",
+        "totalsl_exact_billions",
+        "totalsl_wrong_billions",
+        "totalsl_equivalent_trillions"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "permuted_2031",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g4_unemployment_causal_meta",
+      "binding_sha256": "001797c2c01c7a91178e4e1b826e60e1cb6c121c7f6806578e33e5e91d4aa8ab",
+      "candidate_sha256": [
+        "650a1685a66e79e730f2fd241644a40024f43e35932ef14ddb88d3a232272b30",
+        "3ae6a4fe98cf3886b5b56c4944466d35e61d92e9737e0ae9022ade525ff470af",
+        "5c0f61482ee7bd13450ebe7884783fd3230fd0ecb763e2b560016c5d4f285c5b",
+        "08b87744ba5f3d466e488efa969b31f61cdc5dfa0cc65896e343872c82584362"
+      ],
+      "completion_sha256": [
+        "f5eb20810c22979da8e454efa9690216026a71122cfd157d10d0308bc782531a",
+        "2f41425e94087c5ed120de87adbc808fee0e7b78a7c86b270d9355e94c89a0d1",
+        "054d6349e28b6987b920fe14559f371690a4724230d93ad0200b08261667c596",
+        "fbebef1ad1bebe8fb8ddb25549864c2fe0a46ae383e13f3c4355329494d51380"
+      ],
+      "evidence_sha256": "2703144721cc73711985b6e55d9cdaab926d8da03181d391d6e84f89b4ea6416",
+      "group_id": "g4_unemployment_causal_meta_original",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "unemployment_supported",
+        "unemployment_unsupported_cause",
+        "unemployment_meta_style",
+        "unemployment_wrong_number"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "original",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g4_unemployment_causal_meta",
+      "binding_sha256": "1ef5bb6b9ec01f134676cb7954f053f76422da0f7360798c8c39adf3132470a2",
+      "candidate_sha256": [
+        "5c0f61482ee7bd13450ebe7884783fd3230fd0ecb763e2b560016c5d4f285c5b",
+        "650a1685a66e79e730f2fd241644a40024f43e35932ef14ddb88d3a232272b30",
+        "08b87744ba5f3d466e488efa969b31f61cdc5dfa0cc65896e343872c82584362",
+        "3ae6a4fe98cf3886b5b56c4944466d35e61d92e9737e0ae9022ade525ff470af"
+      ],
+      "completion_sha256": [
+        "054d6349e28b6987b920fe14559f371690a4724230d93ad0200b08261667c596",
+        "f5eb20810c22979da8e454efa9690216026a71122cfd157d10d0308bc782531a",
+        "fbebef1ad1bebe8fb8ddb25549864c2fe0a46ae383e13f3c4355329494d51380",
+        "2f41425e94087c5ed120de87adbc808fee0e7b78a7c86b270d9355e94c89a0d1"
+      ],
+      "evidence_sha256": "2703144721cc73711985b6e55d9cdaab926d8da03181d391d6e84f89b4ea6416",
+      "group_id": "g4_unemployment_causal_meta_permuted_2031",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "unemployment_meta_style",
+        "unemployment_supported",
+        "unemployment_wrong_number",
+        "unemployment_unsupported_cause"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "permuted_2031",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g5_ffr_target_leakage",
+      "binding_sha256": "62988221212e96eff3c8d31dbffcf344b63e39d1f2544764a422e9c9d6e28a40",
+      "candidate_sha256": [
+        "8f67bb7ed585bce5eecb8badbe47a448d2a29bfa1cb1d0a043cd342efab6962d",
+        "5d1be99063497940bf8405cead6aca1104e312a5d577de34b9e64a9298fb3898",
+        "a07008292c52eae47fa5e6780ee98ec6d3a1ee7d24e7afb44e84c24da8031538",
+        "f291c4202d60f7c01493480a97b15611139a2a71668a9fcfbabd80ab98ca0b29"
+      ],
+      "completion_sha256": [
+        "dcaa4a0192160fed02ea68aaf89a9e63dae2ac23c2419cd7ade0984af0d9e444",
+        "9869cc89d2c00f83143f91135a28d4310cde36323c8fd588b1f924a2d17adaa0",
+        "b2fce39024db15e01aacfbc304bdf980fa1d4a430818db8f43e4f141f13662fa",
+        "34d6d859fa883fd4e147c423e5ad8929f3302a14c1d4e70d0d1e35bc0975e991"
+      ],
+      "evidence_sha256": "d1c31ab176d91554e5b839db0c24a703db21b4e28214621e314e78616e1e6531",
+      "group_id": "g5_ffr_target_leakage_original",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "ffr_supported",
+        "ffr_think_target_leakage",
+        "ffr_answer_target_leakage",
+        "ffr_no_leakage_caveat"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "original",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    },
+    {
+      "base_group_id": "g5_ffr_target_leakage",
+      "binding_sha256": "d082c9ee0da85853618ecc168b90906ac6028b139ac67062b02948830b3b9ea1",
+      "candidate_sha256": [
+        "a07008292c52eae47fa5e6780ee98ec6d3a1ee7d24e7afb44e84c24da8031538",
+        "8f67bb7ed585bce5eecb8badbe47a448d2a29bfa1cb1d0a043cd342efab6962d",
+        "f291c4202d60f7c01493480a97b15611139a2a71668a9fcfbabd80ab98ca0b29",
+        "5d1be99063497940bf8405cead6aca1104e312a5d577de34b9e64a9298fb3898"
+      ],
+      "completion_sha256": [
+        "b2fce39024db15e01aacfbc304bdf980fa1d4a430818db8f43e4f141f13662fa",
+        "dcaa4a0192160fed02ea68aaf89a9e63dae2ac23c2419cd7ade0984af0d9e444",
+        "34d6d859fa883fd4e147c423e5ad8929f3302a14c1d4e70d0d1e35bc0975e991",
+        "9869cc89d2c00f83143f91135a28d4310cde36323c8fd588b1f924a2d17adaa0"
+      ],
+      "evidence_sha256": "d1c31ab176d91554e5b839db0c24a703db21b4e28214621e314e78616e1e6531",
+      "group_id": "g5_ffr_target_leakage_permuted_2031",
+      "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+      "labels": [
+        "ffr_answer_target_leakage",
+        "ffr_supported",
+        "ffr_no_leakage_caveat",
+        "ffr_think_target_leakage"
+      ],
+      "max_output_tokens": 16384,
+      "model": "deepseek-v4-flash",
+      "order_variant": "permuted_2031",
+      "reasoning_effort": "low",
+      "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+      "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+      "source_kind": "deterministic_diagnostic"
+    }
+  ],
+  "privacy": {
+    "api_key_persisted": false,
+    "hidden_reasoning_persisted": false,
+    "provider_output_persisted": false,
+    "raw_candidates_persisted": false,
+    "raw_evidence_persisted": false
+  },
+  "request": {
+    "api": "responses",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "backoff_seconds": 2.0,
+    "base_url": "https://api.deepseek.com",
+    "group_size": 4,
+    "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+    "max_attempts": 2,
+    "max_output_tokens": 16384,
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "low",
+    "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+    "timeout_seconds": 420.0
+  },
+  "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+  "source": {
+    "completion_parquet": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/completions/completions_00001.parquet",
+      "sha256": "4f2f318454a42ed17d05e2735fa011ddb9e9826976c812e35b9aa68717897dcc"
+    },
+    "high_canary_reward_log": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/retrain_v2/chk2_deepseek_high_canary_20260810_01/reward.jsonl",
+      "sha256": "d790bd4d39f8fd7bc03078dfc50d0032c09cf40da1a98e663357314d0fec91aa"
+    },
+    "high_reward_log": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/reward.jsonl",
+      "sha256": "8569bc8491351575899d017daa972c4e6755072497ba813377221f27a020f048"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "adapter": {
+    "files": {
+      "adapter_config.json": "fa687e5e67bf1671674dc999186953269b78202db0182de075500a6645bfe42b",
+      "adapter_model.safetensors": "ad3e5c0aa0eeeab09f130061695466c11371ff6bd1ea2f9b09662ba2678264c1"
+    },
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk3_direct_chk1_cp200_smoke20_lr1e6_20260810/adapters/chk3/checkpoint-20"
+  },
+  "base_model": {
+    "files": {
+      "config.json": "7b5b46c23b279e8cf4d4bb41202fa308cc147eac2a747b3d21ceb070a993cf53",
+      "generation_config.json": "1835c3135c03489786b3d054b963fad10c38ad02dbbfd020a26e1e4fe783d0e9",
+      "model-00001-of-00004.safetensors": "4afaa90484e1e509a0ca4c82db80b03c769c20ac84cf00fe5a9acf3ae6c5fd4c",
+      "model-00002-of-00004.safetensors": "13fe5ca6616de29b5490cc31c639c0c575e2d6488b4034f9fe02cf4a21242ccd",
+      "model-00003-of-00004.safetensors": "79b93f9d9c5a0021afaf9af28db5b76c4b97cd3eb686e13072f907562998bdcd",
+      "model-00004-of-00004.safetensors": "8b34e420584c6330b92e0eddf1fd4f6400d8a94033d8e3c3ae9513623fce99ef",
+      "model.safetensors.index.json": "560e89ca3d220e7d9b76fbc0749c2b8e67f7fcfae6d34f3a67ea88fcdc2ab6ae"
+    },
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1"
+  },
+  "created_at_utc": "2026-08-10T20:01:54Z",
+  "generation": {
+    "attn_implementation": "sdpa",
+    "do_sample": false,
+    "load_in_4bit": true,
+    "max_new_tokens": 3072,
+    "seed": 20260810,
+    "tail_tokens": 1024
+  },
+  "model_label": "chk3-direct-smoke20",
+  "redaction": {
+    "completion_text_persisted": false,
+    "prompt_text_persisted": false,
+    "source_analysis_text_persisted": false,
+    "target_text_persisted": false
+  },
+  "runtime": {
+    "cuda_visible_devices": "0",
+    "python": "/home/haobin_cui/.conda/envs/fomc_trainer/bin/python",
+    "python_version": "3.10.9"
+  },
+  "sample_manifest": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/samples_v2.json",
+    "sha256": "112ca6804c5c906b0e3c6bd33e309b196bc2800ee9ee6293e223a3e266c1f9a7"
+  },
+  "schema_version": "chk3-sft-degeneration-probe-v1",
+  "status": "initializing"
+}

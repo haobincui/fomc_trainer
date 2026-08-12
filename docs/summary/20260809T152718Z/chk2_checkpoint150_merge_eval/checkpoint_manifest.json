@@ -1,0 +1,59 @@
+{
+  "artifacts": [
+    {
+      "adapter_path": null,
+      "adapter_sha256": null,
+      "artifact_id": "eval-chk0-base",
+      "design_checkpoint_id": "chk-0",
+      "intended_parent_id": null,
+      "lineage_status": "verified_root_artifact",
+      "model_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "model_sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "tokenizer_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "tokenizer_sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "usable_for_evaluation": true,
+      "verified_parent_artifact_id": null
+    },
+    {
+      "adapter_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_compressed_flash_max_v1_20260805/adapters/chk1",
+      "adapter_sha256": "b99fe46315f5ab495ed906906de928856a5f54b20e23797fae01a5818152c8e0",
+      "artifact_id": "eval-chk1-compressed-sft",
+      "design_checkpoint_id": "chk-1",
+      "intended_parent_id": "chk-0",
+      "lineage_status": "verified_parent_matches_intended_parent",
+      "model_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_compressed_flash_max_v1_20260805/merged/chk1",
+      "model_sha256": "70be17c6d879f70eb98ab54bcf2a29f2f4991b2d7ab73b5696cbb6a0139f83aa",
+      "tokenizer_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_compressed_flash_max_v1_20260805/merged/chk1",
+      "tokenizer_sha256": "70be17c6d879f70eb98ab54bcf2a29f2f4991b2d7ab73b5696cbb6a0139f83aa",
+      "usable_for_evaluation": true,
+      "verified_parent_artifact_id": "eval-chk0-base"
+    },
+    {
+      "adapter_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_long4096_fresh_20260807/adapters/chk2/checkpoint-150",
+      "adapter_sha256": "2130a852906cc201aee192e0927a7ea43f52e1dca0c0fac28900e42f85ef0e81",
+      "artifact_id": "eval-chk2-reward-v3-cp150",
+      "design_checkpoint_id": "chk-2",
+      "intended_parent_id": "chk-1",
+      "lineage_status": "verified_parent_matches_intended_parent",
+      "model_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_selected_cp150_20260809/merged/chk2",
+      "model_sha256": "fe4a207a75d3883606e565e7001dbf66bda81563677dd061bc13fd5440b56c18",
+      "tokenizer_path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk2_compressed_chk1_v1_reward_v3_selected_cp150_20260809/merged/chk2",
+      "tokenizer_sha256": "fe4a207a75d3883606e565e7001dbf66bda81563677dd061bc13fd5440b56c18",
+      "usable_for_evaluation": true,
+      "verified_parent_artifact_id": "eval-chk1-compressed-sft"
+    }
+  ],
+  "claim_boundary": "Current-chain common-test comparison on the frozen Chapter 2 raw D-1 evidence to Minutes stress benchmark; this test is out-of-task for the analysis-producing chk1/chk2 models.",
+  "evaluation_scope": "current chk0 -> compressed chk1 -> reward-v3 chk2 checkpoint-150",
+  "generated_at_utc": "2026-08-09T15:27:18Z",
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "19f5ce1616b144c29f12b0ce2b6aa0a62b6c65587defe5c26eaaf2244d798a43"
+  },
+  "lineage_evidence": {
+    "eval-chk1-compressed-sft": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260809T152718Z/chk2_checkpoint150_merge_eval/chk1_exact_merge_lineage.json",
+    "eval-chk2-reward-v3-cp150": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260809T152718Z/chk2_checkpoint150_merge_eval/chk2_cp150_exact_merge_lineage.json"
+  },
+  "schema_version": "retrain-v2-checkpoint-eval-manifest-v1",
+  "training_performed": false
+}

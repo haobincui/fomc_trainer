@@ -1,0 +1,335 @@
+{
+  "schema_version": "chk4-steps24-sft-checkpoint-pilot-diagnosis-v1",
+  "created_at_utc": "2026-08-11T01:18:30Z",
+  "status": "complete",
+  "scope": {
+    "branch_id": "chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811",
+    "sft_steps": 24,
+    "audited_checkpoints": [10, 20, 24],
+    "pilot_split": "train",
+    "pilot_directions": ["hold", "hike", "cut"],
+    "cases_per_direction": 5,
+    "sampled_cases_per_direction": 4,
+    "total_cases_per_checkpoint": 15,
+    "completion_text_included": false
+  },
+  "conclusion": {
+    "sft_status": "completed_successfully",
+    "checkpoint_promotion_status": "blocked",
+    "selected_checkpoint": null,
+    "sft_merge_started": false,
+    "grpo_started": false,
+    "reason": "No audited checkpoint passed every per-direction sampled nonzero, direction-correct, and positive-reward-variance gate.",
+    "closest_checkpoint": 20,
+    "closest_checkpoint_blocker": "The sampled cut group had zero correct directions; its only nonzero reward was the 0.05 strict-format component on a wrong hold/0 prediction.",
+    "diagnostic_pattern": "stable_hold_bias_across_checkpoints"
+  },
+  "sft": {
+    "config": {
+      "path": "configs/retrain_v2/chk4_decision_sft_from_chk1_cp200_warm_fix_lr1e5_steps24_v3_20260811.yaml",
+      "sha256": "77dbf1a67530c32d74d2c5f8d1e1336e9d0efe9b1c9a783454a110719b78c6df",
+      "learning_rate": 0.00001,
+      "max_steps": 24,
+      "num_train_epochs_configured": 3,
+      "warmup_steps": 2,
+      "lr_scheduler_type": "cosine",
+      "per_device_train_batch_size": 1,
+      "gradient_accumulation_steps": 8,
+      "max_length": 3072,
+      "completion_only_loss": true,
+      "load_in_4bit": true,
+      "peft_r": 32,
+      "peft_lora_alpha": 64
+    },
+    "runtime": {
+      "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/resolved_runtime_config.json",
+      "sha256": "e20fc57c1c59eb9dadaa154d6a9fcf1ce1555b4988b19dbfc9102d8627cf11ac",
+      "cuda_visible_devices": "1",
+      "n_gpu": 1,
+      "world_size": 1,
+      "device_name": "NVIDIA A30",
+      "dtype": "bfloat16",
+      "quantization": "nf4_4bit_double_quant",
+      "optimizer": "paged_adamw_8bit"
+    },
+    "trainer_state": {
+      "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/trainer_state.json",
+      "sha256": "2e7bc68c84174d235f45a0778d974d2301a9744eb98ad9f809271d3e69513754",
+      "global_step": 24,
+      "epoch": 1.3404255319148937,
+      "best_metric": null,
+      "best_model_checkpoint": null,
+      "total_flos": 5327299615039488.0
+    },
+    "loss_history": {
+      "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/loss_history.jsonl",
+      "sha256": "ffda2dd6bfaad56bc494b77d5c9580e4247c484cce312f81b740cb63981aef14",
+      "eval_series": [
+        {"step": 4, "eval_loss": 2.0115292072296143, "eval_token_accuracy": 0.554901829132667},
+        {"step": 8, "eval_loss": 1.875813364982605, "eval_token_accuracy": 0.5621616565264188},
+        {"step": 12, "eval_loss": 1.791023850440979, "eval_token_accuracy": 0.572827568420997},
+        {"step": 16, "eval_loss": 1.7486655712127686, "eval_token_accuracy": 0.5808356541853684},
+        {"step": 20, "eval_loss": 1.7317873239517212, "eval_token_accuracy": 0.5814894483639643},
+        {"step": 24, "eval_loss": 1.7281625270843506, "eval_token_accuracy": 0.5868003047429599}
+      ]
+    },
+    "terminal_metrics": {
+      "train_results": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/train_results.json",
+        "sha256": "82b8d1cfebe6818c05b162a76d948a3420825e2f71fb3fff0c4f36bb8b34f193",
+        "train_loss": 1.8091275542974472,
+        "train_runtime_seconds": 205.1082,
+        "train_samples": 141
+      },
+      "eval_results": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/eval_results.json",
+        "sha256": "cb5787327f56a3d91a107a09df0996d22073b2476ed3c71e2efe6d58faf04b91",
+        "eval_loss": 1.7281625270843506,
+        "eval_samples": 13
+      },
+      "all_results": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/all_results.json",
+        "sha256": "fcfcbe645c57a9477dee891e2b3b9ba2a8caa44b545b6a961c8c343bbe1815b9"
+      },
+      "log": {
+        "path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/logs/sft.log",
+        "sha256": "5ffadc8a985fcb706b2bca462a9d2ff0ccd05975496f08c24b55507965537986",
+        "terminal_status": "training_completed_successfully"
+      }
+    },
+    "dataset": {
+      "release_manifest": {
+        "path": "dataset/processed/retrain_v2/chk4_decision_warmstart_grpo_core_v3_20260810/release_manifest.json",
+        "sha256": "8b05dce09bcb0a0b27ee240da1e5d730be93921ce19e650a3b3e8b2689adb893",
+        "quality_status": "passed",
+        "population_scope": "core-only"
+      },
+      "decision_sft_train": {
+        "path": "dataset/processed/retrain_v2/chk4_decision_warmstart_grpo_core_v3_20260810/decision_sft/train.jsonl",
+        "sha256": "0b7ffb7a3c1f54f8c2dc65f2badbf213ea9fdd0d74e462a7a060ffa5693d56b6",
+        "rows": 141,
+        "physical_direction_counts": {"hold": 89, "hike": 36, "cut": 16},
+        "physical_direction_rates": {"hold": 0.63120567, "hike": 0.25531915, "cut": 0.11347518},
+        "unique_direction_counts": {"hold": 89, "hike": 9, "cut": 4},
+        "unique_rows": 102,
+        "unique_direction_rates": {"hold": 0.87254902, "hike": 0.08823529, "cut": 0.03921569}
+      },
+      "decision_sft_validation": {
+        "path": "dataset/processed/retrain_v2/chk4_decision_warmstart_grpo_core_v3_20260810/decision_sft/validation.jsonl",
+        "sha256": "8913a2c31087ddbf1f678e7dbed975c2ff466254fcf13dd214ed322b5323045e",
+        "rows": 13,
+        "direction_counts": {"hold": 3, "hike": 10, "cut": 0}
+      }
+    },
+    "checkpoint_losses": [
+      {
+        "checkpoint": 10,
+        "epoch": 0.5673758865248227,
+        "train_loss_at_checkpoint": 1.747,
+        "learning_rate": 0.000007703204087277989,
+        "eval_reference_step": 8,
+        "eval_loss": 1.875813364982605,
+        "trainer_state_path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/checkpoint-10/trainer_state.json",
+        "trainer_state_sha256": "55b69ff2026f963d6938816046aee1f63bbf1db37c7f4fc26223d5300e475e61",
+        "adapter_directory_sha256": "3a3affdfd5679ef2bfc268ee140b081220a996cd146888b6a456ff8b18e9e545"
+      },
+      {
+        "checkpoint": 20,
+        "epoch": 1.1134751773049645,
+        "train_loss_at_checkpoint": 1.6696,
+        "learning_rate": 0.0000012212521282287093,
+        "eval_reference_step": 20,
+        "eval_loss": 1.7317873239517212,
+        "trainer_state_path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/checkpoint-20/trainer_state.json",
+        "trainer_state_sha256": "bc806add0182f6bbfec4f35c7eb2cc6d151e89c6c464cf41cd4f952a515fd822",
+        "adapter_directory_sha256": "7e09eb7d9d00069c6fb2ec6f0ddb338ddbdcd5f5b700a772fb3263c86b91a310"
+      },
+      {
+        "checkpoint": 24,
+        "epoch": 1.3404255319148937,
+        "train_loss_at_checkpoint": 1.6323,
+        "learning_rate": 5.089279059533658e-8,
+        "eval_reference_step": 24,
+        "eval_loss": 1.7281625270843506,
+        "trainer_state_path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_sft/checkpoint-24/trainer_state.json",
+        "trainer_state_sha256": "427874cbba95d2745cdafc2ecde029342bd3803f23edd7562fe8a2c3e06fe186",
+        "adapter_directory_sha256": "5daba41322edebe6e5fadfaa9342a79cbb0f317b6cc5fb1990fcdb25ec0bd12f"
+      }
+    ]
+  },
+  "pilot_contract": {
+    "sample_manifest": {
+      "path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/sample_manifest.json",
+      "sha256": "1894525fa76fc947b31e78226d4b96f9d556e715ef7e8deb9e24f27f9ef3f4a2",
+      "selection_algorithm": "per-direction-rendered-prompt-token-lower-median-v1"
+    },
+    "grpo_config": {
+      "path": "configs/retrain_v2/chk4_decision_grpo_from_sft_warm_fix_lr1e5_steps24_v3_20260811.yaml",
+      "sha256": "f88aa1f9fe5f6845e4a8f92408e3df7d5437aabd124e356dcfb6d9f8bb46f2be",
+      "reward_funcs": ["decision_dense_v3"],
+      "scale_rewards": "group",
+      "num_generations": 4,
+      "generation_batch_size": 8,
+      "max_completion_length": 1024,
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "mask_truncated_completions": true
+    },
+    "generation": {
+      "greedy_per_direction": 1,
+      "sampled_per_direction": 4,
+      "sample_temperature": 0.7,
+      "sample_top_p": 0.9,
+      "max_new_tokens": 1024
+    },
+    "quality_gate": {
+      "per_direction_sampled": {
+        "nonzero_count_min": 1,
+        "direction_correct_count_min": 1,
+        "reward_std_gt": 0.0
+      },
+      "overall": {
+        "cap_rate_max": 0.25,
+        "boundary_rate_min": 0.75,
+        "strict_periodic_tail_max": 0
+      }
+    },
+    "source": {
+      "path": "jobs/retrain_v2/probe_chk4_decision_grpo_stratified.py",
+      "sha256": "2ca85b6dd697eac2d95ac6a14645fac255b4e203967ff417b8450d62ff83225d"
+    }
+  },
+  "reward_contract": {
+    "name": "decision_dense_v3",
+    "source": {
+      "path": "src/open_r1/trainer/rewards/reward_funcs/decision_reward_v3.py",
+      "sha256": "186f76d17b43e978e73ffe3601f015961f24d2498ebb866da78fe7414a8289bc"
+    },
+    "constants": {
+      "format_component": 0.05,
+      "direction_component": 0.45,
+      "magnitude_component": 0.30,
+      "exact_component": 0.20,
+      "fenced_semantic_discount": 0.25
+    },
+    "formula": {
+      "magnitude_score": "direction_correct * max(0, 1 - abs(predicted_bp - target_bp) / 100)",
+      "semantic_score": "0.45 * direction_correct + 0.30 * magnitude_score + 0.20 * exact",
+      "strict_json_reward": "0.05 + semantic_score",
+      "fenced_json_reward": "0.25 * semantic_score",
+      "invalid_reward": 0.0,
+      "pilot_override": "reward=0 when hit_eos is false or cap_reached is true"
+    },
+    "reference_scores": {
+      "strict_exact": 1.0,
+      "fenced_exact": 0.2375,
+      "strict_wrong_direction_schema_valid": 0.05,
+      "fenced_wrong_direction": 0.0
+    }
+  },
+  "pilots": [
+    {
+      "checkpoint": 10,
+      "created_at_utc": "2026-08-11T01:13:45Z",
+      "elapsed_seconds": 621.409,
+      "status": "complete",
+      "quality_status": "failed",
+      "runtime": {"cuda_visible_devices": "1", "peak_allocated_gib": 5.846, "peak_reserved_gib": 7.4},
+      "files": {
+        "launch": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp10/launch.json", "sha256": "3e8be970e7e9a578606916b4925214403f03e06b35875ca8e1a8e922e4f1f733"},
+        "results": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp10/results.jsonl", "sha256": "4b3a47244bfbb29a7e3d54499766e5daf51d36f982faf653cb9a88c81b748650", "rows": 15},
+        "summary": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp10/summary.json", "sha256": "2a1f9cc067cde69a16348723ed648b35e1a3882259ac4ff8f097ffc00e0072c8"}
+      },
+      "overall": {"reward_mean": 0.06333333, "reward_std": 0.10502645, "nonzero_count": 4, "direction_correct_count": 4, "cap_count": 2, "boundary_count": 13, "strict_json_count": 0, "fenced_json_count": 10},
+      "sampled_by_direction": {
+        "hold": {"rewards": [0.2375, 0.2375, 0.0, 0.2375], "reward_mean": 0.178125, "reward_std": 0.10284052, "nonzero_count": 3, "direction_correct_count": 3, "cap_count": 0, "boundary_count": 4, "strict_json_count": 0, "fenced_json_count": 3},
+        "hike": {"rewards": [0.0, 0.0, 0.0, 0.0], "reward_mean": 0.0, "reward_std": 0.0, "nonzero_count": 0, "direction_correct_count": 0, "cap_count": 1, "boundary_count": 3, "strict_json_count": 0, "fenced_json_count": 2},
+        "cut": {"rewards": [0.0, 0.0, 0.0, 0.0], "reward_mean": 0.0, "reward_std": 0.0, "nonzero_count": 0, "direction_correct_count": 0, "cap_count": 0, "boundary_count": 4, "strict_json_count": 0, "fenced_json_count": 4}
+      },
+      "gate_reasons": [
+        "hike:sampled_nonzero_count_lt_1",
+        "hike:sampled_direction_correct_count_lt_1",
+        "hike:sampled_reward_zero_std",
+        "cut:sampled_nonzero_count_lt_1",
+        "cut:sampled_direction_correct_count_lt_1",
+        "cut:sampled_reward_zero_std"
+      ]
+    },
+    {
+      "checkpoint": 20,
+      "created_at_utc": "2026-08-11T00:49:12Z",
+      "elapsed_seconds": 654.859,
+      "status": "complete",
+      "quality_status": "failed",
+      "runtime": {"cuda_visible_devices": "1", "peak_allocated_gib": 5.846, "peak_reserved_gib": 7.4},
+      "files": {
+        "launch": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp20/launch.json", "sha256": "06eaf4e023eb78625682d00dc0018d9968b63551cfacb91dc1f5d3d6551fead3"},
+        "results": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp20/results.jsonl", "sha256": "365e1b329952ed9ade183dbc3ffc6f68645c0d36b8805be1bcf553684d499fd9", "rows": 15},
+        "summary": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp20/summary.json", "sha256": "a5a079e1345755e49e76ff7b05e687cabde9601f96551e53193c263b5c99d081"}
+      },
+      "overall": {"reward_mean": 0.0825, "reward_std": 0.11028373, "nonzero_count": 6, "direction_correct_count": 5, "cap_count": 3, "boundary_count": 13, "strict_json_count": 1, "fenced_json_count": 11},
+      "sampled_by_direction": {
+        "hold": {"rewards": [0.2375, 0.2375, 0.0, 0.2375], "reward_mean": 0.178125, "reward_std": 0.10284052, "nonzero_count": 3, "direction_correct_count": 3, "cap_count": 1, "boundary_count": 3, "strict_json_count": 0, "fenced_json_count": 3},
+        "hike": {"rewards": [0.0, 0.0, 0.2375, 0.0], "reward_mean": 0.059375, "reward_std": 0.10284052, "nonzero_count": 1, "direction_correct_count": 1, "cap_count": 0, "boundary_count": 4, "strict_json_count": 0, "fenced_json_count": 4},
+        "cut": {"rewards": [0.0, 0.05, 0.0, 0.0], "reward_mean": 0.0125, "reward_std": 0.02165064, "nonzero_count": 1, "direction_correct_count": 0, "cap_count": 2, "boundary_count": 3, "strict_json_count": 1, "fenced_json_count": 1}
+      },
+      "gate_reasons": ["cut:sampled_direction_correct_count_lt_1"]
+    },
+    {
+      "checkpoint": 24,
+      "created_at_utc": "2026-08-11T01:02:30Z",
+      "elapsed_seconds": 695.321,
+      "status": "complete",
+      "quality_status": "failed",
+      "runtime": {"cuda_visible_devices": "1", "peak_allocated_gib": 5.846, "peak_reserved_gib": 7.4},
+      "files": {
+        "launch": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp24/launch.json", "sha256": "07807b3113505632da3d1803b22526fd5a2c08b007c8fadac5cde116a80de20d"},
+        "results": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp24/results.jsonl", "sha256": "86c014ea7a9b4bf9787488c42dddfb40d38bb5c78f210f6167c53d5b909acde0", "rows": 15},
+        "summary": {"path": "output/eval/retrain_v2/chk4_decision_grpo_steps24_sft_checkpoint_pilot_v1_20260811/cp24/summary.json", "sha256": "fc9ca86ef6270eeb5518a595e6f6faac990a4567186716f9c4c2e9a39908ae6c"}
+      },
+      "overall": {"reward_mean": 0.11416667, "reward_std": 0.25478204, "nonzero_count": 4, "direction_correct_count": 4, "cap_count": 3, "boundary_count": 12, "strict_json_count": 1, "fenced_json_count": 9},
+      "sampled_by_direction": {
+        "hold": {"rewards": [1.0, 0.2375, 0.2375, 0.0], "reward_mean": 0.36875, "reward_std": 0.37712937, "nonzero_count": 3, "direction_correct_count": 3, "cap_count": 1, "boundary_count": 3, "strict_json_count": 1, "fenced_json_count": 2},
+        "hike": {"rewards": [0.0, 0.0, 0.0, 0.0], "reward_mean": 0.0, "reward_std": 0.0, "nonzero_count": 0, "direction_correct_count": 0, "cap_count": 1, "boundary_count": 3, "strict_json_count": 0, "fenced_json_count": 2},
+        "cut": {"rewards": [0.0, 0.0, 0.0, 0.0], "reward_mean": 0.0, "reward_std": 0.0, "nonzero_count": 0, "direction_correct_count": 0, "cap_count": 1, "boundary_count": 3, "strict_json_count": 0, "fenced_json_count": 2}
+      },
+      "gate_reasons": [
+        "hike:sampled_nonzero_count_lt_1",
+        "hike:sampled_direction_correct_count_lt_1",
+        "hike:sampled_reward_zero_std",
+        "cut:sampled_nonzero_count_lt_1",
+        "cut:sampled_direction_correct_count_lt_1",
+        "cut:sampled_reward_zero_std"
+      ]
+    }
+  ],
+  "grpo_handoff": {
+    "state": "not_started",
+    "configured_parent_path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/merged/chk4_sft",
+    "configured_parent_exists": false,
+    "sft_selection_receipt_exists": false,
+    "sft_merge_receipt_exists": false,
+    "grpo_adapter_path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/adapters/chk4_grpo",
+    "grpo_adapter_exists": false,
+    "grpo_merged_path": "output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_warm_fix_lr1e5_steps24_v3_20260811/merged/chk4_grpo",
+    "grpo_merged_exists": false,
+    "active_grpo_process_observed_at_audit": false,
+    "fail_closed_rationale": [
+      "No checkpoint passed the stratified quality gate.",
+      "With group reward scaling, zero-variance sampled groups provide no within-group learning signal.",
+      "Checkpoint 20's cut variance came only from a format-only reward on a wrong direction.",
+      "The configured merged SFT parent was deliberately not created."
+    ]
+  },
+  "limitations": [
+    "The pilot is train-only and is not a held-out performance estimate.",
+    "Each direction uses one fixed prompt and four sampled generations, so prompt-population uncertainty is not measured.",
+    "The shared manifest, seeds, evaluator, parent, and generation settings support controlled checkpoint comparison but not broad generalization.",
+    "The association between unique-context imbalance and hold collapse is diagnostic, not causal proof."
+  ],
+  "evidence_validation": {
+    "method": "Recompute SHA-256 for every file path in this record and recompute canonical directory fingerprints for checkpoint adapters; compare pilot metrics and gate reasons against sealed summary JSON.",
+    "source_hashes_verified": true,
+    "completion_payloads_copied": false
+  }
+}

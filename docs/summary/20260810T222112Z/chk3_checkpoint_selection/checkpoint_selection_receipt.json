@@ -1,0 +1,54 @@
+{
+  "schema_version": "chk3-standalone-checkpoint-selection-v1",
+  "status": "selected",
+  "selected_at": "2026-08-10T22:31:01Z",
+  "selected_checkpoint": 250,
+  "scope": {
+    "stage": "chk3",
+    "experiment": "direct_chk1_cp200_standalone",
+    "promotable_to_canonical_dag": false
+  },
+  "checkpoint": {
+    "path": "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/checkpoint-250",
+    "adapter_model_sha256": "396bdefef55c4521918a84df8e27abf8c82752eeadef3dcbb81188ffca332f45",
+    "adapter_config_sha256": "b25c345fcf6c0f4a1d0bef5a21405371b4d9565ab131c0228413b9acbe93f55f",
+    "trainer_state_sha256": "82c46aecc79a317e1b4392b863650e2cb62e1d707709e4501baa5fa9924f40b7",
+    "adapter_tensor_count": 448,
+    "nonfinite_tensor_count": 0
+  },
+  "training": {
+    "config_path": "configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_full3ep_lr1e6_20260810.yaml",
+    "config_sha256": "a54da7a9a4c89afacff94d6c59765a771a3efbcb41a663a87268a33a79b0b033",
+    "checkpoint_eval_loss": 1.1212036609649658,
+    "global_best_eval_loss": 1.1212036609649658
+  },
+  "generation_gate": {
+    "cases": 3,
+    "quality_valid_cases": 3,
+    "status": "passed",
+    "results_path": "docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/chk3_full_cp250_selection_v1/results.jsonl",
+    "results_sha256": "c519ca6da29baa6bea3eb9e8cf7d11769ad6ea9f7710dab4a3b1d5e1f9a7e413",
+    "comparison_path": "docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/comparison_full_cp250_vs_chk1_selection_v1.json",
+    "comparison_sha256": "7976d100c06f83ceb3c9cb2a9be4f70ec024fff3689bbf6c1154b6c98f8af3ea",
+    "mean_repetition": 0.13928234666666664,
+    "max_repetition": 0.17364532,
+    "mean_repetition_delta_vs_chk1": 0.013562073333333332
+  },
+  "decision": {
+    "rule": "hard generation gates, then eval loss within 0.001 of best, then repetition and earliest checkpoint as tie-breakers",
+    "reason": "checkpoint-250 passes all three frozen generation cases, has the global minimum eval loss, and has lower mean and maximum repetition than the other eligible probed checkpoints"
+  },
+  "evidence": {
+    "analysis_snapshot_path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/analysis_snapshot.json",
+    "analysis_snapshot_sha256": "a54d452b26202a5788dfc2ac7e90be24ea986421dae6efd11f1782af6da5f390",
+    "notebook_path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/chk3_checkpoint_selection.ipynb",
+    "notebook_sha256": "acaefe3400b035d09545b1aa600f54bb363b3fc08b5b74cd96a6776d1457a0ac",
+    "report_path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/report.html",
+    "report_sha256": "b608c96b51b4531fd63a6dae5d0ca14758ca5db0162a770d6202226150d9f42f"
+  },
+  "limitations": [
+    "The frozen generation gate has only three deterministic cases.",
+    "Generated text is redacted, so this receipt does not independently certify nonnumeric factuality, causal claims, or prose quality.",
+    "The direct chk1-to-chk3 branch remains standalone and non-promotable under the canonical DAG."
+  ]
+}

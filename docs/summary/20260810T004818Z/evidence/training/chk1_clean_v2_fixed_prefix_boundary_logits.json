@@ -1,0 +1,440 @@
+{
+  "created_at_utc": "2026-08-10T00:50:48.327955Z",
+  "prefixes": {
+    "chk0_natural_reasoning_end": {
+      "prefix_ids_sha256": "7bafed08c88ef7f94375c25a5651a137b745c4961d84d8819e4ab8dd1a7392a8",
+      "prefix_tokens": 1091,
+      "reasoning_sha256": "47f3cf58d535edd3a80be876f12fe4f8b251c14c9d490ed9ca8009bffeee99ba",
+      "reasoning_tokens_continuation": 269
+    },
+    "gold_reasoning_end": {
+      "prefix_ids_sha256": "af73c3f91b18c409e832c6f182d913899a190a541c131d235c608ebccaf9fa56",
+      "prefix_tokens": 1835,
+      "reasoning_sha256": "85a2e919c751ffe70ddf6d52eb1b98b614854186015a3fc39980289c8c3c1b67",
+      "reasoning_tokens_continuation": 1013
+    }
+  },
+  "results": [
+    {
+      "adapter": null,
+      "boundary_logit": 26.375,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9999962449073792,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "chk0_base",
+      "prefix": "chk0_natural_reasoning_end",
+      "top1_logit": 26.375,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 26.375,
+          "prob": 0.9999962449073792,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 11.1875,
+          "prob": 2.53600973110224e-07,
+          "token_id": 42505,
+          "token_text": "=======\n"
+        },
+        {
+          "logit": 10.25,
+          "prob": 9.931156341735914e-08,
+          "token_id": 74694,
+          "token_text": "```"
+        },
+        {
+          "logit": 10.25,
+          "prob": 9.931156341735914e-08,
+          "token_id": 524,
+          "token_text": "</"
+        },
+        {
+          "logit": 9.3125,
+          "prob": 3.88909668913584e-08,
+          "token_id": 69862,
+          "token_text": "\f\n"
+        }
+      ]
+    },
+    {
+      "adapter": "cp8",
+      "boundary_logit": 25.75,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9999943375587463,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "cp8",
+      "prefix": "chk0_natural_reasoning_end",
+      "top1_logit": 25.75,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 25.75,
+          "prob": 0.9999943375587463,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 10.6875,
+          "prob": 2.8736698709508346e-07,
+          "token_id": 42505,
+          "token_text": "=======\n"
+        },
+        {
+          "logit": 10.4375,
+          "prob": 2.238016492128736e-07,
+          "token_id": 524,
+          "token_text": "</"
+        },
+        {
+          "logit": 10.3125,
+          "prob": 1.9750424939957156e-07,
+          "token_id": 74694,
+          "token_text": "```"
+        },
+        {
+          "logit": 8.9375,
+          "prob": 4.9936897283942017e-08,
+          "token_id": 65171,
+          "token_text": "******\n"
+        }
+      ]
+    },
+    {
+      "adapter": "cp9",
+      "boundary_logit": 25.25,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9999923706054688,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "cp9",
+      "prefix": "chk0_natural_reasoning_end",
+      "top1_logit": 25.25,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 25.25,
+          "prob": 0.9999923706054688,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 10.875,
+          "prob": 5.714964004255307e-07,
+          "token_id": 524,
+          "token_text": "</"
+        },
+        {
+          "logit": 10.375,
+          "prob": 3.466300881882489e-07,
+          "token_id": 74694,
+          "token_text": "```"
+        },
+        {
+          "logit": 10.375,
+          "prob": 3.466300881882489e-07,
+          "token_id": 42505,
+          "token_text": "=======\n"
+        },
+        {
+          "logit": 9.1875,
+          "prob": 1.0571620379096203e-07,
+          "token_id": 128001,
+          "token_text": "<｜end▁of▁sentence｜>"
+        }
+      ]
+    },
+    {
+      "adapter": "cp10",
+      "boundary_logit": 24.625,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9999866485595703,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "cp10",
+      "prefix": "chk0_natural_reasoning_end",
+      "top1_logit": 24.625,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 24.625,
+          "prob": 0.9999866485595703,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 11.375,
+          "prob": 1.760322788868507e-06,
+          "token_id": 524,
+          "token_text": "</"
+        },
+        {
+          "logit": 10.5625,
+          "prob": 7.811385103195789e-07,
+          "token_id": 74694,
+          "token_text": "```"
+        },
+        {
+          "logit": 10.125,
+          "prob": 5.043409032623458e-07,
+          "token_id": 42505,
+          "token_text": "=======\n"
+        },
+        {
+          "logit": 9.875,
+          "prob": 3.9278108943108236e-07,
+          "token_id": 128001,
+          "token_text": "<｜end▁of▁sentence｜>"
+        }
+      ]
+    },
+    {
+      "adapter": null,
+      "boundary_logit": 24.0,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9999675750732422,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "chk0_base",
+      "prefix": "gold_reasoning_end",
+      "top1_logit": 24.0,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 24.0,
+          "prob": 0.9999675750732422,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 10.375,
+          "prob": 1.2098279285055469e-06,
+          "token_id": 791,
+          "token_text": "The"
+        },
+        {
+          "logit": 10.125,
+          "prob": 9.422149673810054e-07,
+          "token_id": 524,
+          "token_text": "</"
+        },
+        {
+          "logit": 10.0,
+          "prob": 8.315017794302548e-07,
+          "token_id": 65171,
+          "token_text": "******\n"
+        },
+        {
+          "logit": 9.75,
+          "prob": 6.475742111433647e-07,
+          "token_id": 42505,
+          "token_text": "=======\n"
+        }
+      ]
+    },
+    {
+      "adapter": "cp8",
+      "boundary_logit": 22.5,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9998627305030823,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "cp8",
+      "prefix": "gold_reasoning_end",
+      "top1_logit": 22.5,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 22.5,
+          "prob": 0.9998627305030823,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 12.0,
+          "prob": 2.7532669264473952e-05,
+          "token_id": 791,
+          "token_text": "The"
+        },
+        {
+          "logit": 9.75,
+          "prob": 2.901922016462777e-06,
+          "token_id": 65171,
+          "token_text": "******\n"
+        },
+        {
+          "logit": 9.5625,
+          "prob": 2.405777649983065e-06,
+          "token_id": 524,
+          "token_text": "</"
+        },
+        {
+          "logit": 9.5625,
+          "prob": 2.405777649983065e-06,
+          "token_id": 58,
+          "token_text": "["
+        }
+      ]
+    },
+    {
+      "adapter": "cp9",
+      "boundary_logit": 21.75,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.999723494052887,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "cp9",
+      "prefix": "gold_reasoning_end",
+      "top1_logit": 21.75,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 21.75,
+          "prob": 0.999723494052887,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 12.125,
+          "prob": 6.603824294870719e-05,
+          "token_id": 791,
+          "token_text": "The"
+        },
+        {
+          "logit": 9.625,
+          "prob": 5.420748948381515e-06,
+          "token_id": 74694,
+          "token_text": "```"
+        },
+        {
+          "logit": 9.625,
+          "prob": 5.420748948381515e-06,
+          "token_id": 58,
+          "token_text": "["
+        },
+        {
+          "logit": 9.4375,
+          "prob": 4.493958840612322e-06,
+          "token_id": 524,
+          "token_text": "</"
+        }
+      ]
+    },
+    {
+      "adapter": "cp10",
+      "boundary_logit": 20.75,
+      "boundary_minus_top1_logit_margin": 0.0,
+      "boundary_probability": 0.9992716908454895,
+      "boundary_rank": 1,
+      "boundary_token_id": 128014,
+      "boundary_token_text": "</think>",
+      "model": "cp10",
+      "prefix": "gold_reasoning_end",
+      "top1_logit": 20.75,
+      "top1_token_id": 128014,
+      "top1_token_text": "</think>",
+      "top5": [
+        {
+          "logit": 20.75,
+          "prob": 0.9992716908454895,
+          "token_id": 128014,
+          "token_text": "</think>"
+        },
+        {
+          "logit": 12.1875,
+          "prob": 0.0001910016144393012,
+          "token_id": 791,
+          "token_text": "The"
+        },
+        {
+          "logit": 10.125,
+          "prob": 2.4283133825520054e-05,
+          "token_id": 74694,
+          "token_text": "```"
+        },
+        {
+          "logit": 9.625,
+          "prob": 1.4728464520885609e-05,
+          "token_id": 128001,
+          "token_text": "<｜end▁of▁sentence｜>"
+        },
+        {
+          "logit": 9.4375,
+          "prob": 1.2210325621708762e-05,
+          "token_id": 58,
+          "token_text": "["
+        }
+      ]
+    }
+  ],
+  "runtime": {
+    "attn_implementation": "sdpa",
+    "compute_dtype": "bfloat16",
+    "cuda_visible_devices": "0",
+    "double_quant": true,
+    "load_in_4bit": true,
+    "peft": "0.15.2",
+    "python": "/home/haobin_cui/.conda/envs/fomc_trainer/bin/python3.10",
+    "quant_type": "nf4",
+    "torch": "2.10.0+cu128",
+    "transformers": "4.57.6"
+  },
+  "sample": {
+    "prompt_ids_sha256": "ab40bcc29af8b024e9fc3fbee77dfb97e3e7c7e137849be6e521834051b12497",
+    "prompt_tokens": 822,
+    "sample_id": "chk1-analysis-2024-07-31-229179952b21dcd5"
+  },
+  "schema_version": "chk1-fixed-prefix-boundary-logit-probe-v1",
+  "sources": {
+    "adapters": {
+      "8": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_smoke10_20260809/adapters/chk1/checkpoint-8/adapter_model.safetensors",
+        "sha256": "eeb8da84948b08f24b05f292de634a098b26e7a35090a23eb2a00347b0a1a95d"
+      },
+      "9": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_smoke10_20260809/adapters/chk1/checkpoint-9/adapter_model.safetensors",
+        "sha256": "689093c32a11d502c3d8081de0fcbede806bb9f94b23542e58c022b0fb55e1a7"
+      },
+      "10": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_smoke10_20260809/adapters/chk1/checkpoint-10/adapter_model.safetensors",
+        "sha256": "5c8a631aee8073b53110b54223227fb1592b26bfd756eca737d486c2bd3d50cf"
+      }
+    },
+    "base_config": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B/config.json",
+      "sha256": "c6162f33d194369772137ecdd4bdcac4cf3fed4f40607d694b94bcbb8e5dc39f"
+    },
+    "baseline_results": {
+      "completion_sha256": "357bd9beffc07a1961361fb7ed3bbca4b962252d265f1a18b232098e35a48e1a",
+      "line_number": 1,
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260809T234411Z/chk0_baseline_probe/results.jsonl",
+      "sha256": "26063038ea3258fb17ba7500a3af321389a6b39a394694a15c7c982229d72391"
+    },
+    "dataset_test": {
+      "line_number": 122,
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/analysis_sft/test.jsonl",
+      "sha256": "60462438d7e72b39cd45a30e8964fb5b04c7f00d1b2749bc3db96459598300b1"
+    },
+    "training_config": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/configs/retrain_v2/chk1_analysis_sft_clean_v2_override_smoke10_20260809.yaml",
+      "sha256": "7423bf5cfee592b7b03b3fe7ed9d1173ec44c98ff2ca70dc1f596f8e6c14390c"
+    }
+  }
+}

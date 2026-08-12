@@ -1,0 +1,46 @@
+{
+  "adapter": {
+    "files": {
+      "adapter_config.json": "6abec47b6b7d038d0f42bc2fa0ab7feeb19235cc40e9ebc10084e33c50b0eaf5",
+      "adapter_model.safetensors": "5c8a631aee8073b53110b54223227fb1592b26bfd756eca737d486c2bd3d50cf"
+    },
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_smoke10_20260809/adapters/chk1"
+  },
+  "base_model": {
+    "files": {
+      "config.json": "c6162f33d194369772137ecdd4bdcac4cf3fed4f40607d694b94bcbb8e5dc39f",
+      "generation_config.json": "cd5194726d1e8f7361a8c8425fc11d33ade5e69de1fd7615eb23fae5601af68b",
+      "model-00001-of-000002.safetensors": "7e6b24744354ef4ba547547cc758339090f46ba2da917845cfc69f7d4ded9edb",
+      "model-00002-of-000002.safetensors": "19fb83b79bd0d06d49b7cf6f86b83f5183cd292aa2c028d633ca4fceac1ae742",
+      "model.safetensors.index.json": "83bdf4be4bb1a054ff315cd804554c48a88036226fdfbc65bee84ff562fea32a"
+    },
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B"
+  },
+  "created_at_utc": "2026-08-10T00:14:17Z",
+  "generation": {
+    "attn_implementation": "sdpa",
+    "greedy": {
+      "temperature": 0.0,
+      "top_p": 1.0
+    },
+    "load_in_4bit": true,
+    "max_new_tokens": 3072,
+    "sampled": {
+      "temperature": 0.6,
+      "top_p": 0.95
+    },
+    "tail_tokens": 1024
+  },
+  "model_label": "chk1_smoke10",
+  "runtime": {
+    "cuda_visible_devices": "1",
+    "python": "/home/haobin_cui/.conda/envs/fomc_trainer/bin/python",
+    "python_version": "3.10.9"
+  },
+  "sample_manifest": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260809T234411Z/chk1_sft_degeneration_samples.json",
+    "sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246"
+  },
+  "schema_version": "chk1-sft-degeneration-probe-v1",
+  "status": "initializing"
+}

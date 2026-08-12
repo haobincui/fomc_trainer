@@ -1,0 +1,204 @@
+{
+  "schema_version": "chk1-smoke-root-cause-diagnostics-v1",
+  "created_at_utc": "2026-08-10T00:48:18Z",
+  "assessment": {
+    "status": "high_confidence_multifactor_sequence_instability",
+    "primary_data_driver": "long_evidence_insensitive_templated_reasoning_targets",
+    "primary_optimization_trigger": "high_lr_high_capacity_all_projection_lora_threshold",
+    "direct_mechanism": "free_running_trajectory_divergence_and_self_reinforcing_repetition",
+    "formal_training_authorized": false
+  },
+  "target_distribution": {
+    "all_rows": 1743,
+    "train_rows": 1354,
+    "reasoning_tokens_all_mean": 992.6,
+    "reasoning_tokens_all_p50": 996,
+    "reasoning_fraction_ge_900": 0.766,
+    "paragraphs_p50": 8,
+    "sentences_p50": 35,
+    "evidence_reasoning_length_pearson": 0.118,
+    "evidence_answer_length_pearson": 0.678,
+    "three_evidence_rows": 335,
+    "three_evidence_reasoning_mean": 956.8,
+    "three_evidence_tokens_per_fact_mean": 318.9,
+    "train_reasoning_tokens": 1338719,
+    "train_answer_tokens": 156321,
+    "train_reasoning_supervision_share": 0.89382125698048,
+    "train_answer_supervision_share": 0.10437069520373253,
+    "boundary_token_share": 0.0009040239078937178,
+    "eos_token_share": 0.0009040239078937178,
+    "reasoning_sentence_starts_at_the_same_time_fraction": 0.573,
+    "reasoning_sentence_starts_on_balance_the_evidence_fraction": 0.192
+  },
+  "failing_case": {
+    "sample_id": "chk1-analysis-2024-07-31-229179952b21dcd5",
+    "split": "test",
+    "changed_by_clean_v2": false,
+    "prompt_tokens": 822,
+    "evidence_facts": 3,
+    "gold_reasoning_tokens": 1013,
+    "gold_answer_tokens": 68,
+    "gold_paragraphs": 8,
+    "gold_sentences": 41,
+    "chk0_natural_reasoning_tokens": 269,
+    "smoke_unsupported_extension_onset_token_approx": 174,
+    "smoke_repetition_onset_token_approx": 225
+  },
+  "adapter": {
+    "trainable_parameters": 83886080,
+    "tensor_count": 448,
+    "rank": 32,
+    "alpha": 64,
+    "scaling_alpha_over_rank": 2.0,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "all_tensors_finite": true
+  },
+  "checkpoint_trajectory": {
+    "chk0": {
+      "cases": 8,
+      "max_new_tokens": 3072,
+      "eos_rate": 1.0,
+      "contract_valid_rate": 1.0,
+      "catastrophic_cases": 0,
+      "max_full_token_4gram_repetition": 0.14251497
+    },
+    "checkpoint_8": {
+      "cases": 8,
+      "max_new_tokens": 1024,
+      "eos_rate": 0.875,
+      "contract_valid_rate": 1.0,
+      "summary_catastrophic_cases": 1,
+      "repetition_catastrophic_cases": 0,
+      "mean_full_token_4gram_repetition": 0.1364434475,
+      "max_full_token_4gram_repetition": 0.22310757,
+      "periodic_tail_rate": 0.0
+    },
+    "checkpoint_9": {
+      "cases": 8,
+      "max_new_tokens": 1024,
+      "eos_rate": 0.625,
+      "contract_valid_rate": 0.625,
+      "catastrophic_cases": 4,
+      "mean_full_token_4gram_repetition": 0.490294005,
+      "max_full_token_4gram_repetition": 0.78452498,
+      "periodic_tail_rate": 0.25
+    },
+    "checkpoint_10_fail_fast": {
+      "completed_cases": 1,
+      "max_new_tokens": 3072,
+      "raw_generated_tokens": 3072,
+      "hit_eos": false,
+      "contract_valid": false,
+      "think_boundary_count": 0,
+      "has_nonempty_answer": false,
+      "full_token_4gram_repetition": 0.92310199,
+      "tail_token_4gram_repetition": 0.96474045,
+      "retokenized_prefix_1024_full_4gram_repetition": 0.7688540646425074,
+      "retokenized_prefix_1024_tail_4gram_repetition": 0.9292730844793713
+    }
+  },
+  "same_short_case": {
+    "chk0": {
+      "tokens": 374,
+      "hit_eos": true,
+      "contract_valid": true,
+      "full_4gram_repetition": 0.04054054
+    },
+    "checkpoint_8": {
+      "tokens": 535,
+      "hit_eos": true,
+      "contract_valid": true,
+      "full_4gram_repetition": 0.07909605
+    },
+    "checkpoint_9": {
+      "tokens": 477,
+      "hit_eos": true,
+      "contract_valid": true,
+      "full_4gram_repetition": 0.09936575
+    },
+    "checkpoint_10": {
+      "tokens": 3072,
+      "hit_eos": false,
+      "contract_valid": false,
+      "full_4gram_repetition": 0.92310199
+    }
+  },
+  "optimizer_trajectory": {
+    "step_8": {
+      "logged_learning_rate": 3.888888888888889e-05,
+      "loss": 1.6896,
+      "grad_norm": 0.984375
+    },
+    "step_9": {
+      "logged_learning_rate": 4.4444444444444447e-05,
+      "loss": 1.5798,
+      "grad_norm": 0.70703125
+    },
+    "step_10": {
+      "logged_learning_rate": 5e-05,
+      "loss": 1.613,
+      "grad_norm": 0.64453125
+    }
+  },
+  "batch_diagnostics": {
+    "sampler_exactly_reconstructed_from_seed_and_token_totals": true,
+    "step_9": {
+      "rows": 16,
+      "reasoning_tokens": 16399,
+      "answer_tokens": 1849,
+      "changed_rows": 2,
+      "reasoning_repaired_rows": 0,
+      "target_4gram_repetition_mean": 0.07741681688568322
+    },
+    "step_10": {
+      "rows": 16,
+      "reasoning_tokens": 16761,
+      "answer_tokens": 1945,
+      "changed_rows": 5,
+      "target_4gram_repetition_mean": 0.05954510200061683
+    },
+    "first_160_topic_concentration": {
+      "topic": "Unemployment Rate",
+      "observed_rows": 15,
+      "observed_fraction": 0.09375,
+      "train_rows": 73,
+      "train_fraction": 0.05391432791728213,
+      "hypergeometric_tail_probability_ge_15": 0.0193
+    }
+  },
+  "fixed_prefix_boundary_probe": {
+    "receipt_sha256": "51826afa7dfac5ea11ce452933dc9cca199f7ce5a93f3dc7ea1b494afe27b8b6",
+    "natural_end": {
+      "chk0_probability": 0.9999962449073792,
+      "chk0_rank": 1,
+      "checkpoint_10_probability": 0.9999866485595703,
+      "checkpoint_10_rank": 1
+    },
+    "gold_end": {
+      "chk0_probability": 0.9999675750732422,
+      "chk0_rank": 1,
+      "checkpoint_10_probability": 0.9992716908454895,
+      "checkpoint_10_rank": 1
+    }
+  },
+  "ruled_out_or_low_probability": [
+    "direct_periodic_loop_in_training_targets",
+    "clean_v2_answer_repair_as_direct_reasoning_loop_source",
+    "double_bos",
+    "missing_boundary_or_eos_labels",
+    "completion_mask_failure",
+    "training_truncation",
+    "adapter_checkpoint_mismatch",
+    "non_finite_adapter_weights",
+    "probe_eos_decode_bug",
+    "temperature_as_sole_cause"
+  ]
+}

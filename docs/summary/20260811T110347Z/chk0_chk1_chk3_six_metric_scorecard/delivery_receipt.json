@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "html": "docs/summary/20260811T110347Z/chk0_chk1_chk3_six_metric_scorecard/report.html",
+  "stages": {
+    "validation": "passed",
+    "package": "passed",
+    "verification": "structural_only"
+  },
+  "browser_warning": {
+    "code": "browser_unavailable",
+    "message": "No installed Chromium headless-shell executable was found; portable tooling did not download a browser."
+  },
+  "counts": {
+    "blocks": 16,
+    "charts": 1,
+    "html": 0,
+    "metrics": 6,
+    "tables": 1
+  },
+  "source_dialog": "not_verified",
+  "source_interaction": "not_verified",
+  "viewports": [],
+  "timings_ms": {
+    "validate_and_package": 96.7,
+    "static_chart_extraction": 3.9,
+    "structural_verification": 6.5,
+    "total": 103.6
+  }
+}

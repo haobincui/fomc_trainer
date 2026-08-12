@@ -1,0 +1,16 @@
+[
+  {
+    "cutoff_utc": "2026-08-10T18:31:36Z",
+    "process_id": 1037286,
+    "process_status": "running",
+    "physical_gpu": 1,
+    "configured_resume_checkpoint": 4,
+    "latest_replayed_step": 6,
+    "latest_replayed_reward": 0.8645796776,
+    "highest_durable_checkpoint": 40,
+    "peak_reserved_gib_at_replayed_step_6": 16.169921875,
+    "completion_clipped_ratio": 0.0,
+    "zero_gradient_window_fraction": 0.0,
+    "diagnosis": "The active process is replaying from checkpoint-4 rather than continuing checkpoint-40."
+  }
+]

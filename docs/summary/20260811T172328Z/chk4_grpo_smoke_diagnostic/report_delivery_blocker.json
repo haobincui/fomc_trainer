@@ -1,0 +1,17 @@
+{
+  "schema_version": "portable-report-delivery-blocker-v1",
+  "recorded_at": "2026-08-11T17:23:28Z",
+  "selected_delivery_mode": "portable_html",
+  "status": "blocked",
+  "artifact_source": "docs/summary/20260811T172328Z/chk4_grpo_smoke_diagnostic/artifact.json",
+  "attempted_command": "node /home/haobin_cui/.codex/plugins/cache/openai-curated-remote/data-analytics/0.2.8-13ceeea1f599/skills/build-report/scripts/deliver_portable_artifact.mjs --input docs/summary/20260811T172328Z/chk4_grpo_smoke_diagnostic/artifact.json --output docs/summary/20260811T172328Z/chk4_grpo_smoke_diagnostic/report.html",
+  "error": "node: command not found",
+  "fallback_attempts": {
+    "node": false,
+    "nodejs": false,
+    "bun": false,
+    "deno": false,
+    "artifact_mcp_tools_available": false
+  },
+  "impact": "The canonical artifact source and reviewed diagnostic dataset are available, but the required shared renderer and validator could not be executed in this runtime; no unvalidated report.html was published."
+}

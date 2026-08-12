@@ -1,0 +1,30 @@
+{
+  "api_key_recorded": false,
+  "api_key_source": "DEEPSEEK_API_KEY",
+  "binding_path": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low600_resume_cp4_launch_binding.json",
+  "binding_sha256": "50f9e8ff9ad8fac58fa2fe67f0bce37903b7fd0875aeebd3f0e20324d89575e8",
+  "command_sha256": "f6fa06c25bfd91665c232f9000ff2d3d80694e4a50182029913e3f84bcb26994",
+  "config_path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810.yaml",
+  "cuda_visible_devices": "1",
+  "disk_free_bytes_at_launch": 348741046272,
+  "downstream_stages_allowed": [
+    "chk2"
+  ],
+  "gpu1_compute_pids_before_launch": [],
+  "gpu1_free_mib_at_launch": 24036,
+  "judge_model": "deepseek-v4-flash",
+  "judge_provider": "deepseek",
+  "judge_reasoning_effort": "low",
+  "judge_timeout_seconds": 600,
+  "local_judge_started": false,
+  "physical_policy_gpu": 1,
+  "resume_from_checkpoint": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/adapters/chk2/checkpoint-4",
+  "resume_global_step": 4,
+  "run_root": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810",
+  "schema_version": "chk2-deepseek-low600-resume-launch-receipt-v1",
+  "session_name": "fomc_chk2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810",
+  "started_at_utc": "2026-08-10T15:18:50.223334Z",
+  "status": "started",
+  "training_log": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810/logs/train.log",
+  "world_size": 1
+}

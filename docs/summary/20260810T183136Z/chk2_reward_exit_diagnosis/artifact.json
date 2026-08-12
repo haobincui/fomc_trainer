@@ -1,0 +1,247 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk2 Reward 与退出原因诊断",
+    "description": "截至 2026-08-10 18:31:36 UTC 的 chk2 reward、退出事件和恢复状态审计。",
+    "generatedAt": "2026-08-10T18:31:36Z",
+    "cards": [
+      {
+        "id": "mean_reward_card",
+        "description": "去重后的 steps 1-40，按 optimizer step 汇总。",
+        "dataset": "headline",
+        "sourceId": "reward_steps_source",
+        "metrics": [{"label": "平均 reward", "field": "mean_reward", "format": "number"}]
+      },
+      {
+        "id": "last_reward_card",
+        "description": "最后一个不重复的 durable step。",
+        "dataset": "headline",
+        "sourceId": "reward_steps_source",
+        "metrics": [{"label": "step 40 reward", "field": "last_reward", "format": "number"}]
+      },
+      {
+        "id": "last10_card",
+        "description": "steps 31-40 的平均 reward。",
+        "dataset": "headline",
+        "sourceId": "window_source",
+        "metrics": [{"label": "最近 10 step", "field": "last10_reward", "format": "number"}]
+      },
+      {
+        "id": "exit_card",
+        "description": "三次都由 DeepSeek Judge 响应合同失败触发。",
+        "dataset": "headline",
+        "sourceId": "exit_source",
+        "metrics": [{"label": "异常退出", "field": "exit_count", "format": "number"}]
+      },
+      {
+        "id": "replay_card",
+        "description": "活跃进程从 checkpoint-4 回放，并非从 checkpoint-40 续训。",
+        "dataset": "headline",
+        "sourceId": "current_status_source",
+        "metrics": [{"label": "当前回放 step", "field": "replayed_step", "format": "number"}]
+      }
+    ],
+    "charts": [
+      {
+        "id": "reward_trend_chart",
+        "title": "Canonical step reward",
+        "subtitle": "去除失败 step 的部分 receipts 和当前 checkpoint-4 回放；steps 1-40。",
+        "intent": "trend",
+        "question": "Reward 是否持续改善，还是主要在 prompt 间波动？",
+        "rationale": "40 个连续 optimizer steps 足以展示短期轨迹和低点；单线避免把 Judge 配置切换误画成独立模型系列。",
+        "type": "line",
+        "dataset": "reward_steps",
+        "sourceId": "reward_steps_source",
+        "encodings": {
+          "x": {"field": "step", "type": "quantitative", "label": "Optimizer step"},
+          "y": {"field": "reward", "type": "quantitative", "label": "Mean reward"},
+          "tooltip": [
+            {"field": "reward", "type": "quantitative", "label": "Reward"},
+            {"field": "segment", "type": "nominal", "label": "Run segment"}
+          ]
+        },
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "window_table",
+        "title": "10-step reward windows",
+        "subtitle": "四个不重叠窗口，按训练顺序排列。",
+        "dataset": "reward_windows",
+        "sourceId": "window_source",
+        "defaultSort": {"field": "start_step", "direction": "asc"},
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "window", "label": "Window", "type": "text"},
+          {"field": "start_step", "label": "Start", "format": "number"},
+          {"field": "end_step", "label": "End", "format": "number"},
+          {"field": "mean_reward", "label": "Mean reward", "format": "number"}
+        ]
+      },
+      {
+        "id": "exit_table",
+        "title": "Recent training exits",
+        "subtitle": "三次异常退出均发生在 Judge 评分阶段；未发现 OOM 或 runtime-safety 触发。",
+        "dataset": "exit_events",
+        "sourceId": "exit_source",
+        "defaultSort": {"field": "attempt", "direction": "asc"},
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "attempt", "label": "Attempt", "format": "number"},
+          {"field": "run", "label": "Run", "type": "text"},
+          {"field": "reasoning_effort", "label": "Judge effort", "type": "text"},
+          {"field": "timeout_seconds", "label": "Timeout (s)", "format": "number"},
+          {"field": "last_completed_step", "label": "Last step", "format": "number"},
+          {"field": "error_class", "label": "Error class", "type": "text"},
+          {"field": "oom", "label": "OOM", "type": "text"}
+        ]
+      },
+      {
+        "id": "candidate_table",
+        "title": "Reward component diagnostics",
+        "subtitle": "320 completions from the canonical 40-step trajectory; no candidate text is included."
+        ,"dataset": "candidate_metrics",
+        "sourceId": "candidate_source",
+        "defaultSort": {"field": "metric", "direction": "asc"},
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {"field": "metric", "label": "Metric", "type": "text"},
+          {"field": "value", "label": "Value", "format": "number"},
+          {"field": "unit", "label": "Unit", "type": "text"},
+          {"field": "interpretation", "label": "Interpretation", "type": "text"}
+        ]
+      }
+    ],
+    "sources": [
+      {"id": "reward_steps_source", "label": "Canonical chk2 reward steps", "path": "docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/reward_step_snapshot.json"},
+      {"id": "window_source", "label": "Ten-step reward windows", "path": "docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/window_summary.json"},
+      {"id": "exit_source", "label": "Recent chk2 exit events", "path": "docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/exit_events.json"},
+      {"id": "candidate_source", "label": "Canonical candidate reward diagnostics", "path": "docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/candidate_summary.json"},
+      {"id": "current_status_source", "label": "Active chk2 process snapshot", "path": "docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/current_status.json"}
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# chk2 Reward 与退出原因诊断"},
+      {"id": "technical_summary", "type": "markdown", "body": "## 技术摘要\n\n**Reward 本身目前没有崩坏。** 去重后的 steps 1–40 平均 reward 为 `0.7324`，中位数 `0.7642`；最后 step 40 为 `0.8818`，最近十步均值 `0.7791`，与最初十步的 `0.7760` 基本相同。它更像高方差横盘，而不是持续上升或持续下降。\n\n**三次退出都不是 OOM。** 三份堆栈均为 DeepSeek Judge 在两个总尝试后仍返回不可接受响应，最终触发 fail-closed `JudgeInfrastructureError`。把 timeout 从 420 秒提高到 600 秒没有消除问题，因为日志中的最终 error class 是内部响应合同错误，而不是 SDK timeout。\n\n**当前重启没有从 step 40 继续。** 活跃配置仍把 `resume_from_checkpoint` 固定到 checkpoint-4；截至快照，它已经回放到 step 6。继续运行会重复旧数据和优化器轨迹，并可能与输出目录里已有的 checkpoint-10/20/30/38/39/40 冲突。"},
+      {"id": "headline_metrics", "type": "metric-strip", "cardIds": ["mean_reward_card", "last_reward_card", "last10_card", "exit_card", "replay_card"]},
+      {"id": "reward_finding", "type": "markdown", "sourceId": "reward_steps_source", "body": "## Reward 有信号，但尚无稳定上升趋势\n\nReward 在 `0.3995–0.9083` 间波动，最低点是 step 16，最高点是 step 10。steps 11–30 的窗口均值下降到约 `0.68–0.69`，steps 31–40 回升到 `0.7791`。由于每个 step 的 prompt 不同，这只能说明训练 reward 分布仍有区分度，不能当作固定验证集上的质量提升。"},
+      {"id": "reward_chart", "type": "chart", "chartId": "reward_trend_chart", "layout": "full"},
+      {"id": "window_finding", "type": "markdown", "sourceId": "window_source", "body": "## 最后十步恢复，但与开头几乎持平\n\n最后十步相对最初十步只高 `0.0031`。这不支持“reward 已持续改善”的结论，但也没有显示训练在 step 40 前发生 reward collapse。"},
+      {"id": "window_block", "type": "table", "tableId": "window_table", "layout": "full"},
+      {"id": "exit_finding", "type": "markdown", "sourceId": "exit_source", "body": "## 退出源于 Judge 响应合同，不是显存或保护阈值\n\n三次退出分别停在 step 1、4 和 40，均由 `_RetryableProviderResponseError` 在两个尝试后升级为 `JudgeInfrastructureError`。这个内部错误覆盖 incomplete status、缺少 visible/hidden output、缺少 reasoning-token usage、或严格 JSON/schema 不合格。失败时 attempt details 只留在内存，未写入日志，因此现在无法进一步区分是哪一种。"},
+      {"id": "exit_block", "type": "table", "tableId": "exit_table", "layout": "full"},
+      {"id": "replay_finding", "type": "markdown", "sourceId": "current_status_source", "body": "## 当前进程在回放 checkpoint-4\n\n快照时 PID `1037286` 正在物理 GPU1 运行，最新完成的是回放 step 6（reward `0.8646`）；输出目录中真正最高的 durable checkpoint 是 step 40。当前 step 6 的 clipped ratio 和 rolling zero-gradient fraction 都为 `0`，peak reserved 为 `16.17 GiB`，所以当前也没有显存或零梯度告警。问题是恢复点选错，而不是训练算子异常。"},
+      {"id": "component_finding", "type": "markdown", "sourceId": "candidate_source", "body": "## Reward 的主要拖累是事实惩罚和 reasoning 过长\n\n320 条 canonical completion 全部结构合格且进入 Judge，numeric 与 concision 均值约 `0.97`；但 `76.9%` 收到非零事实/因果 penalty，`28.8%` 至少有一个 major answer error。Reasoning efficiency 只有 `0.558`，并且 `45.6%` 超过 prompt 要求的 512 reasoning tokens。低 reward step 主要由 major factual/causal penalties 聚集造成，不是格式缺失。"},
+      {"id": "candidate_block", "type": "table", "tableId": "candidate_table", "layout": "full"},
+      {"id": "definitions", "type": "markdown", "body": "## 范围与定义\n\nCanonical trajectory 只保留第一次完成的 steps 1–40，每个 optimizer step 对应 8 条 completion；失败 step 已经写入但未形成完整 optimizer step 的 4 条 receipts 被排除，当前 checkpoint-4 回放也被排除。`reward` 是每 step 八条 `grounded_analysis_v3_deepseek_*` final reward 的均值。退出分类来自三份训练日志和对应 runtime-safety receipts。"},
+      {"id": "limitations", "type": "markdown", "body": "## 限制与稳健性\n\nStep reward 不是固定 prompt 验证指标，因此窗口差异不能解释为因果训练收益。三段轨迹还切换了 Judge effort/timeout。失败请求的具体 contract subtype 没有持久化，这是当前最重要的可观测性缺口。活跃进程状态会在本快照之后变化。"},
+      {"id": "next_steps", "type": "markdown", "body": "## 建议的下一步\n\n1. 先暂停当前 checkpoint-4 回放；不要让它继续写入已有 checkpoint-10/20/30/38/39/40 的目录。\n\n2. 从 checkpoint-40 创建新的版本化 resume config/output directory，再继续训练。\n\n3. 在 Judge fail-closed 前把每次 attempt 的具体 rejection reason、status、latency 和 response hashes 写入独立失败 receipt；仅增加 timeout 不足以解决当前问题。\n\n4. 保持候选文本不落日志，只持久化已脱敏的错误类别和 hashes。"},
+      {"id": "questions", "type": "markdown", "body": "## 仍待确认的问题\n\n- 三次 provider response 分别属于 incomplete、缺失 reasoning，还是 strict JSON/schema 失败？现有日志无法回答。\n- checkpoint-40 在固定验证 prompts 上是否优于 checkpoint-4？训练 reward 轨迹本身不能替代这一对照。"}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T18:31:36Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [{"mean_reward": 0.7324262964, "last_reward": 0.8817747235, "last10_reward": 0.7791382998, "exit_count": 3, "replayed_step": 6}],
+      "reward_steps": [
+        {"step": 1, "reward": 0.8297641575, "segment": "high"}, {"step": 2, "reward": 0.7790350318, "segment": "low"}, {"step": 3, "reward": 0.4618246555, "segment": "low"}, {"step": 4, "reward": 0.8771079481, "segment": "low"}, {"step": 5, "reward": 0.8375104964, "segment": "low600"}, {"step": 6, "reward": 0.8509573042, "segment": "low600"}, {"step": 7, "reward": 0.7527838945, "segment": "low600"}, {"step": 8, "reward": 0.7990419865, "segment": "low600"}, {"step": 9, "reward": 0.6637223065, "segment": "low600"}, {"step": 10, "reward": 0.9083000720, "segment": "low600"},
+        {"step": 11, "reward": 0.6093383133, "segment": "low600"}, {"step": 12, "reward": 0.7724055052, "segment": "low600"}, {"step": 13, "reward": 0.8244009316, "segment": "low600"}, {"step": 14, "reward": 0.7388326228, "segment": "low600"}, {"step": 15, "reward": 0.7974835634, "segment": "low600"}, {"step": 16, "reward": 0.3995203674, "segment": "low600"}, {"step": 17, "reward": 0.8399528563, "segment": "low600"}, {"step": 18, "reward": 0.6834532022, "segment": "low600"}, {"step": 19, "reward": 0.4461008012, "segment": "low600"}, {"step": 20, "reward": 0.8118920326, "segment": "low600"},
+        {"step": 21, "reward": 0.7857303917, "segment": "low600"}, {"step": 22, "reward": 0.5237533525, "segment": "low600"}, {"step": 23, "reward": 0.8026709557, "segment": "low600"}, {"step": 24, "reward": 0.6603399515, "segment": "low600"}, {"step": 25, "reward": 0.8147768676, "segment": "low600"}, {"step": 26, "reward": 0.7109210491, "segment": "low600"}, {"step": 27, "reward": 0.6680590808, "segment": "low600"}, {"step": 28, "reward": 0.4722053409, "segment": "low600"}, {"step": 29, "reward": 0.6278488934, "segment": "low600"}, {"step": 30, "reward": 0.7559349239, "segment": "low600"},
+        {"step": 31, "reward": 0.7472756803, "segment": "low600"}, {"step": 32, "reward": 0.7243164778, "segment": "low600"}, {"step": 33, "reward": 0.8486778140, "segment": "low600"}, {"step": 34, "reward": 0.7272798717, "segment": "low600"}, {"step": 35, "reward": 0.8194217384, "segment": "low600"}, {"step": 36, "reward": 0.8281265497, "segment": "low600"}, {"step": 37, "reward": 0.6927963197, "segment": "low600"}, {"step": 38, "reward": 0.6959130764, "segment": "low600"}, {"step": 39, "reward": 0.8258007467, "segment": "low600"}, {"step": 40, "reward": 0.8817747235, "segment": "low600"}
+      ],
+      "reward_windows": [
+        {"window": "steps 1-10", "start_step": 1, "end_step": 10, "mean_reward": 0.7760047853},
+        {"window": "steps 11-20", "start_step": 11, "end_step": 20, "mean_reward": 0.6923380196},
+        {"window": "steps 21-30", "start_step": 21, "end_step": 30, "mean_reward": 0.6822240807},
+        {"window": "steps 31-40", "start_step": 31, "end_step": 40, "mean_reward": 0.7791382998}
+      ],
+      "exit_events": [
+        {"attempt": 1, "run": "deepseek_high", "reasoning_effort": "high", "timeout_seconds": 420, "last_completed_step": 1, "error_class": "_RetryableProviderResponseError", "oom": false},
+        {"attempt": 2, "run": "deepseek_low_resume_cp1", "reasoning_effort": "low", "timeout_seconds": 420, "last_completed_step": 4, "error_class": "_RetryableProviderResponseError", "oom": false},
+        {"attempt": 3, "run": "deepseek_low600_resume_cp4", "reasoning_effort": "low", "timeout_seconds": 600, "last_completed_step": 40, "error_class": "_RetryableProviderResponseError", "oom": false}
+      ],
+      "candidate_metrics": [
+        {"metric": "completed candidate rows", "value": 320, "unit": "rows", "interpretation": "40 unique optimizer steps × 8 completions"},
+        {"metric": "mean final reward", "value": 0.7324262956, "unit": "score", "interpretation": "Mean across the canonical 320 completions"},
+        {"metric": "median final reward", "value": 0.8050737187, "unit": "score", "interpretation": "Distribution is left-tailed by factual penalties"},
+        {"metric": "mean judge score", "value": 0.8029687500, "unit": "score", "interpretation": "Five-rubric weighted base component"},
+        {"metric": "mean answer numeric score", "value": 0.9696169285, "unit": "score", "interpretation": "Numeric grounding is generally strong"},
+        {"metric": "mean structure score", "value": 1.0000000000, "unit": "score", "interpretation": "All 320 completions satisfied the boundary/answer contract"},
+        {"metric": "mean answer concision", "value": 0.9703431015, "unit": "score", "interpretation": "Final answers are usually concise"},
+        {"metric": "mean reasoning efficiency", "value": 0.5579106677, "unit": "score", "interpretation": "Weakest positive component"},
+        {"metric": "mean applied penalty", "value": 0.1378750000, "unit": "score", "interpretation": "Factual/causal violations materially reduce reward"},
+        {"metric": "penalized completions", "value": 246, "unit": "rows", "interpretation": "76.9% of completions received a non-zero penalty"},
+        {"metric": "major answer-error completions", "value": 92, "unit": "rows", "interpretation": "28.8% contained at least one major answer error"},
+        {"metric": "unsupported-answer-number completions", "value": 32, "unit": "rows", "interpretation": "75 unsupported answer-number occurrences across 32 rows"},
+        {"metric": "reasoning above 512 tokens", "value": 146, "unit": "rows", "interpretation": "45.6% exceeded the prompt's requested reasoning budget"},
+        {"metric": "target leakage", "value": 0, "unit": "rows", "interpretation": "No target leakage was recorded"},
+        {"metric": "zero reward", "value": 0, "unit": "rows", "interpretation": "No completed candidate was forced to zero"}
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "reward_steps_source",
+      "query": {
+        "engine": "duckdb", "language": "sql",
+        "sql": "SELECT step, reward, segment FROM read_json_auto('docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/reward_step_snapshot.json') ORDER BY step",
+        "description": "Reads the reviewed, de-duplicated optimizer-step reward trajectory.",
+        "executed_at": "2026-08-10T18:31:36Z",
+        "tables_used": ["docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/reward_step_snapshot.json"],
+        "filters": ["first completed occurrence of steps 1 through 40", "exclude partial failed groups", "exclude active checkpoint-4 replay"],
+        "metric_definitions": ["Step reward is the mean final reward across eight completions in one completed optimizer step."]
+      }
+    },
+    {
+      "id": "window_source",
+      "query": {
+        "engine": "duckdb", "language": "sql",
+        "sql": "SELECT window, start_step, end_step, mean_reward FROM read_json_auto('docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/window_summary.json') ORDER BY start_step",
+        "description": "Reads four non-overlapping ten-step reward windows.",
+        "executed_at": "2026-08-10T18:31:36Z",
+        "tables_used": ["docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/window_summary.json"],
+        "metric_definitions": ["Window mean is the arithmetic mean of ten completed optimizer-step rewards."]
+      }
+    },
+    {
+      "id": "exit_source",
+      "query": {
+        "engine": "duckdb", "language": "sql",
+        "sql": "SELECT attempt, run, reasoning_effort, timeout_seconds, last_completed_step, error_class, oom FROM read_json_auto('docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/exit_events.json') ORDER BY attempt",
+        "description": "Reads the three recent fail-closed training exit classifications.",
+        "executed_at": "2026-08-10T18:31:36Z",
+        "tables_used": ["docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/exit_events.json"],
+        "filters": ["recent cp200 DeepSeek Judge chk2 attempts"]
+      }
+    },
+    {
+      "id": "candidate_source",
+      "query": {
+        "engine": "duckdb", "language": "sql",
+        "sql": "SELECT metric, value, unit, interpretation FROM read_json_auto('docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/candidate_summary.json') ORDER BY metric",
+        "description": "Reads aggregate reward diagnostics for 320 canonical completion receipts without candidate text.",
+        "executed_at": "2026-08-10T18:31:36Z",
+        "tables_used": ["docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/candidate_summary.json"],
+        "filters": ["40 completed unique steps", "eight completions per step"]
+      }
+    },
+    {
+      "id": "current_status_source",
+      "query": {
+        "engine": "duckdb", "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/current_status.json')",
+        "description": "Reads the active-process and resume-point snapshot at the diagnostic cutoff.",
+        "executed_at": "2026-08-10T18:31:36Z",
+        "tables_used": ["docs/summary/20260810T183136Z/chk2_reward_exit_diagnosis/current_status.json"]
+      }
+    }
+  ]
+}

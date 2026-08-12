@@ -1,0 +1,15 @@
+model_name_or_path: models/DeepSeek-R1-Distill-Llama-8B
+output_dir: output/training/retrain_v2/chk1_compressed_flash_max_v1_20260805/adapters/chk1
+peft_merged_model_path: output/training/retrain_v2/chk1_compressed_flash_max_v1_20260805/merged/chk1
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+peft_bias: none

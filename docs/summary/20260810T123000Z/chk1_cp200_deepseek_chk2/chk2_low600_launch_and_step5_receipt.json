@@ -1,0 +1,118 @@
+{
+  "schema_version": "chk2-low600-launch-step5-validation-v1",
+  "recorded_at_utc": "2026-08-10T15:25:58Z",
+  "status": "passed_and_continuing",
+  "run_id": "chk2_clean_v2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810",
+  "session_name": "fomc_chk2_cp200_deepseek_low600_totalsl_v1_resume_cp4_20260810",
+  "resume": {
+    "path": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/adapters/chk2/checkpoint-4",
+    "global_step": 4,
+    "directory_sha256": "24813c7aaad1adb53cc9c39e6f55ede0569598602c2a54ca60b11be27aa50083"
+  },
+  "contract": {
+    "reward_name": "grounded_analysis_v3_deepseek_low_timeout600",
+    "provider": "deepseek",
+    "api": "responses",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "low",
+    "timeout_seconds": 600,
+    "max_total_attempts": 2,
+    "max_output_tokens": 16384,
+    "group_size": 4,
+    "request_contract_sha256": "0873c7694a1052637169e006e94047bcbd5679651bea6d2963c6c37a956a553c",
+    "contract_file_sha256": "f0442e3cb0ca9a27a10eb73b38caa91ef56689587a8251375b45e7b85c868125"
+  },
+  "launch": {
+    "started_at_utc": "2026-08-10T15:18:50.223334Z",
+    "physical_policy_gpu": 1,
+    "world_size": 1,
+    "local_qwen_judge_started": false,
+    "gpu1_free_mib_before_launch": 24036,
+    "disk_free_bytes_before_launch": 348741046272,
+    "binding_sha256": "50f9e8ff9ad8fac58fa2fe67f0bce37903b7fd0875aeebd3f0e20324d89575e8",
+    "launch_receipt_sha256": "ea82217a8235544551cec868aa503f33d5724fa7868eec3eb7e89b61460c1031",
+    "api_key_recorded": false
+  },
+  "validation": {
+    "global_step": 5,
+    "logical_requests": 2,
+    "candidate_rewards": 8,
+    "successful_requests": 2,
+    "first_attempt_successes": 2,
+    "provider_errors": 0,
+    "schema_or_mapping_errors": 0,
+    "target_leakage_count": 0,
+    "rejection_count": 0,
+    "nonfinite_reward_count": 0,
+    "requests": [
+      {
+        "attempts": 1,
+        "http_status": 200,
+        "latency_seconds": 10.525439186953008,
+        "input_tokens": 5579,
+        "output_tokens": 1461,
+        "reasoning_tokens": 1186,
+        "rewards": [
+          0.9449704142011834,
+          0.9767441860465117,
+          0.9794979079497909,
+          0.9661327231121282
+        ]
+      },
+      {
+        "attempts": 1,
+        "http_status": 200,
+        "latency_seconds": 61.98399878107011,
+        "input_tokens": 4890,
+        "output_tokens": 9598,
+        "reasoning_tokens": 8354,
+        "rewards": [
+          0.6026478494623657,
+          0.6939204545454546,
+          0.9852398523985241,
+          0.5509307875894986
+        ]
+      }
+    ],
+    "reward_log_first_8_rows_sha256": "24d2db405d65f1cfda604f92c406ffb03e779feb3b8c315760aa83906c5e8404",
+    "loss": 0.0382,
+    "reward_mean": 0.837510496377945,
+    "reward_std": 0.10480380710214376,
+    "grad_norm": 1.007906198501587,
+    "kl": 0.0005663727824867237,
+    "completion_mean_tokens": 478.25,
+    "completion_max_tokens": 560.5,
+    "completion_clipped_ratio": 0.0,
+    "frac_reward_zero_std": 0.0,
+    "step_time_seconds": 191.49215667741373,
+    "loss_history_first_row_sha256": "d2a4e94eef5ae6d9335f86daa5a1c27348c767e1e1a95e4fa9198f96845eb79c",
+    "runtime_safety_first_row_sha256": "d2cd02e8d8d28efc0ff19042a998c3c35e26ef62611d7a74fe4ef9b9d2266f01"
+  },
+  "checkpoint_5": {
+    "complete": true,
+    "file_count": 12,
+    "total_bytes": 524991265,
+    "directory_sha256": "a8c362cc228af8762039d9522c313b62ac4fb6129e32644aad56c032ad8e5465",
+    "adapter_sha256": "f21cce223548b80c1fe38e1b961b9f8d9f67ca619df6f433cc4f685912ae2539",
+    "trainer_state_sha256": "1dc26ab44cdc17ec2309caeceeb22c86bb07a0b8984a0a4145331771347f5d68",
+    "optimizer_scheduler_rng_present": true
+  },
+  "tests": {
+    "pytest_passed": 122,
+    "ruff_passed": true,
+    "python_compile_passed": true
+  },
+  "runtime_safety": {
+    "oom": false,
+    "nan": false,
+    "context_error": false,
+    "judge_final_failure": false,
+    "candidate_group_error": false,
+    "traceback": false
+  },
+  "continuation": {
+    "training_left_running": true,
+    "next_observed_state": "step_6_in_progress",
+    "automatic_chk3_or_chk4_promotion_allowed": false
+  }
+}

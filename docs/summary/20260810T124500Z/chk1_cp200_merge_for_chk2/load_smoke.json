@@ -1,0 +1,66 @@
+{
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "865fa3f7411f83b7308d67a396431573e46af6dfc8ab14cc5f7ccaffc65de334"
+  },
+  "model_fingerprint": {
+    "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+    "file_count": 14,
+    "kind": "directory",
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+    "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+    "total_bytes": 16077912659
+  },
+  "model_path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+  "runtime_validation": {
+    "architectures": [
+      "LlamaForCausalLM"
+    ],
+    "argmax_next_token_id": 33413,
+    "attention_implementation": "sdpa",
+    "config_class": "LlamaConfig",
+    "device": "cuda:0",
+    "known_non_blocking_warnings": [
+      "transformers tokenizer regex advisory; actual base/merged token parity passed",
+      "rope_scaling original_max_position_embeddings advisory"
+    ],
+    "load_mode": "4bit_nf4_double_quant_bf16",
+    "logits_finite": true,
+    "peak_allocated_gib": 6.99,
+    "peak_reserved_gib": 7.1,
+    "prompt_tokens": 16,
+    "status": "passed"
+  },
+  "schema_version": "chk1-cp200-merged-load-smoke-v1",
+  "status": "passed",
+  "tokenizer_validation": {
+    "byte_identity_note": "Merged tokenizer files were reserialized by save_pretrained; semantic parity, not JSON byte identity, is the enforced contract.",
+    "byte_identity_required": false,
+    "chat_template_token_parity": true,
+    "fixed_text_cases": 4,
+    "fixed_text_token_parity": true,
+    "single_bos": true,
+    "special_token_ids": {
+      "bos_token_id": 128000,
+      "eos_token_id": 128001,
+      "pad_token_id": 128001,
+      "unk_token_id": null
+    },
+    "tokenizer_class": "LlamaTokenizerFast",
+    "vocab_size": 128256,
+    "vocabulary_parity": true
+  },
+  "weight_inventory": {
+    "index_sha256": "560e89ca3d220e7d9b76fbc0749c2b8e67f7fcfae6d34f3a67ea88fcdc2ab6ae",
+    "missing_tensors": [],
+    "shard_count": 4,
+    "shards": [
+      "model-00001-of-00004.safetensors",
+      "model-00002-of-00004.safetensors",
+      "model-00003-of-00004.safetensors",
+      "model-00004-of-00004.safetensors"
+    ],
+    "tensor_count": 291,
+    "unindexed_tensors": []
+  }
+}

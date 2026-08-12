@@ -1,0 +1,1310 @@
+{
+  "algorithm_version": "peft-lora-fp32-exact-v1",
+  "bindings": {
+    "checkpoint_manifest": {
+      "assertions": {
+        "base_fingerprint_matches": true,
+        "base_path_matches": true,
+        "merged_fingerprint_matches": true,
+        "merged_path_matches": true,
+        "merged_verified_parent_matches_base": true
+      },
+      "base_artifact_id": "eval-base",
+      "merged_artifact_id": "eval-analysis-sft",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/checkpoints/recovered/llama_sft_synthetic_20250526_2_cp1668_recovered_v1_20260729/checkpoint_manifest.json",
+      "payload_sha256": "16d29ec20f283c34b1cf69e7b2d5459a5a228e86466e0c2d3ae620e39168acc7",
+      "sha256": "1265d8d0fc0c0940fa1c66c9c5655940b238a0235e30bf581f55f33a551b4d18"
+    }
+  },
+  "claim_scope": "The supplied merged weight tensors are exactly the supplied base weight tensors with the supplied LoRA adapter merged using float32 B@A and addition, cast to each stored merged dtype. This proves the weight parent; it does not independently prove the training data.",
+  "conclusion": "exact_base_plus_adapter_merge_verified",
+  "integrity": {
+    "algorithm": "sha256(canonical-json-without-integrity)",
+    "payload_sha256": "49554cf15a3fa7ab4035b99a36c8db7eaf2cb805d82e4ca7a2eccfa8672d9a3d"
+  },
+  "metadata_evidence": {
+    "adapter": {
+      "base_model_name_or_path": "models/DeepSeek-R1-Distill-Llama-8B",
+      "base_path_matches": true,
+      "bias": "none",
+      "lora_alpha": 16.0,
+      "peft_type": "LORA",
+      "r": 8,
+      "scaling": 2.0,
+      "scaling_formula": "lora_alpha/r",
+      "target_modules": [
+        "q_proj",
+        "v_proj"
+      ],
+      "task_type": "CAUSAL_LM",
+      "use_dora": false,
+      "use_rslora": false
+    },
+    "training_config": {
+      "lora_metadata_checks": {
+        "bias_matches": true,
+        "lora_alpha_matches": true,
+        "r_matches": true,
+        "target_modules_match": true
+      },
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/archive/configs/sft/sft_20250515.yaml",
+      "path_checks": {
+        "model_name_or_path_matches_base": true,
+        "output_dir_matches_adapter": true,
+        "peft_merged_model_path_matches_merged": true
+      },
+      "sha256": "79583c969248f95ec3b8b797b5a4eb737db677ea1277a7de5f82799524d8c317"
+    }
+  },
+  "schema_version": "lora-merge-lineage-evidence-v1",
+  "sources": {
+    "adapter": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 30,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/adapters/llama_sft_20250521_2",
+      "sha256": "987fefa96bd673b9e1b14927a116935a9cb53697e0ba6586c9ce8629ce669f5a",
+      "total_bytes": 89489886
+    },
+    "base_model": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 83,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "total_bytes": 32134256893
+    },
+    "base_weight_index_sha256": "83bdf4be4bb1a054ff315cd804554c48a88036226fdfbc65bee84ff562fea32a",
+    "critical_files": {
+      "adapter_config": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/adapters/llama_sft_20250521_2/adapter_config.json",
+        "sha256": "e3f787d1c556938b95e0fa7ddd523726e870792a7426bb3e873f85955f8c7826",
+        "size": 790
+      },
+      "adapter_weights": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/adapters/llama_sft_20250521_2/adapter_model.safetensors",
+        "sha256": "e7a9d845d83399bfe3457c3b0b435027572830d9a88b9407cb43b5a81999a87d",
+        "size": 6832728
+      },
+      "base_config": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B/config.json",
+        "sha256": "c6162f33d194369772137ecdd4bdcac4cf3fed4f40607d694b94bcbb8e5dc39f",
+        "size": 828
+      },
+      "base_tokenizer": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B/tokenizer.json",
+        "sha256": "b9c9eb63a8e03059914880f918cd28a880dec8b6e15e4461e1ff677e3743dbb8",
+        "size": 9084480
+      },
+      "base_tokenizer_config": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B/tokenizer_config.json",
+        "sha256": "5a773d1f7a8716f53f414040cbbf94ddf5f55f4f00bc3b4cc8fd8d6b64369777",
+        "size": 3072
+      },
+      "base_weight_index": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B/model.safetensors.index.json",
+        "sha256": "83bdf4be4bb1a054ff315cd804554c48a88036226fdfbc65bee84ff562fea32a",
+        "size": 24240
+      },
+      "merged_config": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/merged/llama_sft_20250522/config.json",
+        "sha256": "272c8a1958c0ac887fed6b1158560e4fe6e03b14b5673300fd01c57c62f96e89",
+        "size": 911
+      },
+      "merged_tokenizer": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/merged/llama_sft_20250522/tokenizer.json",
+        "sha256": "b9c9eb63a8e03059914880f918cd28a880dec8b6e15e4461e1ff677e3743dbb8",
+        "size": 9084480
+      },
+      "merged_tokenizer_config": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/merged/llama_sft_20250522/tokenizer_config.json",
+        "sha256": "5a773d1f7a8716f53f414040cbbf94ddf5f55f4f00bc3b4cc8fd8d6b64369777",
+        "size": 3072
+      },
+      "merged_weight_index": {
+        "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/merged/llama_sft_20250522/model.safetensors.index.json",
+        "sha256": "146776fce3f6db1103aa6f249e65ee5544c5923ce6f971b092eee79aa6e5d37b",
+        "size": 23950
+      }
+    },
+    "merged_model": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 11,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer_back/fomc_trainer/output/merged/llama_sft_20250522",
+      "sha256": "51311501381e997e5011f6030a9584211cedadd9a03416fae9e53b2308e819b1",
+      "total_bytes": 16069670281
+    },
+    "merged_weight_index_sha256": "146776fce3f6db1103aa6f249e65ee5544c5923ce6f971b092eee79aa6e5d37b"
+  },
+  "subject_artifact_id": "eval-analysis-sft",
+  "tensor_verification": {
+    "adapted_model_tensor_count": 64,
+    "adapted_tensors": [
+      {
+        "changed_elements_vs_base": 13702784,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.0.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3694884,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.0.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12415376,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.1.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3562863,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.1.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12606686,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.10.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3681168,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.10.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12703439,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.11.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3486058,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.11.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12741256,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.12.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3558481,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.12.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12579481,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.13.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3519373,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.13.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12551352,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.14.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3625086,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.14.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12874920,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.15.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3619699,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.15.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12790042,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.16.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3613079,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.16.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13178121,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.17.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3552984,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.17.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13960344,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.18.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3721830,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.18.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13755614,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.19.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3643037,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.19.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 11667026,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.2.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3640073,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.2.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13424116,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.20.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3653501,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.20.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13328652,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.21.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3627822,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.21.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13610608,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.22.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3601778,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.22.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13878851,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.23.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3660505,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.23.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 14028969,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.24.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3555963,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.24.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13294339,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.25.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3573547,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.25.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13785929,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.26.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3636446,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.26.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13569017,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.27.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3564928,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.27.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13264956,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.28.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3487099,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.28.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12259093,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.29.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3452066,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.29.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12360129,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.3.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3517777,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.3.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 14091439,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.30.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3296189,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.30.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 13197643,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.31.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3308892,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.31.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12334166,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.4.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3603543,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.4.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12123981,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.5.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3604069,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.5.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 11987433,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.6.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3630481,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.6.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12282141,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.7.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3559022,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.7.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12278308,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.8.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3547732,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.8.self_attn.v_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 12413932,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          4096,
+          8
+        ],
+        "shape": [
+          4096,
+          4096
+        ],
+        "tensor_name": "model.layers.9.self_attn.q_proj.weight"
+      },
+      {
+        "changed_elements_vs_base": 3461807,
+        "dtype": "bfloat16",
+        "exact_reconstruction": true,
+        "lora_a_shape": [
+          8,
+          4096
+        ],
+        "lora_b_shape": [
+          1024,
+          8
+        ],
+        "shape": [
+          1024,
+          4096
+        ],
+        "tensor_name": "model.layers.9.self_attn.v_proj.weight"
+      }
+    ],
+    "adapter_tensor_count": 128,
+    "changed_adapted_elements_vs_base": 529301925,
+    "comparison": "torch.equal (exact stored tensor values)",
+    "device": "cpu",
+    "exact_adapted_model_tensor_count": 64,
+    "exact_unchanged_model_tensor_count": 227,
+    "merge_expression": "to_merged_dtype(base.float32 + (lora_B.float32 @ lora_A.float32) * scaling)",
+    "mismatch_count": 0,
+    "model_tensor_count": 291,
+    "total_adapted_elements": 671088640,
+    "total_unchanged_elements": 7359172608,
+    "unchanged_model_tensor_count": 227
+  }
+}

@@ -1,0 +1,387 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk1 clean-v2：237 条 DeepSeek 语义审核",
+    "description": "对 clean-v2 中全部 237 条变更样本进行 source-only、双阶段 DeepSeek max-thinking 审核。",
+    "generatedAt": "2026-08-10T00:29:25Z",
+    "filters": [],
+    "cards": [
+      {
+        "id": "audited_rows_card",
+        "description": "完成 hash-bound 初审和必要的二次反向裁决。",
+        "dataset": "headline",
+        "sourceId": "headline_sql",
+        "metrics": [
+          {"label": "已审核样本", "field": "audited_rows", "format": "number"},
+          {"label": "Provider errors", "field": "provider_errors", "format": "number"}
+        ]
+      },
+      {
+        "id": "passed_rows_card",
+        "description": "没有任何经二次裁决确认的事实类错误。",
+        "dataset": "headline",
+        "sourceId": "headline_sql",
+        "metrics": [
+          {"label": "通过样本", "field": "passed_rows", "format": "number"},
+          {"label": "通过率", "field": "pass_rate", "format": "percent"}
+        ]
+      },
+      {
+        "id": "failed_rows_card",
+        "description": "至少包含一项 confirmed factual、numerical 或 causal violation。",
+        "dataset": "headline",
+        "sourceId": "headline_sql",
+        "metrics": [
+          {"label": "失败样本", "field": "failed_rows", "format": "number"},
+          {"label": "失败率", "field": "failure_rate", "format": "percent"}
+        ]
+      },
+      {
+        "id": "confirmed_card",
+        "description": "Stage A 疑点经独立 try-to-disprove Stage B 复核后的结论。",
+        "dataset": "headline",
+        "sourceId": "headline_sql",
+        "metrics": [
+          {"label": "确认错误", "field": "confirmed_violations", "format": "number"},
+          {"label": "剔除误报", "field": "false_positive_proposals", "format": "number"}
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "violation_kind_chart",
+        "title": "Confirmed violations by kind",
+        "subtitle": "203 条确认错误，覆盖 113 个样本；同一样本可能包含多个 kind",
+        "type": "bar",
+        "dataset": "violation_kind",
+        "sourceId": "violation_kind_sql",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {"field": "kind", "type": "nominal", "label": "Violation kind"},
+          "y": {"field": "confirmed_violations", "type": "quantitative", "label": "Confirmed violations"},
+          "tooltip": [
+            {"field": "rows_affected", "type": "quantitative", "label": "Rows affected"},
+            {"field": "major_violations", "type": "quantitative", "label": "Major"},
+            {"field": "minor_violations", "type": "quantitative", "label": "Minor"}
+          ]
+        }
+      },
+      {
+        "id": "repair_group_chart",
+        "title": "Failure rate by clean-v2 repair group",
+        "subtitle": "三组 95% Wilson 区间重叠；修复操作不是失败集中的明显来源",
+        "type": "bar",
+        "dataset": "repair_group",
+        "sourceId": "repair_group_sql",
+        "valueFormat": "percent",
+        "encodings": {
+          "x": {"field": "repair_group", "type": "nominal", "label": "Repair group"},
+          "y": {"field": "failure_rate", "type": "quantitative", "label": "Failure rate"},
+          "tooltip": [
+            {"field": "total", "type": "quantitative", "label": "Audited rows"},
+            {"field": "failed", "type": "quantitative", "label": "Failed rows"},
+            {"field": "ci_low", "type": "quantitative", "label": "95% CI low", "format": "percent"},
+            {"field": "ci_high", "type": "quantitative", "label": "95% CI high", "format": "percent"}
+          ]
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "split_outcomes_table",
+        "title": "Outcome by split",
+        "subtitle": "全部 237 条变更样本；按失败率降序",
+        "dataset": "split_outcomes",
+        "sourceId": "split_outcomes_sql",
+        "defaultSort": {"field": "failure_rate", "direction": "desc"},
+        "columns": [
+          {"field": "split", "label": "Split", "type": "text"},
+          {"field": "total", "label": "Rows", "format": "number"},
+          {"field": "passed", "label": "Passed", "format": "number"},
+          {"field": "failed", "label": "Failed", "format": "number"},
+          {"field": "failure_rate", "label": "Failure rate", "format": "percent"}
+        ]
+      },
+      {
+        "id": "representative_failures_table",
+        "title": "Representative confirmed failures",
+        "subtitle": "按 major 数量和总 violation 数排序的 8 个高信号案例",
+        "dataset": "representative_failures",
+        "sourceId": "representative_failures_sql",
+        "defaultSort": {"field": "major_count", "direction": "desc"},
+        "columns": [
+          {"field": "sample_id", "label": "Sample ID", "type": "text"},
+          {"field": "section", "label": "Section", "type": "text"},
+          {"field": "kind", "label": "Kind", "type": "text"},
+          {"field": "severity", "label": "Severity", "type": "text"},
+          {"field": "violation_count", "label": "Violations", "format": "number"},
+          {"field": "major_count", "label": "Major", "format": "number"},
+          {"field": "candidate_quote", "label": "Confirmed quote", "type": "text"},
+          {"field": "explanation", "label": "Why unsupported", "type": "text"}
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "audit_analysis",
+        "label": "DeepSeek audit summary SQL",
+        "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite"
+      },
+      {
+        "id": "headline_sql",
+        "label": "Headline audit metrics SQL",
+        "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite"
+      },
+      {
+        "id": "violation_kind_sql",
+        "label": "Violation-kind aggregates SQL",
+        "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite"
+      },
+      {
+        "id": "repair_group_sql",
+        "label": "Repair-group outcomes SQL",
+        "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite"
+      },
+      {
+        "id": "split_outcomes_sql",
+        "label": "Split outcomes SQL",
+        "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite"
+      },
+      {
+        "id": "representative_failures_sql",
+        "label": "Representative confirmed failures SQL",
+        "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite"
+      },
+      {
+        "id": "semantic_input",
+        "label": "Immutable 237-row semantic audit input",
+        "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/audits/semantic_audit_input.jsonl"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# chk1 clean-v2：237 条 DeepSeek 语义审核"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "audit_analysis",
+        "body": "## 结论：这 237 条不能直接作为 strict clean chk1 release\n\n- **124/237（52.3%）通过；113/237（47.7%）失败。**失败样本至少含一项经第二阶段确认的 factual、numerical 或 causal violation。\n- **Stage A 提出 236 条疑点，Stage B 确认 203 条、剔除 33 条误报。**最终没有 ambiguous、provider error 或 review-required 样本。\n- **没有 target leakage。**主要问题是 unsupported causal interpretation（98 条）、unsupported/contradicted factual claim（82 条）和 numerical error（23 条）。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "cardIds": ["audited_rows_card", "passed_rows_card", "failed_rows_card", "confirmed_card"]
+      },
+      {
+        "id": "violation_findings",
+        "type": "markdown",
+        "sourceId": "audit_analysis",
+        "body": "## 因果外推是最主要的污染类型\n\n203 条确认错误中，causal 为 98 条、factual 为 82 条、numerical 为 23 条。think 与 answer 都受到影响：107 条 violation 位于 think，96 条位于 answer；40 个失败样本只在 think 出错，42 个只在 answer 出错，31 个两边都出错。"
+      },
+      {"id": "violation_kind", "type": "chart", "chartId": "violation_kind_chart"},
+      {
+        "id": "repair_comparison",
+        "type": "markdown",
+        "sourceId": "repair_group_sql",
+        "body": "## clean-v2 的去 ID／JSON 恢复没有造成失败集中\n\n恢复 JSON-like answer 的 42 条中有 18 条失败（42.9%）；去掉内联 evidence ID 的 159 条中有 78 条失败（49.1%）；answer 未改的 36 条中有 17 条失败（47.2%）。三个 Wilson 95% 区间明显重叠。这个结果不能证明修复绝对无影响，但没有看到修复方法与语义失败之间的系统性关联，因此不建议回滚 clean-v2 的确定性清理。"
+      },
+      {"id": "repair_group", "type": "chart", "chartId": "repair_group_chart"},
+      {
+        "id": "scope_and_method",
+        "type": "markdown",
+        "sourceId": "audit_analysis",
+        "body": "## 审核口径与通过定义\n\n审核粒度是一条 clean-v2 changed sample，共 237 条，split 为 train/eval/test=`183/25/29`。DeepSeek 使用 Responses API、`deepseek-v4-flash`、`reasoning.effort=max` 和 `max_output_tokens=32768`。Stage A 同时阅读 point-in-time evidence、think 和 answer；每条疑似 factual/numerical/causal/target-leakage violation 都由独立 Stage B 尝试反证。只有 Stage B=`confirmed` 才阻断；`false_positive` 不阻断，`ambiguous` 或 API/schema 错误会使 run incomplete。本轮所有 237 条均得到最终结论。"
+      },
+      {"id": "split_outcomes", "type": "table", "tableId": "split_outcomes_table"},
+      {
+        "id": "examples_intro",
+        "type": "markdown",
+        "sourceId": "representative_failures_sql",
+        "body": "## 高信号案例包含真实数值与单位错误\n\n代表性错误并非只有措辞偏严格。例如一条 answer 把 `3,623.6983 million dollars` 写成约 `$3.6 trillion`，放大了 1,000 倍；另一条把 4.2 到 17.5 的月度降幅描述为“没有明显加速”。同时存在大量把无基准的水平称为 `elevated`、从共同变动推断 household motives，或从收益率曲线推断 term premium／growth expectations 的 source-only 外推。"
+      },
+      {"id": "representative_failures", "type": "table", "tableId": "representative_failures_table"},
+      {
+        "id": "robustness",
+        "type": "markdown",
+        "sourceId": "audit_analysis",
+        "body": "## 两阶段设计避免重演旧 Qwen 的系统性误报\n\nStage B 否决了 33/236（14.0%）初审疑点，并使 7 个样本免于被错误判失败；例如正确的月度差值换算、保守的 `may reflect` 表述和可由序列直接推出的方向判断。最终 203 个 confirmed quote 全部通过本地 section 子串复核，candidate/evidence 哈希绑定错误为 0，provider errors 为 0，缓存中未发现原始正文键、软链接或 API key。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 局限：结论只覆盖 237 条 changed rows\n\n这次没有审核 clean-v2 中其余 1,506 条未改样本，因此不能把 124 条通过外推为整个 1,743 条 release 已经语义安全。Stage A 和 Stage B 使用同一个 DeepSeek 模型，虽然采用相反提示和独立请求，但错误仍可能相关。source-only 合同也比一般宏观分析更严格：常见但未在 fact card 中出现的经济学背景会被判 unsupported。当前正式 publisher 仍要求本地 Qwen attestation，DeepSeek 结果没有冒充该收据。"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "sourceId": "audit_analysis",
+        "body": "## 建议：先修复 113 条，再决定是否扩展到全量 1,743 条\n\n1. **不要把当前 candidate 标记为 strict clean release，也不要直接用它替代正式 chk1 数据门禁。**\n2. **优先用 DeepSeek source-only rewrite 修复 113 条失败样本，保留 124 条通过样本字节不变。**每次只改被确认的 quote 所在 section，并重新跑同一双阶段合同。\n3. **若要宣称整个 chk1 release 语义干净，应继续审核剩余 1,506 条。**目前高失败率说明只审核 changed rows 不足以证明旧 targets 安全。\n4. **如果仍要立刻训练，只能沿用显式的 chk1-only override。**该模型不得自动进入 chk2/chk3/chk4，并应保留本报告的失败 lineage。"
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## 后续需要做的选择\n\n- 严格路线：修复全部 113 条，并对剩余 1,506 条做全量 source-only audit。\n- 分级路线：先强制修复含 major violation 的 34 条，再评估是否接受 79 条 minor-only 样本；这会改变当前零容忍合同，必须单独版本化。\n- 实验路线：在不提升到 chk2 的前提下，用 override 数据做短 smoke，对比严格修复版与当前版的退化和 eval loss。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T00:29:25Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "audited_rows": 237,
+          "provider_errors": 0,
+          "passed_rows": 124,
+          "pass_rate": 0.523207,
+          "failed_rows": 113,
+          "failure_rate": 0.476793,
+          "confirmed_violations": 203,
+          "false_positive_proposals": 33
+        }
+      ],
+      "violation_kind": [
+        {"kind": "Causal", "confirmed_violations": 98, "rows_affected": 70, "major_violations": 26, "minor_violations": 72},
+        {"kind": "Factual", "confirmed_violations": 82, "rows_affected": 65, "major_violations": 8, "minor_violations": 74},
+        {"kind": "Numerical", "confirmed_violations": 23, "rows_affected": 22, "major_violations": 13, "minor_violations": 10}
+      ],
+      "repair_group": [
+        {"repair_group": "Answer unchanged", "total": 36, "passed": 19, "failed": 17, "failure_rate": 0.472222, "ci_low": 0.31986, "ci_high": 0.629941},
+        {"repair_group": "JSON recovered", "total": 42, "passed": 24, "failed": 18, "failure_rate": 0.428571, "ci_low": 0.291177, "ci_high": 0.577938},
+        {"repair_group": "IDs stripped", "total": 159, "passed": 81, "failed": 78, "failure_rate": 0.490566, "ci_low": 0.414006, "ci_high": 0.567571}
+      ],
+      "split_outcomes": [
+        {"split": "eval", "total": 25, "passed": 11, "failed": 14, "failure_rate": 0.56},
+        {"split": "train", "total": 183, "passed": 96, "failed": 87, "failure_rate": 0.47541},
+        {"split": "test", "total": 29, "passed": 17, "failed": 12, "failure_rate": 0.413793}
+      ],
+      "representative_failures": [
+        {"sample_id": "chk1-analysis-2010-01-27-ce48a6682218022d", "section": "think", "kind": "causal", "severity": "major", "violation_count": 6, "major_count": 5, "candidate_quote": "the scope for additional large declines is less than it would have been at a higher level of indebtedness", "explanation": "This counterfactual claim about indebtedness levels and the scope for further declines is not grounded in the point-in-time evidence; no baseline or mechanism is provided."},
+        {"sample_id": "chk1-analysis-2021-04-28-81fc4b723bfb38d0", "section": "answer", "kind": "causal", "severity": "major", "violation_count": 5, "major_count": 4, "candidate_quote": "broadly signaled contained inflation risk and modest growth prospects", "explanation": "The evidence contains no inflation or growth expectation data and no term-premium decomposition. Inferring contained inflation risk and modest growth prospects from the curve shape is an external causal interpretation; the candidate itself acknowledges these components are not separately identified."},
+        {"sample_id": "chk1-analysis-2014-04-30-6464cdc92348378d", "section": "think", "kind": "causal", "severity": "minor", "violation_count": 6, "major_count": 2, "candidate_quote": "Easing in these categories is often relevant for near-term consumer spending, as credit cards and auto loans are common sources of funding for household purchases.", "explanation": "This is an external generalization about consumer spending and funding sources beyond the supplied fact card, introducing a causal channel with no source support."},
+        {"sample_id": "chk1-analysis-2020-03-15-d1c4a92a2c0b32e0", "section": "think", "kind": "causal", "severity": "major", "violation_count": 3, "major_count": 2, "candidate_quote": "investors were receiving a modest but increasing term premium as maturity extended", "explanation": "The fact card records only observed yields at a single date. It contains no information about term premia, investor compensation, or the decomposition of yields. Inferring that the slope of the curve indicates investors were receiving an increasing term premium is a causal and structural claim unsupported by the evidence."},
+        {"sample_id": "chk1-analysis-2021-06-16-c15863021423d908", "section": "answer", "kind": "causal", "severity": "major", "violation_count": 3, "major_count": 2, "candidate_quote": "suggesting that households maintained a cautious posture despite easier credit conditions", "explanation": "The final answer draws a conclusion about household caution from the saving rate alone. The fact card has no household sentiment, borrowing, or spending data, so this directional claim is not supported; the saving rate could reflect income or other factors unrelated to attitudes toward credit."},
+        {"sample_id": "chk1-analysis-2012-09-13-0ef955556d286236", "section": "think", "kind": "factual", "severity": "major", "violation_count": 2, "major_count": 2, "candidate_quote": "When a nominal series rises while its real counterpart falls, the typical implication is that price changes account for much of the difference", "explanation": "This sentence presupposes that the two supplied series are a nominal/real pair. The evidence labels them differently in scope and concept, so the price-change implication is not derivable from the supplied data and overstates what the observed divergence can establish."},
+        {"sample_id": "chk1-analysis-2016-07-27-0f73decc6397543d", "section": "answer", "kind": "numerical", "severity": "major", "violation_count": 2, "major_count": 2, "candidate_quote": "to reach about $3.6 trillion", "explanation": "The fact card reports total consumer credit at 3,623.6983 million dollars, which is about $3.6 billion, not $3.6 trillion. The quoted claim is a factor of 1,000 too large and contradicts the conversion in the candidate's own think section."},
+        {"sample_id": "chk1-analysis-2018-05-02-1902f0eed290ac05", "section": "answer", "kind": "factual", "severity": "major", "violation_count": 2, "major_count": 2, "candidate_quote": "with the yen and the renminbi registering the most notable moves", "explanation": "The March 30 to April 27 data show the yen moved about 2.75% (106.20 to 109.12), the euro about 1.72% (1.2320 to 1.2108), the pound about 1.73% (1.4027 to 1.3785), and the renminbi only about 0.95% (6.2726 to 6.3325). The renminbi's move was the smallest of the four, not one of the two most notable; the euro and pound declines were larger."}
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {
+      "id": "audit_analysis",
+      "label": "DeepSeek audit summary SQL",
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT * FROM audit_summary",
+        "description": "Loads the reviewed top-level DeepSeek audit outcome and scope metrics.",
+        "executed_at": "2026-08-10T00:29:25Z",
+        "tables_used": ["audit_summary"],
+        "filters": ["All 237 rows changed by clean-v2 repair; no sampling"],
+        "metric_definitions": {
+          "failed row": "At least one Stage-B-confirmed factual, numerical, causal or target-leakage violation.",
+          "false positive": "A Stage-A proposed blocking violation rejected by independent try-to-disprove Stage B.",
+          "failure rate": "Failed audited rows divided by all audited rows in the stated group."
+        }
+      }
+    },
+    {
+      "id": "headline_sql",
+      "label": "Headline audit metrics SQL",
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT audited_rows, provider_errors, passed_rows, pass_rate, failed_rows, failure_rate, confirmed_violations, false_positive_proposals FROM headline",
+        "description": "Loads the reviewed headline audit metrics shown in the metric strip.",
+        "executed_at": "2026-08-10T00:29:25Z",
+        "tables_used": ["headline"],
+        "filters": ["One aggregate row over all 237 audited samples"],
+        "metric_definitions": {
+          "pass rate": "Passed rows divided by 237 audited rows.",
+          "failure rate": "Rows with at least one confirmed blocking violation divided by 237."
+        }
+      }
+    },
+    {
+      "id": "violation_kind_sql",
+      "label": "Violation-kind aggregates SQL",
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT kind, confirmed_violations, rows_affected, major_violations, minor_violations FROM violation_kind ORDER BY CASE kind WHEN 'Causal' THEN 1 WHEN 'Factual' THEN 2 ELSE 3 END",
+        "description": "Counts Stage-B-confirmed violations and affected rows by factual error kind.",
+        "executed_at": "2026-08-10T00:29:25Z",
+        "tables_used": ["violation_kind"],
+        "filters": ["Confirmed blocking violations only"]
+      }
+    },
+    {
+      "id": "repair_group_sql",
+      "label": "Repair-group outcomes SQL",
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT repair_group, total, passed, failed, failure_rate, ci_low, ci_high FROM repair_group ORDER BY CASE repair_group WHEN 'Answer unchanged' THEN 1 WHEN 'JSON recovered' THEN 2 ELSE 3 END",
+        "description": "Compares audit failure rates across the three clean-v2 repair groups.",
+        "executed_at": "2026-08-10T00:29:25Z",
+        "tables_used": ["repair_group"],
+        "filters": ["All 237 audited changed rows"],
+        "metric_definitions": {
+          "failure rate": "Failed rows divided by total rows in each repair group.",
+          "CI": "Two-sided 95% Wilson interval for the group failure proportion."
+        }
+      }
+    },
+    {
+      "id": "split_outcomes_sql",
+      "label": "Split outcomes SQL",
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT split, total, passed, failed, failure_rate FROM split_outcomes ORDER BY failure_rate DESC",
+        "description": "Loads exact pass/fail outcomes for train, eval and test changed rows.",
+        "executed_at": "2026-08-10T00:29:25Z",
+        "tables_used": ["split_outcomes"],
+        "filters": ["All audited rows grouped by frozen split"]
+      }
+    },
+    {
+      "id": "representative_failures_sql",
+      "label": "Representative confirmed failures SQL",
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "query": {
+        "engine": "sqlite",
+        "language": "sql",
+        "sql": "SELECT sample_id, section, kind, severity, violation_count, major_count, candidate_quote, explanation FROM representative_failures ORDER BY major_count DESC, violation_count DESC, sample_id ASC LIMIT 8",
+        "description": "Loads eight high-signal confirmed failures ranked by major and total violation count.",
+        "executed_at": "2026-08-10T00:29:25Z",
+        "tables_used": ["representative_failures"],
+        "filters": ["Confirmed failures; top 8 by major_count then violation_count"]
+      }
+    },
+    {
+      "id": "semantic_input",
+      "label": "Immutable 237-row semantic audit input",
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/audits/semantic_audit_input.jsonl",
+      "query": {
+        "engine": "filesystem",
+        "language": "jsonl",
+        "description": "The exact point-in-time prompts, evidence and repaired candidate responses audited by DeepSeek.",
+        "filters": ["All and only clean-v2 changed rows"]
+      }
+    }
+  ]
+}

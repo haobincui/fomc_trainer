@@ -1,0 +1,296 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk1 完成总结：DeepSeek 蒸馏数据、SFT 训练与封存模型",
+    "description": "对 chk1 数据准备、DeepSeek A 生成、质量门、QLoRA SFT、模型合并及下游复用的可复核技术总结。",
+    "generatedAt": "2026-08-05T12:41:40Z",
+    "cards": [
+      {
+        "id": "headline_card",
+        "description": "chk1 最终数据与训练结果。",
+        "dataset": "headline",
+        "sourceId": "audit_notebook",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 2072 AS canonical_rows, 1355 AS sft_train_rows, 0.7877293825 AS eval_loss, 0.7944194704 AS eval_token_accuracy",
+            "description": "Audited headline values reproduced by chk1_audit.ipynb."
+          }
+        },
+        "metrics": [
+          {"label": "Canonical 通过", "field": "canonical_rows"},
+          {"label": "SFT 训练样本", "field": "sft_train_rows"},
+          {"label": "最终 eval loss", "field": "eval_loss"},
+          {"label": "Eval token accuracy", "field": "eval_token_accuracy", "format": "percent"}
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "sft_split_chart",
+        "title": "最终 analysis_sft 划分",
+        "subtitle": "训练 1,355；验证 199；测试 190。",
+        "type": "bar",
+        "dataset": "sft_splits",
+        "sourceId": "split_integrity",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 'train' AS split, 1355 AS rows UNION ALL SELECT 'validation', 199 UNION ALL SELECT 'test', 190",
+            "description": "Final analysis_sft line counts verified against split_integrity.json."
+          }
+        },
+        "encodings": {
+          "x": {"field": "split", "type": "nominal", "label": "划分"},
+          "y": {"field": "rows", "type": "quantitative", "label": "样本数"}
+        }
+      },
+      {
+        "id": "training_loss_chart",
+        "title": "SFT 训练损失轨迹",
+        "subtitle": "记录点损失由 step 1 的 1.706 降至 step 170 的 0.770；最终 eval loss 为 0.788。",
+        "type": "line",
+        "dataset": "training_loss",
+        "sourceId": "trainer_state",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 1 AS step, 1.7059514523 AS loss UNION ALL SELECT 10, 1.6251272625 UNION ALL SELECT 20, 1.3062021255 UNION ALL SELECT 30, 1.0945405960 UNION ALL SELECT 40, 1.0102912903 UNION ALL SELECT 50, 0.9516023636 UNION ALL SELECT 60, 0.8765604019 UNION ALL SELECT 70, 0.8585041046 UNION ALL SELECT 80, 0.8752700806 UNION ALL SELECT 90, 0.8096846581 UNION ALL SELECT 100, 0.7889286995 UNION ALL SELECT 110, 0.7744023323 UNION ALL SELECT 120, 0.7696753502 UNION ALL SELECT 130, 0.7638846397 UNION ALL SELECT 140, 0.7705518723 UNION ALL SELECT 150, 0.7727819443 UNION ALL SELECT 160, 0.7809061050 UNION ALL SELECT 170, 0.7696318626",
+            "description": "Training loss records extracted from trainer_state.json."
+          }
+        },
+        "encodings": {
+          "x": {"field": "step", "type": "quantitative", "label": "Global step"},
+          "y": {"field": "loss", "type": "quantitative", "label": "训练损失"}
+        }
+      }
+    ],
+    "tables": [
+      {
+        "id": "lifecycle_table",
+        "title": "数据生命周期计数",
+        "subtitle": "获取、规范准入和最终任务划分是不同层级，不能混为同一个分母。",
+        "dataset": "lifecycle",
+        "sourceId": "audit_notebook",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 'DeepSeek 获取' AS stage, 2115 AS accepted, 2 AS excluded, '2,117 selected' AS note UNION ALL SELECT 'Canonical 准入', 2072, 45, '2 invalid + 43 empty components' UNION ALL SELECT 'SFT train', 1355, 0, '1190 SFT-only + 165 shared' UNION ALL SELECT 'SFT validation', 199, 0, 'full canonical eval' UNION ALL SELECT 'SFT test', 190, 0, 'held out from training'",
+            "description": "Audited lifecycle counts."
+          }
+        },
+        "columns": [
+          {"field": "stage", "label": "阶段", "type": "text"},
+          {"field": "accepted", "label": "保留/通过", "type": "number"},
+          {"field": "excluded", "label": "排除", "type": "number"},
+          {"field": "note", "label": "口径", "type": "text"}
+        ]
+      },
+      {
+        "id": "audit_table",
+        "title": "最终基础发布质量门",
+        "subtitle": "8 项审核均为 passed；这是数据与契约审核，不是模型任务效果评测。",
+        "dataset": "audit_gates",
+        "sourceId": "base_release_manifest",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 'schema' AS gate, 'passed' AS status, 'schema contract' AS meaning UNION ALL SELECT 'token_budget','passed','token budget' UNION ALL SELECT 'reference_leakage','passed','leakage checks' UNION ALL SELECT 'point_in_time','passed','point-in-time binding' UNION ALL SELECT 'split_integrity','passed','split integrity' UNION ALL SELECT 'target_consistency','passed','target consistency' UNION ALL SELECT 'encoding','passed','encoding' UNION ALL SELECT 'teacher_grounding','passed','teacher grounding'",
+            "description": "Statuses read from the eight immutable audit JSON files."
+          }
+        },
+        "columns": [
+          {"field": "gate", "label": "审核", "type": "text"},
+          {"field": "status", "label": "状态", "type": "text"},
+          {"field": "meaning", "label": "覆盖范围", "type": "text"}
+        ]
+      },
+      {
+        "id": "eval_table",
+        "title": "逐 epoch 验证结果",
+        "dataset": "evaluation",
+        "sourceId": "trainer_state",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 1 AS epoch, 85 AS step, 0.8198274374 AS eval_loss, 0.7885424054 AS token_accuracy UNION ALL SELECT 2, 170, 0.7877293825, 0.7944194704",
+            "description": "Epoch evaluation entries extracted from trainer_state.json."
+          }
+        },
+        "columns": [
+          {"field": "epoch", "label": "Epoch", "type": "number"},
+          {"field": "step", "label": "Step", "type": "number"},
+          {"field": "eval_loss", "label": "Eval loss", "type": "number"},
+          {"field": "token_accuracy", "label": "Token accuracy", "format": "percent"}
+        ]
+      },
+      {
+        "id": "artifact_table",
+        "title": "封存产物与血缘",
+        "dataset": "artifacts",
+        "sourceId": "run_manifest",
+        "source": {
+          "query": {
+            "engine": "sqlite",
+            "sql": "SELECT 'foundation' AS artifact, '32.13 GB' AS size, 'bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11' AS sha256 UNION ALL SELECT 'adapter directory','897.14 MB','ba876793b2266599ef6209c7b8bd1a3a18c7491fb5d51d2b6483e00b50ae9635' UNION ALL SELECT 'adapter_model.safetensors','167.83 MB','b1c467ae48e6f94c543b0b1d6b08fe5e15e6029426f8370e9c5d9336ed15c29e' UNION ALL SELECT 'merged chk1','16.08 GB','9b355f903b7722f274bca1bc226bf75c1da4ebe449de726174bd1d054ff8948c' UNION ALL SELECT 'training receipt','-','168268b988c115e53a6b84874cfccc8a24e782524745c216be47dc44249c6340' UNION ALL SELECT 'merge receipt','-','2fac0c5eab605541db6bdcf6f81561bc4c3775f733dea3a0051dcf5c7a3e6b08'",
+            "description": "Artifact fingerprints recorded in receipts and run_manifest.json."
+          }
+        },
+        "columns": [
+          {"field": "artifact", "label": "产物", "type": "text"},
+          {"field": "size", "label": "大小", "type": "text"},
+          {"field": "sha256", "label": "SHA-256", "type": "text"}
+        ]
+      }
+    ],
+    "sources": [
+      {"id": "audit_notebook", "label": "本报告可执行审计 notebook", "path": "docs/summary/20260805T124140Z/chk1_audit.ipynb"},
+      {"id": "generation_handoff", "label": "DeepSeek 全量生成 handoff", "path": "output/data/retrain_v2/chk1/generation_full_v7/generation_handoff.json"},
+      {"id": "quality_report", "label": "Canonical 数据质量报告", "path": "output/data/retrain_v2/chk1/canonical_releases/chk1_full_v7_automated_v2_20260804/audit/quality_report.json"},
+      {"id": "base_release_manifest", "label": "Analysis base release manifest", "path": "dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/base_release_manifest.json"},
+      {"id": "split_integrity", "label": "数据划分完整性审核", "path": "dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/audits/split_integrity.json"},
+      {"id": "token_budget", "label": "训练 token budget 审核", "path": "dataset/processed/retrain_v2/analysis_base_full_v7_automated_v3_20260804/audits/token_budget.json"},
+      {"id": "resolved_config", "label": "chk1 解析后训练配置", "path": "output/training/retrain_v2/retrain_v2_full_v7_automated_v5_20260804/resolved_configs/chk1.yaml"},
+      {"id": "all_results", "label": "chk1 汇总训练结果", "path": "output/training/retrain_v2/retrain_v2_full_v7_automated_v5_20260804/adapters/chk1/all_results.json"},
+      {"id": "trainer_state", "label": "Trainer 状态与日志历史", "path": "output/training/retrain_v2/retrain_v2_full_v7_automated_v5_20260804/adapters/chk1/trainer_state.json"},
+      {"id": "run_manifest", "label": "封存 run manifest", "path": "output/training/retrain_v2/retrain_v2_full_v7_automated_v5_20260804/run_manifest.json"},
+      {"id": "merge_attestation", "label": "模型合并证明", "path": "output/training/retrain_v2/retrain_v2_full_v7_automated_v5_20260804/merged/chk1/merge_attestation.json"},
+      {"id": "downstream_import", "label": "下游 chk1 导入证明示例", "path": "output/training/retrain_v2/retrain_v2_full_v7_automated_v9_20260804/imports/chk1.json"}
+    ],
+    "blocks": [
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "body": "## 技术摘要\n\nchk1 已完成并封存。DeepSeek `deepseek-v4-pro` 从 2,117 个候选问题中返回 2,115 个可落盘 A；canonical 准入进一步排除 43 个空组件响应，最终保留 2,072 个高完整性 Q-A。基础发布按稳定哈希把训练样本分配给 SFT 与后续 GRPO：chk1 SFT 实际使用 1,355 条训练、199 条验证；190 条测试数据未进入训练。\n\nSFT 以 `DeepSeek-R1-Distill-Llama-8B` 为父模型，使用两张 NVIDIA A30、4-bit NF4 QLoRA 和两轮 completion-only 训练。最终 `eval_loss=0.787729`、验证 token accuracy `0.794419`；LoRA 已合并并以 SHA-256 封存。\n\n**结论边界：**现有证据足以确认数据契约、训练执行、合并及下游复用完成，但尚无独立的任务级生成评测，不能仅凭 loss 或 token accuracy 宣称政策分析质量已经达到某个业务阈值。"
+      },
+      {"id": "headline", "type": "metric-strip", "cardIds": ["headline_card"]},
+      {
+        "id": "key_findings",
+        "type": "markdown",
+        "body": "## 关键发现\n\n- DeepSeek 获取成功率为 **99.91%**（2,115 / 2,117）；仅 2 条因返回结构无效在获取阶段排除。\n- Canonical 准入共排除 45 条：上述 2 条无效返回，加 43 条 `empty_response_component`；最终 SFT 数据中空响应和缺失推理边界均为 0。\n- 1683 条 canonical 训练样本没有丢失：稳定哈希分桶为 1190 SFT-only、328 GRPO-only、165 shared；因此 SFT train=1190+165=1355，GRPO train=328+165=493。\n- 两轮验证均改善：eval loss 从 0.819827 降至 0.787729，token accuracy 从 78.85% 升至 79.44%。\n- merged 模型已被 v6、v7、v8、v9 四个后续运行按同一 SHA-256 导入，说明封存与复用链路成立。"
+      },
+      {"id": "sft_split", "type": "chart", "chartId": "sft_split_chart"},
+      {"id": "lifecycle", "type": "table", "tableId": "lifecycle_table"},
+      {
+        "id": "scope",
+        "type": "markdown",
+        "body": "## 范围、数据与指标定义\n\n本报告只覆盖 chk1：从 point-in-time FOMC 证据构造问题和 provided data、调用教师模型生成 A、canonical 准入、SFT 数据发布、QLoRA 训练、adapter 合并与模型封存。**不包含 chk2 GRPO 训练，也不把 Qwen 当作 chk1 教师或 verifier。**\n\n- `selected`：准备阶段送入 DeepSeek 获取队列的样本数。\n- `accepted`（generation）：provider 输出满足最小结构合同并落盘的样本数。\n- `canonical admitted`：排除空 analysis/answer 等零容忍问题后的规范样本数。\n- `train/eval/test`：按 FOMC meeting 分离的源划分；基础发布把 eval 映射为训练配置中的 validation。\n- `train_loss`：Trainer 汇总的两轮 completion-token 交叉熵平均值。\n- `eval token accuracy`：teacher-forced completion token 的逐 token 准确率，不等同于自由生成回答的任务准确率。"
+      },
+      {
+        "id": "teacher",
+        "type": "markdown",
+        "body": "## A 的蒸馏获取\n\n教师为 DeepSeek `deepseek-v4-pro`，provider base origin 为 `https://api.deepseek.com`。实际并发为 **8**，`reasoning_effort=high`、thinking enabled、`response_format=json_object`、`max_tokens=4096`、超时 180 秒、最多重试 3 次。该模型不接收 temperature/top_p。\n\nA 的映射合同是：`analysis = message.reasoning_content`，`answer = message.content.answer`，SFT response 组装为 `analysis + '\\n</think>\\n' + answer`。当前获取链路是 **provider output contract only**：没有 critic、verifier、reward 或 repair pass；响应原样缓存后进入规范准入。API key 只通过 `DEEPSEEK_API_KEY` 环境变量引用，本报告不读取也不包含明文密钥。\n\nQwen 的角色被限定在后续 GRPO 的 LLM reward/judge，不参与 chk1 A 获取或 chk1 SFT 标签生成。"
+      },
+      {"id": "quality", "type": "table", "tableId": "audit_table"},
+      {
+        "id": "token_budget_notes",
+        "type": "markdown",
+        "body": "### Token 预算与无截断准入\n\n训练合同为 prompt ≤ 3,072、总长度 ≤ 7,168，completion 不设独立上限，并禁止输入截断。最终 `analysis_sft` 最大观测为 prompt 2,735、completion 4,464、total 6,855；全部在预算内。基础发布使用与 chk0/训练一致的本地 tokenizer bundle 重新计数并写入审计。"
+      },
+      {
+        "id": "model_training",
+        "type": "markdown",
+        "body": "## 模型与训练细节\n\n| 项目 | 最终配置 |\n|---|---|\n| 父模型 | `models/DeepSeek-R1-Distill-Llama-8B` |\n| 精度/注意力 | bfloat16；`flex_attention`；TF32 enabled |\n| 量化 | 4-bit NF4、double quant、bf16 compute/storage |\n| PEFT | LoRA r=32、alpha=64、dropout=0.05 |\n| LoRA targets | q/k/v/o、gate/up/down projection |\n| 数据 | train 1,355；validation 199；test 190 未训练 |\n| 序列/损失 | max_length 7,168；packing=false；completion_only_loss=true |\n| 优化器 | paged_adamw_8bit；LR 5e-5；cosine；warmup 5%；weight decay 0.01 |\n| 训练 | 2 epochs；per-device batch 1；grad accumulation 8；effective batch 16 |\n| 并行 | DDP world size 2；2 × NVIDIA A30 |\n| 稳定性 | gradient checkpointing；max grad norm 1.0；seed/data_seed 42 |\n| Kernel | Liger enabled；activation offloading disabled；use_cache=false |\n\n总计 170 global steps，训练运行约 **2 小时 11 分 31 秒**。checkpoint 分别保存于 step 85 和 step 170。"
+      },
+      {"id": "training_loss", "type": "chart", "chartId": "training_loss_chart"},
+      {"id": "eval", "type": "table", "tableId": "eval_table"},
+      {
+        "id": "model_artifacts",
+        "type": "markdown",
+        "body": "## 模型产物、合并与复用\n\n完成 run 为 `retrain_v2_full_v7_automated_v5_20260804`，chk1 于 `2026-08-04T14:33:00Z` 标记为 `sealed`。训练 receipt、merge receipt、adapter 与 merged 模型各自有独立 SHA-256。\n\n合并证明记录 `peft_merge_and_unload_in_process_v1`：合并前 224 个 LoRA 模块，合并后残留 LoRA 模块和 state keys 均为 0；合并参数量 8,030,261,248，291 个参数 tensor。该证明只覆盖结构性 in-process merge，**没有**宣称 8B CPU 合并前后已做端到端 logits 等价测试。"
+      },
+      {"id": "artifacts", "type": "table", "tableId": "artifact_table"},
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## 审计方法\n\n报告数字来自不可变 handoff、质量审核、解析后训练配置、Trainer 状态、receipts、merge attestation 和下游 import attestation。随报告提供的 `chk1_audit.py` 与已执行 `chk1_audit.ipynb` 会重新读取 JSON/JSONL、复算行数和关键关系，并用断言固定以下不变量：2072 canonical admitted；SFT 1355/199/190；8 项审核全 passed；训练 sealed 且 global step 170；merged SHA 与 v6–v9 导入记录一致。\n\n审计为只读离线复算，不访问 DeepSeek、不读取密钥、不加载 8B 权重。"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## 局限与稳健性边界\n\n- `eval_loss` 与 token accuracy 是 teacher-forced 指标，可能受模板和教师措辞分布影响；尚不能证明自由生成时的事实性、政策语气、推理完整性或拒答行为。\n- 当前无训练前基线、无同一测试集上的 before/after 生成对比，也无人工盲评，因此不能量化 SFT 的净提升。\n- 190 条 test 已隔离，但本次完成证据未显示对其执行最终生成评测；应继续保持其未触碰状态直至评测方案冻结。\n- DeepSeek provider revision 标记为 `provider-current`，不是可下载的固定权重；可复现性主要依赖请求/响应缓存、模型绑定哈希和生成 provenance。\n- 无 critic/verifier 是按当前任务要求设计的获取路径；数据质量依赖 provider 合同与后续 deterministic admission gates。"
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## 建议下一步\n\n1. 在冻结的 190 条 test 上建立自由生成评测：结构有效率、证据引用正确率、时间泄漏率、关键结论覆盖率和人工偏好。\n2. 用父模型与 chk1 merged 模型做同 prompt、同 decoding 的成对对照，报告置信区间和失败样例，而不是只报平均 loss。\n3. 对高风险 topic（例如 generation/canonical 阶段接受率较低的 Exchange Rate、Fed Balance Sheet）做分层切片评估。\n4. 如继续 chk2 GRPO，严格使用已封存 merged SHA，并让 Qwen reward/judge 的版本、prompt、打分分布和校准集单独留痕。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## 待回答问题\n\n- chk1 的任务级验收阈值是什么：事实性、证据扎根、政策写作风格还是综合人工偏好？\n- test 评测是否允许一次性揭盲，还是需要先从 validation 冻结 decoding 与评分 rubric？\n- 下游 GRPO 是否要保留 165 条 shared 样本，还是为更严格的阶段隔离重新定义数据策略？\n- 是否需要补做 adapter 与 merged 模型的定量 logits/生成一致性抽样测试？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-05T12:41:40Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {"canonical_rows": 2072, "sft_train_rows": 1355, "eval_loss": 0.7877293825, "eval_token_accuracy": 0.7944194704}
+      ],
+      "sft_splits": [
+        {"split": "train", "rows": 1355},
+        {"split": "validation", "rows": 199},
+        {"split": "test", "rows": 190}
+      ],
+      "lifecycle": [
+        {"stage": "DeepSeek 获取", "accepted": 2115, "excluded": 2, "note": "2,117 个 selected；仅检查 provider 输出合同"},
+        {"stage": "Canonical 准入", "accepted": 2072, "excluded": 45, "note": "2 无效返回 + 43 空 response component"},
+        {"stage": "SFT train", "accepted": 1355, "excluded": 0, "note": "1190 SFT-only + 165 shared"},
+        {"stage": "SFT validation", "accepted": 199, "excluded": 0, "note": "完整 canonical eval"},
+        {"stage": "SFT test", "accepted": 190, "excluded": 0, "note": "隔离，未进入训练"}
+      ],
+      "audit_gates": [
+        {"gate": "schema", "status": "passed", "meaning": "字段、类型与 accepted/excluded 结构"},
+        {"gate": "token_budget", "status": "passed", "meaning": "live tokenizer 重算及 7168 总长度合同"},
+        {"gate": "reference_leakage", "status": "passed", "meaning": "输入中无 target marker/目标复制"},
+        {"gate": "point_in_time", "status": "passed", "meaning": "cutoff、evidence lineage 与 preparation replay"},
+        {"gate": "split_integrity", "status": "passed", "meaning": "meeting/sample 跨源划分重叠为 0"},
+        {"gate": "target_consistency", "status": "passed", "meaning": "SFT/GRPO 投影与目标边界一致"},
+        {"gate": "encoding", "status": "passed", "meaning": "strict UTF-8、无 NUL/替换字符/非有限数"},
+        {"gate": "teacher_grounding", "status": "passed", "meaning": "教师输出绑定请求、缓存与 provenance"}
+      ],
+      "training_loss": [
+        {"step": 1, "loss": 1.7059514523},
+        {"step": 10, "loss": 1.6251272625},
+        {"step": 20, "loss": 1.3062021255},
+        {"step": 30, "loss": 1.0945405960},
+        {"step": 40, "loss": 1.0102912903},
+        {"step": 50, "loss": 0.9516023636},
+        {"step": 60, "loss": 0.8765604019},
+        {"step": 70, "loss": 0.8585041046},
+        {"step": 80, "loss": 0.8752700806},
+        {"step": 90, "loss": 0.8096846581},
+        {"step": 100, "loss": 0.7889286995},
+        {"step": 110, "loss": 0.7744023323},
+        {"step": 120, "loss": 0.7696753502},
+        {"step": 130, "loss": 0.7638846397},
+        {"step": 140, "loss": 0.7705518723},
+        {"step": 150, "loss": 0.7727819443},
+        {"step": 160, "loss": 0.7809061050},
+        {"step": 170, "loss": 0.7696318626}
+      ],
+      "evaluation": [
+        {"epoch": 1, "step": 85, "eval_loss": 0.8198274374, "token_accuracy": 0.7885424054},
+        {"epoch": 2, "step": 170, "eval_loss": 0.7877293825, "token_accuracy": 0.7944194704}
+      ],
+      "artifacts": [
+        {"artifact": "父模型目录", "size": "32.13 GB", "sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11"},
+        {"artifact": "Adapter 目录（含 checkpoints）", "size": "897.14 MB", "sha256": "ba876793b2266599ef6209c7b8bd1a3a18c7491fb5d51d2b6483e00b50ae9635"},
+        {"artifact": "最终 adapter_model.safetensors", "size": "167.83 MB", "sha256": "b1c467ae48e6f94c543b0b1d6b08fe5e15e6029426f8370e9c5d9336ed15c29e"},
+        {"artifact": "Merged chk1（4 shards）", "size": "16.08 GB", "sha256": "9b355f903b7722f274bca1bc226bf75c1da4ebe449de726174bd1d054ff8948c"},
+        {"artifact": "Training receipt lineage", "size": "—", "sha256": "168268b988c115e53a6b84874cfccc8a24e782524745c216be47dc44249c6340"},
+        {"artifact": "Merge receipt lineage", "size": "—", "sha256": "2fac0c5eab605541db6bdcf6f81561bc4c3775f733dea3a0051dcf5c7a3e6b08"}
+      ]
+    }
+  },
+  "sources": [],
+  "package_info": {
+    "originUrl": "artifact://chk1-completion-summary-20260805T124140Z",
+    "controls": {"edit": false, "refresh": false}
+  }
+}

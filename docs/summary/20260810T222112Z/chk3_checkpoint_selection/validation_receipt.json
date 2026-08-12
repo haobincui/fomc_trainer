@@ -1,0 +1,24 @@
+{
+  "schema_version": "chk3-checkpoint-selection-validation-v1",
+  "status": "passed",
+  "validated_at": "2026-08-10T22:31:01Z",
+  "selected_checkpoint": 250,
+  "checks": {
+    "hash_bindings_verified": 10,
+    "probe_rows_verified": 3,
+    "all_selected_probe_rows_quality_valid": true,
+    "selected_eval_loss_is_global_minimum": true,
+    "checkpoint_230_hard_failure_reproduced": true,
+    "artifact_structure_valid": true,
+    "portable_report_packaged": true
+  },
+  "recomputed_metrics": {
+    "mean_token_4gram_repetition": 0.13928234666666664,
+    "max_token_4gram_repetition": 0.17364532
+  },
+  "limitations": {
+    "browser_render_verification": "not_run_browser_unavailable",
+    "semantic_certification": false,
+    "reason": "The frozen probe contains three redacted deterministic cases and does not independently grade all nonnumeric facts, causal claims, or prose quality."
+  }
+}

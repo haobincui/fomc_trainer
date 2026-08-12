@@ -1,0 +1,150 @@
+{
+  "schema_version": "chk2-low-resume-initial-monitoring-v1",
+  "recorded_at_utc": "2026-08-10T14:59:53Z",
+  "status": "passed_and_continuing",
+  "run_kind": "versioned_chk2_candidate_trial",
+  "run_name": "chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "tmux_session": "fomc_chk2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "gpu": {
+    "physical_device": 1,
+    "world_size": 1,
+    "local_qwen_judge_started": false
+  },
+  "resume": {
+    "source_checkpoint": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/checkpoint-1",
+    "source_global_step": 1,
+    "source_judge_effort": "high",
+    "first_low_effort_global_step": 2,
+    "comparability_note": "This is a mixed-Judge trial: checkpoint-1 was scored with high effort and resumed steps are scored with low effort. It is not a homogeneous low-vs-high ablation."
+  },
+  "judge_contract": {
+    "reward_name": "grounded_analysis_v3_deepseek_low",
+    "provider": "deepseek",
+    "api": "responses",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "low",
+    "max_output_tokens": 16384,
+    "timeout_seconds": 420,
+    "max_total_attempts": 2,
+    "group_size": 4
+  },
+  "benchmark": {
+    "status": "passed",
+    "logical_requests": 10,
+    "candidate_judgments": 40,
+    "first_attempt_successes": 10,
+    "latency_median_seconds": 26.69,
+    "latency_p95_seconds": 43.83,
+    "high_comparison_reward_mae": 0.03515625,
+    "high_comparison_reward_max_abs_delta": 0.105,
+    "high_comparison_pairwise_order_agreement": 1.0,
+    "benchmark_summary_sha256": "30172fd9d30579b0d3d8dd1d0ed27e651eaef9b75284b6167c53f89d5ea24794",
+    "benchmark_manifest_sha256": "4b126d5e783ac94dd1e7824ece1e02336fd2da17d46a4e0c8e65aad66475abc6"
+  },
+  "initial_runtime_validation": {
+    "validated_global_steps": [
+      2,
+      3
+    ],
+    "logical_requests": 4,
+    "candidate_rewards": 16,
+    "successful_logical_requests": 4,
+    "first_attempt_successes": 4,
+    "provider_errors": 0,
+    "schema_or_mapping_errors": 0,
+    "target_leakage_count": 0,
+    "rejected_candidate_count": 0,
+    "nonfinite_reward_count": 0,
+    "reward_min": 0.14961645746164587,
+    "reward_max": 0.9774117647058824,
+    "reward_mean": 0.6204298370749409,
+    "request_latency_seconds": [
+      46.54481208790094,
+      33.95234971586615,
+      77.20809578383341,
+      40.85284205386415
+    ],
+    "request_attempts": [
+      1,
+      1,
+      1,
+      1
+    ],
+    "request_input_tokens": [
+      5964,
+      5558,
+      5780,
+      5462
+    ],
+    "request_output_tokens": [
+      6090,
+      4362,
+      10956,
+      5789
+    ],
+    "request_reasoning_tokens": [
+      5685,
+      3602,
+      9768,
+      4714
+    ],
+    "max_output_budget_utilization": 0.668701171875,
+    "reward_log_first_16_rows_sha256": "7f954fec1c24e3bbc70d563253cdf1f0bba6e295dfce0ac00584e5b1a6104c6a"
+  },
+  "steps": {
+    "2": {
+      "checkpoint_complete": true,
+      "checkpoint_file_count": 12,
+      "checkpoint_bytes": 524988025,
+      "trainer_state_sha256": "6e570e055299291b855200a1aa0be5c408d24aa78c5138ee91702b2e2acff7cc",
+      "loss": 0.2188,
+      "reward_mean": 0.7790350317955017,
+      "reward_std": 0.3086796998977661,
+      "grad_norm": 1.0726351737976074,
+      "completion_mean_tokens": 601.125,
+      "completion_max_tokens": 797.5,
+      "completion_clipped_ratio": 0.0,
+      "frac_reward_zero_std": 0.0,
+      "zero_gradient_window_fraction": 0.0,
+      "step_time_seconds": 251.10179961891845
+    },
+    "3": {
+      "checkpoint_complete": true,
+      "checkpoint_file_count": 12,
+      "checkpoint_bytes": 524989097,
+      "trainer_state_sha256": "6c1f65f563bace276affd95a44444d8328bd180d297b2a1321a3edbc28afc052",
+      "loss": 0.0007,
+      "reward_mean": 0.4618246555328369,
+      "reward_std": 0.28504953533411026,
+      "grad_norm": 1.1254398822784424,
+      "completion_mean_tokens": 518.5,
+      "completion_max_tokens": 648.5,
+      "completion_clipped_ratio": 0.0,
+      "frac_reward_zero_std": 0.0,
+      "zero_gradient_window_fraction": 0.0,
+      "step_time_seconds": 263.0430992823094
+    }
+  },
+  "runtime_safety": {
+    "oom": false,
+    "nan": false,
+    "context_error": false,
+    "judge_final_failure": false,
+    "candidate_group_error": false,
+    "traceback": false,
+    "peak_allocated_gib": 11.515388488769531,
+    "peak_reserved_gib": 12.224609375
+  },
+  "artifacts": {
+    "config": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810.yaml",
+    "config_sha256": "623ab06227d1c9b445b41ed1b2970559f552cd219ce4ea6db37afe54fbce4185",
+    "launch_receipt_sha256": "3d82fde3ead7cce7a2b0329627a7bf83ed5725c03377c3e3e4ab57e419ecd29d",
+    "loss_history_first_2_rows_sha256": "db39a6852ece3077de292900fdbdae8c06ff4ee91a66d54473217326fcb97ddc",
+    "runtime_safety_first_2_rows_sha256": "4183b60238e6987fbc8a9f650641acb71ed6343bc9388c31729833b9795cb00c"
+  },
+  "continuation": {
+    "training_left_running": true,
+    "next_observed_state": "step_4_in_progress",
+    "automatic_chk3_or_chk4_promotion_allowed": false
+  }
+}

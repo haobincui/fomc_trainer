@@ -1,0 +1,14 @@
+{
+  "algorithm": "sha256",
+  "canonical_scorecard": {
+    "path": "output/evaluation/main/chk3_checkpoint_selection_cp318_20260811_v1/six_metrics/chk0_chk1_chk3_cp318_n12_cpu_v1.json",
+    "file_sha256": "acaea49f4865f080623bf42c2397abe4b18fc84411e7800463e08bbc0ae6b84a",
+    "payload_sha256": "2828a7c6d94ec586b66c7edae12f9f31674cc528bcd346198c448d45b1322e72"
+  },
+  "report_artifacts": {
+    "artifact.json": "3510403d9819f7d5ab610967d87a5e5624f7cc2aea1f5023f915ead2e30c0b5e",
+    "report.html": "65687f4a9ee06539fa6125a551656b1465f19fe63492e2cdeb4070beae48a496",
+    "source_notes.json": "7bbcf54f1a2e0d325a0ff132bfa320924dafbee37af4556865e6ce1d1258359a",
+    "delivery_receipt.json": "375c0522534f9efa1dc10d1917c9489a8fad2bfea8eed8c21a7b6117e10cd029"
+  }
+}

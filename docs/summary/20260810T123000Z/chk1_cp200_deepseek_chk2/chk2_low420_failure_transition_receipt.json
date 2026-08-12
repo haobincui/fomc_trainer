@@ -1,0 +1,48 @@
+{
+  "schema_version": "chk2-low420-failure-transition-v1",
+  "recorded_at_utc": "2026-08-10T15:08:00Z",
+  "status": "failed_closed",
+  "run_id": "chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+  "judge_contract": {
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "low",
+    "timeout_seconds": 420,
+    "max_total_attempts": 2,
+    "max_output_tokens": 16384
+  },
+  "failure": {
+    "optimizer_step_in_progress": 5,
+    "completed_candidate_groups_in_step": 1,
+    "failed_candidate_group_attempts": 2,
+    "exception": "JudgeInfrastructureError",
+    "sanitized_error_class": "_RetryableProviderResponseError",
+    "oom": false,
+    "nan": false,
+    "context_error_reported": false,
+    "provider_error_subtype_available": false,
+    "note": "The sanitized error class covers timeout, incomplete output, missing reasoning and strict response-schema failures; the existing log cannot distinguish these causes."
+  },
+  "last_complete_checkpoint": {
+    "path": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/adapters/chk2/checkpoint-4",
+    "global_step": 4,
+    "file_count": 12,
+    "total_bytes": 524990172,
+    "directory_sha256": "24813c7aaad1adb53cc9c39e6f55ede0569598602c2a54ca60b11be27aa50083",
+    "adapter_sha256": "3131d8d1c1c871d004ca739bb389a176e107fc04170f5474ee0ba9747c3c5a98",
+    "trainer_state_sha256": "3d02a3c44c750911e3937944ef9a6af3e8906c4174d0214205dbfb279f285d20",
+    "complete_optimizer_scheduler_rng_state": true
+  },
+  "source_hashes": {
+    "config_sha256": "623ab06227d1c9b445b41ed1b2970559f552cd219ce4ea6db37afe54fbce4185",
+    "final_log_sha256": "7b0e8d9bdc53b3aabe309d290546deb35c64e3f7e1d81b31b845605366fcb42f",
+    "reward_log_sha256": "1f87c614398e3dfb490c3899d76e5aae33c19744591afdb3a0b8396917578e4a"
+  },
+  "transition": {
+    "requested_timeout_seconds": 600,
+    "resume_from_global_step": 4,
+    "fresh_output_required": true,
+    "same_reward_math": true,
+    "same_reasoning_effort": true,
+    "automatic_chk3_or_chk4_promotion_allowed": false
+  }
+}

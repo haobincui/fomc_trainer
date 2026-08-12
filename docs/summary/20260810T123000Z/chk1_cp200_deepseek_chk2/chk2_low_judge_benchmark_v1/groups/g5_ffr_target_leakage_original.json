@@ -1,0 +1,261 @@
+{
+  "base_group_id": "g5_ffr_target_leakage",
+  "binding": {
+    "base_group_id": "g5_ffr_target_leakage",
+    "binding_sha256": "62988221212e96eff3c8d31dbffcf344b63e39d1f2544764a422e9c9d6e28a40",
+    "candidate_sha256": [
+      "8f67bb7ed585bce5eecb8badbe47a448d2a29bfa1cb1d0a043cd342efab6962d",
+      "5d1be99063497940bf8405cead6aca1104e312a5d577de34b9e64a9298fb3898",
+      "a07008292c52eae47fa5e6780ee98ec6d3a1ee7d24e7afb44e84c24da8031538",
+      "f291c4202d60f7c01493480a97b15611139a2a71668a9fcfbabd80ab98ca0b29"
+    ],
+    "completion_sha256": [
+      "dcaa4a0192160fed02ea68aaf89a9e63dae2ac23c2419cd7ade0984af0d9e444",
+      "9869cc89d2c00f83143f91135a28d4310cde36323c8fd588b1f924a2d17adaa0",
+      "b2fce39024db15e01aacfbc304bdf980fa1d4a430818db8f43e4f141f13662fa",
+      "34d6d859fa883fd4e147c423e5ad8929f3302a14c1d4e70d0d1e35bc0975e991"
+    ],
+    "evidence_sha256": "d1c31ab176d91554e5b839db0c24a703db21b4e28214621e314e78616e1e6531",
+    "group_id": "g5_ffr_target_leakage_original",
+    "instructions_sha256": "7b97474c804bbe40e5b8b75b03acc417e80c80454cec18bb1aed93d7b41f2b3f",
+    "labels": [
+      "ffr_supported",
+      "ffr_think_target_leakage",
+      "ffr_answer_target_leakage",
+      "ffr_no_leakage_caveat"
+    ],
+    "max_output_tokens": 16384,
+    "model": "deepseek-v4-flash",
+    "order_variant": "original",
+    "reasoning_effort": "low",
+    "schema_sha256": "774b4ab6588681f71cd503f84883491cfb4823213f1006ebea49e1ee172ef0ea",
+    "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+    "source_kind": "deterministic_diagnostic"
+  },
+  "candidates": [
+    {
+      "candidate_id": "candidate_0",
+      "candidate_sha256": "8f67bb7ed585bce5eecb8badbe47a448d2a29bfa1cb1d0a043cd342efab6962d",
+      "completion_sha256": "dcaa4a0192160fed02ea68aaf89a9e63dae2ac23c2419cd7ade0984af0d9e444",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 1.0,
+        "reasoning_efficiency": 0.9090909090909092,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "ffr_supported",
+      "penalties": {
+        "applied": 0.0,
+        "major_answer_error": 0,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": false,
+        "unbounded": 0.0
+      },
+      "reasoning_repetition_rate": 0.022727272727272707,
+      "reasoning_tokens": 47,
+      "reward": 0.9954545454545455,
+      "reward_before_penalty": 0.9954545454545455,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 4,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 4
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": []
+    },
+    {
+      "candidate_id": "candidate_1",
+      "candidate_sha256": "5d1be99063497940bf8405cead6aca1104e312a5d577de34b9e64a9298fb3898",
+      "completion_sha256": "9869cc89d2c00f83143f91135a28d4310cde36323c8fd588b1f924a2d17adaa0",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 0.7375,
+        "reasoning_efficiency": 1.0,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "ffr_think_target_leakage",
+      "penalties": {
+        "applied": 0.0,
+        "major_answer_error": 0,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": true,
+        "unbounded": 0.0
+      },
+      "reasoning_repetition_rate": 0.0,
+      "reasoning_tokens": 12,
+      "reward": 0.0,
+      "reward_before_penalty": 0.8687500000000001,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 2,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 1
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": [
+        {
+          "candidate_quote_chars": 64,
+          "candidate_quote_sha256": "081e79acdd878c92a1f0b3454b449c0282f594d312c952635773c86727b993fb",
+          "kind": "target_leakage",
+          "section": "think",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "candidate_id": "candidate_2",
+      "candidate_sha256": "a07008292c52eae47fa5e6780ee98ec6d3a1ee7d24e7afb44e84c24da8031538",
+      "completion_sha256": "b2fce39024db15e01aacfbc304bdf980fa1d4a430818db8f43e4f141f13662fa",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 0.625,
+        "reasoning_efficiency": 0.9090909090909092,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "ffr_answer_target_leakage",
+      "penalties": {
+        "applied": 0.0,
+        "major_answer_error": 0,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": true,
+        "unbounded": 0.0
+      },
+      "reasoning_repetition_rate": 0.022727272727272707,
+      "reasoning_tokens": 47,
+      "reward": 0.0,
+      "reward_before_penalty": 0.8079545454545455,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 1,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 0
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": [
+        {
+          "candidate_quote_chars": 82,
+          "candidate_quote_sha256": "b11905952a0287386564dacff2634d956a03d0f76b99af760edb3cbc01090dd4",
+          "kind": "target_leakage",
+          "section": "answer",
+          "severity": "major"
+        }
+      ]
+    },
+    {
+      "candidate_id": "candidate_3",
+      "candidate_sha256": "f291c4202d60f7c01493480a97b15611139a2a71668a9fcfbabd80ab98ca0b29",
+      "completion_sha256": "34d6d859fa883fd4e147c423e5ad8929f3302a14c1d4e70d0d1e35bc0975e991",
+      "components": {
+        "answer_concision": 1.0,
+        "answer_numeric_score": 1.0,
+        "judge_score": 1.0,
+        "reasoning_efficiency": 0.9090909090909092,
+        "structure_score": 1.0,
+        "think_numeric_score_audit": 1.0
+      },
+      "contract": {
+        "answer_nonempty": true,
+        "closing_think_count": 1,
+        "well_formed": true
+      },
+      "high_baseline": null,
+      "invalid_violations": [],
+      "label": "ffr_no_leakage_caveat",
+      "penalties": {
+        "applied": 0.0,
+        "major_answer_error": 0,
+        "major_think_error": 0,
+        "minor_answer_error": 0,
+        "minor_think_error": 0,
+        "target_leakage": false,
+        "unbounded": 0.0
+      },
+      "reasoning_repetition_rate": 0.022727272727272707,
+      "reasoning_tokens": 47,
+      "reward": 0.9954545454545455,
+      "reward_before_penalty": 0.9954545454545455,
+      "reward_delta_vs_high": null,
+      "rubric": {
+        "data_fidelity": 4,
+        "fomc_style": 4,
+        "policy_relevance": 4,
+        "trend_reasoning": 4,
+        "uncertainty_calibration": 4
+      },
+      "unsupported_answer_number_count": 0,
+      "unsupported_think_number_count_audit": 0,
+      "validated_violations": []
+    }
+  ],
+  "group_id": "g5_ffr_target_leakage_original",
+  "order_variant": "original",
+  "payload_sha256": "d0160bb45ca58bdc4d18a28d30556a97456cd7846b4752fe1ecafb466a01d58d",
+  "provider": {
+    "attempt_metrics": [
+      {
+        "attempt": 1,
+        "http_status": 200,
+        "latency_seconds": 17.330845571123064,
+        "status": "completed"
+      }
+    ],
+    "attempts": 1,
+    "hidden_reasoning_sha256": "1c6759936f6ec0e3953b71ea759731030ecb9489ce3c57cc78879145530b23a5",
+    "latency_seconds": 17.330852941144258,
+    "response_id_sha256": "925846f7b33eb2022790b486928c59fc3b62c93f0a2e9b615d3de259e3e480a1",
+    "returned_model": "deepseek-v4-flash",
+    "usage": {
+      "cached_input_tokens": 2432,
+      "input_tokens": 4170,
+      "output_tokens": 2252,
+      "reasoning_tokens": 1820,
+      "total_tokens": 6422
+    },
+    "visible_response_sha256": "4109bf9acd4fa27bb0af10e8fd2396de89319e678b41aeb4fa3626735886cf9a"
+  },
+  "schema_version": "chk2-deepseek-low-judge-group-cache-v1",
+  "source_kind": "deterministic_diagnostic"
+}

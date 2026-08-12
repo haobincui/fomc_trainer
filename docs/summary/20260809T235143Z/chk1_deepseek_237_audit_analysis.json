@@ -1,0 +1,369 @@
+{
+  "decision": {
+    "direct_use_as_clean_chk1_release": "not_recommended",
+    "minimum_confirmed_rows_to_repair": 113,
+    "reason": "113 of 237 audited changed rows contain at least one independently confirmed factual, numerical, or causal violation.",
+    "strict_source_only_gate": "failed"
+  },
+  "failure_rates": {
+    "by_answer_repair_group": [
+      {
+        "failed": 17,
+        "failure_rate": 0.472222,
+        "failure_rate_wilson_95": [
+          0.31986,
+          0.629941
+        ],
+        "group": "answer unchanged",
+        "passed": 19,
+        "total": 36
+      },
+      {
+        "failed": 18,
+        "failure_rate": 0.428571,
+        "failure_rate_wilson_95": [
+          0.291177,
+          0.577938
+        ],
+        "group": "recovered JSON-like answer",
+        "passed": 24,
+        "total": 42
+      },
+      {
+        "failed": 78,
+        "failure_rate": 0.490566,
+        "failure_rate_wilson_95": [
+          0.414006,
+          0.567571
+        ],
+        "group": "stripped inline evidence IDs",
+        "passed": 81,
+        "total": 159
+      }
+    ],
+    "by_changed_component": [
+      {
+        "failed": 96,
+        "failure_rate": 0.477612,
+        "failure_rate_wilson_95": [
+          0.409628,
+          0.546436
+        ],
+        "group": "answer changed",
+        "passed": 105,
+        "total": 201
+      },
+      {
+        "failed": 17,
+        "failure_rate": 0.472222,
+        "failure_rate_wilson_95": [
+          0.31986,
+          0.629941
+        ],
+        "group": "answer unchanged",
+        "passed": 19,
+        "total": 36
+      },
+      {
+        "failed": 20,
+        "failure_rate": 0.47619,
+        "failure_rate_wilson_95": [
+          0.333596,
+          0.622775
+        ],
+        "group": "reasoning changed",
+        "passed": 22,
+        "total": 42
+      },
+      {
+        "failed": 93,
+        "failure_rate": 0.476923,
+        "failure_rate_wilson_95": [
+          0.407945,
+          0.546793
+        ],
+        "group": "reasoning unchanged",
+        "passed": 102,
+        "total": 195
+      }
+    ],
+    "by_split": [
+      {
+        "failed": 14,
+        "failure_rate": 0.56,
+        "failure_rate_wilson_95": [
+          0.370673,
+          0.733344
+        ],
+        "group": "eval",
+        "passed": 11,
+        "total": 25
+      },
+      {
+        "failed": 12,
+        "failure_rate": 0.413793,
+        "failure_rate_wilson_95": [
+          0.255132,
+          0.592622
+        ],
+        "group": "test",
+        "passed": 17,
+        "total": 29
+      },
+      {
+        "failed": 87,
+        "failure_rate": 0.47541,
+        "failure_rate_wilson_95": [
+          0.404307,
+          0.547524
+        ],
+        "group": "train",
+        "passed": 96,
+        "total": 183
+      }
+    ]
+  },
+  "generated_at_utc": "2026-08-10T00:28:12Z",
+  "integrity": {
+    "audit_summary_sha256": "29c9924371349951e2eec3f8a6b31774c2ee29af3fcbc3f42a14ab3058862723",
+    "candidate_manifest_sha256": "41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700",
+    "provider_errors": 0,
+    "quote_section_binding_errors": 0,
+    "review_required": 0,
+    "row_audits_sha256": "38375236e630f48c33f4495774d7329ad987b77113c87178ecdef0bd6076d5df",
+    "row_hash_binding_errors": 0,
+    "semantic_audit_input_sha256": "34f63a7ac8b94a885f44851acbb5188c729aee8fcc5d90cbd2f8fdb592ecfdcb",
+    "status": "passed"
+  },
+  "outcomes": {
+    "answer_only_failed_rows": 42,
+    "both_sections_failed_rows": 31,
+    "failed": 113,
+    "failure_rate": 0.476793,
+    "failure_rate_wilson_95": [
+      0.414083,
+      0.540243
+    ],
+    "pass_rate": 0.523207,
+    "pass_rate_wilson_95": [
+      0.459757,
+      0.585917
+    ],
+    "passed": 124,
+    "rows_with_major_violation": 34,
+    "rows_with_only_minor_violations": 79,
+    "think_only_failed_rows": 40,
+    "total": 237
+  },
+  "provider": {
+    "api": "responses",
+    "attempts": {
+      "stage_a": {
+        "1": 227,
+        "2": 10
+      },
+      "stage_b": {
+        "1": 198,
+        "2": 27,
+        "3": 8,
+        "4": 3
+      }
+    },
+    "max_output_tokens": 32768,
+    "model": "deepseek-v4-flash",
+    "reasoning": {
+      "effort": "max"
+    },
+    "usage": {
+      "stage_a": {
+        "input_tokens": 941125,
+        "output_tokens": 2047039,
+        "reasoning_tokens": 2009410,
+        "total_tokens": 2988164
+      },
+      "stage_b": {
+        "input_tokens": 757542,
+        "output_tokens": 511807,
+        "reasoning_tokens": 485653,
+        "total_tokens": 1269349
+      }
+    }
+  },
+  "representative_confirmed_failures": [
+    {
+      "example_explanation": "This counterfactual claim about indebtedness levels and the scope for further declines is not grounded in the point-in-time evidence; no baseline or mechanism is provided.",
+      "example_kind": "causal",
+      "example_quote": "the scope for additional large declines is less than it would have been at a higher level of indebtedness",
+      "example_section": "think",
+      "example_severity": "major",
+      "major_count": 5,
+      "sample_id": "chk1-analysis-2010-01-27-ce48a6682218022d",
+      "split": "train",
+      "violation_count": 6
+    },
+    {
+      "example_explanation": "The evidence contains no inflation or growth expectation data and no term-premium decomposition. Inferring contained inflation risk and modest growth prospects from the curve shape is an external causal interpretation; the candidate itself acknowledges these components are not separately identified.",
+      "example_kind": "causal",
+      "example_quote": "broadly signaled contained inflation risk and modest growth prospects",
+      "example_section": "answer",
+      "example_severity": "major",
+      "major_count": 4,
+      "sample_id": "chk1-analysis-2021-04-28-81fc4b723bfb38d0",
+      "split": "train",
+      "violation_count": 5
+    },
+    {
+      "example_explanation": "This is an external generalization about consumer spending and funding sources beyond the supplied fact card, introducing a causal channel with no source support.",
+      "example_kind": "causal",
+      "example_quote": "Easing in these categories is often relevant for near-term consumer spending, as credit cards and auto loans are common sources of funding for household purchases.",
+      "example_section": "think",
+      "example_severity": "minor",
+      "major_count": 2,
+      "sample_id": "chk1-analysis-2014-04-30-6464cdc92348378d",
+      "split": "train",
+      "violation_count": 6
+    },
+    {
+      "example_explanation": "The fact card records only observed yields at a single date. It contains no information about term premia, investor compensation, or the decomposition of yields. Inferring that the slope of the curve indicates investors were receiving an increasing term premium is a causal and structural claim unsupported by the evidence.",
+      "example_kind": "causal",
+      "example_quote": "investors were receiving a modest but increasing term premium as maturity extended",
+      "example_section": "think",
+      "example_severity": "major",
+      "major_count": 2,
+      "sample_id": "chk1-analysis-2020-03-15-d1c4a92a2c0b32e0",
+      "split": "train",
+      "violation_count": 3
+    },
+    {
+      "example_explanation": "The final answer draws a conclusion about household caution from the saving rate alone. The fact card has no household sentiment, borrowing, or spending data, so this directional claim is not supported; the saving rate could reflect income or other factors unrelated to attitudes toward credit.",
+      "example_kind": "causal",
+      "example_quote": "suggesting that households maintained a cautious posture despite easier credit conditions",
+      "example_section": "answer",
+      "example_severity": "major",
+      "major_count": 2,
+      "sample_id": "chk1-analysis-2021-06-16-c15863021423d908",
+      "split": "train",
+      "violation_count": 3
+    },
+    {
+      "example_explanation": "This sentence presupposes that the two supplied series are a nominal/real pair. The evidence labels them differently in scope and concept, so the price-change implication is not derivable from the supplied data and overstates what the observed divergence can establish.",
+      "example_kind": "factual",
+      "example_quote": "When a nominal series rises while its real counterpart falls, the typical implication is that price changes account for much of the difference",
+      "example_section": "think",
+      "example_severity": "major",
+      "major_count": 2,
+      "sample_id": "chk1-analysis-2012-09-13-0ef955556d286236",
+      "split": "train",
+      "violation_count": 2
+    },
+    {
+      "example_explanation": "The fact card reports total consumer credit at 3,623.6983 million dollars, which is about $3.6 billion, not $3.6 trillion. The quoted claim is a factor of 1,000 too large and contradicts the conversion in the candidate's own think section.",
+      "example_kind": "numerical",
+      "example_quote": "to reach about $3.6 trillion",
+      "example_section": "answer",
+      "example_severity": "major",
+      "major_count": 2,
+      "sample_id": "chk1-analysis-2016-07-27-0f73decc6397543d",
+      "split": "train",
+      "violation_count": 2
+    },
+    {
+      "example_explanation": "The March 30 to April 27 data show the yen moved about 2.75% (106.20 to 109.12), the euro about 1.72% (1.2320 to 1.2108), the pound about 1.73% (1.4027 to 1.3785), and the renminbi only about 0.95% (6.2726 to 6.3325). The renminbi's move was the smallest of the four, not one of the two most notable; the euro and pound declines were larger.",
+      "example_kind": "factual",
+      "example_quote": "with the yen and the renminbi registering the most notable moves",
+      "example_section": "answer",
+      "example_severity": "major",
+      "major_count": 2,
+      "sample_id": "chk1-analysis-2018-05-02-1902f0eed290ac05",
+      "split": "train",
+      "violation_count": 2
+    }
+  ],
+  "rubric_means": {
+    "all": {
+      "data_fidelity": 3.620253,
+      "fomc_style": 3.966245,
+      "policy_relevance": 3.852321,
+      "trend_reasoning": 3.780591,
+      "uncertainty_calibration": 3.848101
+    },
+    "failed": {
+      "data_fidelity": 3.247788,
+      "fomc_style": 3.929204,
+      "policy_relevance": 3.769912,
+      "trend_reasoning": 3.566372,
+      "uncertainty_calibration": 3.681416
+    },
+    "passed": {
+      "data_fidelity": 3.959677,
+      "fomc_style": 4.0,
+      "policy_relevance": 3.927419,
+      "trend_reasoning": 3.975806,
+      "uncertainty_calibration": 4.0
+    }
+  },
+  "schema_version": "chk1-clean-sft-deepseek-audit-analysis-v1",
+  "scope": {
+    "audited_population": "all 237 rows changed by clean-v2 repair",
+    "audited_rows": 237,
+    "full_candidate_rows": 1743,
+    "scope_warning": "This result does not establish semantic safety for the 1,506 unchanged rows.",
+    "unaudited_candidate_rows": 1506
+  },
+  "sources": {
+    "audit_summary": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_deepseek_source_audit_v1/summary.json",
+    "repair_manifest": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/audits/repair_manifest.jsonl",
+    "row_audits": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_deepseek_source_audit_v1/row_audits.jsonl",
+    "semantic_audit_input": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/audits/semantic_audit_input.jsonl"
+  },
+  "two_stage_adjudication": {
+    "ambiguous": 0,
+    "confirmed": 203,
+    "false_positive": 33,
+    "false_positive_rate": 0.139831,
+    "provider_errors": 0,
+    "rows_rescued_from_false_failure": 7,
+    "stage_a_proposals": 236,
+    "stage_a_rows_with_proposals": 120
+  },
+  "violations": {
+    "by_kind": {
+      "causal": 98,
+      "factual": 82,
+      "numerical": 23
+    },
+    "by_section": {
+      "answer": 96,
+      "think": 107
+    },
+    "by_severity": {
+      "major": 47,
+      "minor": 156
+    },
+    "confirmed_basis": {
+      "contradicted": 17,
+      "invalid_calculation": 15,
+      "not_derivable": 76,
+      "overclaimed_causality": 95
+    },
+    "confirmed_total": 203,
+    "per_failed_row": {
+      "1": 52,
+      "2": 41,
+      "3": 16,
+      "4": 1,
+      "5": 1,
+      "6": 2
+    },
+    "rows_affected_by_kind": {
+      "causal": 70,
+      "factual": 65,
+      "numerical": 22
+    },
+    "rows_affected_by_section": {
+      "answer": 73,
+      "think": 71
+    },
+    "target_leakage": 0
+  }
+}

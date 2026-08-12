@@ -1,0 +1,185 @@
+{
+  "cache_hits": 0,
+  "candidates": 40,
+  "created_at_utc": "2026-08-10T14:30:31Z",
+  "gates": {
+    "all_groups_completed": true,
+    "all_have_reasoning_tokens": true,
+    "all_within_attempt_budget": true,
+    "answer_target_leakage_detected": true,
+    "caveat_not_target_leakage": true,
+    "every_base_round_nonzero_std": true,
+    "forty_rewards_finite_bounded": true,
+    "high8_reward_mae_le_0_08": true,
+    "high8_reward_max_abs_delta_le_0_15": true,
+    "high8_weighted_judge_mae_le_0_10": true,
+    "major_localization_both_rounds": true,
+    "max_output_utilization_le_0_75": true,
+    "median_latency_le_45_seconds": true,
+    "missing_boundary_both_rounds_zero": true,
+    "p95_latency_le_90_seconds": true,
+    "p95_output_utilization_le_0_50": true,
+    "permutation_max_reward_delta_le_0_12": true,
+    "real_group_at_least_3_distinct": true,
+    "real_group_std_ge_0_05": true,
+    "retry_groups_le_1": true,
+    "target_leakage_both_rounds_zero": true,
+    "target_leakage_rewards_zero": true,
+    "think_target_leakage_detected": true,
+    "totalsl_equivalent_scale_supported": true,
+    "totalsl_wrong_billions_detected": true,
+    "totalsl_wrong_millions_detected": true,
+    "unemployment_causal_error_detected": true,
+    "unemployment_meta_has_no_factual_penalty": true,
+    "unemployment_wrong_number_detected": true
+  },
+  "group_reward_std": {
+    "g1_ffr_canary_original": 0.3890031140024441,
+    "g1_ffr_canary_permuted_2031": 0.3884999622187104,
+    "g2_real_step_00001_original": 0.17642899525265937,
+    "g2_real_step_00001_permuted_2031": 0.15369393706789497,
+    "g3_totalsl_scale_original": 0.2784722222222222,
+    "g3_totalsl_scale_permuted_2031": 0.33472222222222225,
+    "g4_unemployment_causal_meta_original": 0.30643282170607966,
+    "g4_unemployment_causal_meta_permuted_2031": 0.2949165665912989,
+    "g5_ffr_target_leakage_original": 0.49772727272727274,
+    "g5_ffr_target_leakage_permuted_2031": 0.4915567460705204
+  },
+  "groups": 10,
+  "high8_comparison": {
+    "candidates": 8,
+    "high_rewards": [
+      0.9954545454545455,
+      0.8353787878787878,
+      0.4392045454545454,
+      0.0,
+      0.9820728291316527,
+      0.8064993261455528,
+      0.685872641509434,
+      0.987450980392157
+    ],
+    "low_rewards": [
+      0.9954545454545455,
+      0.8728787878787879,
+      0.4767045454545454,
+      0.0,
+      0.9820728291316527,
+      0.7052493261455527,
+      0.5808726415094341,
+      0.987450980392157
+    ],
+    "pairwise_order_agreement": 1.0,
+    "reward_deltas": [
+      0.0,
+      0.03750000000000009,
+      0.03749999999999998,
+      0.0,
+      0.0,
+      -0.10125000000000006,
+      -0.10499999999999987,
+      0.0
+    ],
+    "reward_mae": 0.03515625,
+    "reward_max_abs_delta": 0.10499999999999987,
+    "rubric_exact_cell_agreement": 0.85,
+    "weighted_judge_mae": 0.04531250000000002
+  },
+  "known_error_checks": {
+    "answer_target_leakage_detected": true,
+    "caveat_not_target_leakage": true,
+    "target_leakage_rewards_zero": true,
+    "think_target_leakage_detected": true,
+    "totalsl_equivalent_scale_supported": true,
+    "totalsl_wrong_billions_detected": true,
+    "totalsl_wrong_millions_detected": true,
+    "unemployment_causal_error_detected": true,
+    "unemployment_meta_has_no_factual_penalty": true,
+    "unemployment_wrong_number_detected": true
+  },
+  "latency": {
+    "median_seconds": 26.691870813723654,
+    "p95_seconds": 43.83272814191878
+  },
+  "output_dir": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low_judge_benchmark_v1",
+  "output_utilization": {
+    "maximum": 0.31805419921875,
+    "p95": 0.31805419921875
+  },
+  "permutation_consistency": {
+    "fixed_permutation": [
+      2,
+      0,
+      3,
+      1
+    ],
+    "paired_candidates": 20,
+    "penalty_exact_agreement": 0.95,
+    "reward_mae": 0.024062499999999997,
+    "reward_max_abs_delta": 0.11250000000000004,
+    "rubric_exact_cell_agreement": 0.84
+  },
+  "privacy": {
+    "api_key_persisted": false,
+    "hidden_reasoning_persisted": false,
+    "provider_output_persisted": false,
+    "raw_candidates_persisted": false,
+    "raw_evidence_persisted": false
+  },
+  "provider": {
+    "attempts": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "latency_seconds": [
+      27.45942808687687,
+      25.924313540570438,
+      29.098672093823552,
+      30.870608990080655,
+      43.83272814191878,
+      17.193411266896874,
+      13.783132198732346,
+      20.71836083009839,
+      17.330852941144258,
+      31.941366222687066
+    ],
+    "logical_requests": 10,
+    "max_output_tokens": 16384,
+    "model": "deepseek-v4-flash",
+    "output_tokens": [
+      3052,
+      3443,
+      4835,
+      4545,
+      5211,
+      2139,
+      1781,
+      2733,
+      2252,
+      3688
+    ],
+    "reasoning_effort": "low",
+    "reasoning_tokens": [
+      2523,
+      2923,
+      3843,
+      3624,
+      4771,
+      1706,
+      1480,
+      2306,
+      1820,
+      3378
+    ]
+  },
+  "schema_version": "chk2-deepseek-low-judge-benchmark-v1",
+  "status": "passed",
+  "suitable_for_chk2_trial": true
+}

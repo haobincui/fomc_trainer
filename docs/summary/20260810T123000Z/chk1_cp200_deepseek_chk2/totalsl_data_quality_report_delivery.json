@@ -1,0 +1,33 @@
+{
+  "artifact_sha256": "901453d59307a9ef86c2b5280ef30984096654683d136f6efc90461a9a22d78d",
+  "browser_warning": {
+    "code": "browser_unavailable",
+    "impact": "Runtime viewport and source-dialog interaction checks were not executed; self-contained structural verification passed.",
+    "message": "No installed Chromium headless-shell executable was found."
+  },
+  "counts": {
+    "blocks": 10,
+    "charts": 1,
+    "html": 0,
+    "metrics": 1,
+    "tables": 1
+  },
+  "delivery_tool": "data-analytics build-report portable artifact builder",
+  "html_sha256": "4f132aa43420084e23eb83f811ab1e1e7c096922e529db345c451938a66568e9",
+  "output": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/totalsl_data_quality_report.html",
+  "source_dialog": "not_verified",
+  "source_interaction": "not_verified",
+  "stages": {
+    "package": "passed",
+    "validation": "passed",
+    "verification": "structural_only"
+  },
+  "status": "delivered",
+  "structural_content_checks": {
+    "audit_table_present": true,
+    "chart_fallback_table_present": true,
+    "technical_summary_present": true,
+    "title_present": true
+  },
+  "schema_version": "portable-report-delivery-receipt-v1"
+}

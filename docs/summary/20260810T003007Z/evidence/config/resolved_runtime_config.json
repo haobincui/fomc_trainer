@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "model": {
+    "model_name_or_path": "models/DeepSeek-R1-Distill-Llama-8B",
+    "model_revision": null,
+    "torch_dtype": "bfloat16",
+    "dtype": "bfloat16",
+    "attn_implementation": "flex_attention",
+    "quantization": {
+      "enabled": true,
+      "load_in_4bit": true,
+      "load_in_8bit": false,
+      "bnb_4bit_quant_type": "nf4",
+      "bnb_4bit_compute_dtype": "bfloat16",
+      "bnb_4bit_quant_storage": "bfloat16",
+      "bnb_4bit_use_double_quant": true,
+      "prepared_for_kbit_training": true
+    }
+  },
+  "dataset": {
+    "name": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/analysis_sft",
+    "binding_mode": "chk1_semantic_override",
+    "prompt_column": "prompt",
+    "train_split": "train",
+    "eval_split": "validation",
+    "release_manifest": null,
+    "release_manifest_sha256": null,
+    "semantic_override": {
+      "scope": {
+        "stage": "chk1",
+        "operation": "sft_training",
+        "downstream_stages_allowed": []
+      },
+      "candidate_manifest": {
+        "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/candidate_manifest.json",
+        "sha256": "41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700"
+      },
+      "deterministic_validation_receipt": {
+        "path": "docs/summary/20260809T213520Z/chk1_clean_sft_token_validation.json",
+        "sha256": "12c9f9f56c3946a98e3ca4eb4770818c30489b71c5cc498bbedb24edafef187b"
+      },
+      "failed_semantic_audit_summary": {
+        "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_qwen_source_audit/summary.json",
+        "sha256": "780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e"
+      },
+      "authorization_receipt": {
+        "path": "docs/summary/20260809T234411Z/chk1_semantic_override_authorization.json",
+        "sha256": "efe099889333a951df9a371cc2cfc06b22560c93a408cbfedb07e5f16084f602"
+      }
+    },
+    "user_prompt_suffix_sha256": null
+  },
+  "training": {
+    "output_dir": "output/training/retrain_v2/chk1_clean_v2_override_smoke10_20260809/adapters/chk1",
+    "learning_rate": 5e-05,
+    "num_train_epochs": 2,
+    "max_steps": 10,
+    "optimizer": "paged_adamw_8bit",
+    "lr_scheduler_type": "cosine",
+    "warmup_ratio": 0.05,
+    "gradient_accumulation_steps": 8,
+    "gradient_checkpointing": true,
+    "per_device_train_batch_size": 1,
+    "per_device_eval_batch_size": 1,
+    "seed": 42,
+    "bf16": true
+  },
+  "generation": {
+    "max_prompt_length": null,
+    "max_completion_length": null,
+    "num_generations": null,
+    "temperature": null,
+    "top_p": null
+  },
+  "peft": {
+    "merged_model_path": "output/training/retrain_v2/chk1_clean_v2_override_smoke10_20260809/merged/chk1",
+    "r": 32,
+    "lora_alpha": 64,
+    "lora_dropout": 0.05,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ]
+  },
+  "rewards": {
+    "reward_funcs": [],
+    "reward_weights": null
+  },
+  "environment": {
+    "device": "cuda:0",
+    "n_gpu": 1,
+    "world_size": 2,
+    "process_index": 0,
+    "local_process_index": 0,
+    "cuda_visible_devices": "0,1",
+    "cuda_available": true,
+    "cuda_device_count": 2,
+    "cuda_device_names": [
+      "NVIDIA A30",
+      "NVIDIA A30"
+    ]
+  }
+}

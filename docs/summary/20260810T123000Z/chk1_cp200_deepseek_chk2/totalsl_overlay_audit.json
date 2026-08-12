@@ -1,0 +1,68 @@
+{
+  "audit_type": "independent_totalsl_overlay_contract_check",
+  "audited_at_utc": "2026-08-10T12:52:00Z",
+  "builder_validation": {
+    "attestation_sha256": "93285c16f0e5a1f6d698ed6d0032d8695bb533c23a6bf2dd548da0e7fd2186cf",
+    "manifest_sha256": "00a825755444b83ea3c3f3d0878b394acbcc2af85ab231ec714aa64f742de410",
+    "output_payload_sha256": "d8587373d3a922300732799b397a1f1294c4b6fb7114948f0309dcfd31546fe2",
+    "status": "valid"
+  },
+  "counts": {
+    "affected_rows": 55,
+    "evidence_entries_changed": 71,
+    "rows": 882,
+    "unchanged_rows_byte_identical": 827,
+    "unique_sample_ids": 882
+  },
+  "errors": [],
+  "expected_contract_match": true,
+  "invariants": {
+    "all_sample_ids_unique": true,
+    "only_totalsl_units_changed": true,
+    "output_tree_contains_no_symlinks": true,
+    "output_tree_is_read_only": true,
+    "prompt_contains_exactly_one_synchronized_provided_data": true,
+    "sample_id_order_dates_values_evidence_ids_and_source_hashes_unchanged": true,
+    "split_counts_unchanged": true,
+    "unaffected_rows_byte_identical": true
+  },
+  "output": {
+    "attestation": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810/overlay_attestation.json",
+    "manifest": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810/overlay_manifest.json",
+    "path": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810"
+  },
+  "splits": {
+    "eval": {
+      "affected_rows": 12,
+      "evidence_entries_changed": 12,
+      "output_sha256": "bf7ca73a2f8a648965d1d97ff8d6a12610fa280337e41db77ebe912f7bbeda9c",
+      "rows": 199,
+      "source_sha256": "fdbf39b642714b549da18fd360510b9b050b20e7512fa795c44bd955db51be09",
+      "unchanged_rows": 187
+    },
+    "test": {
+      "affected_rows": 13,
+      "evidence_entries_changed": 13,
+      "output_sha256": "0a48000bb7757e3842a3f22be0eae69725b2e24e0388a8f276e0477418f0fa6c",
+      "rows": 190,
+      "source_sha256": "8e0e89fe89d271b6d6862f5059431e5ad12d03646a4d8f1ab5e304c84b939a20",
+      "unchanged_rows": 177
+    },
+    "train": {
+      "affected_rows": 30,
+      "evidence_entries_changed": 46,
+      "output_sha256": "6d7a16249bd81bbcdcdcfd8897d5d87f1d30aa0b31a9891d2e628f4de304a815",
+      "rows": 493,
+      "source_sha256": "da32684c3001d8ac908a99c20dcc5d2397a7351e57f3b9ea15ede63990f2b4bd",
+      "unchanged_rows": 463
+    }
+  },
+  "status": "passed",
+  "tests": {
+    "command": "pytest -q tests/test_retrain_v2_totalsl_overlay.py tests/test_retrain_v2_base_release_builder.py",
+    "passed": 23,
+    "failed": 0,
+    "ruff": "passed"
+  },
+  "schema_version": "totalsl-overlay-independent-audit-v1"
+}

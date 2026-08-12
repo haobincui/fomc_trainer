@@ -1,0 +1,60 @@
+{
+  "schema_version": "chk2-deepseek-low-resume-authorization-v1",
+  "created_at_utc": "2026-08-10T14:38:17Z",
+  "status": "authorized_for_chk2_trial_after_passing_benchmark",
+  "user_instruction": "Test the low-effort DeepSeek judge first, then switch the chk2 judge to low effort for the trial.",
+  "run": {
+    "run_id": "chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810",
+    "output_dir": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810/adapters/chk2",
+    "fresh_output_required": true,
+    "resume_from_checkpoint": "output/training/retrain_v2/chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810/adapters/chk2/checkpoint-1",
+    "resume_global_step": 1,
+    "physical_policy_gpu": 1,
+    "world_size": 1,
+    "local_judge_allowed": false
+  },
+  "judge": {
+    "reward_func": "grounded_analysis_v3_deepseek_low",
+    "model": "deepseek-v4-flash",
+    "reasoning_effort": "low",
+    "max_output_tokens": 16384,
+    "timeout_seconds": 420,
+    "maximum_total_attempts": 2,
+    "api_key_source": "DEEPSEEK_API_KEY",
+    "api_key_may_be_persisted": false
+  },
+  "benchmark": {
+    "summary": "docs/summary/20260810T123000Z/chk1_cp200_deepseek_chk2/chk2_low_judge_benchmark_v1/benchmark_summary.json",
+    "summary_sha256": "30172fd9d30579b0d3d8dd1d0ed27e651eaef9b75284b6167c53f89d5ea24794",
+    "status": "passed",
+    "logical_requests": 10,
+    "candidate_evaluations": 40,
+    "all_attempts_succeeded_first_try": true,
+    "latency_median_seconds": 26.691870813723654,
+    "latency_p95_seconds": 43.83272814191878,
+    "high_reward_mae": 0.03515625,
+    "high_reward_max_abs_delta": 0.10499999999999987,
+    "pairwise_order_agreement": 1.0,
+    "suitable_for_chk2_trial": true
+  },
+  "lineage": {
+    "merged_chk1": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+    "dataset_overlay": "dataset/processed/retrain_v2/analysis_grpo_full_v7_totalsl_billions_v1_20260810",
+    "high_source_config": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_high_totalsl_v1_20260810.yaml",
+    "low_resume_config": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_low_totalsl_v1_resume_cp1_20260810.yaml"
+  },
+  "scope": {
+    "downstream_stages_allowed": [
+      "chk2"
+    ],
+    "canonical_dag_update_allowed": false,
+    "automatic_chk2_merge_allowed": false,
+    "automatic_chk3_or_chk4_promotion_allowed": false
+  },
+  "interpretation": {
+    "reward_history_is_homogeneous": false,
+    "reason": "The preserved first optimizer step was judged with high effort; resumed optimizer steps use low effort.",
+    "classification": "versioned chk2 trial, not a strict single-reward ablation",
+    "required_follow_up": "Monitor the first two resumed optimizer steps before unattended continuation."
+  }
+}

@@ -1,0 +1,587 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "chk3 Checkpoint Selection",
+    "description": "Loss and frozen-generation evidence for selecting the standalone chk3 checkpoint.",
+    "generatedAt": "2026-08-10T22:21:12Z",
+    "cards": [
+      {
+        "id": "selected_cp_card",
+        "description": "Recommended artifact after loss and generation gates.",
+        "dataset": "headline",
+        "sourceId": "analysis_snapshot_source",
+        "metrics": [
+          {
+            "label": "Selected checkpoint",
+            "field": "selected_checkpoint",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "best_eval_card",
+        "description": "Lowest evaluation loss observed across 32 evaluations.",
+        "dataset": "headline",
+        "sourceId": "loss_history_source",
+        "metrics": [
+          {
+            "label": "Best eval loss",
+            "field": "best_eval_loss",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "valid_cases_card",
+        "description": "Frozen short, medium, and long cases passing every hard gate.",
+        "dataset": "headline",
+        "sourceId": "analysis_snapshot_source",
+        "metrics": [
+          {
+            "label": "Valid probe cases",
+            "field": "valid_cases",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "repetition_card",
+        "description": "Mean token 4-gram repetition for checkpoint 250.",
+        "dataset": "headline",
+        "sourceId": "analysis_snapshot_source",
+        "metrics": [
+          {
+            "label": "Mean repetition",
+            "field": "mean_repetition",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "eval_loss_chart",
+        "title": "Evaluation loss by optimizer step",
+        "subtitle": "32 evaluations across the completed 318-step run; loss flattens after roughly step 220.",
+        "intent": "trend",
+        "question": "Where does validation improvement stop being material?",
+        "rationale": "Thirty-two ordered evaluations are sufficient to show the descent and late plateau.",
+        "type": "line",
+        "dataset": "eval_curve",
+        "sourceId": "loss_history_source",
+        "encodings": {
+          "x": {
+            "field": "step",
+            "type": "quantitative",
+            "label": "Optimizer step"
+          },
+          "y": {
+            "field": "eval_loss",
+            "type": "quantitative",
+            "label": "Eval loss"
+          },
+          "tooltip": [
+            {
+              "field": "step",
+              "type": "quantitative",
+              "label": "Step"
+            },
+            {
+              "field": "eval_loss",
+              "type": "quantitative",
+              "label": "Eval loss"
+            }
+          ]
+        },
+        "valueFormat": "number",
+        "layout": "full"
+      },
+      {
+        "id": "repetition_chart",
+        "title": "Mean generation repetition by artifact",
+        "subtitle": "Same three greedy short/medium/long cases; lower is better, but all valid candidates remain below the 0.50 hard ceiling.",
+        "intent": "comparison",
+        "question": "Which loss-eligible checkpoint has the least repetitive generation?",
+        "rationale": "A categorical bar chart compares the frozen baseline and five checkpoint snapshots directly.",
+        "type": "bar",
+        "dataset": "repetition_compare",
+        "sourceId": "analysis_snapshot_source",
+        "encodings": {
+          "x": {
+            "field": "checkpoint_label",
+            "type": "nominal",
+            "label": "Artifact"
+          },
+          "y": {
+            "field": "mean_repetition",
+            "type": "quantitative",
+            "label": "Mean token 4-gram repetition"
+          },
+          "tooltip": [
+            {
+              "field": "valid_cases",
+              "type": "quantitative",
+              "label": "Valid cases"
+            },
+            {
+              "field": "checkpoint",
+              "type": "quantitative",
+              "label": "Step"
+            }
+          ]
+        },
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "candidate_table",
+        "title": "Checkpoint decision matrix",
+        "subtitle": "Five probed checkpoints using identical samples, seed, decoding, tokenizer, and base model.",
+        "dataset": "candidates",
+        "sourceId": "analysis_snapshot_source",
+        "defaultSort": {
+          "field": "checkpoint",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "layout": "full",
+        "columns": [
+          {
+            "field": "checkpoint",
+            "label": "Checkpoint",
+            "format": "number"
+          },
+          {
+            "field": "eval_loss",
+            "label": "Eval loss",
+            "format": "number"
+          },
+          {
+            "field": "delta_from_best",
+            "label": "Δ from best",
+            "format": "number",
+            "movement": true
+          },
+          {
+            "field": "valid_cases",
+            "label": "Valid cases",
+            "format": "number"
+          },
+          {
+            "field": "hard_gate",
+            "label": "Hard gate",
+            "type": "text"
+          },
+          {
+            "field": "mean_repetition",
+            "label": "Mean repetition",
+            "format": "number"
+          },
+          {
+            "field": "max_repetition",
+            "label": "Max repetition",
+            "format": "number"
+          },
+          {
+            "field": "mean_output_tokens",
+            "label": "Mean output tokens",
+            "format": "number"
+          },
+          {
+            "field": "selection",
+            "label": "Decision",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "analysis_snapshot_source",
+        "label": "Validated chk3 checkpoint-selection analysis snapshot",
+        "path": "docs/summary/20260810T222112Z/chk3_checkpoint_selection/analysis_snapshot.json"
+      },
+      {
+        "id": "loss_history_source",
+        "label": "Completed chk3 training loss history",
+        "path": "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/loss_history.jsonl"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# chk3 Checkpoint Selection"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## Checkpoint 250 is the strongest automatic-gate choice\n\n**Select checkpoint 250.** It owns the run minimum eval loss (`1.121203661`), passes all `3/3` frozen generation cases, and has the lowest mean (`0.1393`) and maximum (`0.1736`) repetition among loss-eligible checkpoints that pass every hard gate. Checkpoint 230 is rejected because its long case omits four source dates; checkpoint 318 is valid but adds no validation benefit and has slightly higher repetition."
+      },
+      {
+        "id": "headline",
+        "type": "metric-strip",
+        "cardIds": [
+          "selected_cp_card",
+          "best_eval_card",
+          "valid_cases_card",
+          "repetition_card"
+        ]
+      },
+      {
+        "id": "loss_finding",
+        "type": "markdown",
+        "sourceId": "loss_history_source",
+        "body": "## Validation improvement stops after the second epoch\n\nEval loss falls steadily through step 230, then stays within a `0.000147` band through step 318. The third epoch continues lowering average train loss while validation is effectively flat, so later exposure is not justified unless generation quality improves."
+      },
+      {
+        "id": "eval_chart_block",
+        "type": "chart",
+        "chartId": "eval_loss_chart",
+        "layout": "full"
+      },
+      {
+        "id": "generation_finding",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## Generation gates separate near-identical loss points\n\nLoss alone would treat cp230, cp250, and cp318 as nearly interchangeable. The frozen probe does not: cp230 fails exact date preservation on the long sample. cp250 passes EOS, cap, boundary, paragraph, numeric, date, and periodic-tail checks on all three samples, while remaining only `+0.0136` above the chk1 baseline in mean repetition."
+      },
+      {
+        "id": "rep_chart_block",
+        "type": "chart",
+        "chartId": "repetition_chart",
+        "layout": "full"
+      },
+      {
+        "id": "candidate_table_block",
+        "type": "table",
+        "tableId": "candidate_table",
+        "layout": "full"
+      },
+      {
+        "id": "definitions",
+        "type": "markdown",
+        "body": "## What the gate measures\n\nA checkpoint first has to finish with EOS before 3,072 tokens, emit exactly one `</think>`, produce a non-empty one-paragraph Minutes answer, preserve the source numeric multiset and date set exactly, and avoid a strict periodic tail. It must also remain below the pre-registered repetition ceilings and sit within `0.001` eval loss of the run minimum. Loss is a shortlist metric; output integrity is the selection gate."
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "sourceId": "analysis_snapshot_source",
+        "body": "## Identical inputs make checkpoint differences interpretable\n\nThe comparison uses the same three validation rows (short, medium, long), chk1 base model, tokenizer, greedy decoding, 3,072-token cap, seed, and probe implementation for every checkpoint. The executed `fomc_trainer` notebook independently reconstructs all 318 train records, 32 eval records, five checkpoint summaries, per-case deltas, and the selected checkpoint."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "body": "## The choice is regression-safe, not a full semantic certification\n\nThe probe contains only three deterministic cases and deliberately stores hashes and structural metrics rather than completion text. It therefore does not manually judge non-numeric factual claims, causal reasoning, omissions, or prose style. The underlying direct chk1→chk3 run is also explicitly standalone and non-promotable under the canonical DAG."
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "body": "## Use cp250 for the next evaluation artifact\n\n1. Bind downstream evaluation or merge work to the exact checkpoint-250 adapter hash.\n2. Run a larger held-out, text-reviewable Minutes evaluation before any promotion claim.\n3. Keep cp200 as the conservative fallback and cp170 as the earlier regression control.\n4. Do not substitute the root adapter: it is byte-equivalent to cp318, not cp250."
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## Further questions\n\nWould checkpoint 250 retain its advantage on all 190 held-out atomic rows, and does its final Minutes prose avoid unsupported non-numeric claims? Those checks could change confidence in promotion, but they do not change the current five-checkpoint regression-gate winner."
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-10T22:21:12Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "selected_checkpoint": 250,
+          "best_eval_loss": 1.1212036609649658,
+          "valid_cases": 3,
+          "mean_repetition": 0.13928234666666664
+        }
+      ],
+      "eval_curve": [
+        {
+          "eval_loss": 1.211933970451355,
+          "step": 10
+        },
+        {
+          "eval_loss": 1.205822467803955,
+          "step": 20
+        },
+        {
+          "eval_loss": 1.1989072561264038,
+          "step": 30
+        },
+        {
+          "eval_loss": 1.1919457912445068,
+          "step": 40
+        },
+        {
+          "eval_loss": 1.18515944480896,
+          "step": 50
+        },
+        {
+          "eval_loss": 1.1785967350006104,
+          "step": 60
+        },
+        {
+          "eval_loss": 1.1721802949905396,
+          "step": 70
+        },
+        {
+          "eval_loss": 1.1662254333496094,
+          "step": 80
+        },
+        {
+          "eval_loss": 1.1604152917861938,
+          "step": 90
+        },
+        {
+          "eval_loss": 1.1551682949066162,
+          "step": 100
+        },
+        {
+          "eval_loss": 1.1507009267807007,
+          "step": 110
+        },
+        {
+          "eval_loss": 1.1464563608169556,
+          "step": 120
+        },
+        {
+          "eval_loss": 1.1423357725143433,
+          "step": 130
+        },
+        {
+          "eval_loss": 1.1386451721191406,
+          "step": 140
+        },
+        {
+          "eval_loss": 1.1350414752960205,
+          "step": 150
+        },
+        {
+          "eval_loss": 1.131482720375061,
+          "step": 160
+        },
+        {
+          "eval_loss": 1.1282564401626587,
+          "step": 170
+        },
+        {
+          "eval_loss": 1.125533938407898,
+          "step": 180
+        },
+        {
+          "eval_loss": 1.1234575510025024,
+          "step": 190
+        },
+        {
+          "eval_loss": 1.1221871376037598,
+          "step": 200
+        },
+        {
+          "eval_loss": 1.1216092109680176,
+          "step": 210
+        },
+        {
+          "eval_loss": 1.1213147640228271,
+          "step": 220
+        },
+        {
+          "eval_loss": 1.1212650537490845,
+          "step": 230
+        },
+        {
+          "eval_loss": 1.12128484249115,
+          "step": 240
+        },
+        {
+          "eval_loss": 1.1212036609649658,
+          "step": 250
+        },
+        {
+          "eval_loss": 1.1212434768676758,
+          "step": 260
+        },
+        {
+          "eval_loss": 1.1213457584381104,
+          "step": 270
+        },
+        {
+          "eval_loss": 1.12130606174469,
+          "step": 280
+        },
+        {
+          "eval_loss": 1.121206283569336,
+          "step": 290
+        },
+        {
+          "eval_loss": 1.1213130950927734,
+          "step": 300
+        },
+        {
+          "eval_loss": 1.1213504076004028,
+          "step": 310
+        },
+        {
+          "eval_loss": 1.1212800741195679,
+          "step": 318
+        }
+      ],
+      "candidates": [
+        {
+          "checkpoint": 170,
+          "checkpoint_label": "cp170",
+          "eval_loss": 1.1282564401626587,
+          "delta_from_best": 0.007052779197692871,
+          "valid_cases": 3,
+          "hard_gate": "PASS",
+          "mean_repetition": 0.20914911000000003,
+          "max_repetition": 0.29129464,
+          "mean_output_tokens": 808.3333333333334,
+          "eligible": "NO",
+          "selection": "REJECTED"
+        },
+        {
+          "checkpoint": 200,
+          "checkpoint_label": "cp200",
+          "eval_loss": 1.1221871376037598,
+          "delta_from_best": 0.0009834766387939453,
+          "valid_cases": 3,
+          "hard_gate": "PASS",
+          "mean_repetition": 0.15757558000000002,
+          "max_repetition": 0.17546362,
+          "mean_output_tokens": 709.6666666666666,
+          "eligible": "YES",
+          "selection": "ALTERNATE"
+        },
+        {
+          "checkpoint": 230,
+          "checkpoint_label": "cp230",
+          "eval_loss": 1.1212650537490845,
+          "delta_from_best": 6.139278411865234e-05,
+          "valid_cases": 2,
+          "hard_gate": "FAIL",
+          "mean_repetition": 0.17775544666666668,
+          "max_repetition": 0.18720379,
+          "mean_output_tokens": 646.0,
+          "eligible": "NO",
+          "selection": "REJECTED"
+        },
+        {
+          "checkpoint": 250,
+          "checkpoint_label": "cp250",
+          "eval_loss": 1.1212036609649658,
+          "delta_from_best": 0.0,
+          "valid_cases": 3,
+          "hard_gate": "PASS",
+          "mean_repetition": 0.13928234666666664,
+          "max_repetition": 0.17364532,
+          "mean_output_tokens": 733.3333333333334,
+          "eligible": "YES",
+          "selection": "SELECTED"
+        },
+        {
+          "checkpoint": 318,
+          "checkpoint_label": "cp318",
+          "eval_loss": 1.1212800741195679,
+          "delta_from_best": 7.641315460205078e-05,
+          "valid_cases": 3,
+          "hard_gate": "PASS",
+          "mean_repetition": 0.14161496,
+          "max_repetition": 0.19313305,
+          "mean_output_tokens": 610.6666666666666,
+          "eligible": "YES",
+          "selection": "ALTERNATE"
+        }
+      ],
+      "repetition_compare": [
+        {
+          "checkpoint_label": "chk1 base",
+          "mean_repetition": 0.12572027333333333,
+          "valid_cases": 3,
+          "checkpoint": 0
+        },
+        {
+          "checkpoint_label": "cp170",
+          "mean_repetition": 0.20914911000000003,
+          "valid_cases": 3,
+          "checkpoint": 170
+        },
+        {
+          "checkpoint_label": "cp200",
+          "mean_repetition": 0.15757558000000002,
+          "valid_cases": 3,
+          "checkpoint": 200
+        },
+        {
+          "checkpoint_label": "cp230",
+          "mean_repetition": 0.17775544666666668,
+          "valid_cases": 2,
+          "checkpoint": 230
+        },
+        {
+          "checkpoint_label": "cp250",
+          "mean_repetition": 0.13928234666666664,
+          "valid_cases": 3,
+          "checkpoint": 250
+        },
+        {
+          "checkpoint_label": "cp318",
+          "mean_repetition": 0.14161496,
+          "valid_cases": 3,
+          "checkpoint": 318
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "analysis_snapshot_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260810T222112Z/chk3_checkpoint_selection/analysis_snapshot.json')",
+        "description": "Reads the executed notebook snapshot that reconciles loss and frozen-generation evidence.",
+        "executed_at": "2026-08-10T22:21:12Z",
+        "tables_used": [
+          "docs/summary/20260810T222112Z/chk3_checkpoint_selection/analysis_snapshot.json"
+        ],
+        "filters": [
+          "checkpoints 170, 200, 230, 250, and 318",
+          "three fixed greedy validation cases per checkpoint"
+        ],
+        "metric_definitions": [
+          "Mean repetition is the arithmetic mean of token 4-gram repetition across the three frozen cases.",
+          "Eligible means within 0.001 eval loss of the run minimum and passing all structural, fidelity, and repetition gates."
+        ]
+      }
+    },
+    {
+      "id": "loss_history_source",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT step, eval_loss FROM read_json_auto('output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/loss_history.jsonl') WHERE eval_loss IS NOT NULL ORDER BY step",
+        "description": "Reads all 32 completed evaluation measurements from the durable training history.",
+        "executed_at": "2026-08-10T22:21:12Z",
+        "tables_used": [
+          "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/loss_history.jsonl"
+        ],
+        "filters": [
+          "eval_loss is not null",
+          "completed 318-step run"
+        ],
+        "metric_definitions": [
+          "Eval loss is the mean completion-only token loss on the fixed 199-row validation split."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,429 @@
+{
+  "baseline": {
+    "mean_repetition": 0.12572027333333333,
+    "path": "docs/summary/20260810T194621Z/chk3_direct_from_chk1/probe/chk1_base_v2/results.jsonl",
+    "sha256": "0fc612b842fad4de8fa8813607189a710b4b351769ecad0f7935f9d595ab27e2"
+  },
+  "best_eval_loss": 1.1212036609649658,
+  "candidates": [
+    {
+      "checkpoint": 170,
+      "eligible": false,
+      "eval_delta_from_best": 0.007052779197692871,
+      "eval_loss": 1.1282564401626587,
+      "hard_pass": true,
+      "loss_eligible": false,
+      "max_case_repetition_delta_vs_chk1": 0.14201695,
+      "max_output_tokens": 1001,
+      "max_repetition": 0.29129464,
+      "mean_output_tokens": 808.3333333333334,
+      "mean_repetition": 0.20914911000000003,
+      "mean_repetition_delta_vs_chk1": 0.08342883666666667,
+      "min_output_tokens": 524,
+      "quality_valid_cases": 3,
+      "repetition_pass": true,
+      "results_sha256": "967c10478c5d2459a0ef1a4f0b7b2f37bb45dd580f3ecda5d2ad15219b16fa18"
+    },
+    {
+      "checkpoint": 200,
+      "eligible": true,
+      "eval_delta_from_best": 0.0009834766387939453,
+      "eval_loss": 1.1221871376037598,
+      "hard_pass": true,
+      "loss_eligible": true,
+      "max_case_repetition_delta_vs_chk1": 0.04694939000000001,
+      "max_output_tokens": 983,
+      "max_repetition": 0.17546362,
+      "mean_output_tokens": 709.6666666666666,
+      "mean_repetition": 0.15757558000000002,
+      "mean_repetition_delta_vs_chk1": 0.03185530666666667,
+      "min_output_tokens": 441,
+      "quality_valid_cases": 3,
+      "repetition_pass": true,
+      "results_sha256": "5cc6da12a75e709512438033ab642622c8453a52c6340d9c37bcf12e0b81c105"
+    },
+    {
+      "checkpoint": 230,
+      "eligible": false,
+      "eval_delta_from_best": 6.139278411865234e-05,
+      "eval_loss": 1.1212650537490845,
+      "hard_pass": false,
+      "loss_eligible": true,
+      "max_case_repetition_delta_vs_chk1": 0.07714045000000001,
+      "max_output_tokens": 808,
+      "max_repetition": 0.18720379,
+      "mean_output_tokens": 646.0,
+      "mean_repetition": 0.17775544666666668,
+      "mean_repetition_delta_vs_chk1": 0.05203517333333333,
+      "min_output_tokens": 426,
+      "quality_valid_cases": 2,
+      "repetition_pass": true,
+      "results_sha256": "e2f8287bd40847a7a6c17843f16c76c0b37a308a3bcf3726c595d09315d8b9bc"
+    },
+    {
+      "checkpoint": 250,
+      "eligible": true,
+      "eval_delta_from_best": 0.0,
+      "eval_loss": 1.1212036609649658,
+      "hard_pass": true,
+      "loss_eligible": true,
+      "max_case_repetition_delta_vs_chk1": 0.035478319999999994,
+      "max_output_tokens": 963,
+      "max_repetition": 0.17364532,
+      "mean_output_tokens": 733.3333333333334,
+      "mean_repetition": 0.13928234666666664,
+      "mean_repetition_delta_vs_chk1": 0.013562073333333332,
+      "min_output_tokens": 421,
+      "quality_valid_cases": 3,
+      "repetition_pass": true,
+      "results_sha256": "c519ca6da29baa6bea3eb9e8cf7d11769ad6ea9f7710dab4a3b1d5e1f9a7e413"
+    },
+    {
+      "checkpoint": 318,
+      "eligible": true,
+      "eval_delta_from_best": 7.641315460205078e-05,
+      "eval_loss": 1.1212800741195679,
+      "hard_pass": true,
+      "loss_eligible": true,
+      "max_case_repetition_delta_vs_chk1": 0.04385536000000001,
+      "max_output_tokens": 730,
+      "max_repetition": 0.19313305,
+      "mean_output_tokens": 610.6666666666666,
+      "mean_repetition": 0.14161496,
+      "mean_repetition_delta_vs_chk1": 0.015894686666666668,
+      "min_output_tokens": 399,
+      "quality_valid_cases": 3,
+      "repetition_pass": true,
+      "results_sha256": "eabd2145e191034c9a14163d827e051ae198dceab992c00408ac30ff4801d9ed"
+    }
+  ],
+  "cases": [
+    {
+      "checkpoint": 170,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "short",
+      "numeric_preserved": true,
+      "output_tokens": 524,
+      "quality_valid": true,
+      "repetition": 0.18269231,
+      "repetition_delta_vs_chk1": 0.05801698999999999,
+      "sample_id": "chk3-validation-95449edf60f02092d2887172"
+    },
+    {
+      "checkpoint": 170,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "medium",
+      "numeric_preserved": true,
+      "output_tokens": 900,
+      "quality_valid": true,
+      "repetition": 0.29129464,
+      "repetition_delta_vs_chk1": 0.14201695,
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34"
+    },
+    {
+      "checkpoint": 170,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "long",
+      "numeric_preserved": true,
+      "output_tokens": 1001,
+      "quality_valid": true,
+      "repetition": 0.15346038,
+      "repetition_delta_vs_chk1": 0.05025257000000001,
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571"
+    },
+    {
+      "checkpoint": 200,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "short",
+      "numeric_preserved": true,
+      "output_tokens": 441,
+      "quality_valid": true,
+      "repetition": 0.17162471,
+      "repetition_delta_vs_chk1": 0.04694939000000001,
+      "sample_id": "chk3-validation-95449edf60f02092d2887172"
+    },
+    {
+      "checkpoint": 200,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "medium",
+      "numeric_preserved": true,
+      "output_tokens": 705,
+      "quality_valid": true,
+      "repetition": 0.17546362,
+      "repetition_delta_vs_chk1": 0.026185929999999996,
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34"
+    },
+    {
+      "checkpoint": 200,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "long",
+      "numeric_preserved": true,
+      "output_tokens": 983,
+      "quality_valid": true,
+      "repetition": 0.12563841,
+      "repetition_delta_vs_chk1": 0.02243060000000001,
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571"
+    },
+    {
+      "checkpoint": 230,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "short",
+      "numeric_preserved": true,
+      "output_tokens": 426,
+      "quality_valid": true,
+      "repetition": 0.18720379,
+      "repetition_delta_vs_chk1": 0.06252847,
+      "sample_id": "chk3-validation-95449edf60f02092d2887172"
+    },
+    {
+      "checkpoint": 230,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "medium",
+      "numeric_preserved": true,
+      "output_tokens": 704,
+      "quality_valid": true,
+      "repetition": 0.16571429,
+      "repetition_delta_vs_chk1": 0.016436599999999996,
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34"
+    },
+    {
+      "checkpoint": 230,
+      "date_preserved": false,
+      "failures": "source_date_set_not_preserved",
+      "length_bucket": "long",
+      "numeric_preserved": true,
+      "output_tokens": 808,
+      "quality_valid": false,
+      "repetition": 0.18034826,
+      "repetition_delta_vs_chk1": 0.07714045000000001,
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571"
+    },
+    {
+      "checkpoint": 250,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "short",
+      "numeric_preserved": true,
+      "output_tokens": 421,
+      "quality_valid": true,
+      "repetition": 0.10551559,
+      "repetition_delta_vs_chk1": -0.01915973,
+      "sample_id": "chk3-validation-95449edf60f02092d2887172"
+    },
+    {
+      "checkpoint": 250,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "medium",
+      "numeric_preserved": true,
+      "output_tokens": 816,
+      "quality_valid": true,
+      "repetition": 0.17364532,
+      "repetition_delta_vs_chk1": 0.02436763,
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34"
+    },
+    {
+      "checkpoint": 250,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "long",
+      "numeric_preserved": true,
+      "output_tokens": 963,
+      "quality_valid": true,
+      "repetition": 0.13868613,
+      "repetition_delta_vs_chk1": 0.035478319999999994,
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571"
+    },
+    {
+      "checkpoint": 318,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "short",
+      "numeric_preserved": true,
+      "output_tokens": 399,
+      "quality_valid": true,
+      "repetition": 0.12151899,
+      "repetition_delta_vs_chk1": -0.0031563300000000127,
+      "sample_id": "chk3-validation-95449edf60f02092d2887172"
+    },
+    {
+      "checkpoint": 318,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "medium",
+      "numeric_preserved": true,
+      "output_tokens": 703,
+      "quality_valid": true,
+      "repetition": 0.19313305,
+      "repetition_delta_vs_chk1": 0.04385536000000001,
+      "sample_id": "chk3-validation-2989048a123b98f4593d0b34"
+    },
+    {
+      "checkpoint": 318,
+      "date_preserved": true,
+      "failures": "",
+      "length_bucket": "long",
+      "numeric_preserved": true,
+      "output_tokens": 730,
+      "quality_valid": true,
+      "repetition": 0.11019284,
+      "repetition_delta_vs_chk1": 0.006985030000000003,
+      "sample_id": "chk3-validation-5fe1814988ed54de75825571"
+    }
+  ],
+  "eval_curve": [
+    {
+      "eval_loss": 1.211933970451355,
+      "step": 10
+    },
+    {
+      "eval_loss": 1.205822467803955,
+      "step": 20
+    },
+    {
+      "eval_loss": 1.1989072561264038,
+      "step": 30
+    },
+    {
+      "eval_loss": 1.1919457912445068,
+      "step": 40
+    },
+    {
+      "eval_loss": 1.18515944480896,
+      "step": 50
+    },
+    {
+      "eval_loss": 1.1785967350006104,
+      "step": 60
+    },
+    {
+      "eval_loss": 1.1721802949905396,
+      "step": 70
+    },
+    {
+      "eval_loss": 1.1662254333496094,
+      "step": 80
+    },
+    {
+      "eval_loss": 1.1604152917861938,
+      "step": 90
+    },
+    {
+      "eval_loss": 1.1551682949066162,
+      "step": 100
+    },
+    {
+      "eval_loss": 1.1507009267807007,
+      "step": 110
+    },
+    {
+      "eval_loss": 1.1464563608169556,
+      "step": 120
+    },
+    {
+      "eval_loss": 1.1423357725143433,
+      "step": 130
+    },
+    {
+      "eval_loss": 1.1386451721191406,
+      "step": 140
+    },
+    {
+      "eval_loss": 1.1350414752960205,
+      "step": 150
+    },
+    {
+      "eval_loss": 1.131482720375061,
+      "step": 160
+    },
+    {
+      "eval_loss": 1.1282564401626587,
+      "step": 170
+    },
+    {
+      "eval_loss": 1.125533938407898,
+      "step": 180
+    },
+    {
+      "eval_loss": 1.1234575510025024,
+      "step": 190
+    },
+    {
+      "eval_loss": 1.1221871376037598,
+      "step": 200
+    },
+    {
+      "eval_loss": 1.1216092109680176,
+      "step": 210
+    },
+    {
+      "eval_loss": 1.1213147640228271,
+      "step": 220
+    },
+    {
+      "eval_loss": 1.1212650537490845,
+      "step": 230
+    },
+    {
+      "eval_loss": 1.12128484249115,
+      "step": 240
+    },
+    {
+      "eval_loss": 1.1212036609649658,
+      "step": 250
+    },
+    {
+      "eval_loss": 1.1212434768676758,
+      "step": 260
+    },
+    {
+      "eval_loss": 1.1213457584381104,
+      "step": 270
+    },
+    {
+      "eval_loss": 1.12130606174469,
+      "step": 280
+    },
+    {
+      "eval_loss": 1.121206283569336,
+      "step": 290
+    },
+    {
+      "eval_loss": 1.1213130950927734,
+      "step": 300
+    },
+    {
+      "eval_loss": 1.1213504076004028,
+      "step": 310
+    },
+    {
+      "eval_loss": 1.1212800741195679,
+      "step": 318
+    }
+  ],
+  "limitations": [
+    "three deterministic greedy cases only",
+    "completion text is redacted, so non-numeric factuality, causality, and style were not manually reviewed",
+    "standalone direct chk1-to-chk3 run is non-promotable under the canonical DAG"
+  ],
+  "schema_version": "chk3-checkpoint-selection-analysis-v1",
+  "selected_checkpoint": 250,
+  "selection_rule": "hard generation gates, then eval loss within 0.001 of best, then repetition and earliest checkpoint as tie-breakers",
+  "status": "validated",
+  "training": {
+    "epochs": 3,
+    "eval_rows": 199,
+    "loss_history_path": "output/training/retrain_v2/chk3_direct_chk1_cp200_full3ep_lr1e6_20260810/adapters/chk3/loss_history.jsonl",
+    "loss_history_sha256": "4b6d1afdae0f95c2b6a59a17431622f83c5215fd1eb6c2551ebe4ef37c258267",
+    "steps": 318,
+    "train_rows": 1683
+  }
+}

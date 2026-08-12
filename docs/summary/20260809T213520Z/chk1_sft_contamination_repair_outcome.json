@@ -1,0 +1,54 @@
+{
+  "schema_version": "chk1-sft-contamination-repair-outcome-v1",
+  "generated_at_utc": "2026-08-09T23:22:53Z",
+  "status": "blocked_by_semantic_gate",
+  "plan_path": "docs/summary/20260809T213520Z/chk1_sft_contamination_repair_plan.md",
+  "report_path": "docs/summary/20260809T213520Z/chk1_sft_contamination_repair_report.md",
+  "candidate": {
+    "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate",
+    "quality_status": "pending_semantic_audit",
+    "immutable_candidate": true,
+    "rows": 1743,
+    "changed_rows": 237,
+    "repair_manifest_sha256": "cd7dee86792c8190a5daceb99612c36a0396506f7dfa4da551a6f41cbb6c3d0b"
+  },
+  "deterministic_validation": {
+    "status": "passed",
+    "receipt_path": "docs/summary/20260809T213520Z/chk1_clean_sft_token_validation.json",
+    "receipt_file_sha256": "12c9f9f56c3946a98e3ca4eb4770818c30489b71c5cc498bbedb24edafef187b",
+    "validation_sha256": "692b6b97f5dd8fa56bd563367d8ea86bde4be37a6c4890cf8d3fbcdc653b8f96",
+    "truncated_rows": 0,
+    "max_total_tokens": 4019
+  },
+  "semantic_audit": {
+    "status": "failed",
+    "summary_path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_qwen_source_audit/summary.json",
+    "summary_sha256": "780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e",
+    "expected": 237,
+    "completed": 235,
+    "passed": 1,
+    "failed": 234,
+    "judge_errors": 2,
+    "blocking_violations": 611,
+    "reasoning_blocking_violations": 0,
+    "answer_blocking_violations": 611,
+    "row_audit_sha256": "dec652ccbe2cef30c32134878e521869e3fa2c9096dd17efde8cd357c6f1baea"
+  },
+  "publication": {
+    "release_published": false,
+    "target_path": "dataset/processed/retrain_v2/chk1_reasoning_compressed_flash_max_v2_clean_20260809",
+    "training_config_created": false,
+    "training_started": false,
+    "reason": "The mandatory source-only semantic audit did not satisfy zero judge errors and zero validated blocking violations."
+  },
+  "implementation_validation": {
+    "integration_tests_passed": 203,
+    "ruff_status": "passed",
+    "compileall_status": "passed",
+    "deterministic_receipt_release_gate": "passed",
+    "failed_semantic_receipt_release_gate": "rejected"
+  },
+  "external_api_calls": {
+    "deepseek_called": false
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "authorization_id": "chk1-cp200-to-chk2-candidate-override-20260810",
+  "authorized_at_utc": "2026-08-10T12:30:00Z",
+  "authorization_basis": {
+    "actor": "user",
+    "instruction": "Use the selected lr=1e-6 checkpoint-200, merge it, and fresh-start the versioned chk2 candidate with grounded_analysis_v3_deepseek_high after applying the TOTALSL unit overlay.",
+    "scope_is_explicit": true
+  },
+  "scope": {
+    "source_stage": "chk1",
+    "source_checkpoint_step": 200,
+    "downstream_stages_allowed": [
+      "chk2"
+    ],
+    "downstream_stages_denied": [
+      "chk3",
+      "chk4"
+    ],
+    "candidate_only": true,
+    "automatic_chk2_merge_allowed": false,
+    "canonical_dag_integration_allowed": false
+  },
+  "source_checkpoint": {
+    "path": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200",
+    "directory_fingerprint_sha256": "fa454f73071b3989bf7c9ea3aaabb5a599196396a3ecb369d8956b849bacdc2f",
+    "adapter_model_sha256": "7a5155562d9482028e0acb777a7b5758e4283f8463c0c39a0cade4062959b9a9",
+    "adapter_config_sha256": "038a883598021f7f7b0d1144cdb59e1adaf10473b01e25a656f28499467c7534",
+    "training_config": {
+      "path": "configs/retrain_v2/chk1_analysis_sft_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810.yaml",
+      "sha256": "c9521a29f531a8a57862e5148eabfa896a803ed59825ff52d5df09206eee61f0"
+    },
+    "resolved_runtime_config": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/resolved_runtime_config.json",
+      "sha256": "89a35e7ece10e1d9a223ee19203605cd75af4e3f749d9e5afd73d889020e1856"
+    }
+  },
+  "selection_evidence": {
+    "source_notes": {
+      "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/source_notes.md",
+      "sha256": "2fa0eabd68d3afde7330eeff224316f79c861754c8d3c5bc589310e036c08423"
+    },
+    "selection_snapshot": {
+      "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/selection_snapshot.jsonl",
+      "sha256": "4a5d2f3a9de4cbcc5f54b400817740d707143ba25eeec6963db3b51291353652"
+    },
+    "report": {
+      "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/report.html",
+      "sha256": "71f94d9f23d4e58def4cbd4c023e1d20c283b1448c3fb017e9d1433ad2b136e5"
+    }
+  },
+  "known_semantic_risk": {
+    "prior_chk1_only_authorization": {
+      "path": "docs/summary/20260809T234411Z/chk1_semantic_override_authorization.json",
+      "sha256": "efe099889333a951df9a371cc2cfc06b22560c93a408cbfedb07e5f16084f602",
+      "downstream_stages_allowed": []
+    },
+    "qwen_source_audit": {
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_qwen_source_audit/summary.json",
+      "sha256": "780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e",
+      "status": "failed"
+    },
+    "deepseek_source_audit": {
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_deepseek_source_audit_v1/summary.json",
+      "sha256": "29c9924371349951e2eec3f8a6b31774c2ee29af3fcbc3f42a14ab3058862723",
+      "status": "semantic_failures",
+      "failed_rows": 113,
+      "audited_rows": 237
+    },
+    "risk_acknowledgement": "This authorization records an explicit downstream experiment override. It does not relabel either audit as passed and does not make checkpoint-200 a canonical chk1 release."
+  },
+  "chk2_candidate_contract": {
+    "config_path": "configs/retrain_v2/chk2_analysis_grpo_cp200_deepseek_high_totalsl_v1_20260810.yaml",
+    "config_sha256": "5b5e5de5b0f06d479ad1d4daa7712a70717fc4f105301af0d1e19e3c89c473af",
+    "run_id": "chk2_clean_v2_cp200_deepseek_high_totalsl_v1_20260810",
+    "reward_func": "grounded_analysis_v3_deepseek_high",
+    "policy_gpu": 1,
+    "world_size": 1,
+    "fresh_start_required": true
+  },
+  "schema_version": "chk2-downstream-override-authorization-v1"
+}

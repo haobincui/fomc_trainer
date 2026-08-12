@@ -1,0 +1,616 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "CHK3 checkpoint 选择报告：cp318",
+    "description": "基于四组 adapter-overlay generation、两个 exact-merged finalist replay、BERTScore 与 MPNet cosine 的可审计技术报告。",
+    "generatedAt": "2026-08-11T10:46:04Z",
+    "cards": [
+      {
+        "id": "selection_card",
+        "description": "最终选择及 exact-merged 原生门禁。",
+        "dataset": "headline",
+        "sourceId": "selection_receipt",
+        "metrics": [
+          {
+            "label": "选择 checkpoint",
+            "field": "selected_step",
+            "format": "number"
+          },
+          {
+            "label": "原生硬门禁通过率",
+            "field": "core_pass_rate",
+            "format": "percent"
+          },
+          {
+            "label": "exact merge 不匹配",
+            "field": "merge_mismatches",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "semantic_card",
+        "description": "非 identity N11、相对 chk1 的语义分数点估计。",
+        "dataset": "headline",
+        "sourceId": "selection_receipt",
+        "metrics": [
+          {
+            "label": "BERT-F1 Δ vs chk1",
+            "field": "bert_delta",
+            "format": "percent",
+            "signed": true
+          },
+          {
+            "label": "MPNet COS Δ vs chk1",
+            "field": "mpnet_delta",
+            "format": "percent",
+            "signed": true
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "overlay_gate_chart",
+        "title": "四组 generation screening 将候选缩小到 cp200 与 cp318",
+        "subtitle": "固定 N12；柱高为通过硬门禁的样本数。cp170 出现截断/周期循环，cp230 出现日期保真失败。",
+        "headerMarkdown": "这里展示的是 **adapter-overlay screening**，用于筛选 exact-merged finalist；最终选择仍以合并后 replay 为准。",
+        "type": "bar",
+        "dataset": "overlay_sweep",
+        "sourceId": "selection_receipt",
+        "encodings": {
+          "x": {
+            "field": "checkpoint",
+            "type": "ordinal",
+            "label": "Checkpoint"
+          },
+          "y": {
+            "field": "hard_valid_cases",
+            "type": "quantitative",
+            "label": "硬门禁通过样本数",
+            "format": "number"
+          },
+          "tooltip": [
+            {
+              "field": "cases",
+              "type": "quantitative",
+              "label": "总样本"
+            },
+            {
+              "field": "date_fidelity_cases",
+              "type": "quantitative",
+              "label": "日期保真"
+            },
+            {
+              "field": "cap_cases",
+              "type": "quantitative",
+              "label": "触顶"
+            },
+            {
+              "field": "periodic_tail_cases",
+              "type": "quantitative",
+              "label": "周期循环"
+            },
+            {
+              "field": "max_tail_repetition",
+              "type": "quantitative",
+              "label": "最大尾部 4-gram 重复率"
+            }
+          ]
+        },
+        "yAxisTitle": "通过数（/12）",
+        "valueFormat": "number",
+        "layout": "full"
+      },
+      {
+        "id": "merged_semantic_delta_chart",
+        "title": "exact-merged cp318 在两项语义指标上均高于 chk1",
+        "subtitle": "非 identity N11；候选减 chk1。硬门禁失败行的全部语义分数固定为 0，因此 cp200 的日期遗漏直接反映在均值中。",
+        "headerMarkdown": "分数仅为小样本点估计，不做显著性推断，也不合成为单一加权分数。",
+        "type": "bar",
+        "dataset": "semantic_deltas",
+        "sourceId": "selection_receipt",
+        "encodings": {
+          "x": {
+            "field": "candidate",
+            "type": "ordinal",
+            "label": "Exact-merged candidate"
+          },
+          "y": {
+            "field": "delta",
+            "type": "quantitative",
+            "label": "相对 chk1 的均值差",
+            "format": "percent"
+          },
+          "color": {
+            "field": "metric",
+            "type": "nominal",
+            "label": "指标"
+          },
+          "tooltip": [
+            {
+              "field": "candidate_mean",
+              "type": "quantitative",
+              "label": "候选均值",
+              "format": "percent"
+            },
+            {
+              "field": "baseline_mean",
+              "type": "quantitative",
+              "label": "chk1 均值",
+              "format": "percent"
+            },
+            {
+              "field": "wins",
+              "type": "quantitative",
+              "label": "逐样本胜出数"
+            }
+          ]
+        },
+        "yAxisTitle": "候选 − chk1",
+        "valueFormat": "percent",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "overlay_sweep_table",
+        "title": "四组 adapter-overlay generation 与语义筛选",
+        "subtitle": "同一 sealed N12、同一 analysis → Minutes 合同；BERT/COS 主视图排除 1 条 identity 样本。",
+        "dataset": "overlay_sweep",
+        "sourceId": "selection_receipt",
+        "columns": [
+          {
+            "field": "checkpoint",
+            "label": "Checkpoint",
+            "type": "text"
+          },
+          {
+            "field": "hard_valid_cases",
+            "label": "硬门禁通过",
+            "format": "number"
+          },
+          {
+            "field": "cap_cases",
+            "label": "触顶",
+            "format": "number"
+          },
+          {
+            "field": "periodic_tail_cases",
+            "label": "周期循环",
+            "format": "number"
+          },
+          {
+            "field": "date_fidelity_cases",
+            "label": "日期保真",
+            "format": "number"
+          },
+          {
+            "field": "max_tail_repetition",
+            "label": "最大尾部重复率",
+            "format": "percent"
+          },
+          {
+            "field": "bert_f1_n11",
+            "label": "BERT-F1（N11）",
+            "format": "percent"
+          },
+          {
+            "field": "mpnet_cos_n11",
+            "label": "MPNet COS（N11）",
+            "format": "percent"
+          },
+          {
+            "field": "result",
+            "label": "结论",
+            "type": "text"
+          }
+        ],
+        "layout": "full"
+      },
+      {
+        "id": "merged_replay_table",
+        "title": "部署形态 replay 决定最终选择",
+        "subtitle": "exact-merged cp200 在 1 条样本遗漏日期，cp318 为 12/12；语义均值采用硬门禁零惩罚。",
+        "dataset": "merged_replay",
+        "sourceId": "selection_receipt",
+        "columns": [
+          {
+            "field": "model",
+            "label": "模型",
+            "type": "text"
+          },
+          {
+            "field": "core_valid_cases",
+            "label": "硬门禁通过",
+            "format": "number"
+          },
+          {
+            "field": "penalized_cases",
+            "label": "零惩罚样本",
+            "format": "number"
+          },
+          {
+            "field": "bert_f1_n11",
+            "label": "BERT-F1（N11）",
+            "format": "percent"
+          },
+          {
+            "field": "mpnet_cos_n11",
+            "label": "MPNet COS（N11）",
+            "format": "percent"
+          },
+          {
+            "field": "bert_delta",
+            "label": "BERT Δ vs chk1",
+            "format": "percent",
+            "movement": true
+          },
+          {
+            "field": "mpnet_delta",
+            "label": "MPNet Δ vs chk1",
+            "format": "percent",
+            "movement": true
+          },
+          {
+            "field": "result",
+            "label": "结论",
+            "type": "text"
+          }
+        ],
+        "layout": "full"
+      },
+      {
+        "id": "lineage_table",
+        "title": "exact merge lineage 核验",
+        "subtitle": "逐张量验证 base + LoRA 的合并结果；两位 finalist 均为 0 mismatch。",
+        "dataset": "merge_lineage",
+        "sourceId": "selection_receipt",
+        "columns": [
+          {
+            "field": "checkpoint",
+            "label": "Checkpoint",
+            "type": "text"
+          },
+          {
+            "field": "adapted_tensors",
+            "label": "已适配模型张量",
+            "format": "number"
+          },
+          {
+            "field": "unchanged_tensors",
+            "label": "未改模型张量",
+            "format": "number"
+          },
+          {
+            "field": "mismatches",
+            "label": "Mismatch",
+            "format": "number"
+          },
+          {
+            "field": "merged_directory_sha256",
+            "label": "合并模型目录 SHA-256",
+            "type": "text"
+          }
+        ],
+        "layout": "full"
+      }
+    ],
+    "sources": [
+      {
+        "id": "selection_receipt",
+        "label": "CHK3 checkpoint selection receipt",
+        "path": "docs/summary/20260811T104604Z/chk3_checkpoint_selection_native_n12/selection_receipt.json"
+      },
+      {
+        "id": "sealed_n12",
+        "label": "Sealed native analysis-to-Minutes N12 sample",
+        "path": "docs/summary/20260811T003000Z/chk3_native_analysis_to_minutes_cp250_eval/samples_n12.json"
+      },
+      {
+        "id": "overlay_semantic",
+        "label": "Adapter-overlay BERTScore and MPNet results",
+        "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/semantic/bert_mpnet_n12_v1.json"
+      },
+      {
+        "id": "merged_semantic",
+        "label": "Exact-merged finalist BERTScore and MPNet results",
+        "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/semantic/merged_finalists_bert_mpnet_v1.json"
+      },
+      {
+        "id": "cp318_lineage",
+        "label": "cp318 exact merge lineage attestation",
+        "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/lineage/chk3_cp318_exact_merge_lineage.json"
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# CHK3 checkpoint 选择报告：cp318"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 技术结论\n\n**选择 checkpoint-318。** 其 exact-merged 模型在原生 `analysis → Minutes` N12 上通过预注册核心门禁 **12/12**，没有触顶、周期循环、结构失败或数值/日期保真失败。非 identity N11 上，BERTScore F1 为 **0.975129**（较 chk1 **+0.006773**），MPNet cosine 为 **0.972733**（较 chk1 **+0.028688**）。\n\n这是一个 **evaluation-only** 选择：当前证据不授权 canonical promotion，也不授权直接开始下游训练。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "cardIds": [
+          "selection_card",
+          "semantic_card"
+        ]
+      },
+      {
+        "id": "screening_method",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 第一阶段：四组 generation screening\n\n在完全相同的 sealed N12、生成参数和 CHK3 原生合同上测试 cp170、cp200、cp230、cp318。硬门禁先于语义分数：交付边界、原生结构、数值多重集、日期集合和退化检测任一失败，都不能被 BERT/COS 抵消。"
+      },
+      {
+        "id": "overlay_gate_visual",
+        "type": "chart",
+        "chartId": "overlay_gate_chart",
+        "layout": "full"
+      },
+      {
+        "id": "overlay_detail",
+        "type": "table",
+        "tableId": "overlay_sweep_table",
+        "layout": "full"
+      },
+      {
+        "id": "deployment_shape",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 第二阶段：exact-merged 部署形态复测\n\nadapter-overlay 阶段的 cp200 与 cp318 都是 12/12，因此将两者精确合并后重新生成。该 replay 改变了结论：cp200 在样本 `chk1-analysis-2023-07-26-59bbaffd1cb36046` 保留了 mid-July，却遗漏 June 30、July 17、May、June 共 4 个日期表面值，仅通过 **11/12**；cp318 仍通过 **12/12**，因此成为唯一合格 finalist。"
+      },
+      {
+        "id": "merged_detail",
+        "type": "table",
+        "tableId": "merged_replay_table",
+        "layout": "full"
+      },
+      {
+        "id": "semantic_method",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 第三阶段：BERTScore 与独立 MPNet cosine\n\n语义比较只使用模型的 `answer` 与 `reference_minutes`，主视图排除 1 条 normalized-identity 样本。BERTScore 固定为本地 RoBERTa-large 第 17 层；COS 使用与训练 reward 独立的本地 all-mpnet-base-v2。评分时不访问网络，失败硬门禁的行固定记 0。"
+      },
+      {
+        "id": "semantic_delta_visual",
+        "type": "chart",
+        "chartId": "merged_semantic_delta_chart",
+        "layout": "full"
+      },
+      {
+        "id": "legacy_diagnostic",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 为什么旧 runner 显示 cp318 只有 10/12\n\n旧 `quality_valid` 汇总把 signed-number surface checker 的结果并入总质量，因此显示 10/12；这不是本次预注册核心门禁。独立重算后，cp318 的核心门禁为 **12/12**。扩展诊断仍记录 1 条输出多显式写了一次上下文已支持的 `2024`，但它没有引入数值或日期事实错误，按既定规则不单独触发零惩罚。"
+      },
+      {
+        "id": "lineage_heading",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 模型 lineage 与可复现性\n\ncp318 合并模型目录为 `output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/models/chk3_cp318_merged`。逐张量核验确认 224 个适配模型张量与 67 个未改模型张量全部精确匹配，mismatch 为 0。选择回执 `selection_receipt.json` 的文件 SHA-256 为 `aaead86f21003f5305b993d51eb90bae794ebaa9245908d4ce472def6b31c3d1`。"
+      },
+      {
+        "id": "lineage_detail",
+        "type": "table",
+        "tableId": "lineage_table",
+        "layout": "full"
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 限制与稳健性边界\n\n- N12 是确定性的诊断样本，不支持总体推断或显著性结论。\n- reference Minutes 是 synthetic teacher target，不是官方 FOMC Minutes。\n- BERTScore 与 MPNet 衡量参考相似度，不等于事实正确性。\n- N11 主视图排除 1 条 identity 样本；本报告不构造加权综合分。\n- adapter-overlay 与 exact-merged 输出可能不同，因此只能把前者当 screening，把后者当最终部署形态证据。"
+      },
+      {
+        "id": "recommendation",
+        "type": "markdown",
+        "sourceId": "selection_receipt",
+        "body": "## 建议的下一步\n\n保留 cp318 exact-merged artifact 作为当前 CHK3 **评估模型**。在任何 canonical promotion 或下游使用前，先冻结评估协议并扩展到 N30，再运行完整 held-out 集；同时继续保留逐样本 generation 落盘、硬门禁零惩罚和模型目录哈希。\n\n## 后续问题\n\n1. cp318 在更大样本上能否维持 100% 的日期与数值保真？\n2. synthetic Minutes 与官方 Minutes 风格之间是否存在系统偏差？\n3. 对 signed numbers、跨年季度和多日期密集样本补充专门压力测试后，结论是否仍稳定？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-11T10:46:04Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {
+          "selected_step": 318,
+          "core_pass_rate": 1,
+          "merge_mismatches": 0,
+          "bert_delta": 0.006773184646259655,
+          "mpnet_delta": 0.028688447041945023
+        }
+      ],
+      "overlay_sweep": [
+        {
+          "checkpoint": "cp170",
+          "cases": 12,
+          "hard_valid_cases": 10,
+          "cap_cases": 1,
+          "periodic_tail_cases": 1,
+          "date_fidelity_cases": 10,
+          "max_tail_repetition": 0.99608227,
+          "bert_f1_n11": 0.8008566336198286,
+          "mpnet_cos_n11": 0.7969687472690236,
+          "result": "拒绝：截断/循环与保真失败"
+        },
+        {
+          "checkpoint": "cp200",
+          "cases": 12,
+          "hard_valid_cases": 12,
+          "cap_cases": 0,
+          "periodic_tail_cases": 0,
+          "date_fidelity_cases": 12,
+          "max_tail_repetition": 0.38491675,
+          "bert_f1_n11": 0.9767040827057578,
+          "mpnet_cos_n11": 0.9723174680363048,
+          "result": "进入 exact merge"
+        },
+        {
+          "checkpoint": "cp230",
+          "cases": 12,
+          "hard_valid_cases": 11,
+          "cap_cases": 0,
+          "periodic_tail_cases": 0,
+          "date_fidelity_cases": 11,
+          "max_tail_repetition": 0.46180964,
+          "bert_f1_n11": 0.8885822404514659,
+          "mpnet_cos_n11": 0.8761505592953075,
+          "result": "拒绝：日期保真失败"
+        },
+        {
+          "checkpoint": "cp318",
+          "cases": 12,
+          "hard_valid_cases": 12,
+          "cap_cases": 0,
+          "periodic_tail_cases": 0,
+          "date_fidelity_cases": 12,
+          "max_tail_repetition": 0.35095448,
+          "bert_f1_n11": 0.97904587875713,
+          "mpnet_cos_n11": 0.9701662876389243,
+          "result": "进入 exact merge"
+        }
+      ],
+      "merged_replay": [
+        {
+          "model": "chk1 baseline",
+          "core_valid_cases": 12,
+          "penalized_cases": 0,
+          "bert_f1_n11": 0.9683556394143538,
+          "mpnet_cos_n11": 0.9440444003451954,
+          "bert_delta": 0,
+          "mpnet_delta": 0,
+          "result": "基线"
+        },
+        {
+          "model": "cp200 exact-merged",
+          "core_valid_cases": 11,
+          "penalized_cases": 1,
+          "bert_f1_n11": 0.8870507912202314,
+          "mpnet_cos_n11": 0.8809889284047213,
+          "bert_delta": -0.08130484819412231,
+          "mpnet_delta": -0.06305547194047408,
+          "result": "拒绝：日期遗漏"
+        },
+        {
+          "model": "cp318 exact-merged",
+          "core_valid_cases": 12,
+          "penalized_cases": 0,
+          "bert_f1_n11": 0.9751288240606134,
+          "mpnet_cos_n11": 0.9727328473871405,
+          "bert_delta": 0.006773184646259655,
+          "mpnet_delta": 0.028688447041945023,
+          "result": "选择（evaluation-only）"
+        }
+      ],
+      "semantic_deltas": [
+        {
+          "candidate": "cp200",
+          "metric": "BERTScore F1",
+          "delta": -0.08130484819412231,
+          "candidate_mean": 0.8870507912202314,
+          "baseline_mean": 0.9683556394143538,
+          "wins": 4
+        },
+        {
+          "candidate": "cp200",
+          "metric": "MPNet cosine",
+          "delta": -0.06305547194047408,
+          "candidate_mean": 0.8809889284047213,
+          "baseline_mean": 0.9440444003451954,
+          "wins": 7
+        },
+        {
+          "candidate": "cp318",
+          "metric": "BERTScore F1",
+          "delta": 0.006773184646259655,
+          "candidate_mean": 0.9751288240606134,
+          "baseline_mean": 0.9683556394143538,
+          "wins": 7
+        },
+        {
+          "candidate": "cp318",
+          "metric": "MPNet cosine",
+          "delta": 0.028688447041945023,
+          "candidate_mean": 0.9727328473871405,
+          "baseline_mean": 0.9440444003451954,
+          "wins": 9
+        }
+      ],
+      "merge_lineage": [
+        {
+          "checkpoint": "cp200",
+          "adapted_tensors": 224,
+          "unchanged_tensors": 67,
+          "mismatches": 0,
+          "merged_directory_sha256": "5e18b378beca91c16236248ef70b399e13271f49af694973250d12d230ccec74"
+        },
+        {
+          "checkpoint": "cp318",
+          "adapted_tensors": 224,
+          "unchanged_tensors": 67,
+          "mismatches": 0,
+          "merged_directory_sha256": "d7a33a5dcd48f8d85b3587d28426496bb259b88e6861d5ca722f4e57115f2146"
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "selection_receipt",
+      "label": "CHK3 checkpoint selection receipt",
+      "path": "docs/summary/20260811T104604Z/chk3_checkpoint_selection_native_n12/selection_receipt.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "sql": "SELECT * FROM read_json_auto('docs/summary/20260811T104604Z/chk3_checkpoint_selection_native_n12/selection_receipt.json')",
+        "description": "Reads the audited selection receipt; the bounded report datasets are deterministic projections of this nested JSON record.",
+        "executed_at": "2026-08-11T10:46:04Z",
+        "tables_used": [
+          "docs/summary/20260811T104604Z/chk3_checkpoint_selection_native_n12/selection_receipt.json"
+        ]
+      }
+    },
+    {
+      "id": "sealed_n12",
+      "label": "Sealed native analysis-to-Minutes N12 sample",
+      "path": "docs/summary/20260811T003000Z/chk3_native_analysis_to_minutes_cp250_eval/samples_n12.json"
+    },
+    {
+      "id": "overlay_semantic",
+      "label": "Adapter-overlay BERTScore and MPNet results",
+      "path": "output/evaluation/main/chk3_native_cp_sweep_n12_20260811_v1/semantic/bert_mpnet_n12_v1.json"
+    },
+    {
+      "id": "merged_semantic",
+      "label": "Exact-merged finalist BERTScore and MPNet results",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/semantic/merged_finalists_bert_mpnet_v1.json"
+    },
+    {
+      "id": "cp318_lineage",
+      "label": "cp318 exact merge lineage attestation",
+      "path": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/lineage/chk3_cp318_exact_merge_lineage.json"
+    }
+  ],
+  "package_info": {
+    "originUrl": "artifact://chk3-checkpoint-selection-native-n12",
+    "controls": {
+      "edit": false,
+      "refresh": false,
+      "persistence": false,
+      "copyAsImage": false
+    }
+  }
+}

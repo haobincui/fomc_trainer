@@ -1,0 +1,92 @@
+{
+  "schema_version": "chk1-deepseek-237-audit-outcome-v1",
+  "completed_at_utc": "2026-08-10T00:38:00Z",
+  "status": "semantic_failures",
+  "decision": {
+    "strict_source_only_gate": "failed",
+    "direct_use_as_clean_chk1_release": "not_recommended",
+    "minimum_rows_to_repair": 113,
+    "downstream_release_changed": false,
+    "training_started": false
+  },
+  "input_binding": {
+    "candidate_manifest_sha256": "41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700",
+    "semantic_audit_input_sha256": "34f63a7ac8b94a885f44851acbb5188c729aee8fcc5d90cbd2f8fdb592ecfdcb",
+    "rows": 237,
+    "split_counts": {"train": 183, "eval": 25, "test": 29}
+  },
+  "audit": {
+    "model": "deepseek-v4-flash",
+    "api": "responses",
+    "reasoning": {"effort": "max"},
+    "max_output_tokens": 32768,
+    "two_stage": true,
+    "counts": {
+      "passed": 124,
+      "failed": 113,
+      "review_required": 0,
+      "stage_a_proposals": 236,
+      "stage_b_confirmed": 203,
+      "stage_b_false_positive": 33,
+      "stage_b_ambiguous": 0,
+      "provider_errors": 0,
+      "target_leakage": 0
+    },
+    "usage": {
+      "stage_a_total_tokens": 2988164,
+      "stage_b_total_tokens": 1269349,
+      "total_tokens": 4257513
+    },
+    "summary": {
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_deepseek_source_audit_v1/summary.json",
+      "sha256": "29c9924371349951e2eec3f8a6b31774c2ee29af3fcbc3f42a14ab3058862723"
+    },
+    "row_audits": {
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_deepseek_source_audit_v1/row_audits.jsonl",
+      "sha256": "38375236e630f48c33f4495774d7329ad987b77113c87178ecdef0bd6076d5df"
+    }
+  },
+  "validation": {
+    "unit_tests": "12 passed",
+    "ruff": "passed",
+    "row_hash_binding_errors": 0,
+    "quote_section_binding_errors": 0,
+    "credential_hits": 0,
+    "forbidden_raw_cache_fields": 0,
+    "cache_counts": {"stage_a": 237, "stage_b": 236},
+    "report_delivery": {
+      "validation": "passed",
+      "package": "passed",
+      "verification": "structural_only",
+      "browser_limitation": "No installed Chromium headless shell; enhanced-reader viewport and source-dialog interaction were not browser-tested."
+    }
+  },
+  "artifacts": {
+    "plan": {
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_source_audit_plan.md",
+      "sha256": "1feb79cd4251c7b9fc604d58cc50d7bf5fea688dc1dfa0a81c5031ad3785d2d4"
+    },
+    "analysis": {
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_analysis.json",
+      "sha256": "ce9d8e336129bdebe874893dbe6c9e8d52a551856854a2570a49791f33538d81"
+    },
+    "report_artifact": {
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_artifact.json",
+      "sha256": "05bf85965e4720c1de447a42d751583a392e571d607fde591aa820ee0b31c5db"
+    },
+    "report_source": {
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report_source.sqlite",
+      "sha256": "b05a45257f17d488626e771a8779e145a42452aba8173190a5b837ce56f4875f"
+    },
+    "report_html": {
+      "path": "docs/summary/20260809T235143Z/chk1_deepseek_237_audit_report.html",
+      "sha256": "da26fc0daeb1535a2e95b866e356dd0d3dd3d1fc1a5e2a8798a6a065bbb5c09c"
+    }
+  },
+  "implementation": {
+    "audit_cli_sha256": "5e484148e11b824ebe8b3051588dc371467630a2c60e375923c49dbfcad01e0a",
+    "summarizer_sha256": "56480c1e068ccb98ecb566836e19597656f1525597b854ab60ba28b64511b200",
+    "report_db_materializer_sha256": "75d814c5f7d574d8a862708d3b39b59b0a5587e9155319b7abe2b3b746ba9fa1",
+    "test_sha256": "438aac995c25790f84bd045396caa7ce702397fbb30185cd23e36e807be19443"
+  }
+}

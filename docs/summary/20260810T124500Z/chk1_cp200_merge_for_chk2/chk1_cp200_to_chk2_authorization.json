@@ -1,0 +1,98 @@
+{
+  "authorization_basis": "explicit_user_instruction",
+  "authorization_sha256": "c8b400ec48be0fd31929f07dea3d30422a2c2638306ab55f4e2e264cb161cb3c",
+  "authorized_at_utc": "2026-08-10T12:45:00Z",
+  "authorized_by": "workspace_user",
+  "bindings": {
+    "adapter_weights_sha256": "7a5155562d9482028e0acb777a7b5758e4283f8463c0c39a0cade4062959b9a9",
+    "base_model": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 83,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/models/DeepSeek-R1-Distill-Llama-8B",
+      "sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "total_bytes": 32134256893
+    },
+    "candidate_manifest": {
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_candidate/candidate_manifest.json",
+      "sha256": "41a5111875b052a44daec4bde5d622e25e19429158819aec43e1ec85d1945700"
+    },
+    "checkpoint_200_probe": {
+      "path": "docs/summary/20260810T113500Z/chk1_lr1e6_cp200_vs_chk0_comparison.json",
+      "sample_manifest_sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246",
+      "sha256": "7e778176b3923b0c97ec2c06f4aaca29ec75d0010bef85bed4391e273d25d345",
+      "status": "passed"
+    },
+    "checkpoint_selection_artifact": {
+      "path": "docs/summary/20260810T123000Z/chk1_checkpoint_selection/artifact.json",
+      "sha256": "274f8ad170617d650a3bc9ae181e506158eb4294481825479aef0f2c79455eb6"
+    },
+    "checkpoint_step": 200,
+    "deterministic_validation_receipt": {
+      "path": "docs/summary/20260809T213520Z/chk1_clean_sft_token_validation.json",
+      "sha256": "12c9f9f56c3946a98e3ca4eb4770818c30489b71c5cc498bbedb24edafef187b"
+    },
+    "merge_config": {
+      "path": "configs/retrain_v2/chk1_clean_v2_lr1e6_cp200_merge_for_chk2_20260810.yaml",
+      "sha256": "5f673ac540dbc4f0f13c4f780dbf38fe786176fdce2c56322af4a180707f3799"
+    },
+    "merged_destination": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+    "original_chk1_authorization": {
+      "downstream_stages_allowed": [],
+      "path": "docs/summary/20260809T234411Z/chk1_semantic_override_authorization.json",
+      "sha256": "efe099889333a951df9a371cc2cfc06b22560c93a408cbfedb07e5f16084f602"
+    },
+    "semantic_audit_summary": {
+      "counts": {
+        "blocking_violations": 611,
+        "completed": 235,
+        "expected": 237,
+        "failed": 234,
+        "judge_errors": 2,
+        "passed": 1
+      },
+      "path": "output/data/retrain_v2/chk1/chk1_reasoning_compressed_flash_max_v2_clean_20260809_qwen_source_audit/summary.json",
+      "sha256": "780436e35db5690fc90cb68eedcc9c61653d67d8d2036dd68306d81907aee90e",
+      "status": "failed"
+    },
+    "source_adapter": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 13,
+      "kind": "directory",
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/checkpoint-200",
+      "sha256": "fa454f73071b3989bf7c9ea3aaabb5a599196396a3ecb369d8956b849bacdc2f",
+      "total_bytes": 356124842
+    },
+    "source_training_config": {
+      "path": "configs/retrain_v2/chk1_analysis_sft_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810.yaml",
+      "sha256": "c9521a29f531a8a57862e5148eabfa896a803ed59825ff52d5df09206eee61f0"
+    },
+    "training_runtime_receipt": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/resolved_runtime_config.json",
+      "sha256": "89a35e7ece10e1d9a223ee19203605cd75af4e3f749d9e5afd73d889020e1856"
+    }
+  },
+  "risk_acknowledgements": [
+    "semantic_audit_failed",
+    "semantic_audit_contains_611_blocking_violations",
+    "semantic_audit_contains_2_judge_errors",
+    "override_is_limited_to_chk2_parent_use",
+    "not_authorized_for_chk3_or_chk4",
+    "canonical_sealed_chk1_release_is_absent"
+  ],
+  "schema_version": "chk1-cp200-to-chk2-override-authorization-v1",
+  "scope": {
+    "allowed_operations": [
+      "merge_checkpoint_200",
+      "use_merged_checkpoint_200_as_chk2_parent"
+    ],
+    "downstream_stages_allowed": [
+      "chk2"
+    ],
+    "further_downstream_stages_allowed": [],
+    "source_stage": "chk1",
+    "target_stage": "chk2"
+  },
+  "status": "authorized",
+  "user_instruction": "现在使用cp200帮我merge出新模型用于chk2的训练"
+}
