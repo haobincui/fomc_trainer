@@ -13,32 +13,19 @@
 
 
 
-\section{Training Plan and Checkpoint Definitions}\label{ch2:sec:training-plan}
+\section{Training Plan}\label{ch2:sec:2-step-training}
 
-The completed Minutes-generation experiment follows a sequential supervised
-fine-tuning design.  DeepSeek-R1-Distill-Llama-8B is retained as the pretrained
-starting model (\textit{Model chk-0}).  The first SFT stage adapts this model to
-map point-in-time macroeconomic and financial evidence to structured analytical
-text.  Checkpoint 200 from this stage is denoted \textit{Model chk-1}.  It is
-the experimental baseline for the Minutes-rewriting analysis.
 
-The second completed SFT stage initializes from \textit{Model chk-1} and
-learns to rewrite a supplied analysis as one institutionally styled FOMC
-Minutes paragraph.  Its input consists solely of a \textit{Model chk-1}
-analysis.  The supervised completion contains a synthetic teacher-generated
-fidelity rationale followed by a Minutes-style paragraph derived from the same
-analysis; it does not contain an excerpt from the official Minutes.  Checkpoint
-318 from this stage is denoted
-\textit{Model chk-3} and is retained for task-aligned evaluation.
+\subsection*{Training Lineage}
+The final training lineage contains one analytical model (Analytical SFT Model, denoted as \textit{Model chk-1}) and two downstream branches. First, supervised fine-tuning (SFT) adapts the pretrained base model (DeepSeek-R1-Distill-Llama-8B, denoted as \textit{Model chk-0}) to point-in-time macro-financial analysis. The resulting analytical model then initializes both the Minutes-rewriting branch (Paragraph-rewriting Model, denoted as \textit{Model chk-2}) and the monetary-policy decision branch (Decision Model, denoted as \textit{Model chk-3}).
 
-Accordingly, the primary empirical comparison is
-\textit{Model chk-3} relative to the \textit{Model chk-1} baseline under an
-identical analysis-to-Minutes prompt.  \textit{Model chk-0} remains useful for
-describing the pretrained starting point and for an auxiliary diagnostic, but
-it is not the baseline for estimating the effect of Minutes-specific
-fine-tuning.  The implemented checkpoint sequence is therefore
-\texttt{chk-0}$\rightarrow$\texttt{chk-1}$\rightarrow$\texttt{chk-3}.
-Table~\ref{tab:ch2:model_checkpoints} summarizes these roles.
+The Paragraph-rewriting Model branch applies an additional SFT stage to learn faithful analysis-to-FOMC-Minutes-style paragraph rewriting. The decision branch first uses SFT to establish the discrete action and response contracts and then applies Group Relative Policy Optimization (GRPO) with an engineered proxy reward for two rule-verifiable properties: agreement with the recorded direction-and-magnitude label and compliance with the native response-delivery contract. This format-sensitive score is not a measure of reasoning quality, economic validity, decision utility, or overall model quality. The complete methods and realized configurations are reported in Section~\ref{ch2:sec:training}.
+
+
+
+
+\subsection*{Summary of the Training Plan}
+The paper uses four model names. Experimental identifiers are mapped to these paper-level names by task: the experimental Minutes model is \textit{Model chk-2}, and the experimental decision model is \textit{Model chk-3}. Table~\ref{tab:ch2:model_checkpoints} fixes this naming throughout the chapter.
 
 \begin{table}[htbp]
     \centering
@@ -49,36 +36,40 @@ Table~\ref{tab:ch2:model_checkpoints} summarizes these roles.
         \toprule
         \textbf{Model} & \textbf{Training status} & \textbf{Training objective} & \textbf{Main learning signal} & \textbf{Role in this chapter} \\
         \midrule
-        \textbf{\textit{Model chk-0}} & Pretrained starting model. & Provides the reasoning-capable initialization used for chapter-specific adaptation. & Pretrained and distilled reasoning capability; no additional chapter-specific fine-tuning. & Base model and auxiliary reference; not the experimental baseline. \\
-        \textbf{\textit{Model chk-1}} & Analysis SFT, checkpoint 200. & Maps point-in-time macro-financial evidence to structured analytical outputs. & Supervised evidence-to-analysis pairs with generated rationales and final analyses. & Experimental baseline and parent checkpoint for Minutes rewriting. \\
+        \textbf{\textit{Model chk-0}} & Reasoning-distilled base model. & The starting point and baseline for evaluating domain adaptation. & Pre-trained and distilled reasoning-oriented response patterns from the selected base model; no additional chapter-specific fine-tuning. & Baseline model for comparison with post-trained checkpoints. \\
+        \textbf{\textit{Model chk-1}} & Analytical SFT model. & Maps point-in-time macro-financial evidence to structured analysis. & Supervised evidence-to-analysis pairs. & Common parent of both downstream branches; checkpoint 200 is evaluated. \\
         \hline
-        \textbf{\textit{Model chk-3}} & Minutes-rewriting SFT, checkpoint 318. & Rewrites a supplied analysis into an FOMC-Minutes-style paragraph while preserving its substantive content. & Synthetic teacher completions, comprising a fidelity rationale and final paragraph derived from the \textit{chk-1} analysis. & Task-specific model evaluated relative to the \textit{chk-1} baseline. \\
+        \textbf{\textit{Model chk-2}} & Paragraph-rewriting SFT branch from \textit{chk-1}. & Rewrites analytical summaries as source-preserving formal FOMC-Minutes-style paragraphs. & Supervised analysis-to-paragraph pairs. & Paragraph-rewriting model; checkpoint 50 is evaluated. \\
+        \hline
+        \textbf{\textit{Model chk-3}} & Decision SFT + GRPO branch from \textit{chk-1}. & Predicts a policy direction and legal magnitude in a fixed JSON schema. & Decision SFT followed by one engineered proxy reward for action-label agreement and response delivery. & Decision model initialized from SFT checkpoint 38; GRPO checkpoint 450 is evaluated. \\
         \bottomrule
     \end{tabularx}
-    \caption{Implemented Checkpoints in the Analysis-to-Minutes Experiment}
+    \caption{Paper-level model names and training lineage.}
     \label{tab:ch2:model_checkpoints}
 \end{table}
+
+
 
 \input{Chapter2/sections/dataset_construction.tex}
 
 
 
-\section{The Base Model}\label{ch2:sec:base_model}
+\section{The Base Model: DeepSeek-R1-Distill-Llama and Its Llama 3.1 Backbone}\label{ch2:sec:base_model}
+
+The base model in this chapter descends from \textbf{DeepSeek-R1-Distill-Llama-8B}, denoted by \textit{Model chk-0}. DeepSeek produced this checkpoint by fine-tuning \textit{Llama-3.1-8B Base} on reasoning examples generated by DeepSeek-R1 \cite{guo2025deepseek}. Llama-3.1-Instruct-8B (\cite{llamateam2024llama3}) served as the backbone of the distillation.
+
+
+\subsection*{Llama 3 Architecture}
+% The empirical analysis uses \textbf{DeepSeek-R1-Distill-Llama-8B} as the base model (\textit{Model chk-0}). Its decoder follows the LLaMA 3 architecture (\cite{meta2024llama3}). The model has 32 decoder layers, a hidden dimension of 4,096, 32 attention heads, and 8 key--value heads.  Although its
+% configured maximum context length is 131,072 tokens, the fine-tuning
+% experiments use shorter task-specific sequence lengths because of the
+% available computational resources.
+
+We started with the \textbf{LLaMA 3-8B-Instruct} (\cite{meta2024llama3}). Within the LLaMA 3 family (8B, 70B, and 405B), the 8B model is the smallest and can be deployed on a single 24 GB GPU. The Instruct variant is optimized for human-like conversations. Noticeably, the maximum context length supported by the model is 128,000 tokens, which is sufficient for Minutes-related writing.
 
 
 
-\subsection*{LLaMA 3 Architecture}
-The empirical analysis uses \textbf{DeepSeek-R1-Distill-Llama-8B} as the base
-model.  Its decoder follows the LLaMA 3 architecture
-(\cite{meta2024llama3}); LLaMA 3-8B-Instruct is therefore not treated as a
-separate initial checkpoint.  The model has 32 decoder layers, a hidden
-dimension of 4,096, 32 attention heads, and 8 key--value heads.  Although its
-configured maximum context length is 131,072 tokens, the fine-tuning
-experiments use shorter task-specific sequence lengths because of the
-available computational resources.
-
-
-Furthermore, compared with the original Transformer architecture (\cite{vaswani-etal2018}), LLaMA 3 includes several modifications for stability and generation quality.
+Furthermore, compared with the original Transformer architecture (\cite{vaswani2017attention}), LLaMA 3 includes several modifications for stability and generation quality.
 
 First of all, the model adopted Grouped-Query Attention (GQA, \cite{ainslie2023gqa}) in place of Multi-Query Attention (MQA) and Multi-Head Attention (MHA). While MHA can produce high-quality outputs, it demands significant memory capacity. Conversely, MQA significantly reduces memory usage but at the cost of lower generation quality. However, GQA can generate outputs comparable to MHA with similar memory requirements to MQA, making it suitable for processing long contexts.
 
@@ -125,10 +116,16 @@ Prompt engineering is important for eliciting the reliable response from languag
 First of all, the zero-shot direct prompting involves instructing the model to generate the output directly in response to an input prompt. The generated results will be fully replied on the knowledge that the model learned. This approach is effective for straightforward tasks, where the model can do the predict without additional guidance and context. And it shows the model's ability to apply the learned concepts in new scenarios. However, for complex reasoning tasks, such as solving mathematical problems or creating an article with interconnected subsections, the Chain of Though (CoT) method yield provide more precise outcomes. CoT prompting necessitates the inclusion of guiding instructions within the prompt to aid the model in generating outputs that are more coherent and rational, broken down into manageable steps. For instance, for logical reasoning, few-shot CoT prompting requires a series of interaction between user and the model, dividing the task into several sub-tasks, and addressing each sub-task at each talk.
 
 
-However, creating logical and coherent CoT prompts is challenging due to requirements for multi-step reasoning, consistency across intermediate steps, and domain-specific expertise. A well-constructed CoT must not only segment the problem into intermediate steps but also ensure that each step is logically sound and contributes meaningfully toward the final solution. Recently developed Reasoning Large Language Models (RLLMs), such as ChatGPT-o1 (\cite{jaech2024openai}) and DeepSeek-R1 (\cite{shao2024deepseekmath}), mitigate this challenge by pre-training on dedicated CoT datasets, teaching the model to approach questions step by step prior to producing the final answer. These models generate extensive intermediate reasoning processes, explicitly marked as reasoning chains, resulting in improved analytical and problem-solving performance, even with relatively small model sizes. This design motivates our choice of a reasoning-capable distilled base model.
+However, creating logical and coherent CoT prompts is challenging due to requirements for multi-step reasoning, consistency across intermediate steps, and domain-specific expertise. A well-constructed CoT must not only segment the problem into intermediate steps but also ensure that each step is logically sound and contributes meaningfully toward the final solution. 
 
 
-Therefore, we selected the \textit{DeepSeek-R1 Distilled} variant of \textit{LLaMA 3-8B} (known as \textbf{DeepSeek-R1-Distill-Llama-8B}) (Base Model or Model ``chk-0'' hereafter) as our base model. This model was further fine-tuned on a high-quality reasoning dataset distilled from DeepSeek-R1, a powerful 671-billion-parameter reasoning model. Consistent with other RLLMs, \textbf{DeepSeek-R1-Distill-Llama-8B} is capable of generating a coherent, step-by-step reasoning process before providing its final response.
+
+Recently developed reasoning large language models (RLLMs), such as OpenAI o1 (\cite{jaech2024openai}) and DeepSeek-R1 (\cite{shao2024deepseekmath}), seek to improve complex problem solving by encouraging multi-step reasoning before producing a final answer. Rather than relying solely on conventional next-token prediction, these models employ post-training strategies designed to strengthen reasoning capabilities. For instance, DeepSeek-R1 combines supervised fine-tuning and reinforcement learning, while its distilled variants transfer reasoning-oriented response patterns to smaller Llama-based models by fine-tuning them on samples generated by DeepSeek-R1 (\cite{guo2025deepseek}).
+
+These training strategies enable smaller distilled models to exhibit structured, multi-step reasoning behaviour while retaining substantially lower computational requirements than the full-scale teacher model. This capability motivates our choice of a reasoning-capable distilled model as the starting point for the subsequent domain-specific fine-tuning stages.
+
+
+Accordingly, we select \textit{DeepSeek-R1-Distill-Llama-8B}, which is based on \textit{Llama 3.1-8B}, as our base model (\textit{Model chk-0}). The model was fine-tuned using reasoning-oriented samples generated by DeepSeek-R1, a 671-billion-parameter reasoning model. Through this distillation process, \textit{DeepSeek-R1-Distill-Llama-8B} inherits reasoning-oriented response patterns from the larger teacher model and can generate structured intermediate reasoning before producing its final response.
 
 
 
@@ -147,173 +144,50 @@ In this section, we evaluate the fine-tuned LLM's outputs with a focus on reliab
 
 
 
-LLM evaluation can be broadly classified into reference-based and reference-free evaluation. First, reference-based evaluation compares the model’s outputs with target outputs generated under the same prompts. Scores are then used to quantitatively measure the differences between them. For example, the F1 score measures classification accuracy, BLEU \cite{papineni2002bleu} measures string-level overlap, and BERTScore \cite{zhang2019bertscore} measures semantic similarity based on token embeddings. Notably, reference outputs are required for reference-based evaluation. By contrast, reference-free evaluation does not require predefined target outputs. It is usually model-based or judgement-based, including regression-based validation between input prompts and outputs, LLM-as-Judge scoring, and human assessment.
+% LLM evaluation can be broadly classified as reference-based or reference-free. Reference-based evaluation compares model outputs with frozen targets under the same prompts; examples include string-overlap measures such as BLEU \cite{papineni2002bleu} and embedding-based measures such as BERTScore \cite{zhang2019bertscore}. Reference-free evaluation instead examines outputs without a target text, for example through econometric diagnostics, expert assessment, or a separately specified model-based evaluator.
+
+LLM evaluation can be broadly classified into reference-based and reference-free evaluation. First, reference-based evaluation compares the model’s outputs with target outputs generated under the same prompts. Scores are then used to quantitatively measure the differences between them. For instance, the F1 score measures classification accuracy, BLEU \cite{papineni2002bleu} measures string-level overlap, and BERTScore \cite{zhang2019bertscore} measures semantic similarity based on token embeddings. Notably, reference outputs are required for reference-based evaluation. By contrast, reference-free evaluation does not require predefined target outputs. It is usually model-based or judgement-based, including regression-based validation between input prompts and outputs, LLM-as-Judge scoring, and human assessment.
 
 
-Because high-quality reference answers are available in this study, we
-primarily use reference-based evaluation. More specifically, we evaluate four
-dimensions: (1) the \textbf{textual similarity} of generated outputs, (2)
-\textbf{target-relative indicator sensitivity} under leave-one-out masking,
-(3) exploratory \textbf{economic relevance} of synthetic text, and (4) the
-\textbf{accuracy of policy-decision inference}.
+Because high-quality reference answers are available in this study, we primarily use reference-based evaluation. More specifically, we will evaluate the fine-tuned model across four key dimensions:  1) the \textbf{textual similarity} of generated outputs, 2) the \textbf{sufficiency of information} contained in the outputs, 3) the \textbf{statistical significance} of synthetic text, 4) the \textbf{accuracy of simulated decision-making}. 
+
+First, we compare generated paragraphs with teacher-generated synthetic rewriting references on the 391-row, 124-meeting release described in Section~\ref{ch2:sec:the-dataset}. This measures reconstruction similarity within a training-only release, not performance against official Minutes or on an independent test set. Second, the separate historical Core8 sensitivity analysis and sentiment diagnostics examine topic dependence and policy-stance alignment. Third, the financial-market diagnostic compares coefficients estimated from generated texts with those estimated from official Minutes. Finally, simulated decision-making accuracy is evaluated separately through the Model chk-3 decision branch using direction accuracy, balanced accuracy, macro-F1, exact-action accuracy, and delivery measures.
 
 
-The first dimension measures closeness to a reference text, while the second
-measures local sensitivity to the conditioning inputs; neither alone
-establishes factual grounding. The third and fourth dimensions provide
-downstream checks on whether the generated text preserves economically
-meaningful signals and supports inference of Federal Reserve decisions.
+The first two dimensions describe semantic resemblance and sensitivity to
+supplied prompt blocks. Neither metric directly verifies factual preservation
+or detects unsupported claims; those properties require separate fidelity
+audits. The financial-market and decision dimensions provide historical
+association and policy-action diagnostics, respectively, with their own
+evaluation populations and limits.
+
 
 
 
 \subsection*{Evaluation Methods}
 
-\subsubsection*{Task-Aligned Evaluation of Minutes Rewriting}
 
-Checkpoint selection for the Minutes-rewriting experiment is based on a fixed
-twelve-observation diagnostic sample drawn from the held-out Minutes-alignment
-data.  The primary comparison is between the \texttt{chk-1} checkpoint-200
-baseline and the task-specific \texttt{chk-3} model.  Both receive the same
-task-aligned input: an analysis that must be rewritten as one formal paragraph
-in the style of the FOMC Minutes.  The pretrained \texttt{chk-0} model is
-reported only as an auxiliary reference and does not define the baseline
-contrast.
+\subsubsection*{Textual Similarity of Minutes-Style Paragraph-Rewriting}
 
-Four necessary validity criteria are evaluated for each observation.  First,
-structural validity requires one properly delimited rationale followed by one
-plain-text paragraph.  Second, numerical fidelity requires the multiset of
-numerical quantities in the source analysis to be preserved.  Third, date
-fidelity requires the set of source dates to be preserved.  Fourth, the
-degeneration criterion excludes completions that terminate at the token limit
-or contain a strictly periodic tail.  An observation that fails any of these
-criteria is assigned a value of zero for both semantic-similarity measures.
 
-For observations satisfying the validity criteria, semantic similarity is
-measured using BERTScore F1 and MPNet cosine similarity between the generated
-paragraph and the synthetic teacher target.  The full \(N=12\) sample is used
-to report the validity criteria.  Because one analysis is identical to its
-normalized target, the semantic comparison is also reported for the
-non-identity subsample of \(N=11\).  The exercise is descriptive rather than
-inferential: the same sample is used for checkpoint selection, the references
-are synthetic rather than official FOMC Minutes, and semantic similarity does
-not by itself establish factual accuracy.
-
-\subsubsection*{Textual Similarity}
-
-Semantic alignment is evaluated against the synthetic teacher target used by
-the Minutes-rewriting task.  Let \(Y_i\) denote the final paragraph generated
-for observation \(i\), and let \(Y_i^{*}\) denote its corresponding synthetic
-reference paragraph.  Two independently pretrained encoders are used.  First,
-BERTScore F1 is computed with a frozen RoBERTa-large model by matching each
-contextualized candidate token with the most similar reference token and vice
-versa (\cite{zhang2019bertscore}).  Second, the generated and reference
-paragraphs are embedded with the frozen
-\texttt{sentence-transformers/all-mpnet-base-v2} encoder, and their cosine
-similarity is calculated as
-
-\begin{equation}
-    Cos_i^{MPNet}
-    =\frac{h(Y_i)^{\top}h(Y_i^{*})}
-    {\lVert h(Y_i)\rVert_2\lVert h(Y_i^{*})\rVert_2},
-\end{equation}
-
-where \(h(\cdot)\) denotes the MPNet sentence embedding.  Both encoders are
-fixed and independent of the models used to generate the training targets.
-An observation that fails any preregistered structural, numerical, date, or
-non-degeneration criterion receives a value of zero for both semantic metrics.
-
-The completed experiment defines improvement relative to the
-\texttt{chk-1} checkpoint-200 baseline.  For a semantic metric
-\(M\in\{BERTScore\text{-}F1,Cos^{MPNet}\}\), the observation-level contrast is
-
-\begin{equation}
-    \Delta M_i=M_i^{chk3}-M_i^{chk1}.
-\end{equation}
-
-Positive values favour \texttt{chk-3}.  The full \(N=12\) diagnostic sample is
-used for validity-adjusted descriptive means, and the \(N=11\) non-identity
-subsample is reported to prevent one mechanically identical source--target
-pair from dominating the semantic comparison.  Because these observations are
-also used for checkpoint selection, no population-level significance claim is
-made.
-
-% The material below records an earlier generic metric discussion and is
-% excluded from the current experiment specification.
-\iffalse
-
-% Cosine Similarity
 To start with, the textual similarity targets comparing the similarity between the target output and the generated output using mathematical distance, such as the Levenshtein Similarity Ratio (\cite{levenshtein1966binary}) and Cosine Similarity (\cite{tanguy2016natural}). The Levenshtein Similarity Ratio replies on the Levenshtein Distance to measure the minimum number of strings that need to be edited from the generated output to the required output. Furthermore, some other metrics driven from the idea of ``n-grams'', such as the Recall-Oriented Understudy for Gisting Evaluation score (ROGUE score, \cite{lin2004rouge}), provide an grammatical-level measurement than the word-level Levenshtein Similarity Ratio. These methods are useful at the age of ``Bag-Of-Word (BOG)''.
 
-However, with the development of LLM, researchers can take advantage of the embeddings from the LLM rather than the one-hot key of ``BOG''. The embeddings can convert the ``word'' into tokens that encoded more semantic information than the one-hot key. Therefore, the Cosine Similarity provides a more accurate estimation of the semantic similarity between two texts. Here, we will use the \textit{sentence-level} \textbf{Cosine Similarity} as our first metric to evaluate the text similarity of outputs. Cosine Similarity ranges from 0 to 1, where a value of 1 indicates a perfect similarity between the two texts, while a value of 0 signifies that the texts are highly different from each other.
+
+However, with the development of LLM, researchers can take advantage of the embeddings from the LLM rather than the one-hot key of ``BOG''. The embeddings can convert the ``word'' into tokens that encoded more semantic information than the one-hot key. 
+
+
+Therefore, the Cosine Similarity provides a more accurate estimation of the semantic similarity between two texts. Here, we will use the \textit{sentence-level} \textbf{Cosine Similarity} as our first metric to evaluate the text similarity of outputs. Cosine Similarity ranges from 0 to 1, where a value of 1 indicates a perfect similarity between the two texts, while a value of 0 signifies that the texts are highly different from each other.
+
 
 The metric helps in determining how well the generated text aligns with the expected content in terms of both meaning and context. For example, \cite{aynetdinov2024semscore}, \cite{kim2024comparison}, and \cite{yauney2023data} used the Cosine Similarity as a benchmark when evaluating the LLM's performance.
 
-Cosine similarity is estimated by the cosine of the angle between two non-zero vectors. It is defined as the dot product of the two vectors divided by the product of their magnitudes. This mathematical operation helps in quantifying how closely the generated text aligns with the target text in terms of meaning and content. We utilize the ``tokenizer'' and the ``hidden layers'' from the LLAMA3 model to convert the response texts into vector representations, denoted as $Y$ for the target text and $\hat{Y}$ for the generated text.
+Cosine similarity is estimated by the cosine of the angle between two non-zero vectors. It is defined as the dot product of the two vectors divided by the product of their magnitudes. This mathematical operation helps in quantifying how closely the generated text aligns with the target text in terms of meaning and content. We utilize the ``tokenizer'' and the ``hidden layers'' from the LLAMA3 model to convert the response texts into vector representations, denoted as $Y$ for the target text and $\hat{Y}$ for the generated text. Then, the cosine similarity score, denoted as $Cos_{Y, \hat{Y}}$, is then calculated as follows:
 
-
-%%% text embedding calculation
-
-% tokens = [2, 1, 3]
-% text_embedding = [[0.111, 0.232131, 0.41414, 0.2412424, 0.1424, 0.444, 0.99]
-%                     [0.5151, 0.52215, 0.232132, 0.223232, 0.535151, 0.23231, 0.515151]
-%                     [0.2155252, 0.2223, 0.54331, 0.321313, 0.14222, 0.421555, 0.535252]]
-% mean pooling = [0.23131, 0.222, 0.23213, 0.325325, 0.532555, 0.535325, 0.23232, 0.424141]
-
-% | 模型          | hidden_size | num_hidden_layers |
-% | ----------- | ----------- | ----------------- |
-% | BERT-base   | 768         | 12                |
-% | Llama-7B    | 4096        | 32                |
-% | GPT-3 small | 12288       | 96                |
-
-% google-bert 768, [https://huggingface.co/google-bert/bert-base-uncased/blob/main/config.json]
-% gemini3-27b 5376,, [https://huggingface.co/google/gemma-3-27b-it/blob/main/config.json]
-% Deepseek-r1 7168,[https://huggingface.co/deepseek-ai/DeepSeek-R1/blob/main/config.json]
-% llama3.1-70b  8192,
-
-
-
-
-Compared with the ``one-hot encoding'' used in the ``Bag-of-Words'' model, the text embeddings employed in large language models (LLMs) offer two significant advantages. On the one hand, text embeddings employ a tokenizer to map the input text into a sequence of dense vectors, $\mathbf{h}_i \in \mathbb{R}^{m\times 1}$, where $i = 1, 2, ..., n$ corresponds to each token in the text, and $m$ denotes the hidden-layer dimension, rather than high-dimensional binary representations. On the other hand, the hidden layers within the LLM transform each token vector into a contextualized embedding by encoding both semantic meaning and positional information.
-
-Noticeably, the hidden layer size ($m$) is different for different models. Generally, a larger hidden dimension allows the model to capture more fine-grained semantic information. For example, Google BERT (110M parameters) has a hidden size of 768 \cite{googlebert}, Gemini 3-27B has a hidden size of 5,376 \cite{googlegemini3}, and LLaMA 3.1-70B uses a hidden size of 8,192 \cite{metallama3}.
-
-
-Furthermore, after the encoding stage, there is a pooling stage aimed at adjusting the dimension of text embedding matrix ($\mathbf{H} \in \mathbb{R}^{M\times N} = [\mathbf{h_1}, \mathbf{h_2}, ..., \mathbf{h_N}]$) to 1 ($\mathbf{H'} \in {\mathbb{R}^{M\times 1}}$). Then, this adjusted text embedding is a vector representation of the input text. Common pooling strategies include mean pooling, max pooling, and weighted-sum pooling. 
-
-% During the pooling stage, token embeddings are aggregated—typically by averaging across all tokens—to produce a single fixed-length vector representing the entire input text. Common pooling strategies include mean pooling, max pooling, and weighted-sum pooling. 
-
-% First, mean pooling computes the average embedding across all tokens:
-
-% \begin{equation}\label{eq:ch2:mean_pooling}
-%     h'_{j} = \frac{1}{N} \sum_{i=1}^{N} h_{ij}
-% \end{equation}
-
-% where $h_{ij}$ denotes the j-th dimension of the i-th token embedding.
-
-% Second, max pooling selects the maximum value across all tokens for each embedding dimension:
-
-% \begin{equation}\label{eq:ch2:max_pooling}
-%     h'_{j} = Max(h_{1j}, h_{2j}, ..., h_{Nj})
-% \end{equation}
-
-
-% Finally, weighted-sum pooling computes a weighted average of token embeddings:
-
-% \begin{equation}\label{eq:ch2:weight_sum_pooling}
-%         h'_{j} = \frac{1}{N} \sum_{i=1}^{N} w_{i,j}h_{ij} 
-% \end{equation}
-% where $w_{ij}$ are non-negative weights satisfying $\sum_{i=1}^{N} w_{ij} = 1$ . In practice, attention weights from a pre-trained transformer are often used as $w_{ij}$.
- 
-To balance the effect of all the tokens, in this study, we adopt mean pooling. Max pooling tends to overemphasize a small number of highly activated tokens, while weighted-sum pooling can be dominated by tokens with disproportionately large attention weights. Mean pooling provides a more stable and balanced representation across the entire text. Appendix \ref{app:text_embedding} provides a detailed illustration and example for the text embedding generation process. 
-
-
-Therefore, the cosine similarity score, denoted as $Cos_{Y, \hat{Y}}$, is then calculated as follows:
 
 
 \begin{equation*}
     Cos_{Y, \hat{Y}} = \frac{Y \cdot \hat{Y}}{\|Y\|_2 \|\hat{Y}\|_2}
 \end{equation*}
-
 
 where $Y$ and $\hat{Y}$ are sentence embeddings for the reference and generated texts, and $\|\cdot\|_2$ denotes the Euclidean norm (e.g., $\|Y\|_2=\sqrt{y_1^2+y_2^2+\cdots+y_N^2}$).
 
@@ -331,6 +205,7 @@ More specifically, for each token $\hat{y}_j$ in the target (reference) output $
 
 Let $Y=\{y_i\}$ denote the set of token embeddings in the generated response and $\hat{Y}=\{\hat{y}_j\}$ denote the set of token embeddings in the reference (target) text. BERTScore computes \textit{Precision} by matching each candidate token to its most similar reference token, and \textit{Recall} by matching each reference token to its most similar candidate token. Finally, the F1 Score (Eq.(\ref{eq:ch2:bert_f1})) is calculated as the harmonic mean of precision and recall, thereby providing a balanced measure of semantic alignment between the generated and reference texts:
 
+
 \begin{equation}\label{eq:ch2:bert_precision}
     BERTScore^{Precision} = \frac{1}{\|Y\|}\sum_{y_i \in Y} \max_{\hat{y}_j \in \hat{Y}} y_i^{\text{T}}\hat{y}_j
 \end{equation}
@@ -344,52 +219,28 @@ Let $Y=\{y_i\}$ denote the set of token embeddings in the generated response and
 \end{equation}
 
 
-For the completed Minutes-rewriting experiment, the directional hypotheses are
-defined relative to the \texttt{chk-1} baseline:
+Overall, we propose the following hypotheses for cosine similarity and BERTScore-F1:
 
 \begin{equation*}
     \begin{split}
-        &Cos_{chk3} - Cos_{chk1} > 0 \\
-        &BERTScore^{Recall}_{chk3} - BERTScore^{Recall}_{chk1} > 0 \\
-        &BERTScore^{Precision}_{chk3} - BERTScore^{Precision}_{chk1} > 0\\
-        &BERTScore^{F1}_{chk3} - BERTScore^{F1}_{chk1} > 0
+        &Cos_{FT} - Cos_{Base} > 0 \\
+        &BERTScore^{F1}_{FT} - BERTScore^{F1}_{Base} > 0
     \end{split}
 \end{equation*}
 
 
-where subscripts \textit{chk3} and \textit{chk1} denote the task-specific model
-and experimental baseline, respectively. These inequalities describe a
-directional hypothesis about semantic alignment. Valid inference would require
-paired row-level scores from a fixed test manifest that is independent of
-checkpoint selection, together with an appropriate uncertainty estimator and
-immutable checkpoint identities. Cosine similarity and BERTScore alone measure
-resemblance to a reference; they do not establish factual, numerical,
-directional, or reasoning fidelity.
+where subscripts $FT$ and $Base$ denote the fine-tuned and baseline models. The hypothesis is that fine-tuning increases semantic alignment with the target text. For the main rewriting comparison, we average raw-best-effort scores over the ten generations of each sample and then over samples within each meeting. The 124 meetings receive equal weight. Table~\ref{tab:ch2:minutes_semantic_ttest} reports supplementary, unadjusted two-sided paired $t$-tests of these meeting means; the frozen experiment's hierarchical paired-bootstrap intervals are reported separately in the results. A positive paired difference indicates greater resemblance to the synthetic target under this scoring rule. It does not identify additional macroeconomic knowledge, factual fidelity, or held-out generalization.
 
 
 %%%%% end of text similarity
-\fi
 
 
-\subsubsection*{Target-relative Indicator Sensitivity}
-% Indicator-level leave-one-out sensitivity
+\subsubsection*{Sufficient Information}
 
 Apart from textual similarity, we also require the generated output to reflect information supplied by the input indicators rather than relying solely on unsupported completion. The question in this subsection is therefore not only whether the generated section resembles the target text, but also whether removing a given indicator materially changes that resemblance.
 
 
-To study this issue, our second metric evaluates how sensitive the generated
-output's target alignment is to removing one complete indicator block.
-Shapley-style attribution methods provide relevant conceptual background
-because they formalize marginal contributions to an output. Originating in
-cooperative game theory, the Shapley Value (\cite{shapley1953value}) measures
-the expected marginal contribution of one player to a coalition. This idea
-has since been adapted to model interpretation, including Shapley Regression
-Value (\cite{lipovetsky2001analysis}), Shapley Sampling Value
-(\cite{vstrumbelj2014explaining}), Quantitative Input Influence
-(\cite{datta2016algorithmic}), Shapley Additive Explanations
-(\cite{lundberg2017unified}), and token-level attribution methods such as
-TokenShapley (\cite{liu2023prompt}; \cite{mohammadi2024wait};
-\cite{goldshmidt2024tokenshap}).
+To study this issue, our second metric evaluates the marginal informational contribution of each indicator prompt to the generated output. Shapley-style attribution methods provide the relevant conceptual background because they quantify how much each input contributes to an observed output. Originating in cooperative game theory, the Shapley Value (\cite{shapley1953value}) measures the expected marginal contribution of one player to a coalition. This idea has since been adapted to model interpretation, including Shapley Regression Value (\cite{lipovetsky2001analysis}), Shapley Sampling Value (\cite{vstrumbelj2014explaining}), Quantitative Input Influence (\cite{datta2016algorithmic}), Shapley Additive Explanations (\cite{lundberg2017unified}), and token-level attribution methods such as TokenShapley (\cite{liu2023prompt}; \cite{mohammadi2024wait}; \cite{goldshmidt2024tokenshap}).
 
 
 
@@ -397,82 +248,152 @@ TokenShapley (\cite{liu2023prompt}; \cite{mohammadi2024wait};
 As literature background, the original Shapley Value ($\mathcal{SV}$) represents the expected marginal contribution of a feature ($p_i$) to a model output $f(\cdot)$:
 
 \begin{equation*}
-  \mathcal{SV}_i(f) = \sum_{\mathcal{S} \subseteq \mathcal{P}\setminus\{p_i\}} \frac{\left|\mathcal{S}\right|! (n - \left|\mathcal{S}\right| - 1)!}{n!} \left(f(\mathcal{S}\cup\{p_i\}) - f(\mathcal{S})\right)
+  \mathcal{SV}_i(f) = \sum_{\mathcal{S} \subset \mathcal{P}\setminus p_i} \frac{\left|\mathcal{S}\right|! (n - \left|\mathcal{S}\right| - 1)!}{n!} \left(f(\mathcal{S}\cup p_i) - f(\mathcal{S})\right)
 \end{equation*}
 
-where $\mathcal{P}=\{p_1, p_2, \cdots, p_n\}$ is the set of prompts, $\mathcal{S}$ is a coalition (subset) of prompts, and $f(\cdot)$ is a utility function. The term $f(\mathcal{S}\cup\{p_i\})-f(\mathcal{S})$ denotes the marginal contribution of feature $p_i$ to coalition $\mathcal{S}$.
+where $\mathcal{P}=\{p_1, p_2, \cdots, p_n\}$ is the set of prompts, $\mathcal{S}$ is a coalition (subset) of prompts, and $f(\cdot)$ is a utility function. The term $f(\mathcal{S}\cup p_i)-f(\mathcal{S})$ denotes the marginal contribution of feature $p_i$ to coalition $\mathcal{S}$.
 
 
-In this research, however, we do not estimate the full Shapley Value across all possible coalitions. Instead, we use an \textbf{indicator-level leave-one-out masking test} (Leave-one-out test hereafter). We remove one complete indicator block at a time while holding the remaining prompt content fixed. This is a local sensitivity diagnostic under a specified masking intervention, not a Shapley Value and not by itself proof of grounding. Let $\mathcal{P}=\{p_1,\ldots,p_n\}$ denote the full indicator set, $o(\mathcal{P})$ the full-prompt output, $o(\mathcal{P}\setminus\{p_i\})$ the output after masking indicator $i$, and $y$ a target that is held fixed within the pair. With sentence-embedding cosine similarity, define
-
-\begin{align}
- s_{\mathrm{full}} &= \operatorname{Cos}\!\left(o(\mathcal{P}),y\right), \nonumber\\
- s_{\mathrm{masked},i} &= \operatorname{Cos}\!\left(o(\mathcal{P}\setminus\{p_i\}),y\right), \nonumber\\
- \Delta_i &= s_{\mathrm{full}}-s_{\mathrm{masked},i}.
- \label{eq:ch2:loo_delta}
-\end{align}
-
-Equivalently, if cosine distance is $d=1-s$, then
-$\Delta_i=d_{\mathrm{masked},i}-d_{\mathrm{full}}$. Thus,
-$1-s_{\mathrm{masked},i}$ alone is the masked output's target-relative cosine
-distance and is not the LOO contribution because it still contains the full
-output's baseline distance. A positive $\Delta_i$ means that masking indicator $i$ reduces
-target alignment; a negative value means that masking improves alignment.
-Negative values are retained rather than truncated.
-
-For the external-alignment analysis, $y$ is the corresponding historical
-Minutes section. For the internal-sensitivity analysis, $y=o(\mathcal{P})$,
-so $s_{\mathrm{full}}=1$ and
-$\Delta_i=1-\operatorname{Cos}(o(\mathcal{P}\setminus\{p_i\}),o(\mathcal{P}))$.
-The latter therefore measures change relative to the model's own unmasked
-output, not agreement with historical Minutes. In a new canonical run, full
-and masked generations will be paired by meeting, section, indicator, and
-generation replicate, and both component scores and the signed delta will be
-retained. Rows will first be averaged within each meeting--replicate cell,
-replicates will then receive equal weight in the meeting mean, confidence
-intervals will resample meetings, and one global Holm family will cover all
-reported indicator--section--context cells in the run. The intervention
-manifest will bind every generated row to its prompt hash, verify that the
-deleted complete block begins with a roster-declared marker for the named
-indicator, reject overlapping deletion spans and duplicate masked prompts
-across indicators, and fingerprint both the generation checkpoint and
-embedding model.
+In this research, however, we do not estimate the full Shapley Value across all possible coalitions. Instead, we adopt a \textbf{Shapley-inspired, indicator-level leave-one-out (LOO) masking test} (Leave-one-out test hereafter). The purpose is the same in spirit: to measure how much each indicator matters for the generated section. 
 
 
-%%%% end of leave-one-out definition
+More, specifically, we choose 8 core topics, including the Consumer Price Index (CPI), GDP Growth, Government Purchases, Housing Starts, Industrial Production, the Labour Market, Money Supply, and the Unemployment Rate, in this test. For metric \(m\), the leave-one-out (LOO) effect is defined as 
 
-\subsubsection*{Exploratory Association Test using Synthetic Texts}
-
-
-This test evaluates the model’s simulation capacity by conducting empirical analyses on the synthetic text it generates. The current literature has confirmed the impact of the release of FOMC Minutes on the financial market, for instance, \cite{rosa2013financial} found that the release of the Minutes significantly increases the volatility of the U.S. asset prices, including treasury rate, equity market index and the exchange rate. \cite{rosa2011high} found that both the statements and the policy decisions have significant effects on the exchange rate market. \cite{huang2021economic} applied an adaptive Bayesian text mining approach, and confirmed the predictive power of the sentiments of FOMC's text in important economic variables. \cite{tadle2022fomc} confirmed the sentiments contained in the Minutes have significantly impacts on the fed funds futures rate and U.S. dollars exchange rate. 
-
-
-Building on this literature, we use an exploratory association test to ask whether sentiment extracted from synthetic Minutes preserves the direction of a historical text--market relationship. Because synthetic text was not released to the market at the historical event time, this exercise cannot identify a market impact caused by the generated text. Nor can statistical significance in this regression, by itself, establish realistic or factually grounded Minutes generation.
-
-
-
-We follow the empirical design in \cite{tadle2022fomc}, which examines how FOMC Minutes influence market expectations regarding monetary policy. Specifically, first of all, we apply the main regression model (Eq.\ref{eq:ch2:sentiment_reg})from their study, which investigates the relationship between sentiment scores derived from FOMC communications and movements in interest and exchange rates. In our case, we use the same regression framework to test whether sentiment extracted from our synthetic minutes yields similar effects on financial market variables.
-
-
-
-\begin{equation}\label{eq:ch2:sentiment_reg}
-    p^f_t = \lambda p^f_{t-1} + \alpha + \beta_{Z_t^M} Z_t^M+ \beta_{Z_{t-1}^M} Z_{t-1}^M + \beta_{Z_t^S} {Z_t}^S + \beta_{VIX_t}VIX_t + \beta_{Y_t}Y_t + \phi_t 
+\begin{equation}\label{eq:ch2:loo}
+    \delta^{(m)}_{h,r,a,t}=S^{(m)}(O^{\mathrm{Full}}_{h,r},R_h)-S^{(m)}(O^{(a,t)}_{h,r},R_h), 
 \end{equation}
 
 
-
-where $p^f_t$ is the price for the Federal Fund Rate Future contract $f$ at time $t$. $VIX_t$ is the log change of the Volatility Index (VIX), $Z_t^M$ and $Z_t^S$ are the sentiment scores extracted from the Minutes and Statements, $Y_t$ is the monthly time effect, and $\phi_t$ is the error term.
-
-Following the empirical test, a bootstrap procedure estimates the distribution of the $\beta$ coefficients. A fully identified comparison would additionally require the exact source series, resampling unit, model manifest, and uncertainty for the difference between model-derived coefficients. The surviving legacy outputs do not retain all of these elements, so the archived plots are reported later only as exploratory and unverified.
+where \(R_h\) denotes the same complete deterministic synthetic reference for meeting \(h\), \(a\) denotes either exact deletion or token-matched neutral replacement, \(t\) identifies the intervened topic, and \(m\) denotes either cosine similarity or BERTScore-F1. A positive value of \(\delta\) indicates that deleting or neutralizing the topic reduces the output’s similarity to the common reference, whereas a negative value indicates that the intervention produces an output that is more similar to the reference. A confidence interval that crosses zero indicates that the analysis does not establish a directionally stable aggregate change under the specified intervention and evaluation design.
 
 
 
-%%%% end of statistical significant
 
+%%%% end of Core8 LOO sensitivity diagnostic
+
+
+\subsubsection*{Statistical Significance using Synthetic Texts}
+
+
+This test evaluates the model’s simulation capacity by conducting empirical analyses on the synthetic text it generates. The current literature has confirmed the impact of the release of FOMC Minutes on the financial market, for instance, \cite{rosa2013financial} found that the release of the Minutes significantly increases the volatility of the U.S. asset prices, including treasury rate, equity market index and the exchange rate. \cite{rosa2011high} found that both the statements and the policy decisions have significant effects on the exchange rate market. \cite{huang2021economic} applied an adaptive Bayesian text mining approach, and confirmed the predictive power of the sentiments of FOMC's text in important economic variables. \cite{tadle2022fomc} confirmed the sentiments contained in the Minutes have significantly impacts on the fed funds futures rate and U.S. dollars exchange rate.
+
+
+Building on these evidences, we test whether the synthetic Minutes generated by our fine-tuned LLM exhibit comparable market relevance. Specifically, a statistically significant relationship between the synthetic text and corresponding financial indicators would indicate that the model is capable of producing realistic, policy-relevant content that mirrors the economic impact of actual FOMC communications.
+
+
+We adapt the empirical framework of \citet{tadle2022fomc}. Tadle relates unexpected sentiment in FOMC communications to changes in financial-market variables, including Federal Funds futures and exchange rates. In our application, the main regression model Eq.~\ref{eq:ch2:tadle_ff_regression} is estimated separately using sentiment measures derived from official Minutes and from each generated-text checkpoints. We are expecting our synthetic minutes yields similar effects on financial market variables. Finally, We estimate the following specification for Federal Funds futures returns:
+
+
+\begin{equation}
+\label{eq:ch2:tadle_ff_regression}
+\begin{aligned}
+r_t^f
+={}&
+\alpha
++\beta_{\mathrm{NS}}NS_t
++\beta_{\ell_{2011}\times\mathrm{NS}}
+ \left(\ell_{2011,t}\times NS_t\right) \\
+&+\beta_{\mathrm{VIX}}VIX_t
++\beta_{\ell_{2011}}\ell_{2011,t}
++\boldsymbol{\beta}_{Y}^{\prime}\mathbf{Y}_t
++\phi_t ,
+\end{aligned}
+\end{equation}
+
+where the dependent variable is the daily log-percentage change in the price of the Federal Funds futures contract at horizon
+\(f\in\{1,3,6,12\}\):
+
+\begin{equation}
+\label{eq:ch2:ff_return}
+r_t^f
+=
+100\left(\ln P_t^f-\ln P_{t-1}^f\right)
+=
+100\ln\left(\frac{P_t^f}{P_{t-1}^f}\right).
+\end{equation}
+
+The indicator for the date-based forward-guidance regime is defined as
+
+\begin{equation}
+\label{eq:ch2:post2011_indicator}
+\ell_{2011,t}
+=
+\begin{cases}
+1, & t>\text{8 August 2011},\\
+0, & \text{otherwise}.
+\end{cases}
+\end{equation}
+
+The variable \(VIX_t\) is the daily log-percentage change in the
+adjusted closing value of the CBOE Volatility Index, vector \(\mathbf{Y}_t\) is calendar-year fixed effect, and \(\phi_t\) denotes the regression error. The coefficient \(\beta_{\mathrm{NS}}\) measures the association between the Minutes news shock and the futures return before the date-based forward-guidance regime, whereas \(\beta_{\ell_{2011}\times\mathrm{NS}}\) measures the change in this association after the regime begins. The corresponding post-2011 marginal coefficient is therefore
+
+
+\begin{equation}
+\label{eq:ch2:post2011_marginal_beta}
+\beta_{\mathrm{post}}
+=
+\beta_{\mathrm{NS}}
++
+\beta_{\ell_{2011}\times\mathrm{NS}}.
+\end{equation}
+
+The Minutes news shock is constructed in two stages. First, relative sentiment is defined as the difference between the standardized Minutes and Statement sentiment scores, which are measured using the Loughran--McDonald dictionary \citep{loughran2011liability}:
+
+\begin{equation}
+\label{eq:ch2:relative_sentiment}
+RZ_t
+=
+Z_t^M-Z_t^S,
+\end{equation}
+
+where \(Z_t^M\) and \(Z_t^S\) denote the standardized sentiment scores of the Minutes and the corresponding FOMC Statement, respectively. Second, the predictable component of relative sentiment is removed:
+
+\begin{equation}
+\label{eq:ch2:minutes_news_shock}
+NS_t
+=
+RZ_t-0.368RZ_{t-1}.
+\end{equation}
+
+Thus, \(NS_{m,t}\) measures the source-specific component of relative sentiment not captured by its immediately preceding value. The constructed news-shock
+regressor is not subsequently standardized to unit variance.
+
+
+We conduct the test with the generated minutes by \textit{Model chk-0}, \textit{Model chk-1}, and \textit{Model chk-2}. Then, we calculated the distance  between the synthetic texts' coefficients ($\beta_{\mathrm{chk-0, chk-1, chk-2}}$) with that of the official Minutes ($\beta_{O}$):
+
+\begin{equation}
+\label{eq:ch2:tadle_beta_distance}
+D_{m,O}
+=
+\left|
+\widehat{\beta}_{m,\mathrm{post}}
+-
+\widehat{\beta}_{O,\mathrm{post}}
+\right|,
+\qquad m\in\{0,1,2\},
+\end{equation}
+
+and define the direct \textit{Model chk-2} distance gain relative to comparator
+\(j\in\{0,1\}\) as
+
+\begin{equation}
+\label{eq:ch2:tadle_beta_gain}
+G_j=D_{j,O}-D_{2,O}.
+\end{equation}
+
+
+Following the empirical test, we conduct a bootstrap procedure to estimate the distribution of the $\beta$ coefficients. A statistically significant positive gain means that the model $m$ is closer to the official coefficient at that horizon. 
+
+
+
+
+%%%% end of sentiment-score closeness and historical Federal Funds futures diagnostic
 
 
 \subsubsection*{Decision-making Accuracy}
+
 Finally, at each Federal Open Market Committee (FOMC) meeting, the Committee votes on monetary policy decisions—most notably the target range of the Federal Funds Rate (FFR), also referred to as the Federal Funds Target Rate. Once the target rate is established, the Federal Reserve employs a range of monetary policy instruments to steer the effective FFR toward the desired level by adjusting the supply of reserves within the banking system. These instruments include open market operations (purchasing and selling U.S. government securities), the Interest on Reserve Balances (IOR), and the Overnight Reverse Repurchase Agreement (ON RRP) facility. Consequently, FOMC decisions exert a direct influence on the interest rate market, with subsequent spillover effects on exchange rates and equity markets.
+
 
 The final stage of our empirical evaluation assesses the model’s simulation ability to predict monetary policy decisions, specifically changes in the Federal Funds Rate, based on macroeconomic and financial indicators. In this context, each FOMC meeting represents a decision-making instance in which the Committee determines the appropriate policy stance in response to evolving economic conditions and market developments.
 
@@ -484,102 +405,115 @@ Furthermore, the Federal Funds Futures market plays a pivotal role in the broade
 
 Given that our fine-tuned model is capable of emulating the analytical style of the FOMC, it can also infer monetary policy actions based on meeting discussions. Therefore, we further evaluate the model’s decision-making accuracy in predicting changes to the Federal Funds Rate (FFR). This evaluation aims to provide insights into the model’s decision-making capabilities and further explore its potential to simulate realistic monetary policy behavior.
 
+For each meeting, the model input is constructed by a target-neutral pre-meeting analysis. The analysis concatenates eight Core 8 economic-topic blocks in a fixed order using information available one day before the meeting. It excludes the realized policy action, official Minutes, post-meeting evidence, and meeting identifiers.
 
-To this end, we first extracted historical FFR changes from the Federal Reserve Bank of New York spanning 2000 to 2025 (Table~\ref{tab:ch2:ffr_changes}). The changes mainly ranged between increases and decreases of 75 basis points (bps). Based on this historical distribution, we constructed a list of potential FFR changes (Table~\ref{tab:ch2:vote_choice}) and prompted the model to select the most appropriate option using the format outlined in Table~\ref{tab:ch2:prompt_for_decision_prediction}, where the \texttt{current\_analysis} represents the other sections from the FOMC minutes. Finally, we assessed the model’s decision-making performance by comparing its predictions to the actual FOMC outcomes, thereby evaluating its accuracy in replicating historical monetary policy decisions.
+We represent an action as $y=(d,m)$, where $d$ is a case-sensitive direction and $m$ is an unsigned magnitude in basis points. The policy actions set ($\mathcal{A}$) is
 
+\begin{equation*}
+    \mathcal{A} = \{(\texttt{hold},0)\} \cup \{(d,m); d\in\{\texttt{cut},\texttt{hike}\},\, m\in\{25,50,75,100\}\}.
+\end{equation*}
 
-\begin{table}[htbp]
+To train the model to produce actions within this predefined action space, we first introduce a supervised fine-tuning (SFT) stage to teach the model the policy-decision task and the required output structure. The subsequent GRPO stage further optimizes the model under the specified reward function
+
+The external evaluation contains two non-overlapping panels. The historical external panel contains 19 meetings from 1993 to 2008 that are absent from the 237-meeting decision-training release. The post-cutoff panel contains 12 regular meetings after the training-data endpoint. It is training-data-held-out but retrospective rather than prospective because the associated policy decisions were publicly observable before this evaluation was conducted. Table~\ref{tab:ch2:decision_external_population} reports the meeting-level composition of the two panels.
+
+\begin{table}[H]
     \centering
     \footnotesize
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \begin{tabular}{c c}
-            \toprule
-            Rate Change (bps) & Frequency \\
-            \midrule
-            0    & 6,177 \\
-            25   & 31 \\
-            -50  & 15 \\
-            -25  & 12 \\
-            75   & 4 \\
-            50   & 2 \\
-            -75  & 2 \\
-            \bottomrule
-        \end{tabular}
-        \caption{Daily Federal Funds Rate Changes (in bps), January 1, 2000 to May 9, 2025}
-        \label{tab:ch2:ffr_changes}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \begin{tabular}{l}
-            \toprule
-            Target Vote Choices \\
-            \midrule
-            Raise by 100 basis points \\
-            Raise by 75 basis points \\
-            Raise by 50 basis points \\
-            Raise by 25 basis points \\
-            No change \\
-            Cut by 25 basis points \\
-            Cut by 50 basis points \\
-            Cut by 75 basis points \\
-            Cut by 100 basis points \\
-            \bottomrule
-        \end{tabular}
-        \caption{Choices for Target Vote}
-        \label{tab:ch2:vote_choice}
-    \end{minipage}
-\end{table}
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.12}
+    \begin{threeparttable}
+    \caption{Meeting Population for the External Stochastic Decision Evaluation}
+    \label{tab:ch2:decision_external_population}
 
+    \begin{tabular}{l l r r r r r}
+        \toprule
+        \textbf{Panel}
+        & \textbf{Meeting span}
+        & \textbf{Cut}
+        & \textbf{Hold}
+        & \textbf{Hike}
+        & \textbf{Meetings}
+        & \makecell{\textbf{Generations}\\\textbf{per model}} \\
+        \midrule
+        Historical external
+        & 1993-02-02--2008-06-25
+        & 4 & 10 & 5 & 19 & 190 \\
 
-\begin{table}[htp]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{Prompt for Government Decision Prediction} \\
-    \midrule
-You are a voting member of the Federal Open Market Committee (FOMC), responsible for setting U.S. monetary policy. 
-Below is an analysis of U.S. economic and financial conditions ahead of the FOMC meeting on \texttt{**\{meeting\_date\}**}.  \\
-The current Effective Federal Funds Rate is \texttt{**\{current\_rate\}\%**}. \\
-~\\
-Your assignment:  
-1. Review the analysis and summarize the key economic and financial factors influencing the decision.  
-2. Provide a step-by-step explanation of your policy recommendation for this meeting.  
-3. Conclude with your \textbf{vote}. Select only one of the following:  \\
-\texttt{... Voting Choices ...}
-~\\
-Guidelines:  \\
-- Stay professional, structured, and objective.  \\
-- Do not speculate beyond the information provided. \\  
-~\\
-\textbf{---} \\
-\textbf{Current Economic and Financial Market Analysis} \\
-\texttt{\{current\_analysis\}} \\
-\textbf{---} \\
-Please structure your response as follows:  \\
-\textbf{1. Summary of Key Economic Factors} (\(\leq 150\) words)  \\
-\textbf{2. Step-by-Step Policy Reasoning}  \\
-\hspace*{0.5cm} - Analyze the data  \\
-\hspace*{0.5cm} - Consider all policy alternatives  \\
-\hspace*{0.5cm} - Justify the your final choice \\
-~\\
-\textbf{3. Final Vote}  \\
-State your choice as: \texttt{**\textbackslash boxed\{\{your choice\}\}**} (e.g., \texttt{\textbackslash boxed\{\{No change\}\}}). \\
-    \bottomrule
-    \toprule
-\textbf{Target Output:} \\
-\midrule
-\texttt{\{Federal Funds Rate Change\}} \\
-\bottomrule
+        Post-cutoff
+        & 2025-03-18--2026-07-29
+        & 3 & 9 & 0 & 12 & 120 \\
+
+        \midrule
+        Post-hoc pooled view
+        & 1993-02-02--2026-07-29
+        & 7 & 19 & 5 & 31 & 310 \\
+        \bottomrule
     \end{tabular}
-    \caption{Prompt for Government Decision Prediction}
-    \label{tab:ch2:prompt_for_decision_prediction}
+    \end{threeparttable}
 \end{table}
 
+Generation uses stochastic decoding with temperature \(T=0.6\), nucleus sampling \(p=0.9\), and \(K=10\) independently seeded completions for every model-meeting pair. The maximum continuation length is 1,536 tokens. The same meeting-replicate seeds and exact prompt token IDs are shared across model states, yielding $31 \times 10  = 310$ completions for each model. 
 
 
+Finally, we calculated the Meeting-averaged Direction accuracy, fixed-three-class balanced accuracy, and class level recall as evaluation metrics. 
+
+
+Let \(d_h\) be the target direction for meeting \(h\), and let
+\(\hat d_{a,h,r}\) be the parsed direction produced by model state \(a\) in replicate \(r\). Predictions that cannot be parsed into an admissible direction are assigned the label \(\mathrm{invalid}\) and remain errors in the denominator. Define the replicate-level correctness indicator and its meeting-level mean as
+
+\begin{align}
+    q_{a,h,r}
+    &=
+    \mathbb{I}\!\left[\hat d_{a,h,r}=d_h\right],
+    \\
+    \bar q_{a,h}
+    &=
+    \frac{1}{K}\sum_{r=1}^{K}q_{a,h,r}.
+    \label{eq:ch2:decision_true_direction_probability}
+\end{align}
+
+
+First of all, Meeting-averaged direction accuracy is then
+
+\begin{equation}
+    \operatorname{DirectionAccuracy}_{a}
+    =
+    \frac{1}{H}\sum_{h=1}^{H}\bar q_{a,h},
+    \label{eq:ch2:decision_direction_accuracy}
+\end{equation}
+where \(H\) is the number of independent meetings in the relevant panel.
+
+
+For each policy class \(c\), class level recall are defined from the replicate-level predictions as
+\begin{align}
+    TP_{a,c}
+    &=
+    \sum_{h=1}^{H}\sum_{r=1}^{K}
+    \mathbb{I}
+    [d_h=c \land \hat d_{a,h,r}=c],
+    \\
+    FN_{a,c}
+    &=
+    \sum_{h=1}^{H}\sum_{r=1}^{K}
+    \mathbb{I}
+    [d_h=c \land \hat d_{a,h,r}\neq c],
+    \\
+    \operatorname{Recall}_{a,c}
+    &=
+    \frac{TP_{a,c}}{TP_{a,c}+FN_{a,c}}.
+\end{align}
+
+Balanced accuracy is the unweighted mean of the supported class recalls:
+
+\begin{equation}
+    \operatorname{BalancedAccuracy}_{a,\mathcal{C}_P}
+    =
+    \frac{1}{|\mathcal{C}_P|}
+    \sum_{c\in\mathcal{C}_P}
+    \operatorname{Recall}_{a,c}.
+    \label{eq:ch2:decision_balanced_accuracy}
+\end{equation}
 
 
 
@@ -587,636 +521,1086 @@ State your choice as: \texttt{**\textbackslash boxed\{\{your choice\}\}**} (e.g.
 
 \section{Empirical Results}\label{ch2:sec:result}
 
-This section reports the completed SFT training evidence and the task-aligned
-evaluation of FOMC-Minutes rewriting.  Results from unfinished downstream
-exercises are kept separate from the principal \texttt{chk-3}-versus-
-\texttt{chk-1} comparison.
+This section reports training diagnostics and downstream results for both FOMC-Minutes-style paragraph rewriting and monetary-policy decision prediction. We assess both optimization dynamics (loss/reward trajectories) and task performance under text-based and economics-based criteria.
+
 
 
 \subsection*{Model Training Results}
 
-\subsubsection*{Step 1: Supervised Fine-Tuning (SFT) Results (\textit{Model chk-1})}
+\subsubsection*{Analytical SFT Trajectory (\textit{Model chk-1})}
 
-The first SFT stage fine-tunes DeepSeek-R1-Distill-Llama-8B on 1,354 training
-observations.  As discussed in Section~\ref{ch2:sec:the-dataset}, this sample
-satisfies the structural validation criteria but is used subject to the
-qualification raised by the strict source-grounding audit.  The model is
-estimated using completion-only QLoRA for three epochs, with a learning rate
-of \(1.0\times10^{-6}\), a maximum sequence length of 7,168 tokens, a
-per-device batch size of 1, and gradient accumulation over 8 steps.  Training
-terminates after 255 optimization steps, with a mean training loss of
-1.777860.  Validation is conducted periodically on a fixed sample of 199
-observations.
-
-Checkpoint 200 is selected instead of the final checkpoint because it attains
-the lowest validation loss, 1.686099, with a token accuracy of 0.602685.  It
-also satisfies all generation-validity criteria in the eight-observation
-diagnostic sample: every completion terminates normally, conforms to the
-response format, remains below the token limit, and avoids periodic or
-catastrophic repetition.  Its mean token four-gram repetition rate is
-0.134664, compared with 0.1410 at checkpoint 255.  The final checkpoint has a
-validation loss of 1.686131, only 0.000032 above the minimum.  The training
-trajectory is therefore more consistent with a validation plateau than with a
-substantive late-stage deterioration, while the repetition diagnostic provides
-a secondary reason to prefer checkpoint 200.
-
-These results establish that the SFT objective is optimized stably and that the
-selected model satisfies the basic generation criteria on the diagnostic
-sample.  They should not, however, be interpreted as evidence of factual
-accuracy on the held-out test set.
+To start with, the \textit{Model chk-1} was fine-tuned from \textit{DeepSeek-R1-Distill-Llama-8B} (\textit{Model chk-0}) using four-bit quantized LoRA (QLoRA). The base-model weights were loaded with NF4 double quantization and bfloat16 computation, while rank-32 LoRA adapters—with a scaling parameter of 64 and a dropout rate of 0.05—were applied to the attention projections (\texttt{q\_proj}, \texttt{k\_proj}, \texttt{v\_proj}, and \texttt{o\_proj}) and feed-forward projections (\texttt{gate\_proj}, \texttt{up\_proj}, and \texttt{down\_proj}). Training minimized the completion-only causal-language-modeling loss for three epochs, using a maximum sequence length of 7,168 tokens without sequence packing. The per-device batch size was one across two distributed processes, with gradients accumulated over eight micro-batches, giving a nominal effective batch size of 16 examples per optimizer update. Optimization used eight-bit paged AdamW with an initial learning rate of $1\times10^{-6}$, cosine decay, a 5\% warm-up ratio, weight decay of 0.01, and gradient clipping at a maximum norm of 1.0. Gradient checkpointing was enabled to reduce memory consumption, and both the model and data-order seeds were fixed at 42. Evaluation was performed every 10 optimizer steps on the 199-example validation set.
 
 
-\subsubsection*{Minutes-Rewriting SFT Results (\textit{Model chk-3})}
+Furthermore, to make sure the generation stability, we added extra hard gates in the checkpoint selection. A checkpoint was eligible only if all eight probe completions were finite, terminated normally, satisfied the reasoning-and-answer contract, remained below the completion limit, and exhibited neither catastrophic repetition nor a strict periodic tail. Meanwhile, During Model chk-1 training, we observed that extended optimization could induce repetitive and degenerate generation, we therefore introduced a generation-stability gate to detect and exclude affected checkpoints. Table~\ref{tab:app:chk1_generation_stability_gates} summarizes these gates and reports the corresponding results for checkpoint 200.
 
-The Minutes-rewriting experiment estimates the task-specific
-\texttt{chk-1}$\rightarrow$\texttt{chk-3} transition.  It is initialized from
-\texttt{chk-1} checkpoint 200 and trained on the analysis-to-Minutes dataset
-described in Section~\ref{ch2:sec:the-dataset}.  The response target comprises
-a synthetic teacher-generated fidelity rationale followed by a paragraph in
-the style of the FOMC Minutes, rather than an excerpt from the official
-Minutes.  Estimation uses completion-only
-QLoRA for three epochs, with a learning rate of \(1.0\times10^{-6}\), a
-maximum sequence length of 4,096 tokens, a per-device batch size of 1, and
-gradient accumulation over 8 steps.  The training procedure terminates after
-318 optimization steps.
 
-An initial selection based on validation loss and a three-observation
-generation diagnostic favoured checkpoint 250.  When subsequently evaluated
-on the twelve-observation task-aligned sample, however, this checkpoint
-satisfied all validity criteria for only 10 observations: one completion
-reached the 3,072-token limit and another failed to preserve the source dates.
-The checkpoint comparison was therefore repeated using the structural,
-numerical, date-preservation, and degeneration criteria defined above.
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \renewcommand{\arraystretch}{1.16}
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
+        >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
+        >{\raggedright\arraybackslash}p{0.16\textwidth}
+    @{}}
+        \toprule
+        \textbf{Gate} &
+        \textbf{Operational definition} &
+        \textbf{Pass requirement} &
+        \textbf{Model chk-1 cp200} \\
+        \midrule
 
-Checkpoint 318 is the only finalist that satisfies all four validity criteria
-for all 12 observations.  It also improves both semantic-similarity point
-estimates relative to the \texttt{chk-1} baseline in the non-identity
-subsample.  The checkpoint is consequently retained for task-aligned
-evaluation.  Because this selection is based on a small diagnostic sample, the
-result is treated as descriptive checkpoint-selection evidence and is not used
-to justify further downstream training.
+        Finite generation &
+        Every probe completion and its recorded diagnostics must remain finite. &
+        8/8 finite completions. \\
+
+        Normal termination &
+        Each completion must emit an end-of-sequence token rather than stopping because of the generation limit. &
+        8/8 EOS; zero capped completions. \\
+
+        Response-contract validity &
+        Each completion must contain the required native reasoning boundary and a nonempty final answer. &
+        8/8 contract-valid; no reduction relative to Model chk-0. \\
+
+        Catastrophic-repetition exclusion &
+        Full-text token four-gram repetition must remain below 0.50 and tail repetition below 0.60 for every completion. &
+        Zero catastrophic cases. \\
+
+        Periodic-tail exclusion &
+        The completion must not end in a strictly repeated periodic sequence. &
+        Zero strict periodic tails. \\
+
+        Relative-repetition control &
+        Repetition is compared with Model chk-0 using the same prompts and seeds. &
+        Maximum case-level increase $\leq 0.20$ and mean increase $\leq 0.10$. \\
+
+        \bottomrule
+    \end{tabularx}
+    \caption{Generation-stability hard gates used in selecting Model chk-1.}
+    \label{tab:app:chk1_generation_stability_gates}
+\end{table}
 
 
 
-\subsubsection*{Policy Prediction GRPO Results (Intended Role: \textit{Model chk-4})}
-
-The intended policy branch applies GRPO to \textit{Model chk-2} to infer the standardized Federal Funds Rate (FFR) vote. The surviving decision adapters instead branch from \textit{Model chk-1}; a later decision-branch merge also overwrote the old merged directory previously associated with the Minutes branch. The archived decision run uses \textit{``Vote Accuracy Reward''} and \textit{``Vote Format Reward''}, whose sum forms the \textit{``Total Reward''}. Figure~\ref{fig:ch2:stage2_grpo} shows the 20-step rolling average over the recorded training trajectory.
+Finally, the analytical SFT run reports 3,407,872 trainable parameters out of 8,051,232,768 total parameters (0.0423\%). The archived Model chk-1 SFT run was trained for three epochs on 1,354 training examples, resulting in 255 optimizer updates. Gradients were accumulated over eight micro-batches before each optimizer update, and evaluation loss was recorded every 10 optimizer steps on the 199-example validation set. Figure~\ref{fig:ch2:stage1_sft_loss} presents the resulting training- and evaluation-loss trajectories.
 
 
 \begin{figure}[htbp]
     \begin{center}
-            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage2_train/trainer_state_grpo_stage2_1900_20250527.png}
-            \caption{Rolling Average Rewards for Decision-Making GRPO (\textit{Model chk-4}) with $\pm$1-Standard Deviation Intervals}
-            \label{fig:ch2:stage2_grpo}
+            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage1_train/Model_chk-1_training_and_evaluation_loss.png}
+            \caption{Training and evaluation loss for the archived analytical SFT run.}
+            \label{fig:ch2:stage1_sft_loss}
+    \end{center}
+\end{figure}
+
+
+In the frozen 255-step run, the 10-step trailing mean of training loss decreases from 1.9558 at step 10 to 1.7229 at step 255. Evaluation loss falls from 1.9033 at step 10 to its minimum logged value of 1.6861 at step 200, which is retained as the paper-facing \textit{Model chk-1} checkpoint, and subsequently remains nearly unchanged, reaching 1.6862 at the final scheduled evaluation at step 250. The continued modest decline in smoothed training loss after step 200, together with the plateau in evaluation loss, indicates diminishing generalization gains and a mild risk of overfitting, although no material increase in evaluation loss is observed.
+
+
+
+Overall, \textbf{Checkpoint 200} is selected instead of the final checkpoint because it attains the lowest validation loss, 1.686099, with a token accuracy of 0.602685.  It also satisfies all generation-validity criteria in the eight-observation diagnostic sample: every completion terminates normally, conforms to the response format, remains below the token limit, and avoids periodic or catastrophic repetition. We also examined initial learning rates of \(5\times10^{-5}\), \(1\times10^{-5}\), and \(1\times10^{-6}\) through staged stability diagnostics under otherwise matched QLoRA settings. Detailed results are reported in Appendix~\ref{app:checkpoint_selection}.
+
+
+
+
+\subsubsection*{Minutes-Style Paragraph-Rewriting SFT Results (\textit{Model chk-2})}
+
+
+
+The Minutes-rewriting experiment implements the task-specific transition from
+\textit{Model chk-1} to \textit{Model chk-2}. Specifically,
+\textit{Model chk-2} is initialized from the exact-merged checkpoint 200 of
+\textit{Model chk-1} and fine-tuned on the analysis-to-Minutes dataset described
+in Section~\ref{ch2:sec:the-dataset}. Each target response concatenates the
+rewriting teacher's fidelity reasoning trace, a literal \texttt{</think>}
+boundary, and a single synthetic FOMC Minutes-style paragraph. Thus, the model
+is trained to reproduce both the content-preservation reasoning process and the
+resulting institutional rewrite, rather than to predict the corresponding
+official Minutes directly. Training is performed for three epochs using
+completion-only QLoRA, with a learning rate of $1.0\times10^{-6}$, a maximum
+sequence length of 4,096 tokens, a per-device batch size of 1, and gradient
+accumulation over 8 steps. With two training devices and 305 training samples,
+the procedure completes after 60 optimization steps.
+
+
+
+We also employed the hard gates in the checkpoint selection. For this training, each completion must satisfy the structure-and-delivery contract, preserve the source numeric multiset and date set, and remain free from capped or repetitive degeneration. Table~\ref{tab:app:chk2_checkpoint_selection_gates} summaried the hard gates for this training.
+
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.14}
+
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.19\textwidth}
+        >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash}p{0.24\textwidth}
+    @{}}
+        \toprule
+        \textbf{Screening criterion} &
+        \textbf{Operational definition} &
+        \textbf{Checkpoint-level requirement} \\
+        \midrule
+
+        Zero-tolerance structure and degeneration &
+        Each completion must terminate with EOS, remain within the generation
+        and 4,096-token sequence limits, contain exactly one
+        \texttt{\textless/think\textgreater} boundary, and include nonempty
+        reasoning followed by one 20--400-word paragraph. The final paragraph
+        must contain no headings, lists, JSON, citations, credentials, or
+        control markers. Strict periodic tails are prohibited, while full-text
+        and tail four-gram repetition must remain below 0.50 and 0.60,
+        respectively. &
+        Zero such failures across all eight screening cases. \\
+
+        Deterministic source fidelity &
+        The normalized numeric multiset and the complete date and attribution
+        sets must be preserved between the source analysis and the generated
+        paragraph. Reuse of source phrases or sentences is permitted, but an
+        exact copy of the complete source analysis is treated as a failure. &
+        At least $75\%$ of the panel, corresponding to at least 6 of 8 cases,
+        must pass. \\
+
+        Validator A factual fidelity &
+        For cases passing the complete deterministic check, a fresh Validator A
+        call examines the source analysis, the student reasoning trace, and the
+        rewritten paragraph. It verifies bidirectional claim support,
+        reasoning--answer compatibility, and the preservation of quantities,
+        dates, directions, comparisons, uncertainty, and attributions.
+        Validator A does not receive the official Minutes reference. &
+        At least $75\%$ of deterministic-pass cases must receive a strict
+        Validator A PASS verdict. \\
+
+        Validator B pass rate &
+        Only cases passing Validator A are submitted to Validator B. Validator B
+        receives the rewritten paragraph and the corresponding meeting's
+        pre-action official Minutes, but not the source analysis or reasoning.
+        It locates comparable official passages and evaluates the rewrite under
+        the six-dimensional Minutes-style contract. &
+        At least $50\%$ of Validator-A-pass cases must receive a strict
+        Validator B PASS verdict. \\
+
+        Validator B mean score &
+        The six Validator B dimensions assess institutional register, sentence
+        structure and information density, paragraph organization, attribution
+        and hedging, temporal and comparative framing, and overall similarity
+        to official Minutes prose. The checkpoint-level mean is calculated
+        across all Validator-A-pass cases with valid scores, including cases
+        that do not individually pass Validator B. &
+        The checkpoint-level mean Validator B score must be at least 6.0 out
+        of 10. \\
+
+        Full-chain validity &
+        A case is fully valid only when it passes the deterministic checks,
+        Validator A, and Validator B in sequence:
+        $H_{i,c}=D_{i,c}A_{i,c}B_{i,c}$. Per-case verdicts remain strict and are
+        not altered by the relaxed checkpoint-level aggregation. &
+        At least $25\%$ of the panel, corresponding to at least 2 of 8 cases,
+        must satisfy the complete chain. \\
+
+        Verification completeness &
+        Every required validator call must reach a resolved terminal state.
+        A contract-only remediation may resolve an incomplete validator report,
+        but it must not change the generated candidate. &
+        Zero unresolved validator, transport, or schema failures. \\
+
+        Joint checkpoint decision &
+        A checkpoint is eligible only if all checkpoint-level requirements
+        above are satisfied simultaneously. If multiple checkpoints are
+        eligible, they are ranked by full-chain pass rate, Validator B mean
+        score, Validator A pass rate, deterministic-fidelity rate, and then the
+        earlier checkpoint step. &
+        Every checkpoint-level criterion must pass; no validation-loss or
+        similarity result can compensate for a failed criterion. \\
+
+        \bottomrule
+    \end{tabularx}
+
+    \caption{Relaxed checkpoint-selection screening criteria for
+    \textit{Model chk-2}. The screening panel comprised eight deterministically
+    selected validation cases and was used only for checkpoint selection.
+    Checkpoint 50 was the only candidate satisfying every checkpoint-level
+    requirement: 6 of 8 cases passed deterministic source fidelity, 5 of 6
+    deterministic-pass cases passed Validator A, 3 of those 5 passed Validator
+    B, the mean Validator B score was 6.73, and 3 of 8 cases passed the complete
+    chain. Checkpoint 40 failed the Validator A, Validator B, and full-chain
+    thresholds, whereas checkpoint 60 failed the Validator B pass-rate and
+    full-chain thresholds. Checkpoint 50 was therefore retained.}
+    \label{tab:app:chk2_checkpoint_selection_gates}
+\end{table}
+
+
+Across the 60-step SFT run, the per-step completion loss exhibited substantial
+minibatch-level variation. Nevertheless, its seven-step trailing mean declined
+from 1.6414 at step~10 to 1.5965 at step~60. The corresponding epoch-level
+training-loss means were 1.6562, 1.5923, and 1.6014, indicating an initial
+improvement followed by relative stabilization. Evaluation loss on the
+42-sample monitoring split decreased monotonically at the ten-step evaluation
+points, from 1.5647 at step~10 to its minimum logged value of 1.5262 at
+step~60. The marginal improvement narrowed considerably toward the end of
+training: evaluation loss declined from 1.5295 at step~40 to 1.5266 at
+step~50 and then by only 0.000344, or 0.0225\%, between steps~50 and~60
+(Figure~\ref{fig:ch2:stage2_sft}). The trajectory therefore approached an
+in-run plateau without exhibiting material validation-loss deterioration.
+Although checkpoint~60 attained the lowest monitoring loss, checkpoint
+selection was not determined by loss alone. Checkpoint~50 was retained because
+it was the only candidate among checkpoints~40, 50, and~60 to satisfy all of
+the documented tolerant checkpoint-level quality criteria; checkpoint~40
+failed the Validator~A, Validator~B, and full-chain thresholds, whereas
+checkpoint~60 failed the Validator~B pass-rate and full-chain thresholds.
+
+Accordingly, \textit{Checkpoint 50} is retained as the paper-facing
+\textit{Model chk-2} adapter checkpoint for the subsequent diagnostic
+evaluation. On the eight deterministically selected cases from the validation
+split, checkpoint~50 produced no zero-tolerance structural or degeneration
+failures; 6 of 8 cases passed the deterministic factual-fidelity screen, 5 of
+those 6 passed Validator~A, and 3 of those 5 passed Validator~B, with a mean
+Validator~B score of 6.73. Consequently, 3 of the 8 cases passed the complete
+deterministic--Validator~A--Validator~B chain, exceeding the checkpoint-level
+minimum of 25\%. Importantly, checkpoint~50 did not pass every sample-level
+hard gate on all eight observations; it was selected because it was the only
+candidate satisfying every tolerant aggregate admission criterion. The
+complete candidate comparison and auxiliary semantic diagnostics are reported
+in Appendix~\ref{app:checkpoint_selection}. Because this small validation panel was used for checkpoint selection, it provides selection evidence only and should not be interpreted as an external test or as population-level evidence
+of rewriting performance.
+
+
+
+\begin{figure}[htbp]
+    \begin{center}
+            \includegraphics[width=0.9\textwidth]{Chapter2/Chapter2Figs/stage2_train/chk2_train_eval_loss_cp50.pdf}
+            \caption{Training and evaluation loss for paragraph-rewriting SFT (\textit{Model chk-2}).}
+            \label{fig:ch2:stage2_sft}
     \end{center}
 \end{figure}
 
 
 
-% % 
-The archived configuration records 5 planned epochs and 1,940 training steps. Within the displayed trajectory, the format- and accuracy-reward rolling averages generally increase, while their rolling standard deviations are lower near step 1,200 than in earlier portions of the run. These quantities are descriptive diagnostics of the archived reward functions and sampled training outputs. Without a fixed held-out comparison, they cannot be interpreted as evidence of policy-optimization effectiveness, behavioral reliability, convergence, or a causal change in policy-decision accuracy.
 
-% Importantly, after step 1,200, the total reward plateaued, and no further significant upward trend was observed. To mitigate the risk of overfitting and ensure generalization, we selected the model checkpoint at step 1,200 (corresponding to epoch 2.0) as the final model for this training stage.
+\subsubsection*{Policy-Decision GRPO Run (\textit{Model chk-3})}
 
 
+For policy decision making prediction task, we further fine-tuned the \textit{Model chk-1} to get \textit{Model chk-3}. Here, we employed decision SFT for instruction following followed by decision GRPO for reasoning capacity improving. 
+
+Decision SFT uses the fixed 312-row exposure schedule for 39 optimizer steps. Also, we added the following (Table~\ref{tab:app:chk3_sft_hard_gates}) to check the quality of the generation in checkpoint selection, including reasoning-boundary delivery, completion-cap control, the absence of periodic degeneration, and minimum direction and reward coverage for hold, hike, and cut.
+
+\begin{table}[htbp]
+\centering
+\caption{Pre-GRPO SFT Qualification Gates for Model chk-3}
+\label{tab:app:chk3_sft_hard_gates}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{
+    @{}
+    p{0.28\textwidth}
+    p{0.27\textwidth}
+    X
+    @{}
+}
+\toprule
+Hard gate & Frozen requirement & Purpose \\
+\midrule
+
+Reasoning-answer boundary
+& Overall boundary rate $\geq .75$
+& Ensures that the native reasoning section is properly separated from the terminal answer. \\
+
+Completion cap
+& Overall cap rate $\leq .25$
+& Limits the frequency of outputs that reach the maximum completion length without valid termination. \\
+
+Periodic degeneration
+& Strict periodic-tail count $=0$
+& Rejects checkpoints that generate mechanically repeated or periodic terminal sequences. \\
+
+Direction coverage
+& At least one sampled direction-correct output for each of hold, hike, and cut
+& Verifies that all three policy directions remain reachable under stochastic decoding. \\
+
+Nonzero-reward coverage
+& At least one sampled nonzero-reward output for each of hold, hike, and cut
+& Ensures that every direction provides a usable learning signal for GRPO initialization. \\
+
+Reward dispersion
+& Sampled reward standard deviation $>0$ for each direction
+& Prevents zero-variance completion groups that provide no group-relative learning signal. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Finally, Figure~\ref{fig:ch2:chk3_sft_loss} illustrates the training and evaluation loss of the decision SFT stage. the five-step trailing mean of training loss decreases from 2.1035 at step 5 to 1.5592 at step 39, despite noticeable batch-level fluctuations. Evaluation loss declines consistently from 1.7539 at step 13 to 1.6222 at step 26 and reaches its minimum logged value of 1.6015 at step 39.
 
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.90\textwidth]
+    {Chapter2/Chapter2Figs/stage2_train/chk3_sft_train_eval_loss_cp38.pdf}
+    \caption{Training and Evaluation Loss during the SFT Stage of Model chk-3}
+    \label{fig:ch2:chk3_sft_loss}
+\end{figure}
 
 
-\subsubsection*{Training Results Summary}
+Exact-merged checkpoint 38 which has the similar loss as checkpoint 39 but passsed all 6 gates (checkpoint 39 failed Sampled cut-direction correctness test) is retained as the pre-GRPO state. 
 
-The completed training evidence concerns \texttt{chk-1} and \texttt{chk-3}.
-The former is the selected analytical baseline, and the latter is the
-Minutes-rewriting model initialized from that baseline.  Their training losses
-document optimization of the respective supervised objectives; task-level
-differences are assessed separately using identical analysis-to-Minutes inputs.
-The decision-task curve is not combined with this comparison.
+
+Decision GRPO then starts from checkpoint 38, uses the same 312-row decision population for three epochs and four generations per prompt, and terminates at global step 468. Hard gates (Table~\ref{tab:app:chk3_grpo_hard_gates}) for this stage have been listed below:
+
+
+\begin{table}[htbp]
+\centering
+\caption{GRPO Checkpoint-Selection Gates for Model chk-3}
+\label{tab:app:chk3_grpo_hard_gates}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{
+    @{}
+    p{0.15\textwidth}
+    p{0.24\textwidth}
+    p{0.24\textwidth}
+    X
+    @{}
+}
+\toprule
+Evaluation stage & Hard gate & Frozen requirement & Purpose \\
+\midrule
+
+Selection panel
+& Delivery validity
+& Delivery-valid rate $\geq .75$
+& Restricts the shortlist to checkpoints that reliably satisfy the complete native-output contract. \\
+
+Selection panel
+& Completion cap
+& Cap rate $\leq .25$
+& Excludes checkpoints with excessive length-limit termination. \\
+
+Selection panel
+& Periodic degeneration
+& Periodic-tail count $=0$
+& Excludes checkpoints exhibiting strict periodic repetition. \\
+
+\midrule
+
+Blind panel
+& Delivery validity
+& Delivery-valid rate $\geq .75$
+& Requires the delivery threshold to hold on an independent blind validation panel. \\
+
+Blind panel
+& Completion cap
+& Cap rate $\leq .25$
+& Requires completion-length stability to persist on the blind panel. \\
+
+Blind panel
+& Periodic degeneration
+& Periodic-tail count $=0$
+& Requires the absence of periodic degeneration on the blind panel. \\
+
+\midrule
+
+Retention panel
+& Direction retention
+& At least one direction-correct output for each of hold, hike, and cut
+& Prevents checkpoint selection from eliminating any policy-action direction. \\
+
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Finally, Figure~\ref{fig:ch2:chk3_grpo_reward} shows the evolution of the GRPO reward during training. The solid line reports the 20-step trailing mean, while the shaded region denotes \(\pm 1\) step-level standard error.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{Chapter2/Chapter2Figs/stage2_train/chk3_grpo_reward_with_standard_error.pdf}
+    \caption{GRPO Reward during Policy-Decision Training}
+    \label{fig:ch2:chk3_grpo_reward}
+\end{figure}
+
+
+There is no checkpoint that has passed all 77 gates. Checkpoint 450 is selected as the \textit{Model chk-3} for post-GRPO evaluation because it is the best-observed exploratory candidate in the completed probe, not because it passed the preregistered selection gates. Its blind delivery-valid rate is 0.30, below the 0.75 gate. 
 
 
 
 %%% end of decision making
 
 
+\subsubsection*{Training Results Summary}
+
+To summarize, the training evidence establishes \textit{Model chk-1} as the common parent of the independent Minutes-rewriting and policy-decision branches. \textit{Model chk-2} at checkpoint 50 is evaluated in the Minutes-rewriting diagnostics reported below. The two successive states of \textit{Model chk-3}, checkpoint 38 before GRPO and checkpoint 450 after GRPO, are evaluated separately on the policy-decision task. Table~\ref{tab:ch2:model_training_lineage} summarizes the models and their corresponding training methods.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Model Lineage and Training Summary}
+    \label{tab:ch2:model_training_lineage}
+    \footnotesize
+    \setlength{\tabcolsep}{6pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{
+        >{\raggedright\arraybackslash}p{0.20\textwidth}
+        >{\raggedright\arraybackslash}p{0.24\textwidth}
+        >{\raggedright\arraybackslash}p{0.20\textwidth}
+        >{\raggedright\arraybackslash}X
+    }
+        \toprule
+        Model name
+        & Direct parent
+        & Checkpoint
+        & Training method \\
+        \midrule
+
+        \textit{Model chk-0}
+        & DeepSeek-Distilled-llama3-8B
+        & Pretrained release
+        & Pretraining \\
+
+        \textit{Model chk-1}
+        & \textit{Model chk-0}
+        & cp200
+        & Analysis SFT \\
+
+        \textit{Model chk-2}
+        & \textit{Model chk-1} cp200
+        & cp50
+        & Minutes SFT \\
+
+        \textit{Model chk-3}
+        & \textit{Model chk-1} cp200
+        & cp38, then cp450
+        & Decision SFT, then Decision GRPO \\
+        \bottomrule
+    \end{tabularx}
+
+    \begin{minipage}{0.97\textwidth}
+        \scriptsize
+        \textit{Note:} For Model chk-3, cp38 denotes the pre-GRPO
+        Decision-SFT state, while cp450 denotes the evaluated post-GRPO
+        state. These checkpoints are successive states of the same
+        paper-level model, not separate models. Model chk-2 and Model chk-3 form independent downstream branches from Model chk-1.
+    \end{minipage}
+\end{table}
+
+
+
+%%%%% end of model training result
+
+
 
 \subsection*{Model Evaluation Results}
 
-The principal completed evaluation compares \texttt{chk-3} with the
-\texttt{chk-1} baseline on the task-aligned diagnostic sample.  Results from
-the unfinished indicator-sensitivity, association, and decision exercises are
-reported separately and do not alter the definition of the experimental
-baseline.
+This subsection reports the evaluation results for the two downstream branches and their associated diagnostics. First, the Minutes-style paragraph-rewriting fidelity experiment primarily compares \textit{Model chk-2} with its immediate parent, \textit{Model chk-1}, while \textit{Model chk-0} serves as a background baseline. Second, as a target-relative prompt-sensitivity stress test, the LOO analysis measures how interventions to the Core 8 indicator blocks change the similarity of \textit{Model chk-2}'s output to a fixed synthetic reference; it does not establish information sufficiency. Third, the historical sentiment-Treasury diagnostic compares the estimated $\beta$ coefficients associated with texts generated by \textit{Model chk-0}, \textit{Model chk-1}, and \textit{Model chk-2}. Finally, the policy-decision evaluation compares \textit{Model chk-1} at checkpoint 200 with the pre-GRPO SFT state of \textit{Model chk-3} at checkpoint 38 and its post-GRPO state at checkpoint 450.
 
-\subsubsection*{Task-Aligned Minutes-Rewriting Performance}
 
-Table~\ref{tab:ch2:chk3_native_n12} reports the task-aligned results for the
-twelve-observation diagnostic sample.  The \texttt{chk-1} baseline and
-\texttt{chk-3} checkpoint 318 satisfy all four validity criteria for all 12
-observations.  The auxiliary \texttt{chk-0} reference fails the structural
-criterion for one observation, the numerical-fidelity criterion for three,
-the date-fidelity criterion for two, and the degeneration criterion for one.
-When invalid observations are assigned zero semantic similarity,
-\texttt{chk-3} yields the highest BERTScore F1 and MPNet cosine-similarity
-point estimates.
+
+\subsubsection*{Minutes-Style Paragraph-Rewriting Fidelity and Similarity Performance}
+This subsection reports the frozen checkpoint-50 reconstruction experiment on all 391 published Minutes-rewriting samples, covering 124 meetings from 28 January 2009 to 29 January 2025. It compares \textit{Model chk-0}, \textit{Model chk-1} checkpoint 200, and \textit{Model chk-2} checkpoint 50 using the same synthetic teacher references and \(K=10\) stochastic generations per sample and model, for \(391\times10\times3=11{,}730\) outputs. The 305 training, 42 validation, and 44 test rows retain their release labels, but all belong to a training-only release whose construction used official meeting text in sample selection. Only the 305 training rows supplied gradient updates; pooling the release therefore yields a reconstruction diagnostic, not an independent held-out evaluation. The separate 128-meeting historical Core8 panel covers 1993--2008 and supplies the subsequent prompt-sensitivity analysis, not this three-model similarity table.
+
+% Canonical output: output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/
+% Reproduction: Chapter2/review/minutes_primary_results_reconciliation_20260904.ipynb
+% Derived paired tests: Chapter2/Chapter2Results/minutes_primary_meeting_paired_tests_20260904.csv
+
+Table~\ref{tab:ch2:minutes_semantic_ttest} reports the paired differences in MPNet cosine similarity and BERTScore-F1 between successive model stages, comparing \textit{Model chk-1} with \textit{Model chk-0} and \textit{Model chk-2} with \textit{Model chk-1}.
+
+
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.08}
+    \caption{Paired Score Differences and Percentage Increases in
+    Synthetic-Reference Semantic Similarity across Model Stages:
+    124-Meeting Training-Release Reconstruction Diagnostic}
+    \label{tab:ch2:minutes_semantic_ttest}
+
+    \begin{threeparttable}
+        \begin{tabularx}{\textwidth}{@{}
+            >{\raggedright\arraybackslash}X
+            *{3}{>{\centering\arraybackslash}p{0.235\textwidth}}
+        @{}}
+            \toprule
+            & \multicolumn{3}{c}{\textbf{Model contrasts}} \\
+            \cmidrule(lr){2-4}
+
+            \textbf{Metric}
+            & \makecell{
+                \textit{chk1}\\
+                \( - \)\\
+                \textit{chk0}
+            }
+            & \makecell{
+                \textit{chk2}\\
+                \( - \)\\
+                \textit{chk1}
+            }
+            & \makecell{
+                \textit{chk2}\\
+                \( - \)\\
+                \textit{chk0}
+            } \\
+            \midrule
+
+            \multicolumn{4}{@{}l}{
+                \textit{Panel A: Paired differences in score levels}
+            } \\
+            \addlinespace[2pt]
+
+            MPNet cosine
+            & \(+0.005201^{***}\)
+            & \(+0.002365^{**}\)
+            & \(+0.007567^{***}\) \\[-1pt]
+
+            & (5.886)
+            & (2.845)
+            & (8.057) \\
+
+            \addlinespace
+
+            BERTScore-F1
+            & \(+0.003430^{***}\)
+            & \(+0.000833^{**}\)
+            & \(+0.004264^{***}\) \\[-1pt]
+
+            & (12.440)
+            & (2.936)
+            & (12.916) \\
+
+            \addlinespace[4pt]
+
+            \multicolumn{4}{@{}l}{
+                \textit{Panel B: Percentage increases relative to Model chk-0}
+            } \\
+            \addlinespace[2pt]
+
+            MPNet cosine
+            & \(+0.5552\%\)
+            & \(+0.2525\%\)
+            & \(+0.8077\%\) \\
+
+            BERTScore-F1
+            & \(+0.3584\%\)
+            & \(+0.0871\%\)
+            & \(+0.4455\%\) \\
+
+            \bottomrule
+        \end{tabularx}
+
+        \begin{tablenotes}[flushleft]
+            \scriptsize
+            \item \textit{Notes:}
+            In Panel A, the first row for each metric reports the paired mean
+            difference, with a positive value indicating a higher
+            raw-best-effort score for the later-stage model. Paired
+            \(t\)-statistics are reported in parentheses. The 391 release rows
+            are grouped into 124 meetings; scores are averaged across each
+            meeting's rows and \(K=10\) stochastic generations before the
+            paired tests are applied to the 124 equally weighted meeting-level
+            observations (\(\mathrm{df}=123\)).
+            \(^{*}p<0.05\), \(^{**}p<0.01\), and \(^{***}p<0.001\), based on
+            supplementary, unadjusted two-sided paired \(t\)-tests computed
+            from the frozen row scores. These are distinct from the
+            hierarchical paired-bootstrap intervals discussed below.
+
+            Raw best effort scores the recovered final text regardless of
+            delivery-gate validity, assigning zero only to empty recovered
+            text. It is not the four-gate reliability-adjusted measure used
+            in the earlier checkpoint-318 historical experiment.
+
+            Panel B reports, from left to right,
+            \(100(\bar{S}_{1}-\bar{S}_{0})/\bar{S}_{0}\),
+            \(100(\bar{S}_{2}-\bar{S}_{1})/\bar{S}_{0}\), and
+            \(100(\bar{S}_{2}-\bar{S}_{0})/\bar{S}_{0}\), where
+            \(\bar{S}_{j}\) is the equally weighted meeting-level mean score
+            for model stage \(j\in\{0,1,2\}\). The Model chk-0 denominators are
+            0.936793 for MPNet cosine and 0.957022 for BERTScore-F1. These
+            percentage transformations are descriptive and are reported
+            without \(t\)-statistics or significance markers.
+
+            References are teacher-generated synthetic rewrites rather than
+            official FOMC Minutes. Because all samples belong to the
+            training-only release, these results are reconstruction
+            diagnostics rather than leakage-safe estimates of held-out
+            generalization.
+        \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+
+Table~\ref{tab:ch2:minutes_semantic_ttest} reports positive paired mean differences across all three model contrasts. Relative to \textit{Model chk-0}, \textit{Model chk-1} increases MPNet cosine similarity by 0.005201 (\(t(123)=5.886\), \(p<0.001\)) and BERTScore-F1 by 0.003430 (\(t(123)=12.440\), \(p<0.001\)). These differences correspond to increases of 0.5552\% and 0.3584\%, respectively, relative to the corresponding \textit{Model chk-0} mean scores. The additional Minutes-rewriting stage produces smaller but statistically significant gains: relative to \textit{Model chk-1}, \textit{Model chk-2} increases MPNet cosine similarity by 0.002365 (\(t(123)=2.845\), \(p=0.0052\)) and BERTScore-F1 by 0.000833 (\(t(123)=2.936\), \(p=0.0040\)). When expressed relative to the \textit{Model chk-0} baselines, these incremental gains equal 0.2525\% and 0.0871\%, respectively. Across the complete training lineage, \textit{Model chk-2} exceeds \textit{Model chk-0} by 0.007567 in MPNet cosine similarity (\(t(123)=8.057\), \(p<0.001\)) and by 0.004264 in BERTScore-F1 (\(t(123)=12.916\), \(p<0.001\)), equivalent to relative increases of 0.8077\% and 0.4455\%. Although the paired tests reject equality of the meeting-level means, the absolute and percentage improvements remain modest. Moreover, the comparison measures reconstruction similarity to synthetic teacher-generated references drawn from the training-only release; it does not establish held-out generalization, factual superiority, or equivalence with official FOMC Minutes.
+
+The inferential procedure matters for the smaller incremental gains. The
+frozen experiment's 1,000-draw hierarchical paired bootstrap, which resamples
+meetings within release splits and stochastic replicates, gives 95\%
+intervals of \([-0.000556,\ 0.005239]\) for the \textit{chk-2} minus
+\textit{chk-1} MPNet difference and \([-0.000090,\ 0.001823]\) for
+BERTScore-F1. Both intervals include zero. The frozen meeting-level
+sign-flip tests give six-comparison Holm-adjusted \(p\)-values of 0.00524
+and 0.00494, respectively; these tests also operate on averaged meeting
+differences and are distinct from the hierarchical bootstrap. Thus, the supplementary paired
+\(t\)-tests on the averaged meeting scores reject equality at the 1\%
+level, while the hierarchical intervals retain uncertainty about the sign
+of these incremental gains. The results support modest reconstruction
+improvements under the reported scoring rule, with inference qualified by
+the treatment of stochastic-generation variability.
+
+
+%%%% end of Minutes-generation fidelity and similarity results
+
+\subsubsection*{Core 8 Indicators Leave-One-Out Sensitivity Results}
+
+This subsection estimates the target-relative sensitivity of \textit{Model chk-2} to the eight Core8 economic-topic blocks. The historical panel contains 128 regular FOMC meetings from 1993--2008 and 10 fixed stochastic generation seeds.  For each meeting, the evaluation includes one Full prompt, eight exact-deletion variants, and eight token-count-matched neutral-replacement variants, yielding \(128 \times 17 \times 10 = 21{,}760\) fresh outputs.  
+
+
+Table~\ref{tab:ch2:core8_loo_ttest} reports the paired leave-one-out differences in MPNet cosine similarity and BERTScore-F1 for each topic under the two intervention designs. The Full and intervened outputs are evaluated against the same deterministic synthetic reference, and uncertainty is estimated using 10,000 shared-index hierarchical paired-bootstrap draws at the meeting level. A positive estimates indicate weaker semantic retention following the corresponding intervention.
+
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.00}
+    \caption{Core8 Indicators Leave-One-Out Sensitivity Results for
+    \textit{Model chk-2} (Checkpoint 50).}
+    \label{tab:ch2:core8_loo_ttest}
+    \begin{threeparttable}
+        \begin{tabularx}{\textwidth}{
+            @{}
+            >{\raggedright\arraybackslash}p{0.21\textwidth}
+            >{\centering\arraybackslash}X
+            >{\centering\arraybackslash}X
+            >{\centering\arraybackslash}X
+            >{\centering\arraybackslash}X
+            @{}
+        }
+            \toprule
+            & \multicolumn{2}{c}{
+                \textbf{Full \( - \) Exact deletion}
+            }
+            & \multicolumn{2}{c}{
+                \textbf{Full \( - \) Neutral replacement}
+            } \\
+            \cmidrule(lr){2-3}
+            \cmidrule(lr){4-5}
+
+            \textbf{Indicator}
+            & \makecell{\textbf{MPNet}\\\textbf{cosine}}
+            & \makecell{\textbf{BERTScore}\\\textbf{F1}}
+            & \makecell{\textbf{MPNet}\\\textbf{cosine}}
+            & \makecell{\textbf{BERTScore}\\\textbf{F1}} \\
+            \midrule
+
+            Consumer Price Index (CPI)
+            & \makecell{\(+0.016115^{***}\)\\\((4.796)\)}
+            & \makecell{\(+0.011090^{***}\)\\\((4.297)\)}
+            & \makecell{\(+0.045634^{***}\)\\\((13.637)\)}
+            & \makecell{\(+0.027250^{***}\)\\\((11.184)\)} \\
+
+            \addlinespace
+
+            GDP Growth
+            & \makecell{\(-0.010557\)\\\((-2.586)\)}
+            & \makecell{\(+0.006047\)\\\((2.063)\)}
+            & \makecell{\(-0.019066^{***}\)\\\((-5.598)\)}
+            & \makecell{\(+0.001441\)\\\((0.578)\)} \\
+
+            \addlinespace
+
+            Government Purchases
+            & \makecell{\(+0.003228\)\\\((0.926)\)}
+            & \makecell{\(+0.014988^{***}\)\\\((6.033)\)}
+            & \makecell{\(-0.000921\)\\\((-0.280)\)}
+            & \makecell{\(+0.011643^{***}\)\\\((5.008)\)} \\
+
+            \addlinespace
+
+            Housing Starts
+            & \makecell{\(+0.006132\)\\\((1.550)\)}
+            & \makecell{\(+0.003320\)\\\((1.235)\)}
+            & \makecell{\(+0.007800\)\\\((2.365)\)}
+            & \makecell{\(+0.007697^{**}\)\\\((3.643)\)} \\
+
+            \addlinespace
+
+            Industrial Production
+            & \makecell{\(-0.001850\)\\\((-0.567)\)}
+            & \makecell{\(+0.007704^{*}\)\\\((3.161)\)}
+            & \makecell{\(-0.000096\)\\\((-0.028)\)}
+            & \makecell{\(+0.008217^{*}\)\\\((3.334)\)} \\
+
+            \addlinespace
+
+            Labour Market
+            & \makecell{\(-0.010267\)\\\((-2.990)\)}
+            & \makecell{\(+0.008031^{*}\)\\\((3.268)\)}
+            & \makecell{\(-0.012535^{**}\)\\\((-3.663)\)}
+            & \makecell{\(+0.005386\)\\\((2.301)\)} \\
+
+            \addlinespace
+
+            Money Supply
+            & \makecell{\(-0.011866^{*}\)\\\((-3.436)\)}
+            & \makecell{\(+0.004356\)\\\((1.764)\)}
+            & \makecell{\(-0.014813^{**}\)\\\((-4.118)\)}
+            & \makecell{\(-0.001646\)\\\((-0.616)\)} \\
+
+            \addlinespace
+
+            Unemployment Rate
+            & \makecell{\(-0.013541^{**}\)\\\((-3.849)\)}
+            & \makecell{\(-0.004076\)\\\((-1.608)\)}
+            & \makecell{\(-0.015119^{***}\)\\\((-4.535)\)}
+            & \makecell{\(-0.004263\)\\\((-1.717)\)} \\
+
+            \bottomrule
+        \end{tabularx}
+
+        \begin{tablenotes}[flushleft]
+            \tiny
+
+            \item \textit{Notes:}
+            Each point estimate is the raw semantic-similarity score for the
+            full Core8 prompt minus the corresponding score after intervention.
+            A positive value therefore indicates that deleting or neutralizing
+            the indicator reduces similarity to the fixed, source-grounded
+            synthetic Minutes reference; the reference is not official FOMC
+            Minutes.
+
+            \item Values in parentheses are paired \(t\)-statistics calculated
+            from 128 meeting-level differences after first averaging the
+            \(K=10\) paired stochastic replicates within each meeting. Meetings
+            receive equal weight, and all tests have 127 degrees of freedom.
+
+            \item The 32 two-sided \(p\)-values are adjusted jointly using the
+            Holm procedure.
+            \(^{*}p_{\mathrm{Holm}}<0.05\),
+            \(^{**}p_{\mathrm{Holm}}<0.01\), and
+            \(^{***}p_{\mathrm{Holm}}<0.001\).
+
+            \item These paired \(t\)-tests are supplemental parametric
+            summaries calculated from the frozen \(K=10\) meeting-level
+            differences. The primary uncertainty analysis is the 10,000-draw
+            shared-index hierarchical paired bootstrap. Its
+            percentile intervals are not adjusted for multiplicity.
+
+            \item Holm-adjusted \(t\)-test classifications need not coincide
+            with the unadjusted bootstrap intervals. The GDP Growth and Labour
+            Market exact-deletion MPNet intervals exclude zero, but their
+            Holm-adjusted \(t\)-test \(p\)-values are \(0.1626\) and \(0.0536\),
+            respectively, and therefore receive no significance marker.
+
+            \item All 21,760 requested outputs remain in the semantic estimand,
+            five empty extracted answers are scored as zero. The structure,
+            numeric/date-fidelity, and repetition gates are diagnostic only:
+            208 outputs pass the joint gate, and gate failures neither remove
+            rows nor zero-penalize nonempty outputs.
+        \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+
+
+
+Table~\ref{tab:ch2:core8_loo_ttest} reveals substantial heterogeneity in the
+target-relative sensitivity of \textit{Model chk-2} across the eight Core8
+topic blocks. Of the 32 intervention--metric comparisons, 16 remain
+statistically significant after joint Holm adjustment: seven under exact
+deletion and nine under token-matched neutral replacement. These comprise
+eight MPNet-cosine and eight BERTScore-F1 comparisons, with ten significant
+positive estimates and six significant negative estimates. The primary
+hierarchical-bootstrap intervals exclude zero for 18 cells; however, these
+intervals are not adjusted for multiplicity. The two additional
+interval-excluding cells are the exact-deletion MPNet contrasts for GDP Growth
+and the Labour Market, whose Holm-adjusted \(p\)-values are 0.1626 and 0.0536,
+respectively.
+
+
+CPI is the only indicator with Holm-significant effects in all four
+intervention--metric cells. Exact deletion produces differences of
+\(+0.016115\) for MPNet cosine and \(+0.011090\) for BERTScore-F1, whereas
+neutral replacement produces larger differences of \(+0.045634\) and
+\(+0.027250\), respectively. All four contrasts satisfy
+\(p_{\mathrm{Holm}}<0.001\). The neutral-replacement MPNet estimate is also the
+largest absolute effect reported in the table. Thus, CPI exhibits the most
+consistently positive association with target-relative similarity across both
+intervention designs and semantic metrics. The larger neutral-replacement
+estimates indicate that preserving prompt length does not preserve alignment
+with the fixed synthetic reference when CPI-specific information is replaced.
+Nevertheless, the difference between deletion and neutral replacement should
+not be interpreted causally because the two interventions alter the prompt in
+different ways.
+
+
+The remaining results are more dependent on the intervention and metric.
+Government Purchases has significant positive BERTScore-F1 differences under
+both exact deletion (\(\Delta=0.014988\)) and neutral replacement
+(\(\Delta=0.011643\)), while neither MPNet contrast is significant. Industrial
+Production follows a similar BERTScore-specific pattern, with significant
+positive differences of 0.007704 and 0.008217 under the two interventions.
+Housing Starts is significant only for BERTScore-F1 under neutral replacement
+(\(\Delta=0.007697\), \(p_{\mathrm{Holm}}<0.01\)). The Labour Market exhibits
+a mixed pattern: exact deletion produces a significant positive
+BERTScore-F1 difference (\(\Delta=0.008031\)), whereas neutral replacement
+produces a significant negative MPNet difference
+(\(\Delta=-0.012535\)).
+
+
+Several topics exhibit significant negative MPNet estimates. GDP Growth is
+significant only under neutral replacement
+(\(\Delta=-0.019066\), \(p_{\mathrm{Holm}}<0.001\)). Money Supply has
+significant negative MPNet differences under both exact deletion
+(\(\Delta=-0.011866\)) and neutral replacement
+(\(\Delta=-0.014813\)), as does the Unemployment Rate
+(\(\Delta=-0.013541\) and \(\Delta=-0.015119\), respectively). Because the
+contrast is defined as the Full-prompt score minus the intervention score,
+these negative estimates indicate that the intervened outputs are, on average,
+more similar to the fixed synthetic reference. They do not demonstrate that
+removing the corresponding information improves factual accuracy or economic
+quality.
+
+
+Overall, CPI is the only topic with consistently positive and
+Holm-significant sensitivity across both interventions and both metrics.
+Government Purchases and Industrial Production exhibit positive sensitivity
+primarily through BERTScore-F1, while the results for Housing Starts and the
+Labour Market are intervention-specific. GDP Growth, Money Supply, and the
+Unemployment Rate instead display significant negative MPNet effects in at
+least one intervention. These findings measure how Core8 prompt interventions
+change the similarity of \textit{Model chk-2}'s output to a fixed,
+teacher-generated synthetic reference; they do not identify causal topic
+importance, information sufficiency, factual correctness, or similarity to
+official FOMC Minutes. Moreover, because all 32 cells trigger at least one
+prespecified replicate-adequacy condition, borderline estimates should be
+interpreted cautiously and may require additional paired generations.
+
+%%%% end of Core8 LOO sensitivity results
+
+
+
+\subsubsection*{Historical Sentiment--Federal Funds Futures Association Results}
+
+TThis subsection examines whether coefficients recovered from model-generated documents resemble those recovered from official FOMC Minutes given a empirical model. We employed the test from \citet{tadle2022fomc} which examines whether the change of Federal Funds futures is affected by the FOMC minutes' sentiments. 
+
+
+We use the same dataset as the original test, including daily 30-Day Federal Funds futures returns from December 1, 2004, through April 30, 2015. It includes 83 FOMC meetings, of which 82 provide estimable news-shock events. Depending on contract horizon, the regressions contain between 2,338 and 2,613 daily observations. Besides the official Minutes, we included the synthetic documents generated from \textit{Model chk-0}, \textit{Model chk-1} , and \textit{Model chk-2}.
+
+Document sentiment is measured using the Loughran-McDonald dictionary polarity score. For each generated source, the meeting-level score is constructed from 10 stochastic document replicates. 
+
+
+Table~\ref{tab:ch2:tadle_post_beta} reports the post-2011 marginal coefficient ($\widehat{\beta}^{\,\mathrm{post}} = \widehat{\beta}_{NS} + \widehat{\beta}_{\mathrm{post}\times NS}$) for each document source and futures horizon.
+
+
+Then, Table~\ref{tab:ch2:tadle_beta_distance} reports the direct
+bootstrap estimates of the coefficient distances in
+Eq.~\ref{eq:ch2:tadle_beta_distance} and the \textit{Model chk-2} gains in
+Eq.~\ref{eq:ch2:tadle_beta_gain}.
+
+
+A smaller absolute coefficient distance indicates closer agreement with the coefficient estimated from the official Minutes. Uncertainty is quantified using 10,000 paired, regime-stratified calendar-year block-bootstrap draws, with 2011 retained in every draw and the 10 generated-document replicates resampled within meetings using indices shared across model arms.
+
+
 
 \begin{table}[htbp]
     \centering
     \footnotesize
-    \setlength{\tabcolsep}{4pt}
-    \begin{tabular}{lcccccc}
+    \setlength{\tabcolsep}{6pt}
+    \renewcommand{\arraystretch}{1.12}
+    \caption{Post-2011 Marginal Federal Funds Futures Price-Return Coefficients}
+    \label{tab:ch2:tadle_post_beta}
+
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{
+        @{}
+        l
+        >{\centering\arraybackslash}p{0.09\textwidth}
+        *{4}{>{\centering\arraybackslash}X}
+        @{}
+    }
         \toprule
-        \textbf{Model} & \makecell{Structure\\valid} &
-        \makecell{Numeric\\valid} & \makecell{Date\\valid} &
-        \makecell{Non-degenerate} & \makecell{BERTScore\\F1} &
-        \makecell{MPNet\\cosine} \\
+        \textbf{Horizon}
+        & \(\boldsymbol{N}\)
+        & \makecell{\textbf{Official}\\\textbf{Minutes}}
+        & \textit{Model chk-0}
+        & \makecell{\textit{Model chk-1}\\cp200}
+        & \makecell{\textit{Model chk-2}\\cp50} \\
         \midrule
-        \makecell[l]{\texttt{chk-0}\\auxiliary reference} & 11/12 & 9/12 & 10/12 & 11/12 & 0.729516 & 0.721363 \\
-        \makecell[l]{\texttt{chk-1}\\checkpoint 200 (baseline)} & 12/12 & 12/12 & 12/12 & 12/12 & 0.966947 & 0.944789 \\
-        \makecell[l]{\texttt{chk-3}\\checkpoint 318} & 12/12 & 12/12 & 12/12 & 12/12 & \textbf{0.973533} & \textbf{0.971603} \\
+
+        FF1
+        & 2,613
+        & \makecell{\(-0.0833\)\\\((0.1034)\)}
+        & \makecell{\(-0.0421\)\\\((0.1014)\)}
+        & \makecell{\(-0.0765\)\\\((0.0788)\)}
+        & \makecell{\(-0.0535\)\\\((0.0889)\)} \\
+
+        \addlinespace
+
+        FF3
+        & 2,612
+        & \makecell{\(-0.3490\)\\\((0.1584)\)}
+        & \makecell{\(+0.0139\)\\\((0.1411)\)}
+        & \makecell{\(+0.0075\)\\\((0.1199)\)}
+        & \makecell{\(+0.0062\)\\\((0.1279)\)} \\
+
+        \addlinespace
+
+        FF6
+        & 2,612
+        & \makecell{\(-0.7240\)\\\((0.2867)\)}
+        & \makecell{\(-0.0718\)\\\((0.2500)\)}
+        & \makecell{\(+0.0183\)\\\((0.2273)\)}
+        & \makecell{\(-0.0355\)\\\((0.2147)\)} \\
+
+        \addlinespace
+
+        FF12
+        & 2,338
+        & \makecell{\(-1.5981\)\\\((0.6395)\)}
+        & \makecell{\(+0.0867\)\\\((0.4961)\)}
+        & \makecell{\(+0.2032\)\\\((0.4014)\)}
+        & \makecell{\(+0.0242\)\\\((0.4248)\)} \\
+
         \bottomrule
-    \end{tabular}
-    \caption{Task-Aligned Analysis-to-Minutes Evaluation (\(N=12\)).  The primary comparison is \texttt{chk-3} relative to the \texttt{chk-1} baseline; \texttt{chk-0} is an auxiliary reference. Semantic similarity is set to zero when an observation fails at least one validity criterion. Reference texts are synthetic teacher targets rather than official FOMC Minutes.}
-    \label{tab:ch2:chk3_native_n12}
+    \end{tabularx}
+
+    \begin{tablenotes}[flushleft]
+        \scriptsize
+        \item \textit{Notes:}
+        Each cell reports the post-August 8, 2011 marginal coefficient
+        \(
+        \widehat{\beta}^{\,\mathrm{post}}
+        =
+        \widehat{\beta}_{NS}
+        +
+        \widehat{\beta}_{\mathrm{post}\times NS}
+        \)
+        in basis points of the Federal Funds futures price log return per
+        one-unit constructed news shock. A unit is defined by the news-shock
+        regressor formed from Minutes and Statement components standardized
+        separately by source; the news shock is not itself re-standardized to
+        unit variance. The quantity is not a policy-rate change. HC1
+        heteroskedasticity-robust standard errors are in parentheses. The
+        regressions control for the contemporaneous VIX log change, the
+        post-2011 indicator, and calendar-year fixed effects.
+    \end{tablenotes}
+    \end{threeparttable}
 \end{table}
 
-Within the non-identity subsample (\(N=11\)), \texttt{chk-3} records a
-BERTScore F1 of
-0.975129 and MPNet cosine 0.972733, compared with 0.968356 and 0.944044 for
-\texttt{chk-1}, respectively.  The corresponding differences are 0.006773 and
-0.028688.  In paired comparisons, \texttt{chk-3} has the higher BERTScore for
-7 of the 11 observations and the higher MPNet similarity for 9.  These
-descriptive results support the choice of checkpoint 318 for the present
-evaluation.  They do not support population-level inference because the
-twelve-observation sample is deterministic and forms part of the checkpoint
-selection procedure.
-
-% Historical four-artifact diagnostics used a superseded checkpoint design and
-% are excluded from the current chapter text.
-\iffalse
-\subsubsection*{Archived Four-Artifact Diagnostic (Excluded from the Principal Experiment)}
-
-For transparency, this subsection preserves an earlier common-input diagnostic.
-It does not use the selected \texttt{chk-3} checkpoint or the task-aligned input
-distribution and is therefore excluded from the principal
-\texttt{chk-3}-versus-\texttt{chk-1} comparison.
-
-Table~\ref{tab:ch2:common_test_quality} reports completion, semantic
-similarity, and surface-quality results from the frozen common test.  Under
-the pre-registered greedy-decoding protocol, the base model, analysis-SFT
-model, and recovered Minutes-SFT branch each reached the 8,192-token
-completion limit on all 33 rows.  They therefore produced no valid final
-answers.  The archived GRPO branch completed 32 of 33 rows; its only
-token-limit failure was the economic-situation section for the March 2025
-meeting.  That failed row is outside the prospective-only subset, in which
-the archived GRPO branch completed all 27 rows.
 
 \begin{table}[htbp]
     \centering
     \scriptsize
-    \begin{tabular}{p{0.25\textwidth} c c c c}
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.14}
+    \caption{Post-2011 Coefficient Distances and Direct Model chk-2 Distance Gains}
+    \label{tab:ch2:tadle_beta_distance}
+
+    \begin{threeparttable}
+    \begin{tabularx}{\textwidth}{
+        @{}
+        l
+        *{5}{>{\centering\arraybackslash}X}
+        @{}
+    }
         \toprule
-        \textbf{Metric} &
-        \makecell[c]{\texttt{chk-0}\\base} &
-        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
-        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
-        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
+        \textbf{Horizon}
+        & \makecell{\(\boldsymbol{D_{0,O}}\)\\chk-0}
+        & \makecell{\(\boldsymbol{D_{1,O}}\)\\chk-1}
+        & \makecell{\(\boldsymbol{D_{2,O}}\)\\chk-2}
+        & \makecell{\(\boldsymbol{G_0}\)\\chk-2 vs. chk-0}
+        & \makecell{\(\boldsymbol{G_1}\)\\chk-2 vs. chk-1} \\
         \midrule
-        Valid rows & 0/33; 0/27 & 0/33; 0/27 & 32/33; 27/27 & 0/33; 0/27 \\
-        BERTScore F1 $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.515; 0.529 & 0.000; 0.000 \\
-        MPNet cosine $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.440; 0.456 & 0.000; 0.000 \\
-        ROUGE-L F1 $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.100; 0.105 & 0.000; 0.000 \\
-        Length ratio (descriptive) & 7.587; 7.782 & 8.027; 8.156 & 0.738; 0.496 & 6.920; 7.509 \\
-        Trigram repetition $\downarrow$ & 1.000; 1.000 & 1.000; 1.000 & 0.046; 0.017 & 1.000; 1.000 \\
-        Format compliance $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.242; 0.296 & 0.000; 0.000 \\
+
+        FF1
+        & \makecell{\(0.0412\)\\\([0.0026,\,0.2446]\)}
+        & \makecell{\(0.0068\)\\\([0.0014,\,0.1858]\)}
+        & \makecell{\(0.0298\)\\\([0.0023,\,0.2376]\)}
+        & \makecell{\(+0.0114\)\\\([-0.1290,\,+0.1449]\)}
+        & \makecell{\(-0.0229\)\\\([-0.1717,\,+0.1167]\)} \\
+
+        \addlinespace
+
+        FF3
+        & \makecell{\(0.3629\)\\\([0.1817,\,0.6122]\)}
+        & \makecell{\(0.3565\)\\\([0.1643,\,0.6367]\)}
+        & \makecell{\(0.3552\)\\\([0.1921,\,0.6176]\)}
+        & \makecell{\(+0.0077\)\\\([-0.2449,\,+0.2469]\)}
+        & \makecell{\(+0.0013\)\\\([-0.2811,\,+0.2866]\)} \\
+
+        \addlinespace
+
+        FF6
+        & \makecell{\(0.6523\)\\\([0.2723,\,1.3163]\)}
+        & \makecell{\(0.7423\)\\\([0.2939,\,1.5051]\)}
+        & \makecell{\(0.6885\)\\\([0.3152,\,1.5384]\)}
+        & \makecell{\(-0.0363\)\\\([-0.6369,\,+0.4806]\)}
+        & \makecell{\(+0.0538\)\\\([-0.6017,\,+0.7263]\)} \\
+
+        \addlinespace
+
+        FF12
+        & \makecell{\(1.6848\)\\\([0.3899,\,4.2564]\)}
+        & \makecell{\(1.8013\)\\\([0.5735,\,4.3401]\)}
+        & \makecell{\(1.6223\)\\\([0.5374,\,3.9242]\)}
+        & \makecell{\(+0.0625\)\\\([-1.2649,\,+1.5157]\)}
+        & \makecell{\(+0.1790\)\\\([-1.4377,\,+1.8551]\)} \\
+
         \bottomrule
-    \end{tabular}
-    \caption{Common-test completion, semantic, and surface results. Each cell
-    reports the meeting-equal-weight mean for all 11 meetings followed by the
-    prospective-only 9-meeting mean. Fatal rows remain in the denominator and
-    receive the pre-registered worst-case headline-quality values, while
-    length ratio remains descriptive; hence a semantic score of zero for an
-    all-fatal artifact is a failure penalty, not an encoder assessment of its
-    truncated text. $^{\dagger}$The archived GRPO artifact is excluded from
-    the current checkpoint sequence. $^{\ddagger}$The recovered historical
-    Minutes adapter is not the \texttt{chk-3} checkpoint selected for the
-    completed experiment.}
-    \label{tab:ch2:common_test_quality}
-\end{table}
+    \end{tabularx}
 
-For the archived GRPO branch, the all-meeting mean BERTScore F1 is 0.515
-(95\% cluster-bootstrap interval: 0.470--0.553), MPNet cosine is 0.440
-(0.398--0.476), and ROUGE-L F1 is 0.100 (0.090--0.108).  The corresponding
-prospective-only values are 0.529 (0.498--0.561), 0.456 (0.424--0.485),
-and 0.105 (0.100--0.111).  Only 8 of 33 rows satisfy the body-only format
-contract; most otherwise valid outputs reproduce a section heading.  Format
-noncompliance is recorded separately and does not suppress semantic,
-surface, or factual scoring.
-
-Table~\ref{tab:ch2:common_test_grounding} reports deterministic factual,
-numeric, and directional checks.  The archived GRPO branch attains high
-conditional numeric-value accuracy (0.925), but mentions only about 0.3\% of
-the available evidence values and has a rule-covered unsupported-claim rate
-of 0.858.  Unit and time accuracy are also low.  Thus, matching a small set
-of stated numbers does not imply broad evidentiary coverage or factual
-grounding.  Direction consistency is 0.383, and no coverable policy-stance
-claim matches the stance derived from the supplied federal-funds-rate
-evidence.
-
-\begin{table}[htbp]
-    \centering
-    \scriptsize
-    \begin{tabular}{p{0.28\textwidth} c c c c}
-        \toprule
-        \textbf{Metric} &
-        \makecell[c]{\texttt{chk-0}\\base} &
-        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
-        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
-        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
-        \midrule
-        Numeric-value accuracy $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.925; 0.962 & 0.000; 0.000 \\
-        Evidence-value coverage $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.003; 0.003 & 0.000; 0.000 \\
-        Unit accuracy $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.165; 0.162 & 0.000; 0.000 \\
-        Time accuracy $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.133; 0.125 & 0.000; 0.000 \\
-        Novel-number rate $\downarrow$ & 1.000; 1.000 & 1.000; 1.000 & 0.073; 0.037 & 1.000; 1.000 \\
-        Rule-covered unsupported rate $\downarrow$ & 1.000; 1.000 & 1.000; 1.000 & 0.858; 0.849 & 1.000; 1.000 \\
-        Direction consistency $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.383; 0.357 & 0.000; 0.000 \\
-        Direction coverage $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.692; 0.772 & 0.000; 0.000 \\
-        Policy-stance consistency $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.000; 0.000 & 0.000; 0.000 \\
-        Policy-stance coverage $\uparrow$ & 0.000; 0.000 & 0.000; 0.000 & 0.667; 0.667 & 0.000; 0.000 \\
-        \bottomrule
-    \end{tabular}
-    \caption{Common-test deterministic grounding and directional results.
-    Cells report all-meeting and prospective-only means. Numeric, unit, time,
-    direction, and stance accuracies are conditional on rule-eligible claims;
-    eligibility counts and all confidence intervals are retained in the
-    sealed row-level and summary artifacts. The unsupported rate covers only
-    claims addressed by deterministic rules and is not an exhaustive
-    natural-language-inference factuality measure. Fatal-row values are
-    pre-registered penalties.}
-    \label{tab:ch2:common_test_grounding}
-\end{table}
-
-The paired contrasts follow only the three verified archived parent edges.
-After treating all 66 pre-specified metric tests in each subset as one Holm
-family, no adjusted \(p\)-value is below 0.05.  In particular, even the
-archived-GRPO-versus-base contrasts for valid completion and BERTScore F1
-have adjusted \(p=0.0645\) in the all-meeting analysis.  The equal
-worst-case scores of the three all-fatal artifacts do not establish model
-equivalence or absence of a training effect.  More importantly, the
-archived GRPO artifact is a branch from \texttt{chk-0}, and the recovered
-historical Minutes adapter is not the selected \texttt{chk-3} checkpoint.
-These results therefore do not estimate the current
-\texttt{chk-1}$\rightarrow$\texttt{chk-3} effect.  Because the common test
-uses raw \(D-1\) evidence rather than a supplied analysis as input, its
-all-fatal historical Minutes result also cannot be used to reject the
-analysis-to-Minutes rewriting capability evaluated in the principal
-experiment.
-
-
-\subsubsection*{Archived Length-Tolerant Robustness View}
-
-Because a token-limit completion can still contain analysable text, we also
-report a separate, post-hoc robustness view that does not classify
-\texttt{finish\_reason=length} as invalid.  This view does not require a
-closing \texttt{</think>} tag.  The first \texttt{<answer>} opening tag, when
-present, marks the beginning of the scored candidate; otherwise the complete
-non-empty raw completion is scored.  All 132 archived completions lack an
-\texttt{<answer>} opening tag, so every row uses the latter fallback.  None of
-the prompts was input-truncated.  The resulting 132/132 scoreable rows are
-sealed separately from the strict results above and do not redefine normal
-generation completion.
-
-\begin{table}[htbp]
-    \centering
-    \scriptsize
-    \begin{tabular}{p{0.25\textwidth} c c c c}
-        \toprule
-        \textbf{Metric} &
-        \makecell[c]{\texttt{chk-0}\\base} &
-        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
-        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
-        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
-        \midrule
-        Valid rows & 33/33; 27/27 & 33/33; 27/27 & 33/33; 27/27 & 33/33; 27/27 \\
-        Token-limit rows & 33/33; 27/27 & 33/33; 27/27 & 1/33; 0/27 & 33/33; 27/27 \\
-        BERTScore F1 $\uparrow$ & 0.145; 0.144 & 0.145; 0.143 & 0.644; 0.663 & 0.147; 0.144 \\
-        MPNet cosine $\uparrow$ & 0.042; 0.042 & 0.043; 0.038 & 0.452; 0.463 & 0.047; 0.044 \\
-        ROUGE-L F1 $\uparrow$ & 0.027; 0.026 & 0.035; 0.034 & 0.116; 0.119 & 0.033; 0.032 \\
-        Length ratio (descriptive) & 7.587; 7.782 & 8.027; 8.156 & 1.566; 1.348 & 6.920; 7.509 \\
-        Trigram repetition $\downarrow$ & 0.984; 0.984 & 0.987; 0.987 & 0.115; 0.095 & 0.985; 0.989 \\
-        Format compliance $\uparrow$ & 1.000; 1.000 & 0.970; 0.963 & 0.000; 0.000 & 1.000; 1.000 \\
-        \bottomrule
-    \end{tabular}
-    \caption{Length-tolerant common-test semantic and surface results. Each
-    cell reports the all-11 and prospective-only meeting-equal-weight means.
-    Token-limit rows are scored rather than assigned failure penalties.
-    Format compliance is a narrow body-only contract check, not an overall
-    quality rating. $^{\dagger}$The archived GRPO artifact is excluded from
-    the current checkpoint sequence. $^{\ddagger}$The recovered historical
-    Minutes adapter is not the \texttt{chk-3} checkpoint selected for the
-    completed experiment.}
-    \label{tab:ch2:common_test_length_tolerant_quality}
-\end{table}
-
-Table~\ref{tab:ch2:common_test_length_tolerant_grounding} reports the
-all-meeting grounding results.  Parentheses give the number of rows eligible
-for each conditional metric.  In particular, high conditional numeric
-accuracy coexists with evidence-value coverage below 0.7\% for every artifact.
-The base, analysis-SFT, and Minutes-SFT completions contain no rule-coverable
-direction or policy-stance claim, so consistency is undefined rather than
-zero; their zero coverage makes that absence explicit.
-
-\begin{table}[htbp]
-    \centering
-    \scriptsize
-    \begin{tabular}{p{0.28\textwidth} c c c c}
-        \toprule
-        \textbf{All-11 metric} &
-        \makecell[c]{\texttt{chk-0}\\base} &
-        \makecell[c]{\texttt{chk-1}\\analysis SFT} &
-        \makecell[c]{Archived GRPO\\from \texttt{chk-0}$^{\dagger}$} &
-        \makecell[c]{Recovered Minutes SFT\\from \texttt{chk-1}$^{\ddagger}$} \\
-        \midrule
-        Numeric-value accuracy $\uparrow$ & 0.999 (11) & 0.960 (11) & 0.952 (29) & 0.984 (15) \\
-        Evidence-value coverage $\uparrow$ & 0.002 (33) & 0.006 (33) & 0.006 (33) & 0.005 (33) \\
-        Unit accuracy $\uparrow$ & 0.043 (11) & 0.357 (11) & 0.146 (29) & 0.271 (14) \\
-        Time accuracy $\uparrow$ & 1.000 (3) & 1.000 (3) & 0.538 (33) & 0.750 (8) \\
-        Novel-number rate $\downarrow$ & 0.001 (13) & 0.022 (12) & 0.034 (33) & 0.016 (15) \\
-        Rule-covered unsupported rate $\downarrow$ & 0.862 (13) & 0.546 (12) & 0.822 (33) & 0.482 (15) \\
-        Direction consistency $\uparrow$ & NA (0) & NA (0) & 0.346 (29) & NA (0) \\
-        Direction coverage $\uparrow$ & 0.000 (33) & 0.000 (33) & 0.848 (33) & 0.000 (33) \\
-        Policy-stance consistency $\uparrow$ & NA (0) & NA (0) & 0.000 (17) & NA (0) \\
-        Policy-stance coverage $\uparrow$ & 0.000 (21) & 0.000 (21) & 0.810 (21) & 0.000 (21) \\
-        \bottomrule
-    \end{tabular}
-    \caption{Length-tolerant all-meeting deterministic grounding results.
-    Accuracy and unsupported-rate estimates are conditional on rule-eligible
-    generated claims; evidence-value and directional coverage must be read
-    jointly with them. NA denotes no eligible generated claim.}
-    \label{tab:ch2:common_test_length_tolerant_grounding}
-\end{table}
-
-The archived GRPO branch has the strongest semantic and surface-overlap means
-and substantially less repetition in this robustness view, but its
-rule-covered unsupported rate is 0.822, direction consistency is 0.346, and
-policy-stance consistency is zero.  The other three artifacts are approximately
-6.9--8.0 times the reference length and have trigram repetition near 0.985;
-counting them as valid therefore does not turn them into high-quality final
-answers.  No archived-parent contrast has a Holm-adjusted \(p\)-value below
-0.05.  For archived GRPO versus base, the all-meeting BERTScore, MPNet,
-ROUGE-L, and repetition contrasts each have raw \(p=0.0009766\) and
-\(p_{\mathrm{Holm}}=0.0566406\).  As with the strict analysis, these are
-archived-branch comparisons rather than estimates of the intended sequential
-training effects.
-
-
-\subsubsection*{Legacy Textual Similarity Performance}
-
-The archived evaluation used sentence-level Cosine Similarity and token-level BERTScore for (i) the full generated text, (ii) the reasoning trajectory ($c_i$, marked as ``think''), and (iii) the final answer ($a_i$, marked as ``answer''). These metrics quantify reference similarity only.
-
-Table~\ref{tab:ch2:result_cos_stage2_synthetic} reproduces the archived aggregate point estimates under their legacy checkpoint labels. Figures~\ref{fig:ch2:stage2-cos}, \ref{fig:ch2:stage2-f1}, \ref{fig:ch2:stage2-precision}, and \ref{fig:ch2:stage2-recall} reproduce the corresponding archived distributions. They are retained for transparency, not promoted as current main results.
-
-
-Within the archived aggregate table, the Minutes-branch means are higher than the base means, with the largest reported relative differences in the ``answer'' segment: 2.872\% for cosine similarity and 1.5207\% for BERTScore F1. Although separate 140-row score workbooks survive, their checkpoint binding, meeting membership, encoder revision, and reproducible test specification are not recoverable to the current standard. The previously reported significance stars and very large $t$-statistics are therefore removed; no inferential claim is made from these aggregates.
-
-
-
-\begin{figure}[htp]
-    \centering
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_Cosine-Similarity_distribution.png}
-        \caption{Legacy Descriptive Cosine-Similarity Distribution}
-        \label{fig:ch2:stage2-cos}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-F1_distribution.png}
-        \caption{Legacy Descriptive BERTScore-F1 Distribution}
-        \label{fig:ch2:stage2-f1}
-    \end{minipage}
-\end{figure}
-
-\begin{figure}[htp]
-    \centering
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-Precision_distribution.png}
-        \caption{Legacy Descriptive BERTScore-Precision Distribution}
-        \label{fig:ch2:stage2-precision}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{stage2_eval_figures/stage2_BERTScore-Recall_distribution.png}
-        \caption{Legacy Descriptive BERTScore-Recall Distribution}
-        \label{fig:ch2:stage2-recall}
-    \end{minipage}
-\end{figure}
-
-
-
-
-
-
-\begin{table}[htp]
-    \centering
-    \footnotesize
-    \begin{tabular}{l c c c}
-        \toprule
-        & \makecell[c]{Legacy Minutes\\branch}& \textit{Model chk-0}& \makecell[c]{Archived relative\\difference (in \%)}\\
-        \hline
-        $Cos_{full}$&0.9357&0.9287&0.7575\\ 
-        $Cos_{think}$&0.9178&0.9033&1.617\\ 
-        $Cos_{answer}$&0.929&0.9031&\textbf{2.872}\\ 
-        \hline
-        $BERTScore_{full}^{Precision}$&0.8647&0.8575&0.8441\\ 
-        $BERTScore_{think}^{Precision}$&0.8653&0.8574&0.917\\ 
-        $BERTScore_{answer}^{Precision}$&0.8579&0.8441&\textbf{1.6387}\\ 
-
-        \hline
-        $BERTScore_{full}^{Recall}$&0.8728&0.8664&0.7372\\ 
-        $BERTScore_{think}^{Recall}$&0.8728&0.8681&0.5398\\ 
-        $BERTScore_{answer}^{Recall}$&0.8796&0.868&\textbf{1.3372}\\ 
-
-        \hline
-        $BERTScore_{full}^{F1}$&0.8686&0.862&0.7673\\ 
-        $BERTScore_{think}^{F1}$&0.8691&0.8628&0.735\\ 
-        $BERTScore_{answer}^{F1}$&0.8688&0.8558&1.5207\\ 
-        \bottomrule
-    \end{tabular}
-    \caption{Legacy Descriptive Text-Similarity Aggregates. The row-level scores, exact test manifest, and immutable Minutes-branch checkpoint were not recovered; no significance test or staged-training effect is claimed.}
-    \label{tab:ch2:result_cos_stage2_synthetic}
+    \begin{tablenotes}[flushleft]
+        \scriptsize
+        \item \textit{Notes:}
+        \(D_{m,O}=|\widehat{\beta}_{m,\mathrm{post}}-
+        \widehat{\beta}_{O,\mathrm{post}}|\). The direct gain is
+        \(G_j=D_{j,O}-D_{2,O}\), so a positive value indicates that
+        \textit{Model chk-2} is closer to the official-Minutes coefficient
+        than comparator \(j\). Brackets are 95\% paired percentile-bootstrap
+        intervals computed directly, draw by draw, for each distance or gain.
+        A distance interval is descriptive uncertainty, not an equivalence or
+        model-minus-official null test. Gain inference uses a prespecified
+        eight-test Holm family; no gain is significant after adjustment.
+    \end{tablenotes}
+    \end{threeparttable}
 \end{table}
 
 
-In summary, the legacy aggregates suggest higher semantic resemblance to the reference text for the archived Minutes branch than for the base-model output under that historical evaluation. They do not establish analytical-reasoning quality, structural or factual fidelity, correct numerical and directional content, or the incremental contribution of any particular training stage.
-
-
-
-%%%% end of textual similarity result
-
-\fi
-\subsubsection*{Target-relative Indicator Sensitivity Results}
-
-In this section, we evaluate target-relative indicator sensitivity using the
-Leave-one-out test defined in Eq.~\ref{eq:ch2:loo_delta}. Two complementary
-targets are considered. When the target is the unmasked generated Minutes,
-the result is an internal output-sensitivity diagnostic. When the target is
-the actual FOMC Minutes, the result is an external-alignment diagnostic. In
-both cases the estimand is the paired, signed difference between full-prompt
-and masked-prompt target similarity.
-
-
-
-In the canonical design, for each indicator $p_i$, we generate the section
-once with the full prompt $\mathcal{P}$ and once with $p_i$ removed, pairing
-the same generation replicate. The historical aggregates below do not retain
-row-level seeds, so this pairing cannot be re-audited. For the unmasked-output
-target, a positive $\Delta_i$ measures displacement from the full output and
-does not imply improvement. For the actual-Minutes target, a positive
-$\Delta_i$ means that removal reduces alignment to the historical Minutes,
-whereas a negative value means that the masked output is more aligned.
-
-We first use the synthetic Minutes generated from the unmasked prompt as the
-target. Because this target is model-generated, the resulting scores describe
-internal output sensitivity rather than validation against the historical
-Minutes. The surviving workbook permits recovery of the historical aggregate
-point estimates, reported in
-Table~\ref{tab:ch2:loo_internal_legacy}. The original row-level generations,
-meeting identifiers, and seed metadata for this 25-indicator experiment are
-unavailable; consequently, the historical significance stars are not
-retained and no clustered inferential claim is made from this table. A
-separate seven-indicator pilot survives at row level, but its indicator and
-section populations do not match this table, its decoding was unseeded, and
-its masking operation also rewrote the prompt template. It is therefore
-excluded from the Chapter 2 results.
-
-\begin{table}[htbp]
-\centering
-\scriptsize
-\begin{threeparttable}
-\input{Chapter2/Chapter2Results/loo_internal_legacy_descriptive.tex}
-\begin{tablenotes}[flushleft]
-\footnotesize
-\item \textit{Notes:} Entries are historical descriptive means of
-$\Delta_i=1-\operatorname{Cos}(o_{\mathrm{masked},i},o_{\mathrm{full}})$.
-They measure internal output sensitivity. The table is regenerated from the
-surviving aggregate workbook; significance markers are omitted because
-meeting-clustered uncertainty cannot be reconstructed without row-level data.
-The surviving internal workbook contains 25 indicators and omits
-Corporate Bond Yields; historical cell sizes vary from 897 to 1,337 pairs.
-\end{tablenotes}
-\caption{Legacy Descriptive Leave-One-Out Output Sensitivity (Target: Unmasked Generated Minutes)}
-\label{tab:ch2:loo_internal_legacy}
-\end{threeparttable}
-\end{table}
-
-
-We next use the corresponding historical FOMC Minutes section as the fixed
-target. The primary quantity is the raw signed delta in
-Eq.~\ref{eq:ch2:loo_delta}, not the masked output's absolute distance and not a
-percentage of that distance. The surviving aggregate workbook stores
-indicator-specific paired means, so its point estimate can be recovered
-algebraically as
-$\bar{\Delta}_i=\bar{d}_{\mathrm{masked},i}-\bar{d}_{\mathrm{full},i}$.
-Table~\ref{tab:ch2:loo_external_legacy} reports this descriptive recovery.
-The underlying row-level generations for this 26-indicator experiment no
-longer survive, so the historical standard errors cannot be re-clustered by
-meeting; the table intentionally contains no significance stars or
-inferential claims.
-
-\begin{table}[htbp]
-\centering
-\scriptsize
-\begin{threeparttable}
-\input{Chapter2/Chapter2Results/loo_external_legacy_descriptive.tex}
-\begin{tablenotes}[flushleft]
-\footnotesize
-\item \textit{Notes:} Entries are signed raw cosine-similarity deltas,
-$\bar{\Delta}_i=\bar{s}_{\mathrm{full}}-\bar{s}_{\mathrm{masked},i}$.
-Positive values mean that masking reduces alignment with the historical
-Minutes; negative values mean that masking improves alignment. Values are
-descriptive recoveries from the surviving paired aggregate workbook.
-Row-level outputs, meeting clusters, and seed metadata are unavailable, so
-confidence intervals and significance stars are deliberately omitted.
-The surviving external workbook contains 26 indicators, and historical cell
-sizes vary from 897 to 1,337 pairs; comparisons across cells are therefore
-descriptive rather than estimates on a common balanced sample.
-\end{tablenotes}
-\caption{Legacy Descriptive Signed Leave-One-Out Delta against Actual FOMC Minutes}
-\label{tab:ch2:loo_external_legacy}
-\end{threeparttable}
-\end{table}
-
-Taken descriptively, the recovered results are heterogeneous and
-section-dependent. Labour-market masking produces the largest positive delta
-in all three sections (approximately 0.024--0.026), whereas several cells are
-near zero or negative; for example, PCE has a negative delta in Participants'
-Views. These patterns are consistent with indicator-specific sensitivity, but
-they are not promoted to current statistical evidence. The canonical paired
-pipeline must be rerun from reconstructed prompts and a newly versioned,
-hash-frozen actual-Minutes reference before meeting-clustered confidence
-intervals or adjusted significance are reported. The target-text source
-family has been recovered and cross-validated against 3,481 surviving
-records, but the exact historical row manifest and full/masked generations
-remain unavailable.
+% The official-Minutes post-2011 coefficients become increasingly negative as the
+% contract horizon lengthens, whereas the generated-source coefficients remain
+% closer to zero. Across the four horizons, the unweighted mean absolute distance
+% from the official coefficient is \(0.6853\) basis points for \textit{Model
+% chk-0}, \(0.7267\) for \textit{Model chk-1}, and \(0.6739\) for \textit{Model
+% chk-2}. Thus, \textit{Model chk-2} has the smallest descriptive mean distance,
+% but the horizon-specific ordering is not uniform: \textit{Model chk-1} is
+% closest at FF1, \textit{Model chk-2} at FF3 and FF12, and \textit{Model chk-0}
+% at FF6.
 
 
 
 
-
-
-
-
-\subsubsection*{Legacy Exploratory Association Results}
-
-The archived analysis applied the sentiment--return regression in Eq.~\ref{eq:ch2:sentiment_reg} (\citet{tadle2022fomc}) to synthetic Minutes and to a base-model series. Figure~\ref{fig:ch2:bootstrap_ft_base} is retained as a legacy record of the resulting bootstrapped $\beta_{Z_m}$ and $t$-statistic distributions. The exact source series, immutable Minutes-branch checkpoint, resampling unit, and model-difference test were not recovered, so this figure is not treated as a verified main result.
-
-
-\begin{figure}[htbp]
-    \centering
-    %----------------- FT -----------------%
-    \begin{subfigure}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{simulation_figure/ft_betas.png}
-        \caption{Legacy Minutes branch: coefficient distribution}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{simulation_figure/ft_tvalues.png}
-        \caption{Legacy Minutes branch: t-statistic distribution}
-    \end{subfigure}
-    \vspace{0.8em}
-
-    %----------------- Base -----------------%
-    \begin{subfigure}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{simulation_figure/base_betas.png}
-        \caption{\textit{Model chk-0}: coefficient distribution}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.48\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{simulation_figure/base_tvalues.png}
-        \caption{\textit{Model chk-0}: t-statistics distribution}
-    \end{subfigure}
-    \caption{Legacy, unverified bootstrap distributions of $Z_{t}^{M}$ coefficients and t-statistics for the archived Minutes branch and \textit{Model chk-0}.}
-    \label{fig:ch2:bootstrap_ft_base}
-\end{figure}
-
-% coefficient
-% base: 0.0022399151956866616, ft:0.0027096296763361653
-% target: 0.005048811
-
-% t-statistics
-% base: 0.6168947613082458, ft: 0.7152094287360642
-% target: -0.289101766
-% 
-
-The archived coefficient and $t$-statistic summaries are not sufficient to test equality with a benchmark or a difference between models. Accordingly, the earlier ``gap reduction'' interpretation is not used as a chapter-level finding. At most, the figure documents the direction of a legacy exploratory association; it provides no causal evidence of market impact and no verified evidence of an incremental \textit{chk-3} effect.
-
+Overall, the coefficient-distance results provide only qualified descriptive
+evidence that \textit{Model chk-2} is, on average, slightly closer to the
+coefficient estimated from the official Minutes. Across the four futures
+horizons, its unweighted mean absolute distance is \(0.6739\) basis points,
+compared with \(0.6853\) for \textit{Model chk-0} and \(0.7267\) for
+\textit{Model chk-1}. The horizon-specific ordering is not uniform:
+\textit{Model chk-1} is closest at FF1, \textit{Model chk-2} is closest at FF3
+and FF12, and \textit{Model chk-0} is closest at FF6. At FF12,
+\textit{Model chk-2} records a distance of \(D_{2,O}=1.6223\), compared with
+\(1.6848\) for \textit{Model chk-0} and \(1.8013\) for
+\textit{Model chk-1}. The advantage at this horizon is therefore smaller than
+suggested by the previous estimates but remains the largest descriptive
+distance gain for \textit{Model chk-2}. Importantly, all eight prespecified
+direct paired distance-gain tests were conducted. Every 95\% bootstrap
+confidence interval crosses zero, and none of the gains remains significant
+after Holm adjustment. The results therefore support only the narrower
+conclusion that \textit{Model chk-2} achieves the smallest descriptive
+four-horizon mean distance and is closest to the official-Minutes coefficient
+at two horizons.
 
 
 
@@ -1225,125 +1609,501 @@ The archived coefficient and $t$-statistic summaries are not sufficient to test 
 
 \subsubsection*{Decision Prediction Performance}
 
-Finally, to assess factual grounding in a decision-relevant setting, we evaluate whether the model can infer the Committee’s voted action from the analytical context. Concretely, we compare model-predicted policy decisions with realized outcomes and report \textit{Decision-Making Accuracy} for \textit{Model chk-0} and \textit{Model chk-4}.
+This subsection assesses how effectively the separate policy-decision branch uses target-neutral pre-meeting information to predict realized federal funds rate decisions. It compares the predictive performance of supervised fine-tuning and subsequent GRPO across the pooled evaluation panel and benchmarks the LLM checkpoints against persistence-based, econometric, machine-learning, and market-implied baselines on a matched historical panel.
 
 
-For this assessment, we use the non-decision sections from the FOMC Minutes as input prompts. Notably, because ``Committee Policy Action'' text was excluded from the analysis-generation dataset used for core training, the models are not directly trained on realized decisions. This design enables a more meaningful test of inferential capability: the models must predict the policy action based on the analytical discussion alone. We also use the supplementary Minutes (1994--2008) as an out-of-sample test set. Table~\ref{tab:ch2:decision_acc} reports the resulting decision-prediction accuracy.
+The first analysis evaluates the policy-direction performance of four LLM checkpoints across the pooled panel of 31 meetings. The second assesses exact-action accuracy, which requires both the predicted direction and the predicted basis-point magnitude to match the realized policy decision. The third benchmarks the LLM checkpoints against five operational baselines using the mean probability assigned to the realized policy direction in the 19-meeting historical external panel (H19).
 
 
-\begin{table}[htp]
+%%%%% llm accuarcy
+\paragraph*{Policy-direction Performance.} The first subsection examines decision-prediction performance across the combined historical external and post-cutoff evaluation panels. The pooled analysis includes 31 regular FOMC meetings, 19 from the historical external panel and 12 from the post-cutoff panel, with 10 stochastic generations per model. We evaluate \textit{Model chk-0}, \textit{Model chk-1} at checkpoint 200, and the two successive states of \textit{Model chk-3}: SFT checkpoint 38 and GRPO checkpoint 450. This produces \(31 \times 10 \times 4 = 1{,}240\) model predictions.
+
+
+Table~\ref{tab:ch2:decision_pooled_n31} reports direction accuracy, three-class (Cut, Hold, Hike) balanced accuracy, class-specific recall, and meeting-level modal accuracy. Table~\ref{tab:ch2:decision_pooled_action_magnitude} further reports exact-action accuracy by realized policy direction and basis-point magnitude. Because the two panels were pooled after their separate frozen evaluations, these results constitute a post-hoc descriptive comparison rather than a new prospective or out-of-sample validation exercise. In particular, all five hike meetings come from the historical external panel, whereas the post-cutoff panel contains only cut and hold decisions.
+
+
+\begin{table}[H]
     \centering
     \footnotesize
-    \begin{tabular}{l l c c c}
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{threeparttable}
+    \caption{Post-Hoc Pooled Decision Prediction Performance
+    (\(N=31\), \(K=10\))}
+    \label{tab:ch2:decision_pooled_n31}
+    
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{0.17\textwidth}
+        >{\centering\arraybackslash}p{0.17\textwidth}
+        >{\centering\arraybackslash}p{0.18\textwidth}
+        >{\centering\arraybackslash}p{0.18\textwidth}
+    @{}}
         \toprule
-        \textbf{Model} & \textbf{Actions} & \textbf{Total Minutes} & \textbf{After 2009} & \textbf{Before 2009} \\
+        \textbf{Metric}
+        & \makecell{\textit{Model chk-0}\\(Base model)}
+        & \makecell{\textit{Model chk-1}\\(cp200)}
+        & \makecell{\textit{Model chk-3}\\(SFT cp38)}
+        & \makecell{\textit{Model chk-3}\\(GRPO cp450)} \\
         \midrule
-        \multirow{4}{*}{\textit{Model chk-4}} 
-            & Overall     & 78.89\% (142/180) & 78.13\% (100/128) & 80.77\% (42/52) \\
-            & Cut         & 42.86\% (6/14)    & 28.57\% (2/7)     & 57.14\% (4/7) \\
-            & No Change   & 79.10\% (106/134) & 77.67\% (80/103)  & 83.87\% (26/31) \\
-            & Raise       & 93.75\% (30/32)   & 100.00\% (18/18)  & 85.71\% (12/14) \\
-        \midrule
-        \multirow{4}{*}{\textit{Model chk-0}} 
-            & Overall     & 67.42\% (120/178) & 66.41\% (87/131)  & 70.21\% (33/47) \\
-            & Cut         & 61.54\% (8/13)    & 42.86\% (3/7)     & 83.33\% (5/6) \\
-            & No Change   & 63.08\% (82/130)  & 63.46\% (66/104)  & 61.54\% (16/26) \\
-            & Raise       & 85.71\% (30/35)   & 90.00\% (18/20)   & 80.00\% (12/15) \\
+
+        Direction accuracy
+        & \makecell{22.26\%\\$(69/310)$}
+        & \makecell{18.71\%\\$(58/310)$}
+        & \makecell{\textbf{24.84\%}\\$(77/310)$}
+        & \makecell{22.58\%\\$(70/310)$} \\
+
+        Three-class balanced accuracy
+        & 26.00\%
+        & 22.63\%
+        & \textbf{32.73\%}
+        & 28.55\% \\
+
+        Meeting-level modal accuracy
+        & \makecell{\textbf{12.90\%}\\$(4/31)$}
+        & \makecell{6.45\%\\$(2/31)$}
+        & \makecell{\textbf{12.90\%}\\$(4/31)$}
+        & \makecell{\textbf{12.90\%}\\$(4/31)$} \\
+
+        \hline
+
+
+        Cut recall
+        & \makecell{10.00\%\\$(7/70)$}
+        & \makecell{\textbf{17.14\%}\\$(12/70)$}
+        & \makecell{14.29\%\\$(10/70)$}
+        & \makecell{14.29\%\\$(10/70)$} \\
+
+        Hold recall
+        & \makecell{\textbf{20.00\%}\\$(38/190)$}
+        & \makecell{14.74\%\\$(28/190)$}
+        & \makecell{17.89\%\\$(34/190)$}
+        & \makecell{17.37\%\\$(33/190)$} \\
+
+        Hike recall
+        & \makecell{48.00\%\\$(24/50)$}
+        & \makecell{36.00\%\\$(18/50)$}
+        & \makecell{\textbf{66.00\%}\\$(33/50)$}
+        & \makecell{54.00\%\\$(27/50)$} \\
         \bottomrule
-    \end{tabular}
-    \caption{Prediction Accuracy for Monetary Policy Decision-making}
-    \label{tab:ch2:decision_acc}
+    \end{tabularx}
+
+    \begin{tablenotes}[flushleft]
+        \scriptsize
+        \item \textit{Notes:} The table pools the historical external panel
+        (\(N=19\)) and the post-cutoff panel (\(N=12\)). Each model generates
+        \(K=10\) predictions per meeting, yielding 310 predictions per model.
+        The combined panel contains seven cut, 19 hold, and five hike meetings.
+        Three-class balanced accuracy is the unweighted mean of cut, hold, and
+        hike recall. Meeting-level modal accuracy is calculated after assigning
+        each meeting the most frequently predicted direction across its ten
+        generations. Bold values indicate the highest point estimate in each
+        row. Because the pooling was conducted post hoc, the results are
+        descriptive and do not replace the separately reported frozen-panel
+        analyses. All hike observations come from the historical panel.
+    \end{tablenotes}
+    \end{threeparttable}
 \end{table}
 
 
 
-Table~\ref{tab:ch2:decision_acc} reports higher raw overall accuracy for the archived decision branch than for \textit{Model chk-0}. However, the two rows use different effective samples (180 versus 178 Minutes, with different period counts), so the percentages are not a like-for-like paired comparison and do not establish a task-training effect.
-
-The archived category percentages are descriptive only. In particular, the ``Cut'' category contains few observations, while the ``No Change'' category dominates the sample. A valid model comparison requires the same meetings, explicit treatment of invalid outputs, and paired uncertainty.
-
-
-We next reproduce a legacy decision experiment whose source description labels the synthetic sections as outputs of \textit{Model chk-2}. The artifact audit shows that the surviving analysis-GRPO artifact actually branches from \textit{Model chk-0}, so this label does not establish the intended staged lineage. Using the same template, the legacy experiment replaces original Minutes text with synthetic text and asks each model to select one policy action from Table~\ref{tab:ch2:vote_choice}.
-
-
-The archived description reports 500 synthetic Minutes and 20 random samples with a sampling interval of 2,000, but it does not preserve a sufficient row-level manifest to reconstruct the sampling unit or denominator. Table~\ref{tab:ch2:decision_acc_synthetic} is therefore retained only as a legacy descriptive aggregate.
-
-
-\begin{table}[htbp]
-    \centering
-      \begin{tabular}{lcc}
-      \toprule
-      \textbf{Target Vote} & \textit{Model chk-0} & \textit{Model chk-4} \\
-      \midrule
-      Overall & 0.4601 & \textbf{0.7055}\\
-      Cut by 50 bp & 0.0504 & \textbf{0.0534}\\
-      Cut by 25 bp & \textbf{0.2466} & 0.1534\\
-      No change & 0.4567 & \textbf{0.7824}\\
-      Raise by 25 bp & \textbf{0.6212} & 0.5469\\
-      Raise by 50 bp & \textbf{0.1588} & 0.1548\\
-      Raise by 75 bp & 0.6077 & \textbf{0.6268}\\
-      \bottomrule
-      \end{tabular}
-    \caption{Legacy Descriptive Accuracy Using Synthetic FOMC Minutes. The historical sample manifest and denominator were not recovered; the former significance statistics are not reported.}
-    \label{tab:ch2:decision_acc_synthetic}
-\end{table}
-
-
-The archived table reports a higher overall point estimate for the decision branch than for \textit{Model chk-0}, but the missing sample manifest and unverifiable synthetic-text checkpoint prevent an inferential or stage-attribution claim. The values do not confirm that task-specific GRPO materially improves decision prediction.
-
-To place the \textit{Model chk-4} results in a broader benchmark context, it is useful to compare the results with different benchmarks. Here, we selects three panels. Panel A uses only pre-meeting information, Panel B uses stripped same-meeting FOMC statements, and Panel C uses stripped FOMC Minutes released after the meeting. Accordingly, the table below reports one representative high-performing baseline from each panel together with \textit{Model chk-4}, and the rows should not be interpreted as a single unified leaderboard.
-
-
-Panel A is designed as a real-time forecasting benchmark. It combines pre-meeting market-implied signals and macro-discrete-choice models following the monetary-policy forecasting literature (\cite{kuttner2001monetary,hamiltonjorda2002target}). For the futures-based component, the current-month fed funds futures rate satisfies
-\begin{equation}
-r_t^{\mathrm{fut}}=\frac{d}{D}r_t^{\mathrm{current}}+\frac{D-d}{D}\mathbb{E}_t\left[r_t^{\mathrm{post}}\right],
-\end{equation}
-which implies
-\begin{equation}
-\mathbb{E}_t\left[r_t^{\mathrm{post}}\right]=\frac{D r_t^{\mathrm{fut}}-d r_t^{\mathrm{current}}}{D-d},
-\end{equation}
-where $D$ is the number of calendar days in the meeting month and $d$ is the meeting day. In parallel, ordered-response models map pre-meeting observables $x_t$ into a latent policy index,
-\begin{equation}
-y_t^*=x_t^\prime\beta+\rho g(y_{t-1})+\varepsilon_t,\qquad \varepsilon_t\sim\mathcal{N}(0,1),
-\end{equation}
-and classify decisions into cut, no-change, and raise states through threshold rules on $y_t^*$. The representative row reported in Table~\ref{tab:ch2:decision_acc_overview} is the persistence benchmark, which predicts the current decision from the previous target outcome.
-
-
-Panel B is a same-meeting text-inference benchmark based on stripped official statements. This design follows the central-bank communication literature, which extracts hawkish and dovish signals from FOMC statements and relates them to policy expectations (\cite{luccatrebbi2009communication,gurkaynak2005actions}). A simple lexical proxy is
-\begin{equation}
-\text{lex\_score}_t=\frac{\text{hawk\_count}_t-\text{dove\_count}_t}{\text{token\_count}_t},
-\end{equation}
-while text classifiers convert a feature vector $z_t$ into class probabilities through
-\begin{equation}
-p(y_t=k\mid z_t)=\mathrm{softmax}(Wz_t+b)_k,\qquad k\in\{\text{cut},\text{no change},\text{raise}\}.
-\end{equation}
-Here $z_t$ can be a TF-IDF representation of the stripped statement or a finance-domain embedding such as FinBERT \cite{araci2019finbert}. The representative baseline in the compact table is the TF-IDF multinomial logit benchmark.
-
-
-Panel C keeps the same prediction logic as Panel B but replaces the input text with stripped FOMC Minutes. This panel is motivated by evidence that Minutes carry policy-relevant information for financial markets and sentiment extraction (\cite{jubinski2013fomc,tadle2022fomc}). Letting $m_t$ denote the stripped Minutes text, the embedding-based specification used in the benchmark panel is
-\begin{equation}
-e_t=\mathrm{Encoder}(m_t),\qquad p(y_t=k\mid e_t)=\mathrm{softmax}(We_t+b)_k.
-\end{equation}
-Because Minutes are published after the meeting, Panel C is an ex post inference benchmark rather than a real-time forecasting exercise. The representative baseline reported below is the embedding-plus-linear-probe model.
-
-\begin{table}[htbp]
+\begin{table}[H]
     \centering
     \footnotesize
-    \begin{tabular}{llcccc}
+    \setlength{\tabcolsep}{3.2pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{threeparttable}
+    \caption{Post-Hoc Pooled Exact-Action Accuracy by Policy Direction
+    and Magnitude (\(N=31\), \(K=10\))}
+    \label{tab:ch2:decision_pooled_action_magnitude}
+    
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.10\textwidth}
+        >{\centering\arraybackslash}p{0.08\textwidth}
+        >{\centering\arraybackslash}p{0.10\textwidth}
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+    @{}}
         \toprule
-        \textbf{Information Set} & \textbf{Method} & \textbf{Cut} & \textbf{No change} & \textbf{Raise} & \textbf{Overall} \\
+        \textbf{True action}
+        & \textbf{Magnitude}
+        & \makecell{\textbf{Meeting}\\\textbf{support}}
+        & \makecell{\textit{Model chk-0}\\ (Base Model)}
+        & \makecell{\textit{Model chk-1}\\\textit{SFT cp200}}
+        & \makecell{\textit{Model chk-3}\\\textit{SFT cp38}}
+        & \makecell{\textit{Model chk-3}\\\textit{GRPO cp450}} \\
         \midrule
-        Panel A & Persistence & 73.91\% & 94.92\% & 84.21\% & 91.78\% \\
-        Panel B & TFIDFLogit & 52.17\% & 93.82\% & 73.68\% & 87.73\% \\
-        Panel C & EmbeddingLinear & 22.22\% & 91.57\% & 42.11\% & 80.79\% \\
-        LLM & \textit{Model chk-4} & 42.86\% & 79.10\% & 93.75\% & 78.89\% \\
+
+        Hold
+        & 0 bp
+        & 19
+        & \makecell{\textbf{20.00\%}\\$(38/190)$}
+        & \makecell{14.74\%\\$(28/190)$}
+        & \makecell{17.89\%\\$(34/190)$}
+        & \makecell{17.37\%\\$(33/190)$} \\
+
+        Cut
+        & 25 bp
+        & 6
+        & \makecell{8.33\%\\$(5/60)$}
+        & \makecell{\textbf{16.67\%}\\$(10/60)$}
+        & \makecell{11.67\%\\$(7/60)$}
+        & \makecell{15.00\%\\$(9/60)$} \\
+
+        Cut
+        & 50 bp
+        & 1
+        & \makecell{0.00\%\\$(0/10)$}
+        & \makecell{0.00\%\\$(0/10)$}
+        & \makecell{0.00\%\\$(0/10)$}
+        & \makecell{0.00\%\\$(0/10)$} \\
+
+        Hike
+        & 25 bp
+        & 4
+        & \makecell{27.50\%\\$(11/40)$}
+        & \makecell{22.50\%\\$(9/40)$}
+        & \makecell{\textbf{45.00\%}\\$(18/40)$}
+        & \makecell{30.00\%\\$(12/40)$} \\
+
+        Hike
+        & 50 bp
+        & 1
+        & \makecell{20.00\%\\$(2/10)$}
+        & \makecell{10.00\%\\$(1/10)$}
+        & \makecell{10.00\%\\$(1/10)$}
+        & \makecell{\textbf{40.00\%}\\$(4/10)$} \\
+
         \bottomrule
-    \end{tabular}
-    \caption{Compact Comparison of Decision Prediction Accuracy across Information Sets}
-    \label{tab:ch2:decision_acc_overview}
+    \end{tabularx}
+
+    \begin{tablenotes}[flushleft]
+        \scriptsize
+        \item \textit{Notes:} Exact-action accuracy requires both the policy
+        direction and the basis-point magnitude to be correct. Meeting support
+        denotes the number of independent meetings in each action-magnitude
+        stratum; the denominator used to calculate each percentage is meeting
+        support multiplied by \(K=10\). The pooled panel contains no 75- or
+        100-basis-point target actions. All hike observations come from the
+        historical external panel. Results for the 50-basis-point strata are
+        based on only one meeting and should therefore be interpreted as
+        descriptive case-level evidence. Bold values indicate the highest
+        point estimate within each row.
+    \end{tablenotes}
+    \end{threeparttable}
 \end{table}
 
-The compact table provides descriptive archived point estimates across different information sets. Panel A and Panel B have higher overall and ``No change'' accuracy in this sample, in which no-change outcomes dominate. The \textit{Model chk-4} row has the highest reported ``Raise'' point estimate (93.75\%), while its ``Cut,'' ``Raise,'' and overall point estimates exceed those in Panel C and its ``No change'' estimate is lower. Because the panels use different information sets and the table does not supply a matched-sample uncertainty analysis, these differences do not establish a model advantage, an improvement caused by task-specific training, or a gain attributable to decision-relevant synthesis.
 
+
+The pooled results indicate that \textit{Model chk-3} SFT cp38 provides the strongest overall decision-quality performance among the four evaluated model states. Its direction accuracy reaches 24.84\%, compared with 18.71\% for \textit{Model chk-1}, representing a descriptive increase of 6.13 percentage points. Its three-class balanced accuracy is also the highest, at 32.73\%, which is 10.10 percentage points above that of \textit{Model chk-1}. Both states of \textit{Model chk-3} outperform their common parent on these two aggregate measures. Nevertheless, the absolute performance remains weak: even the highest direction accuracy implies that approximately three quarters of the stochastic predictions have an incorrect policy direction.
+
+The aggregate differences conceal substantial heterogeneity across policy classes. \textit{Model chk-3} SFT cp38 achieves the highest hike recall, correctly classifying 66.00\% of the 50 hike-conditioned generations. This result is the principal contributor to its comparatively high balanced accuracy. By contrast, \textit{Model chk-1} records the highest cut recall at 17.14\%, while \textit{Model chk-0} records the highest hold recall at 20.00\%. No model therefore dominates across all three policy directions. Moreover, all five hike meetings belong to the historical external panel, so the pooled hike recall does not provide evidence of hike-prediction performance in the post-cutoff period.
+
+The comparison between the two states of \textit{Model chk-3} does not support an overall improvement from GRPO. Relative to SFT cp38, GRPO cp450 reduces direction accuracy from 24.84\% to 22.58\% and balanced accuracy from 32.73\% to 28.55\%, corresponding to descriptive declines of 2.26 and 4.18 percentage points, respectively. Cut recall remains unchanged at 14.29\%, hold recall falls slightly from 17.89\% to 17.37\%, and hike recall falls from 66.00\% to 54.00\%. Thus, within this pooled panel, the pre-GRPO SFT state remains the stronger state for aggregate decision quality.
+
+The action--magnitude results provide a more granular but less statistically stable picture. For 25-basis-point cuts, \textit{Model chk-1} obtains the highest exact-action accuracy at 16.67\%, followed by GRPO cp450 at 15.00\%. For 25-basis-point hikes, SFT cp38 performs best at 45.00\%. GRPO cp450 obtains the highest accuracy for the 50-basis-point hike, at 40.00\%; however, this stratum contains only one meeting and therefore cannot establish a systematic GRPO advantage. None of the models correctly predicts the single 50-basis-point cut in any of its ten generations.
+
+Finally, meeting-level modal accuracy is low for every model. \textit{Model chk-0}, SFT cp38, and GRPO cp450 each produce a correct modal direction for only four of the 31 meetings, while \textit{Model chk-1} does so for two meetings. Repeated stochastic generation therefore does not generally yield a reliably correct majority prediction at the meeting level. Because the analysis pools two separately frozen panels after evaluation, and because the ten generations within a meeting are not independent meetings, these results should be interpreted as descriptive point-estimate comparisons. They do not, without a meeting-level paired inferential procedure, establish statistically significant differences or temporal generalization.
+
+
+
+%%% comparing with different baselines
+
+\paragraph*{Benchmark Baselines.} This subsection compares four LLM states with two baselines using policy direction only, the Hamilton--Jord\`a ACH--OP
+model (\cite{hamiltonjorda2002target}), the Random Forest estimator (\cite{yoonfan2024forecasting}). The evaluation is restricted to the historical external panel (H19), including 19 meetings from February 1993 through June 2008, comprising four Cut, ten Hold, and five Hike decisions.
+
+
+
+Table~\ref{tab:ch2:decision_true_direction_by_class} reported the prediction results with two metric blocks. Block A reports the mean probability assigned to
+the realized direction. For an LLM, this is the empirical correct-direction for a meeting. Block B reports meeting-level recall for the ordinal forest.
+
+
+\noindent\textit{Hamilton--Jord\`a ACH--OP.}
+\citet{hamiltonjorda2002target} model the federal funds rate target as a
+weekly marked point process. An autoregressive conditional hazard (ACH)
+determines whether a target-rate event occurs, while an ordered probit (OP),
+conditional on that event, models the distribution over signed target-rate
+changes. The operational baseline used here applies the authors' revised 2001
+replication coefficients rather than re-estimating the model
+\citep{hamiltonjorda2001archive}:
+
+\begin{align}
+    m_h
+    &=0.067460919u_{h-1}+29.390652-23.045727M_h
+      -8.2087573\lvert S_{h-1}\rvert, \nonumber\\
+    g(m)
+    &=
+    \begin{cases}
+        0, & m\leq 0,\\
+        \dfrac{0.2m^2}{0.1^2+m^2}, & 0<m<0.1,\\
+        m, & m\geq 0.1,
+    \end{cases}
+    \qquad
+    H_h=\frac{1}{1.0001+g(m_h)}.
+    \label{eq:ch2:decision_hj_ach}
+\end{align}
+
+where \(h\) indexes the evaluated FOMC week; \(u_{h-1}\) is the number of
+weeks between the two most recently completed target-change weeks;
+\(M_h\in\{0,1\}\) indicates whether week \(h\) contains an FOMC meeting and
+equals one for the meetings evaluated here; and
+\(S_{h-1}=\overline{\mathrm{DTB6}}_{h-1}
+-\overline{\mathrm{DFF}}_{h-1}\) is the preceding week's average six-month
+Treasury-bill rate minus its average effective federal funds rate, expressed
+in percentage points. The function \(g(\cdot)\) is the authors' smooth pasted
+link. The event indicator \(E_h\) equals one when a target-rate event occurs
+during week \(h\), and
+\(H_h\equiv\Pr(E_h=1\mid\mathcal{F}_{h-1},M_h)\) is its conditional
+probability given the information available through the end of the preceding
+week, denoted by \(\mathcal{F}_{h-1}\). For notational convenience,
+\(m_h\) is shifted down by one relative to the original denominator-scale
+index. Consequently, the intercept \(29.390652\) corresponds exactly to the
+unshifted coefficient \(30.390652\), reported as approximately \(30.391\) in
+the paper; this reparameterization does not change \(H_h\).
+
+For the ordered-probit stage, conditional on \(E_h=1\), let the ordered marks
+of the signed event variable \(A_h\) be
+\((a_1,\ldots,a_5)=(-50,-25,0,25,50)\) basis points. Set
+\(\kappa_0=-\infty\), \(\kappa_5=+\infty\), and the four finite cutpoints to
+\[
+(\kappa_1,\ldots,\kappa_4)
+=
+(-1.8948826,-0.42001991,-0.0052515480,1.5173916).
+\]
+The conditional ordered-probit index and mark probabilities are
+
+\begin{equation}
+    \eta_h=2.5449149y_{h-1}+0.54142729S_{h-1},
+    \qquad
+    r_{h,a_j}
+    =\Phi(\kappa_j-\eta_h)-\Phi(\kappa_{j-1}-\eta_h),
+    \quad j=1,\ldots,5,
+    \label{eq:ch2:decision_hj_op}
+\end{equation}
+
+where \(y_{h-1}\) is the previous completed week's net target-rate change,
+expressed in percentage points; \(\eta_h\) is the ordered-probit location
+index; \(\Phi(\cdot)\) is the standard-normal cumulative distribution
+function; and
+\[
+r_{h,a_j}
+\equiv
+\Pr(A_h=a_j\mid E_h=1,\mathcal{F}_{h-1})
+\]
+is the conditional probability of mark \(a_j\). The five mark probabilities
+are nonnegative and satisfy
+\(\sum_{j=1}^{5}r_{h,a_j}=1\). Aggregating these probabilities by sign and
+assigning the no-event probability to Hold gives
+
+\begin{equation}
+\begin{aligned}
+    p_{h,\mathrm{cut}}
+    &=H_h(r_{h,a_1}+r_{h,a_2}),\\
+    p_{h,\mathrm{hold}}
+    &=1-H_h+H_h r_{h,a_3},\\
+    p_{h,\mathrm{hike}}
+    &=H_h(r_{h,a_4}+r_{h,a_5}),\\
+    \sum_{c\in\{\mathrm{cut},\mathrm{hold},\mathrm{hike}\}}p_{h,c}
+    &=1.
+\end{aligned}
+    \label{eq:ch2:decision_hj_direction}
+\end{equation}
+
+where
+\(p_{h,c}\equiv\Pr(d_h=c\mid\mathcal{F}_{h-1},M_h)\) denotes the probability
+assigned to policy direction
+\(c\in\{\mathrm{cut},\mathrm{hold},\mathrm{hike}\}\). In particular, the Hold
+probability combines the no-event mass \(1-H_h\) with the zero-change mark
+mass \(H_h r_{h,a_3}\).
+
+Operationally, the model uses the current-release historical federal funds
+target rate to construct \(u_{h-1}\) and \(y_{h-1}\), the official FOMC
+calendar to construct \(M_h\), and the preceding week's six-month Treasury
+bill and effective federal funds rates to construct \(S_{h-1}\). These
+interest-rate observations come from current-release historical series rather
+than the data vintages available at each meeting date.
+
+\noindent\textit{Yoon--Fan native ordinal forest with reduced predictors.}
+\citet{yoonfan2024forecasting} forecast ordered federal funds rate actions
+using the ordinal-forest estimator developed by
+\citet{hornung2020ordinalforests}. The estimator represents the ordered
+classes using an optimized set of continuous scores and evaluates each
+candidate score set using an out-of-bag (OOB) performance criterion. Under
+the \texttt{perffunction=equal} configuration used by Yoon and Fan, the
+score-selection objective is
+
+\begin{equation}
+    J_{\mathrm{equal}}
+    =
+    \frac{1}{3}
+    \sum_{c\in\mathcal{C}}
+    \left(
+        \mathrm{TPR}_{c}
+        +\mathrm{TNR}_{c}
+        -1
+    \right).
+    \label{eq:ch2:decision_ordinal_forest_equal}
+\end{equation}
+
+where \(J_{\mathrm{equal}}\) denotes the OOB criterion used to select the
+optimized class scores; \(c\) indexes the ordered policy directions in
+\(\mathcal{C}=\{\mathrm{cut},\mathrm{hold},\mathrm{hike}\}\); and
+\(\mathrm{TPR}_{c}\) and \(\mathrm{TNR}_{c}\) denote, respectively, the OOB
+true-positive rate for class \(c\) and the OOB true-negative rate for the
+complementary event \(d_h\neq c\), where \(d_h\) is the realized policy
+direction at meeting \(h\). Thus,
+\(\mathrm{TPR}_{c}+\mathrm{TNR}_{c}-1\) is the one-versus-rest Youden index
+for class \(c\), and the factor \(1/3\) gives Cut, Hold, and Hike equal
+weight irrespective of their training frequencies. For each candidate score
+set, a regression forest maps the reduced predictor vector \(x_h\) to the
+continuous class scores. The final point prediction is
+
+\begin{equation}
+    \widehat d_h
+    =
+    \operatorname*{arg\,max}_{c\in\mathcal{C}}
+    \sum_{b=1}^{B_{\mathrm{final}}}
+    \mathbb{I}\!\left(\widehat d_{h,b}=c\right),
+    \qquad
+    B_{\mathrm{final}}=5{,}000,
+    \label{eq:ch2:decision_ordinal_forest_vote}
+\end{equation}
+
+where \(B_{\mathrm{final}}\) is the number of trees in the final forest;
+\(\mathbb{I}(\cdot)\) is the indicator function;
+\(\widehat d_{h,b}\) is tree \(b\)'s ordinal-class prediction for meeting
+\(h\); and \(\widehat d_h\) is the resulting plurality-vote point prediction.
+The class ordering is Cut \(<\) Hold \(<\) Hike. Unlike a probability model,
+Equation~\ref{eq:ch2:decision_ordinal_forest_vote} returns a single predicted
+class rather than a three-class probability vector. The present
+implementation uses \texttt{ordinalForest} version 2.4-3, the R package
+released by the estimator's authors
+\citep{hornung2022ordinalforestpackage}.
+
+Table~\ref{tab:ch2:decision_true_direction_by_class} reports the resulting
+comparison with ACH--OP and the evaluated LLM checkpoints.
+
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{2.2pt}
+    \renewcommand{\arraystretch}{1.18}
+    \begin{threeparttable}
+    \caption{Historical Direction Results for Hamilton--Jord\`a ACH--OP,
+    Native Ordinal Forest, and LLM Checkpoints (H19, \(N=19\))}
+    \label{tab:ch2:decision_true_direction_by_class}
+
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.22\textwidth}
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+        >{\centering\arraybackslash}X
+    @{}}
+        \toprule
+        \textbf{Model or method}
+        & \makecell{\textbf{Cut}\\\textbf{Support: 4}}
+        & \makecell{\textbf{Hold}\\\textbf{Support: 10}}
+        & \makecell{\textbf{Hike}\\\textbf{Support: 5}}
+        & \makecell{\textbf{Metric-specific}\\\textbf{summary}} \\
+        \midrule
+
+        \multicolumn{5}{@{}l}{\textit{Block A. Mean probability assigned to
+        the realized direction}} \\
+        Hamilton--Jord\`a ACH--OP
+        & \textbf{25.01\%}
+        & \textbf{86.70\%}
+        & 18.04\%
+        & \textbf{43.25\%} \\
+
+        \textit{Model chk-0}
+        & 12.50\% $(5/40)$
+        & 24.00\% $(24/100)$
+        & 48.00\% $(24/50)$
+        & 28.17\% \\
+
+        \textit{Model chk-1} (SFT cp200)
+        & 12.50\% $(5/40)$
+        & 18.00\% $(18/100)$
+        & 36.00\% $(18/50)$
+        & 22.17\% \\
+
+        \textit{Model chk-3} (SFT cp38)
+        & 17.50\% $(7/40)$
+        & 16.00\% $(16/100)$
+        & \textbf{66.00\%} $(33/50)$
+        & 33.17\% \\
+
+        \textit{Model chk-3} (GRPO cp450)
+        & 10.00\% $(4/40)$
+        & 17.00\% $(17/100)$
+        & 54.00\% $(27/50)$
+        & 27.00\% \\
+
+        \midrule
+        \multicolumn{5}{@{}l}{\textit{Block B. Meeting-level point recall
+        (different estimand)}} \\
+        \makecell[l]{Yoon--Fan native\\\texttt{ordinalForest::ordfor} 2.4-3}
+        & 75.00\% $(3/4)$
+        & 90.00\% $(9/10)$
+        & 80.00\% $(4/5)$
+        & \makecell{OA 84.21\% $(16/19)$\\BA 81.67\%\\F1 83.81\%} \\
+        \bottomrule
+    \end{tabularx}
+
+    \begin{tablenotes}[flushleft]
+        \scriptsize
+        \item \textit{Notes:} H19 contains four Cut, ten Hold, and five Hike
+        meetings; all displayed methods cover all 19. Block A uses the score in
+        Equation~\ref{eq:ch2:decision_true_direction_probability}. ACH--OP
+        reports analytical probabilities. For each LLM, parentheses give
+        parser-recoverable correct directions divided by all generations in
+        the realized-direction stratum. A generation with no parser-recoverable
+        legal direction remains in the denominator with zero credit; failure
+        of the native-JSON delivery contract alone does not invalidate an
+        otherwise recoverable direction. Magnitude is ignored, and no
+        meeting-level modal or plurality reduction is used. Bold identifies
+        the largest Block-A score in each direction and for the equal-class
+        Block-A summary. Block B instead reports
+        correct ordinal-forest point classifications divided by realized
+        meetings. Under \texttt{perffunction=equal}, \texttt{ordinalForest}
+        2.4-3 returns no class probabilities; Block B must not be ranked against
+        Block A as though the percentages had the same estimand. In the summary
+        column, OA, BA, and F1 denote overall accuracy, three-class balanced
+        accuracy, and macro-F1. Repeated LLM generations are nested within
+        meetings. This focused table displays H19 alone; the separately scored
+        post-cutoff panel is not shown, and no pooled \(N=31\) estimand is
+        constructed. The table reports point estimates; the shared-draw,
+        meeting-level bootstrap output for Block A remains in the sealed
+        machine-readable audit. No inference is made across metric blocks.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+Within Block A, ACH--OP assigns more probability to realized cuts and holds
+than any LLM state: 25.01\% versus a best LLM value of 17.50\% for Cut, and
+86.70\% versus 24.00\% for Hold. The pattern reverses for Hike. SFT checkpoint
+38 assigns 66.00\% to the realized hike direction, compared with 18.04\% for
+ACH--OP. Giving the three directions equal weight, the Block-A summaries are
+43.25\% for ACH--OP, 28.17\% for \textit{Model chk-0}, 22.17\% for
+\textit{Model chk-1} SFT checkpoint 200, 33.17\% for \textit{Model chk-3}
+SFT checkpoint 38, and 27.00\% for \textit{Model chk-3} GRPO checkpoint 450.
+These are assigned-probability summaries, not point accuracies.
+
+In Block B, the native ordinal forest correctly classifies 3/4 cuts, 9/10
+holds, and 4/5 hikes. Its overall accuracy is 84.21\% (16/19), its
+three-class balanced accuracy is 81.67\%, and its macro-F1 is 83.81\%.
+Because \texttt{ordfor} supplies no class probabilities under the selected
+criterion, these point results cannot establish that it dominates ACH--OP or
+the LLMs on the Block-A estimated. Conversely, converting each LLM's ten
+generations to a meeting-level modal or plurality prediction would introduce a
+new decision rule that is deliberately not used here.
+
+
+The H19 comparison suggests that the principal advantage of the LLM approach lies in its flexibility when interpreting heterogeneous economic evidence, especially during policy-tightening episodes. \textit{Model chk-3} at SFT checkpoint 38 assigns 66.00\% of its generation mass to the realized Hike direction, substantially exceeding the 36.00\% recorded by its analytical parent model and the 18.04\% analytical probability assigned by ACH--OP. Unlike the baselines, which rely on a small set of predefined numerical relationships, the LLM can jointly process a broader pre-meeting economic narrative and potentially capture nonlinear interactions and contextual signals. Its repeated generations also reveal the stability or dispersion of its decisions. However, this advantage is direction-specific: the LLMs remain weaker for Cut and Hold, so the results support greater adaptability to tightening signals rather than general predictive superiority.
 
 
 
@@ -1351,52 +2111,133 @@ The compact table provides descriptive archived point estimates across different
 
 \section{Conclusion}\label{ch2:sec:conclusion}
 
+This chapter examines whether domain-specific post-training can support two
+distinct tasks at the intersection of central-bank communication and financial
+decision analysis. The first task maps supplied macro-financial analysis into
+source-preserving FOMC-Minutes-style prose; the second maps a target-neutral
+pre-meeting brief into a discrete federal funds rate action. These tasks share
+\textit{Model chk-1} as a parent checkpoint but constitute separate downstream
+branches. In particular, the policy-decision model does not take the generated
+Minutes-style paragraph as an input. The empirical design should therefore be
+interpreted as a shared-parent comparison of two post-training objectives, not
+as an end-to-end indicators-to-communication-to-decision system. Nor does the
+present evidence identify the incremental value of the shared-parent
+initialization itself, which would require a matched direct-initialization
+ablation.
 
-In conclusion, this chapter implements a
-\texttt{chk-0}$\rightarrow$\texttt{chk-1}$\rightarrow$\texttt{chk-3}
-framework for generating structured synthetic policy text from point-in-time
-macro-financial evidence.  \textit{Model chk-0} is the pretrained starting
-model.  The selected \textit{Model chk-1} checkpoint is the analytical model
-and the experimental baseline, while \textit{Model chk-3} is the
-Minutes-rewriting model initialized from that baseline.  In the completed
-rewriting task, the input is a \textit{Model chk-1} analysis, and the
-supervised completion contains a synthetic teacher-generated fidelity rationale
-followed by a Minutes-style paragraph derived from the same analysis.  Official
-FOMC Minutes are not used as the response target.
+The paragraph-rewriting comparison uses the same 391-row, 124-meeting
+training-release reconstruction panel as
+Table~\ref{tab:ch2:minutes_semantic_ttest}, covering January 2009 through
+January 2025. After averaging \(K=10\) generations per sample and the
+samples within each meeting, \textit{Model chk-1} checkpoint 200 exceeds
+\textit{Model chk-0} by 0.005201 in raw-best-effort MPNet cosine similarity
+and 0.003430 in BERTScore-F1; both supplementary paired \(t\)-tests have
+\(p<0.001\). The additional Minutes-specific SFT stage,
+\textit{Model chk-2} checkpoint 50, yields smaller increments over
+\textit{Model chk-1}: 0.002365 for MPNet (\(p=0.0052\)) and 0.000833 for
+BERTScore-F1 (\(p=0.0040\)). These increments are significant at the 1\%
+level in the supplementary, unadjusted paired \(t\)-tests, but their
+hierarchical paired-bootstrap 95\% intervals both include zero. The
+evidence therefore shows modest gains in reconstruction resemblance, with
+uncertainty sensitive to the inferential procedure. The references are
+teacher-generated synthetic rewrites, and official meeting text participated
+in release selection; these results do not establish held-out
+generalization, additional macroeconomic knowledge, factual accuracy, or
+equivalence with official FOMC Minutes.
 
-The analysis SFT stage is completed over three epochs and 255 optimization
-steps.  Checkpoint 200 is selected because it attains the minimum observed
-validation loss while satisfying all generation-validity criteria in the
-diagnostic sample.  The subsequent Minutes-rewriting SFT stage terminates at
-step 318.  Among the exact-merged finalists, checkpoint 318 is the only model
-that satisfies the structural, numerical, date-preservation, and
-non-degeneration criteria for all 12 task-aligned observations.
+The separate Core8 intervention analysis uses 128 historical meetings from
+1993--2008 to describe how individual prompt blocks are associated with
+target alignment. Across 32
+indicator--intervention--metric contrasts, 16 remain significant in the
+supplemental Holm-adjusted paired tests: 7 under exact deletion and 9 under
+token-matched neutral replacement. CPI is the only topic with significant
+positive differences under both interventions and both metrics. Government
+Purchases and Industrial Production show positive BERTScore-F1 differences
+under both interventions, whereas Housing Starts is significant only for the
+neutral-replacement BERTScore-F1 contrast. By contrast, GDP Growth under
+neutral replacement, the Labour Market under neutral replacement, and Money
+Supply and the Unemployment Rate under both interventions exhibit significant
+negative MPNet differences. These negative values mean only that the intervened
+outputs are, on average, more similar to the fixed synthetic reference. The
+patterns are metric- and intervention-dependent, the frozen K-adequacy verdict
+recommends additional replicates, and the historical panel has been evaluated
+previously. They therefore neither identify causal topic importance nor
+establish information sufficiency, factual quality, or performance against
+official FOMC Minutes.
 
-Relative to the \texttt{chk-1} baseline, \texttt{chk-3} also records higher
-semantic-similarity point estimates.  In the non-identity subsample
-(\(N=11\)), BERTScore F1 increases from 0.968356 to 0.975129 and MPNet cosine
-similarity increases from 0.944044 to 0.972733.  The corresponding differences
-are 0.006773 and 0.028688, with \texttt{chk-3} obtaining the higher score in 7
-of 11 BERTScore comparisons and 9 of 11 MPNet comparisons.  These findings
-support the selection of checkpoint 318 for the completed evaluation, but they
-do not constitute population-level evidence of superiority because the sample
-is small, deterministic, and used for checkpoint selection.  The synthetic
-reference targets and the source-grounding qualification attached to the
-analysis dataset further restrict the claim to task-aligned rewriting
-performance.  The unfinished indicator-sensitivity, association, and decision
-analyses are therefore not used to alter this principal conclusion.
+The financial-market diagnostic yields a more qualified conclusion. In the
+Loughran--McDonald sentiment regressions for 30-Day Federal Funds futures,
+coefficients recovered from generated documents do not uniformly reproduce the
+official-Minutes benchmark across contract horizons. \textit{Model chk-2} has
+the smallest unweighted mean absolute coefficient distance, at \(0.6739\) basis
+points, compared with \(0.6853\) for \textit{Model chk-0} and \(0.7267\) for
+\textit{Model chk-1}. This is only a descriptive ordering: \textit{Model chk-1}
+is closest at FF1, \textit{Model chk-2} at FF3 and FF12, and \textit{Model
+chk-0} at FF6. None of the 12 post-period model-minus-official contrasts or the
+eight direct \textit{Model chk-2} distance-gain contrasts survives its
+prespecified Holm correction. The evidence therefore establishes neither a
+general improvement in coefficient proximity nor equivalence with official
+Minutes. Moreover, all 30 post-period shocks have a current or lag meeting in
+the task-specific training roster, and the generated texts were not observed
+by market participants. The regressions are consequently a mixed-scope
+historical association diagnostic, not leakage-safe generalization evidence or
+a causal estimate of communication effects on market prices.
 
+The separate policy-decision branch also provides, at most, limited evidence of
+decision-relevant classification performance. In the post-hoc pooled panel of
+31 meetings, \textit{Model chk-3} SFT checkpoint 38 attains the highest
+direction accuracy (24.84\%) and three-class balanced accuracy (32.73\%). These
+figures exceed the corresponding estimates for its \textit{Model chk-1}
+parent, but their absolute levels remain weak. The checkpoint produces the
+correct modal direction for only four meetings, and no model dominates across
+cut, hold, and hike decisions. The post-GRPO checkpoint 450 does not improve the
+aggregate decision metrics: direction accuracy declines to 22.58\% and
+balanced accuracy to 28.55\%. Moreover, all hike meetings come from the
+historical external panel, while the ten stochastic generations for a given
+meeting are repeated draws rather than independent policy events. Accordingly,
+the pooled estimates are descriptive artifact comparisons; they do not
+establish statistically significant model differences, temporal
+generalization, a causal GRPO effect, or operational monetary-policy forecasting
+ability.
 
-Several avenues for future research therefore remain open. First, beyond
-consistency, the model should also ensure \textit{sufficiency}: generated
-sections should incorporate the relevant economic and financial information
-contained in the prompts. The immediate priority is to rerun the signed,
-paired Leave-one-out design with frozen targets, stable sample IDs, matched
-generation seeds, and meeting-clustered inference. Subsequent work can extend
-the analysis to coalition-sampled Shapley attribution to capture interactions
-across indicators. Factual entailment, numerical consistency, and systematic
-expert validation are also needed to distinguish stylistic resemblance and
-target-relative sensitivity from genuine evidence use.
+Taken together, the evidence supports a deliberately narrow conclusion.
+The selected supervised checkpoints show modest increases in similarity to
+synthetic Minutes-style targets within the training-only release; the
+incremental Minutes-SFT gains are not separated from zero by the
+hierarchical bootstrap intervals. On a separate historical panel, controlled
+prompt interventions describe which macro-financial inputs are associated
+with target alignment. The chapter does not establish that generated
+paragraphs are substitutes for official central-bank communication, that their
+sentiment carries the same asset-pricing content as an observed communication
+shock, or that the separate decision branch provides reliable policy forecasts.
+From a financial-economics perspective, the framework is therefore better
+viewed as a controlled research instrument for studying textual representation,
+model sensitivity, and post-training risk than as a validated trading,
+forecasting, or policy-support system.
 
+Future research should strengthen both the information design and the
+identification strategy. The macro-financial inputs should be reconstructed
+from release-time data vintages under a uniform, preregistered topic universe,
+and evaluation should use newly frozen chronological meetings that are outside
+both task-specific training and plausible model-memory windows. Paragraph
+quality should be assessed against independent human or official benchmarks,
+with claim-level entailment, numerical fidelity, omission, and unsupported-claim
+audits reported separately from semantic similarity. The Core8 exercise could
+then incorporate intervention-consistent references, negative controls, and
+coalition-based effects to distinguish reference mechanics from economically
+meaningful information use.
 
-Second, the framework should be evaluated under more demanding robustness conditions. This includes stricter out-of-sample and distribution-shift tests, stronger benchmark comparisons for policy decision prediction, and further validation of standardized prompt templates and downstream scenario designs. Advancing these directions would improve the reliability of synthetic policy communication and clarify its practical value for macro-financial analysis, scenario design, and risk-management applications.
+Finally, the financial and decision diagnostics require designs matched more
+closely to their intended economic interpretation. Coefficient similarity
+should be evaluated with a prespecified, economically justified equivalence
+margin and a direct paired test; causal market-impact questions require an
+identified communication event rather than text generated ex post. Decision
+training should be replicated across multiple seeds, accompanied by
+reward-component ablations, and evaluated with meeting-level inference,
+class-balanced support, and proper probability-scoring rules. A separate
+end-to-end experiment could compare raw indicators, analytical summaries, and
+generated Minutes-style paragraphs as alternative inputs to the same frozen
+decision model. Such extensions would determine whether synthetic
+central-bank communication contains incremental information for asset pricing,
+risk management, or policy forecasting beyond the controlled alignment effects
+documented in this chapter.

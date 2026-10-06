@@ -1,0 +1,61 @@
+{
+  "checkpoint_summary": {
+    "minimum_eval_loss": 1.526235818862915,
+    "minimum_eval_loss_checkpoint": 60,
+    "selected_checkpoint": 50,
+    "selected_checkpoint_eval_loss": 1.52657949924469,
+    "selected_checkpoint_full_chain_pass_count": 3,
+    "selected_minus_minimum_eval_loss": 0.00034368038177490234,
+    "selection_panel_evaluation_eligible": false,
+    "selection_panel_rows": 8
+  },
+  "coverage": {
+    "epochs": 3,
+    "optimizer_steps": 60,
+    "train_loss_points": 60,
+    "train_samples": 305,
+    "validation_loss_points": 6,
+    "validation_samples": 42
+  },
+  "implementation": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/jobs/eval/plot_paper_chk2_train_eval_loss_cp50.py",
+    "sha256": "795af1877dc3a4e33b89c1cc3c3fa4f6cd143a0fa176199f03ffdc2a7d574030"
+  },
+  "paper_model": "Model chk-2",
+  "payload_sha256": "1a526864baccbb4b2760f576aa1c1e8522328a1364d0a5369f91ae4944d4750c",
+  "rendering": {
+    "pdf": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/stage2_train/chk2_train_eval_loss_cp50.pdf",
+      "sha256": "bd37194cf56f753cdce7222f96ac29c4f50a4613b2fee9b235388e3db0651763"
+    },
+    "png": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/stage2_train/chk2_train_eval_loss_cp50.png",
+      "sha256": "8f0505eb9f5745c5403297dcfb625cd632af043ad25342e33b1e8ec4ac5efcf9"
+    },
+    "train_raw": true,
+    "train_trailing_mean_window": 7,
+    "validation_focused_panel": true
+  },
+  "runtime": {
+    "matplotlib": "3.10.3",
+    "numpy": "2.2.6",
+    "python": "3.10.9"
+  },
+  "schema_version": "paper-chk2-train-eval-loss-figure-v2",
+  "sources": {
+    "all_results": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901/adapters/chk2/all_results.json",
+      "sha256": "147c587999492f1bf6b018ebb19505427dfed595b22c7680787b049bb717e445"
+    },
+    "checkpoint_selection": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/evaluation/retrain_v2/paper_chk2_minutes_checkpoint_hard_gate_probe_v1_20260901/relaxed_checkpoint_selection_v1.json",
+      "receipt_sha256": "3834cbbf2ab1552989ba1b8cfcfa5f95f1ac46104b2d5bce61a36e44de2dbb9c",
+      "sha256": "9c2fcff135114ff1165c60b881f109c69bb3c0f3b04368157744e634b99e138f"
+    },
+    "loss_history": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901/adapters/chk2/loss_history.jsonl",
+      "sha256": "f035e90827c4c3233ceed22318ed706e5303645dddac9db82620a32b1cb7ca0f"
+    }
+  },
+  "status": "complete"
+}

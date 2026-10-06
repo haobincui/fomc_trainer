@@ -1,0 +1,516 @@
+\clearpage
+\newcounter{ch2checkpointappendix}
+\renewcommand{\thech2checkpointappendix}{\thechapter.A}
+\refstepcounter{ch2checkpointappendix}
+\section*{Chapter 2 Appendix: Checkpoint-Selection Diagnostics}
+\addcontentsline{toc}{section}{Chapter 2 Appendix: Checkpoint-Selection Diagnostics}
+\label{app:checkpoint_selection}
+
+This appendix records checkpoint-selection diagnostics for the three
+paper-level post-trained models. \textit{Model chk-1} is the analytical SFT
+checkpoint 200. \textit{Model chk-2} is the independent Minutes-rewriting SFT
+branch represented by checkpoint 50 loaded as a LoRA adapter over the
+exact-merged \textit{Model chk-1} checkpoint~200 parent. \textit{Model chk-3}
+is the independent policy-decision branch, with SFT checkpoint 38 as its
+pre-GRPO state and GRPO checkpoint 450 as a post-GRPO exploratory evaluation
+state. These paper names are task labels and should not be inferred from older
+repository-side \texttt{chkN} identifiers.
+
+The stages use different prompts, samples, and admission rules. The
+\textit{Model chk-1} gate uses a frozen eight-case generation-stability probe;
+the post-checkpoint-200 neighbour sweep reported below is retrospective. The
+\textit{Model chk-2} gate uses eight deterministically selected validation rows
+from the 42-row monitoring split and combines zero-tolerance generation checks
+with tolerant checkpoint-level thresholds over source fidelity and two fresh
+validators. It is selection-only, uses official pre-action Minutes in Validator
+B, and is not a leakage-safe population evaluation. The \textit{Model chk-3}
+SFT qualification probe is train-stratified, whereas its GRPO gate uses separate
+selection, blind-validation, and train-only retention panels. Case counts and
+pass rates are therefore not comparable across model stages.
+
+Table~\ref{tab:app:chk1_post_cp200_hard_gates} audits late-trajectory
+free-running analysis generation, and
+Table~\ref{tab:app:chk2_cp40_cp60_selection} reports the current
+\textit{Model chk-2} candidate comparison. Tables~\ref{tab:app:chk3_sft_qualification_gates}
+and~\ref{tab:app:chk3_grpo_selection_gates} distinguish the decision-SFT
+qualification gate from the subsequent GRPO checkpoint-selection gate, while
+Table~\ref{tab:app:chk3_sft_cp38_cp39_selection} records why SFT checkpoint 38,
+rather than the terminal checkpoint 39, initializes GRPO.
+
+\subsection*{Learning-Rate Stability Diagnostics for Model chk-1}
+\label{app:chk1_lr_selection}
+
+The peak learning rate for \textit{Model chk-1} was chosen through staged
+generation-stability diagnostics rather than an exhaustive hyperparameter
+search. The first controlled smoke comparison held the dataset, sample order,
+random seeds, LoRA configuration, optimizer, warm-up schedule, batch size, and
+generation prompts fixed while reducing the peak learning rate from
+\(5\times10^{-5}\) to \(1\times10^{-5}\). At \(5\times10^{-5}\), the first
+matched held-out completion reached the 3,072-token limit, failed to emit both
+an end-of-sequence token and a valid reasoning boundary, and recorded full-text
+and tail four-gram repetition rates of 0.9231 and 0.9647, respectively. This
+single case satisfied the preregistered fail-fast condition, so the remaining
+seven cases were not generated. By contrast, the ten-step
+\(1\times10^{-5}\) smoke checkpoint passed all eight fixed probe cases.
+
+Passing the short smoke test did not establish stability over a complete
+training trajectory. The three-epoch \(1\times10^{-5}\) run completed all 255
+optimizer updates and attained a terminal validation loss of 1.300019, but its
+terminal checkpoint failed the same generation gate: one of eight completions
+reached the token limit, only seven satisfied the output contract, and three
+were classified as catastrophically repetitive. The lower validation loss
+therefore did not imply reliable free-running generation. The peak learning
+rate was subsequently reduced to \(1\times10^{-6}\), and a new three-epoch run
+was initialized from \textit{Model chk-0}. In that run, checkpoints 80, 150,
+200, and 255 all passed the fixed eight-case generation probe. Checkpoint 200
+was retained as the paper-facing \textit{Model chk-1} because it combined the
+minimum logged validation loss (1.686099) with a fully passing generation
+probe; checkpoint 255 had an essentially unchanged terminal validation loss
+of 1.686131 and also passed, but exhibited slightly greater mean four-gram
+repetition (0.140996 versus 0.134664).
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}Xcccccc@{}}
+        \toprule
+        \makecell{\textbf{Peak learning}\\\textbf{rate}} &
+        \textbf{Diagnostic state} &
+        \textbf{Cases} &
+        \makecell{\textbf{Contract}\\\textbf{valid}} &
+        \textbf{Capped} &
+        \makecell{\textbf{Catastrophic}\\\textbf{repetition}} &
+        \makecell{\textbf{Mean full-text}\\\textbf{4-gram repetition}} &
+        \textbf{Gate} \\
+        \midrule
+        \(5\times10^{-5}\) & ten-step smoke, cp10 & 1\textsuperscript{a} & 0/1 & 1/1 & 1/1 & 0.923102 & Failed \\
+        \(1\times10^{-5}\) & ten-step smoke, cp10 & 8 & 8/8 & 0/8 & 0/8 & 0.094759 & Passed \\
+        \(1\times10^{-5}\) & three-epoch run, cp255 & 8 & 7/8 & 1/8 & 3/8 & 0.408608 & Failed \\
+        \(1\times10^{-6}\) & three-epoch run, cp200 & 8 & 8/8 & 0/8 & 0/8 & 0.134664 & Passed \\
+        \bottomrule
+    \end{tabularx}
+    \begin{minipage}{0.96\textwidth}
+        \vspace{2pt}
+        \footnotesize
+        \textit{Note:} \textsuperscript{a}\ The \(5\times10^{-5}\) probe stopped
+        after its first case triggered the fail-fast rule; its row is therefore
+        a failure demonstration, not an estimate of an eight-case failure rate.
+        ``Catastrophic repetition'' follows the frozen probe thresholds of at
+        least 0.50 full-text or 0.60 tail token four-gram repetition. All rows
+        use the same frozen probe manifest, but they represent an adaptive,
+        staged diagnostic sequence rather than a balanced or statistically
+        powered learning-rate sweep.
+    \end{minipage}
+    \caption{Staged learning-rate stability diagnostics for \textit{Model
+    chk-1}. Selection prioritized valid and non-degenerate free-running
+    generation; validation loss alone was not treated as sufficient evidence
+    of model reliability.}
+    \label{tab:app:chk1_lr_stability}
+\end{table}
+
+\subsection*{Post-cp200 Generation-Stability Replay for Model chk-1}
+
+To determine whether the retained checkpoint was uniquely stable or whether
+stability persisted across the late loss plateau, checkpoints 210--250 were
+replayed retrospectively on 23 August 2026 using the same frozen eight-case
+manifest, seeds, decoding settings, \textit{Model chk-0} baseline, and runtime
+versions as the original checkpoint-200 and checkpoint-255 probes. These
+intermediate replays did not participate in the original checkpoint-selection
+decision. Table~\ref{tab:app:chk1_post_cp200_hard_gates} therefore provides a
+matched descriptive audit of the late trajectory rather than new prospective
+selection evidence.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3.25pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabular}{@{}lcccccc@{}}
+        \toprule
+        \textbf{Checkpoint} &
+        \makecell{\textbf{Training / evaluation}\\\textbf{loss}} &
+        \makecell{\textbf{Finite / EOS /}\\\textbf{contract-valid}} &
+        \makecell{\textbf{Cap / catastrophic /}\\\textbf{periodic}} &
+        \makecell{\textbf{Mean full-text}\\\textbf{4-gram repetition}} &
+        \makecell{\textbf{$\Delta$ versus chk-0}\\\textbf{mean / maximum}} &
+        \textbf{Gate} \\
+        \midrule
+        \texttt{cp200} (retained) & 1.729560 / 1.686099 & 8 / 8 / 8 & 0 / 0 / 0 & 0.134664 & 0.051945 / 0.144158 & Passed \\
+        \texttt{cp210}\textsuperscript{a} & 1.694860 / 1.686223 & 8 / 8 / 8 & 0 / 0 / 0 & 0.148501 & 0.065781 / 0.135519 & Passed \\
+        \texttt{cp220}\textsuperscript{a} & 1.709530 / 1.686188 & 8 / 8 / 8 & 0 / 0 / 0 & 0.142607 & 0.059888 / 0.161819 & Passed \\
+        \texttt{cp230}\textsuperscript{a} & 1.724720 / 1.686177 & 8 / 8 / 8 & 0 / 0 / 0 & 0.116562 & 0.033842 / 0.158795 & Passed \\
+        \texttt{cp240}\textsuperscript{a} & 1.704090 / 1.686112 & 8 / 8 / 8 & 0 / 0 / 0 & 0.111440 & 0.028720 / 0.146266 & Passed \\
+        \texttt{cp250}\textsuperscript{a} & 1.705740 / 1.686216 & 8 / 8 / 8 & 0 / 0 / 0 & 0.150136 & 0.067417 / 0.141370 & Passed \\
+        \texttt{cp255} (terminal) & 1.722860 / 1.686131 & 8 / 8 / 8 & 0 / 0 / 0 & 0.140996 & 0.058276 / 0.171121 & Passed \\
+        \bottomrule
+    \end{tabular}
+    \begin{minipage}{0.97\textwidth}
+        \vspace{2pt}
+        \footnotesize
+        \textit{Note:} \textsuperscript{a}\ Retrospective matched replay; the
+        original selection record contained probes for checkpoints 200 and 255
+        but not for these intermediate checkpoints. Each three-part count is
+        the number of cases, out of eight, in the order stated in its column
+        heading. Each probe contains six unique prompts plus two additional
+        greedy decodes. The
+        frozen comparator requires finite
+        output for every case, no completion at the 3,072-token cap, no strict
+        periodic tail, no catastrophic repetition (full-text four-gram rate
+        $\geq 0.50$ or tail rate $\geq 0.60$), no contract-validity loss relative
+        to the fully valid chk-0 baseline, a mean repetition increase no greater
+        than 0.10, and a per-case increase no greater than 0.20. EOS is reported
+        as a diagnostic but is not a separate comparator threshold. In the loss
+        column, the training value is the trailing mean of the ten step-level
+        losses ending at the reported checkpoint,
+        $\overline{L}^{\mathrm{train}}_{c,10}=10^{-1}\sum_{j=0}^{9}
+        L^{\mathrm{train}}_{c-j}$, followed by evaluation loss. Neither loss is
+        part of the generation gate; the checkpoint-255 evaluation value is the
+        terminal evaluation loss. Full-text and 1,024-token-tail repetition
+        values coincide in every row because no retained completion contains
+        more than 1,023 content tokens.
+    \end{minipage}
+    \caption{Post-cp200 generation-stability hard-gate comparison for
+    \textit{Model chk-1}. All evaluated checkpoints pass the frozen gate, so
+    the table does not establish checkpoint 200 as uniquely stable. Its
+    retention remains supported by the minimum logged evaluation loss together
+    with a passing contemporaneous generation probe.}
+    \label{tab:app:chk1_post_cp200_hard_gates}
+\end{table}
+
+\subsection*{Tolerant Checkpoint-Level Selection for Model chk-2}
+
+The current Minutes-rewriting branch starts from the exact-merged
+\textit{Model chk-1} checkpoint~200 parent and trains a separate LoRA adapter on
+305 training rows for three epochs, producing 60 optimizer steps. The terminal
+root adapter is not selected automatically. Instead, checkpoints 40, 50, and
+60 are loaded as adapters over the same frozen parent and compared on a fixed
+screening panel. Later paper evaluations use the selected checkpoint~50 adapter
+in this same parent-plus-adapter form; this comparison is not an exact-merged
+candidate replay.
+
+The panel contains eight rows drawn deterministically from the 42-row
+validation split without access to the supervised target. Five rows represent
+fixed prompt-length quantiles; the remaining three prioritize high numerical
+density, high date density, and attribution content, with distinct meetings
+preferred throughout. The realized panel covers eight meetings, seven atomic
+topics, and both section-style strata. Every candidate uses the same prompts
+under greedy decoding, a 2,048-token completion limit, four-bit NF4 inference,
+and the same recorded seed. No test row is generated during selection.
+
+The selection contract deliberately separates strict per-row verdicts from
+tolerant checkpoint-level admission. For row \(i\) and candidate \(c\), let
+\(Z_{i,c}\) indicate passage of the zero-tolerance structure and degeneration
+checks. These checks require a finite nonempty completion, terminal EOS,
+compliance with the generation and 4,096-token sequence limits, exactly one
+reasoning boundary, nonempty native reasoning, one 20--400-word final
+paragraph, no prohibited headings, lists, JSON, citations, credentials, or
+control markers, no strict periodic tail, and full-text and tail token
+four-gram repetition below 0.50 and 0.60, respectively. Let \(D_{i,c}\)
+indicate deterministic source fidelity: the normalized numeric multiset and
+the complete date and attribution sets must be preserved, and the final
+paragraph must not be an exact copy of the full source analysis. Finally, let
+\(G_{i,c}\) indicate passage of the complete local deterministic gate, which
+also rejects a duplicated final sentence before either validator is called.
+
+Validator A receives the source analysis, student reasoning, and rewritten
+paragraph, but not the official Minutes, and checks bidirectional claim support
+and reasoning--answer compatibility. Validator B receives the rewritten
+paragraph and the corresponding meeting's pre-action official Minutes, but not
+the source analysis or reasoning, and applies the six-dimensional style
+contract. Denote their strict binary verdicts by \(A_{i,c}\) and \(B_{i,c}\),
+and let \(s^B_{i,c}\) be Validator B's mean style score. A row passes the full
+chain only when
+
+\[
+    H_{i,c}=G_{i,c}A_{i,c}B_{i,c}=1.
+\]
+
+A candidate is admitted only if all of the following checkpoint-level
+requirements hold simultaneously:
+
+\[
+\begin{gathered}
+    \sum_{i=1}^{8}(1-Z_{i,c})=0,
+    \qquad \overline{D}_{c}\geq 0.75,
+    \qquad \overline{A}_{G,c}\geq 0.75, \\
+    \overline{B}_{A,c}\geq 0.50,
+    \qquad \overline{s}^{B}_{A,c}\geq 6.0,
+    \qquad \overline{H}_{c}\geq 0.25,
+    \qquad U_c=0,
+\end{gathered}
+\]
+
+where the Validator-A rate is conditional on complete deterministic-gate passage,
+the Validator-B rate and mean score are conditional on Validator-A passage,
+and \(U_c\) is the number of unresolved required validator calls. The mean
+Validator-B score includes every Validator-A-pass case with a valid score,
+including cases that do not receive a Validator-B PASS verdict. If more than
+one candidate is eligible, the receipt-defined ranking order is full-chain pass rate,
+Validator-B mean score, Validator-A pass rate, deterministic-fidelity pass
+rate, and then the earlier checkpoint step.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{2.3pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xcccccccc@{}}
+        \toprule
+        \textbf{Candidate} &
+        \makecell{\textbf{Evaluation}\\\textbf{loss}} &
+        \makecell{\textbf{\(Z\)}\\\textbf{failures}} &
+        \makecell{\textbf{\(D\) pass}\\\textbf{(of 8)}} &
+        \makecell{\textbf{\(A\) pass}\\\textbf{(of \(G\))}} &
+        \makecell{\textbf{\(B\) pass}\\\textbf{(of \(A\))}} &
+        \makecell{\textbf{Mean}\\\textbf{\(B\) score}} &
+        \makecell{\textbf{Full chain}\\\textbf{\(H\) (of 8)}} &
+        \textbf{Admission} \\
+        \midrule
+        \texttt{cp40} & 1.529542 & 0 & 7/8 & 5/7 & 0/5 & 4.3333 & 0/8 & Failed \\
+        \texttt{cp50} (retained) & 1.526579 & 0 & 6/8 & 5/6 & 3/5 & 6.7333 & 3/8 & \textbf{Passed} \\
+        \texttt{cp60} (terminal) & \textbf{1.526236} & 0 & 6/8 & 5/6 & 1/5 & 6.3333 & 1/8 & Failed \\
+        \bottomrule
+    \end{tabularx}
+    \begin{minipage}{0.97\textwidth}
+        \vspace{2pt}
+        \footnotesize
+        \textit{Note:} Evaluation loss is reported as an optimization
+        diagnostic and is not an admission criterion. All three candidates have
+        \texttt{strict\_all\_rows\_pass=false}. For every candidate shown,
+        the \(G\)-pass count equals the reported \(D\)-pass count because there
+        are no \(Z\) failures or duplicated-final-sentence failures. The
+        checkpoint~60 row uses the
+        final remediated record: one initially unresolved Validator-B report was
+        resolved by contract-only remediation without changing the generated
+        candidate, leaving zero unresolved calls. ``Retained'' identifies the
+        paper-facing adapter checkpoint. The selection receipt is selection-only
+        and does not itself authorize a merge or canonical-DAG promotion.
+    \end{minipage}
+    \caption{Checkpoint-level candidate comparison for the current
+    \textit{Model chk-2} Minutes-rewriting branch. Checkpoint 50 is the only
+    candidate satisfying every tolerant aggregate admission requirement; this
+    does not mean that every checkpoint~50 row passes the strict full chain.}
+    \label{tab:app:chk2_cp40_cp60_selection}
+\end{table}
+
+Checkpoint 40 passes the zero-tolerance and aggregate deterministic-fidelity
+requirements but falls below the Validator-A, Validator-B, mean-style-score,
+and full-chain thresholds. Checkpoint 60 passes the zero-tolerance,
+deterministic-fidelity, Validator-A, and mean-style-score requirements, but its
+Validator-B pass rate is \(1/5=0.20\) and its full-chain pass rate is
+\(1/8=0.125\). Checkpoint 50 is the sole admitted candidate: six of eight rows
+pass deterministic fidelity, five of those six pass Validator A, three of
+those five pass Validator B, and three of eight pass the complete chain.
+
+The terminal checkpoint has the minimum monitoring loss, 1.5262358, compared
+with 1.5265795 at checkpoint 50. The difference is only 0.0003437, or 0.0225\%
+relative to the checkpoint~50 value, and loss is not part of the quality gate.
+Checkpoint 50 is therefore retained because it is the only candidate to pass
+the documented checkpoint-level contract, not because it minimizes validation
+loss and not because it passes every sample-level hard gate.
+
+This eight-row panel provides internal selection evidence only. It is neither
+an untouched test nor a basis for population inference: its rows come from the
+monitoring split, and Validator B directly uses corresponding official
+pre-action Minutes as a style comparator. BERTScore, MPNet similarity, Core8
+interventions, and historical association results are downstream diagnostics
+of the already selected checkpoint and do not participate in this selection
+rule. The supervised reference paragraphs remain synthetic teacher rewrites;
+official Minutes are used by Validator B only for the stated style comparison.
+
+\clearpage
+\subsection*{Separate SFT and GRPO Hard Gates for Model chk-3}
+
+Paper-level \textit{Model chk-3} corresponds to repository artifact
+\texttt{chk4}. Its two training stages answer different gate questions. The
+decision-SFT gate asks whether an SFT candidate is sufficiently well behaved to
+initialize GRPO; the matched replay below distinguishes checkpoint 38 from the
+terminal checkpoint 39. The GRPO gate asks whether any later policy checkpoint
+meets the frozen checkpoint-selection requirements. Passing the first gate does
+not imply passing the second.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}Xccc>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Gate component} &
+        \textbf{Frozen requirement} &
+        \makecell{\textbf{Observed at}\\\textbf{SFT cp38}} &
+        \textbf{Result} &
+        \textbf{Function of the gate} \\
+        \midrule
+        Reasoning-boundary delivery & Rate $\geq 0.75$ & 14/15 = 0.9333 & Passed & Requires a usable native reasoning boundary before the terminal action. \\
+        Completion cap & Rate $\leq 0.25$ & 1/15 = 0.0667 & Passed & Limits truncated generations under the 1,024-token probe ceiling. \\
+        Strict periodic tail & Count $=0$ & 0/15 & Passed & Rejects mechanically looping completions. \\
+        Sampled direction correctness by class & At least one per class & \makecell{hold 3; hike 1; cut 1} & Passed & Requires non-zero action signal for each policy direction. \\
+        Sampled non-zero reward by class & At least one per class & \makecell{hold 3; hike 1; cut 2} & Passed & Prevents an all-zero reward group. \\
+        Sampled reward dispersion by class & Standard deviation $>0$ & \makecell{hold 0.4330; hike 0.1028;\\cut 0.3074} & Passed & Ensures within-group reward variation for GRPO. \\
+        \bottomrule
+    \end{tabularx}
+    \begin{minipage}{0.97\textwidth}
+        \vspace{2pt}
+        \footnotesize
+        \textit{Note:} The probe contains three direction-stratified groups,
+        each with one greedy and four sampled generations. Class-specific gates
+        use the four sampled generations. Exact magnitude is reported elsewhere
+        as a diagnostic but is not an SFT qualification gate, because the
+        validation-only 50/75-basis-point hike magnitudes are absent from the
+        sealed training split. Checkpoint 38 passes this qualification gate and
+        is exact-merged as the pre-GRPO SFT state of \textit{Model chk-3}.
+    \end{minipage}
+    \caption{Decision-SFT qualification hard gates for \textit{Model chk-3}
+    at checkpoint 38. These gates determine whether the SFT state may initialize
+    GRPO; they do not establish held-out decision quality.}
+    \label{tab:app:chk3_sft_qualification_gates}
+\end{table}
+
+\subsubsection*{Why Checkpoint 38 Rather than Checkpoint 39?}
+
+The terminal SFT checkpoint is not automatically preferred to an earlier
+checkpoint. Checkpoints 38 and 39 were evaluated with the same
+direction-stratified qualification probe and the same frozen thresholds.
+Table~\ref{tab:app:chk3_sft_cp38_cp39_selection} separates the trainer-reported
+loss observations from the behavioral quantities that actually determine
+qualification.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{
+        @{}
+        >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{0.22\textwidth}
+        >{\centering\arraybackslash}p{0.22\textwidth}
+        @{}
+    }
+        \toprule
+        \textbf{Diagnostic} &
+        \textbf{Frozen requirement} &
+        \textbf{SFT cp38} &
+        \textbf{SFT cp39} \\
+        \midrule
+        Per-step training loss
+        & Not a qualification gate
+        & 1.6149
+        & 1.3127 \\
+        Scheduled evaluation loss
+        & Not a qualification gate
+        & Not recorded at step 38
+        & 1.601505 \\
+        Reasoning-boundary delivery
+        & Overall rate $\geq 0.75$
+        & $14/15=0.9333$
+        & $13/15=0.8667$ \\
+        Completion cap
+        & Overall rate $\leq 0.25$
+        & $1/15=0.0667$
+        & $2/15=0.1333$ \\
+        Strict periodic tail
+        & Count $=0$
+        & 0
+        & 0 \\
+        \makecell[l]{Sampled direction-correct\\coverage: hold / hike / cut}
+        & At least one per class
+        & $3 / 1 / 1$
+        & $2 / 1 / \mathbf{0}$ \\
+        \makecell[l]{Sampled non-zero-reward\\coverage: hold / hike / cut}
+        & At least one per class
+        & $3 / 1 / 2$
+        & $3 / 2 / 3$ \\
+        \makecell[l]{Sampled reward standard deviation:\\hold / hike / cut}
+        & Greater than zero for every class
+        & $0.4330 / 0.1028 / 0.3074$
+        & $0.4878 / 0.4263 / 0.0217$ \\
+        Overall qualification
+        & Every behavioral gate must pass
+        & \textbf{Passed}
+        & \makecell{\textbf{Failed}: no sampled\\cut-direction success} \\
+        \bottomrule
+    \end{tabularx}
+    \begin{minipage}{0.97\textwidth}
+        \vspace{2pt}
+        \footnotesize
+        \textit{Note:} Each checkpoint is evaluated on one hold, one hike, and
+        one cut training prompt, with one greedy and four sampled generations
+        per prompt. The class-specific gates use the four sampled generations.
+        Checkpoint 39 produces a correct cut under greedy decoding but produces
+        no correct cut direction in its four sampled generations. Training loss
+        is a batch-level statistic, and no scheduled evaluation was performed at
+        step 38; neither loss quantity is part of this behavioral gate.
+    \end{minipage}
+    \caption{Matched SFT qualification comparison between checkpoints 38 and
+    39 for \textit{Model chk-3}. Checkpoint 39 is the terminal SFT state but
+    fails the frozen sampled cut-direction coverage requirement.}
+    \label{tab:app:chk3_sft_cp38_cp39_selection}
+\end{table}
+
+Although checkpoint 39 records the minimum logged SFT evaluation loss, that
+value is not a matched checkpoint-38 comparison because evaluation was
+scheduled only at steps 13, 26, and 39. More importantly, loss is not the
+selection criterion for GRPO initialization. Checkpoint 39 fails the frozen
+requirement of at least one sampled direction-correct output in every policy
+class: none of its four sampled cut completions predicts the correct direction.
+Checkpoint 38 satisfies every qualification component and is therefore retained
+and exact-merged as the pre-GRPO state of \textit{Model chk-3}. This small,
+train-stratified probe establishes readiness to initialize GRPO, not population
+superiority or a statistically unique loss optimum.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabular}{@{}lccccccc@{}}
+        \toprule
+        \textbf{GRPO checkpoint} &
+        \makecell{\textbf{Mean}\\\textbf{reward}} &
+        \makecell{\textbf{Direction}\\\textbf{accuracy}} &
+        \makecell{\textbf{Exact-action}\\\textbf{accuracy}} &
+        \makecell{\textbf{Delivery-valid}\\\textbf{rate}} &
+        \textbf{Cap rate} &
+        \makecell{\textbf{Periodic-tail}\\\textbf{count}} &
+        \textbf{Gate} \\
+        \midrule
+        \texttt{cp310} & 0.227083 & 0.277778 & 0.222222 & 0.444444 & 0.111111 & 0 & Failed \\
+        \texttt{cp360} & 0.106944 & 0.222222 & 0.166667 & 0.388889 & 0.000000 & 0 & Failed \\
+        \texttt{cp410} & 0.093750 & 0.111111 & 0.111111 & 0.555556 & 0.055556 & 0 & Failed \\
+        \texttt{cp440}\textsuperscript{a} & 0.122917 & 0.166667 & 0.111111 & 0.388889 & 0.166667 & 0 & Failed \\
+        \texttt{cp450}\textsuperscript{b} & 0.143750 & 0.222222 & 0.166667 & 0.333333 & 0.166667 & 0 & Failed \\
+        \texttt{cp460}\textsuperscript{a} & 0.078819 & 0.111111 & 0.055556 & 0.333333 & 0.111111 & 0 & Failed \\
+        \texttt{cp468} (terminal) & 0.069444 & 0.055556 & 0.055556 & 0.333333 & 0.166667 & 0 & Failed \\
+        \bottomrule
+    \end{tabular}
+    \begin{minipage}{0.97\textwidth}
+        \vspace{2pt}
+        \footnotesize
+        \textit{Note:} The selection-panel eligibility gate requires a
+        delivery-valid rate of at least 0.75, a cap rate no greater than 0.25,
+        and zero periodic-tail cases. The reported panel contains 18 completions
+        from nine selection-panel validation prompts; it contains no cut example.
+        Every checkpoint fails the delivery threshold. \textsuperscript{a}
+        Checkpoints 440 and 460 are post-hoc local-neighbour probes.
+        \textsuperscript{b}\ Checkpoint 450 is the best-observed exploratory
+        candidate, not a selected checkpoint. On its blind follow-up it records
+        reward 0.1725, direction accuracy 0.30, exact-action accuracy 0.15,
+        delivery validity 0.30, cap rate 0.10, and zero periodic tails. It covers
+        cut, hold, and hike on the train-only retention panel, but fails the
+        blind delivery gate. The authoritative receipt therefore records
+        \texttt{best\_observed\_checkpoint\_step=450},
+        \texttt{selected\_checkpoint\_step=null}, and
+        \texttt{provisional\_no\_candidate\_passed\_all\_gates}. The later
+        13-meeting test likewise records \texttt{quality\_not\_demonstrated}.
+    \end{minipage}
+    \caption{GRPO checkpoint-selection hard gates for \textit{Model chk-3}.
+    No checkpoint satisfies the frozen eligibility rule; checkpoint 450 was
+    evaluated only as the best-observed exploratory candidate through an
+    explicit override.}
+    \label{tab:app:chk3_grpo_selection_gates}
+\end{table}

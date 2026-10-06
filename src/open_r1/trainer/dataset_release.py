@@ -9,6 +9,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from open_r1.provenance import fingerprint_artifact_path
+
 
 CLEAN_SFT_RELEASE_SCHEMA = "chk1-clean-sft-release-v2"
 CLEAN_SFT_AUDIT_SCHEMA = "chk1-clean-sft-source-audit-v1"
@@ -19,6 +21,72 @@ STANDALONE_CHK3_RELEASE_SCHEMA = "chk3-minutes-training-release-v1"
 STANDALONE_CHK3_DATASET_ROLE = "standalone_chk3_minutes_alignment"
 STANDALONE_CHK3_DIRECT_SCOPE = "chk1-to-chk3-direct-sft-non-promotable-v1"
 STANDALONE_CHK3_BINDING_SCHEMA = "standalone-chk3-direct-sft-binding-v1"
+PAPER_CHK2_RELEASE_SCHEMA = "paper-chk2-downstream-recovery-release-v1"
+PAPER_CHK2_HANDOFF_SCHEMA = "paper-chk2-downstream-recovery-release-handoff-v1"
+PAPER_CHK2_DATASET_ROLE = (
+    "paper_chk2_chk1_final_analysis_to_synthetic_minutes_sft_v6_recovery"
+)
+PAPER_CHK2_TRAINING_SCOPE = "paper-chk2-chk1-cp200-minutes-sft-v6-downstream128"
+PAPER_CHK2_BINDING_SCHEMA = "paper-chk2-minutes-sft-runtime-binding-v1"
+PAPER_CHK2_PROMPT_CONTRACT_SCHEMA = "paper-chk2-student-prompt-contract-v1"
+PAPER_CHK2_STUDENT_SYSTEM_PROMPT = """\
+You are a Federal Reserve Minutes editor. The user supplies a complete
+economic or financial analysis. Use the native reasoning section for the
+complete reasoning process, including any useful deliberation about the task,
+prompt, JSON transport, answer contract, length, or drafting. Within that full
+reasoning trace, identify every substantive claim, quantity, date, direction,
+comparison, attribution, causal relation, and expression of uncertainty that
+the formal rewrite must preserve. Then express the same information as exactly
+one formal FOMC Minutes paragraph.
+
+Do not add, remove, broaden, narrow, or contradict any substantive claim.
+Preserve the numeric-quantity multiset and every explicit calendar reference.
+The final paragraph may reuse phrases, sentences, or extensive wording from
+the analysis when that wording is already suitable; lexical overlap is not an
+error. The final paragraph as a whole must not be a verbatim copy of the whole
+analysis. Do not emit headings, lists, JSON, citations, answer tags, or
+model-control tags in the final paragraph.
+"""
+PAPER_CHK2_STUDENT_SYSTEM_PROMPT_SHA256 = (
+    "4730a4ed585238547447ab850836db5a9fc67e5c3b1328b485c88d701ae78c4e"
+)
+PAPER_CHK2_USER_PROMPT_TEMPLATE = (
+    "Rewrite the following analysis as formal FOMC Minutes prose:\n\n"
+    '{"analysis":"[SOURCE_ANALYSIS]"}'
+)
+PAPER_CHK2_USER_PROMPT_TEMPLATE_SHA256 = (
+    "423e79849cb66d6361c986f705ea4d4b16a03e28fec5826113eb9c8030a976d0"
+)
+PAPER_CHK2_USER_PROMPT_PREFIX = (
+    "Rewrite the following analysis as formal FOMC Minutes prose:\n\n"
+)
+PAPER_CHK2_WORD_RE = re.compile(r"[A-Za-z0-9]+(?:[-'’][A-Za-z0-9]+)*")
+PAPER_CHK2_PARENT_MODEL_RELATIVE = (
+    "output/training/retrain_v2/"
+    "chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1"
+)
+PAPER_CHK2_PARENT_MODEL_SHA256 = (
+    "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+)
+PAPER_CHK2_PARENT_MANIFEST_SCHEMA = "chk1-cp200-merged-checkpoint-manifest-v1"
+PAPER_CHK2_PARENT_MANIFEST_FILE_SHA256 = (
+    "59758ab4d2b54592f632776c14d2b06c21c56416e4eb83e09d896f6a06d0a687"
+)
+PAPER_CHK2_PARENT_MANIFEST_RELATIVE = (
+    "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/"
+    "checkpoint_manifest.json"
+)
+PAPER_CHK2_PARENT_AUTHORIZATION_SCHEMA = "chk1-cp200-to-chk2-override-authorization-v1"
+PAPER_CHK2_PARENT_AUTHORIZATION_SHA256 = (
+    "c8b400ec48be0fd31929f07dea3d30422a2c2638306ab55f4e2e264cb161cb3c"
+)
+PAPER_CHK2_PARENT_AUTHORIZATION_FILE_SHA256 = (
+    "e4e80fbfdd805b3691b3b05fbf3e3f26353eeef399fb7a08f156260e7f0ca554"
+)
+PAPER_CHK2_PARENT_AUTHORIZATION_RELATIVE = (
+    "docs/summary/20260810T124500Z/chk1_cp200_merge_for_chk2/"
+    "chk1_cp200_to_chk2_authorization.json"
+)
 CHK4_DECISION_RELEASE_SCHEMA = "chk4-decision-training-release-v1"
 CHK4_DECISION_HANDOFF_SCHEMA = "chk4-decision-training-handoff-v1"
 CHK4_DECISION_INPUT_CONTRACT_SCHEMA = "chk4-target-decision-blind-input-contract-v1"
@@ -2471,6 +2539,895 @@ def verify_standalone_chk3_direct_sft_release(
     return result
 
 
+def _paper_chk2_descriptor_files(
+    *, release_root: Path, artifacts: Mapping[str, Any]
+) -> dict[str, tuple[Path, Mapping[str, Any]]]:
+    """Resolve and authenticate every artifact descriptor in a paper-chk2 release."""
+
+    resolved: dict[str, tuple[Path, Mapping[str, Any]]] = {}
+
+    def visit(value: Any, *, label: str) -> None:
+        node = _required_mapping(value, label=label)
+        if "path" in node:
+            expected_keys = {"path", "bytes", "sha256"}
+            path_value = node.get("path")
+            if isinstance(path_value, str) and path_value.endswith(".jsonl"):
+                expected_keys.add("rows")
+            if set(node) != expected_keys:
+                raise DatasetReleaseValidationError(
+                    f"{label} has an invalid artifact descriptor schema"
+                )
+            path = _resolve_release_member(
+                release_root, path_value, label=f"{label}.path"
+            )
+            relative = path.relative_to(release_root).as_posix()
+            if relative in resolved:
+                raise DatasetReleaseValidationError(
+                    f"paper chk2 artifact is described more than once: {relative}"
+                )
+            expected_bytes = _required_count(node.get("bytes"), label=f"{label}.bytes")
+            if path.stat().st_size != expected_bytes:
+                raise DatasetReleaseValidationError(
+                    f"paper chk2 artifact byte-size drift: {relative}"
+                )
+            expected_sha = _required_sha256(node.get("sha256"), label=f"{label}.sha256")
+            if sha256_file(path) != expected_sha:
+                raise DatasetReleaseValidationError(
+                    f"paper chk2 artifact SHA-256 drift: {relative}"
+                )
+            if relative.endswith(".jsonl"):
+                rows = _read_jsonl_objects(
+                    path, label=f"paper chk2 artifact {relative}"
+                )
+                if len(rows) != _required_count(
+                    node.get("rows"), label=f"{label}.rows"
+                ):
+                    raise DatasetReleaseValidationError(
+                        f"paper chk2 artifact row-count drift: {relative}"
+                    )
+            resolved[relative] = (path, node)
+            return
+        if not node:
+            raise DatasetReleaseValidationError(f"{label} must not be empty")
+        for key, nested in node.items():
+            if not isinstance(key, str) or not key:
+                raise DatasetReleaseValidationError(
+                    f"{label} contains an invalid artifact key"
+                )
+            visit(nested, label=f"{label}.{key}")
+
+    visit(artifacts, label="artifacts")
+
+    expected_files = {
+        path.relative_to(release_root).as_posix()
+        for path in release_root.rglob("*")
+        if path.is_file()
+    }
+    for path in release_root.rglob("*"):
+        if path.is_symlink():
+            raise DatasetReleaseValidationError(
+                f"paper chk2 release contains a symlink: {path}"
+            )
+    expected_files -= {"release_manifest.json", "handoff.json"}
+    if set(resolved) != expected_files:
+        missing = sorted(expected_files - set(resolved))
+        orphan_descriptors = sorted(set(resolved) - expected_files)
+        raise DatasetReleaseValidationError(
+            "paper chk2 artifact inventory drift; "
+            f"undescribed={missing}, orphan_descriptors={orphan_descriptors}"
+        )
+    return resolved
+
+
+def _paper_chk2_extract_analysis(prompt: str, *, label: str) -> str:
+    if not prompt.startswith(PAPER_CHK2_USER_PROMPT_PREFIX):
+        raise DatasetReleaseValidationError(
+            f"{label} does not use the approved student user-prompt prefix"
+        )
+    serialized = prompt[len(PAPER_CHK2_USER_PROMPT_PREFIX) :]
+    try:
+        payload = json.loads(serialized)
+    except json.JSONDecodeError as exc:
+        raise DatasetReleaseValidationError(
+            f"{label} has an invalid user-prompt JSON boundary"
+        ) from exc
+    if not isinstance(payload, Mapping) or set(payload) != {"analysis"}:
+        raise DatasetReleaseValidationError(
+            f"{label} user prompt must contain only analysis"
+        )
+    analysis = payload.get("analysis")
+    if (
+        not isinstance(analysis, str)
+        or not analysis.strip()
+        or analysis != analysis.strip()
+    ):
+        raise DatasetReleaseValidationError(f"{label} source analysis is invalid")
+    if serialized != _canonical_json({"analysis": analysis}):
+        raise DatasetReleaseValidationError(
+            f"{label} user-prompt JSON is not in canonical form"
+        )
+    return analysis
+
+
+def _verify_paper_chk2_parent_binding(
+    *,
+    release_root: Path,
+    root: Mapping[str, Any],
+    artifact_files: Mapping[str, tuple[Path, Mapping[str, Any]]],
+    model_path: str | Path,
+) -> dict[str, Any]:
+    repo_root = Path(__file__).resolve().parents[3]
+    expected_model = (repo_root / PAPER_CHK2_PARENT_MODEL_RELATIVE).resolve(strict=True)
+    model = _canonical_path(
+        model_path, label="paper chk2 model_name_or_path", directory=True
+    )
+    if model != expected_model:
+        raise DatasetReleaseValidationError(
+            "paper chk2 must use the exact authorized chk1 checkpoint-200 merge"
+        )
+    try:
+        fingerprint = fingerprint_artifact_path(model)
+    except (OSError, ValueError) as exc:
+        raise DatasetReleaseValidationError(
+            "cannot fingerprint the paper chk2 parent model"
+        ) from exc
+    if (
+        fingerprint.get("kind") != "directory"
+        or fingerprint.get("sha256") != PAPER_CHK2_PARENT_MODEL_SHA256
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent model directory digest drift"
+        )
+
+    parent = _required_mapping(root.get("parent_checkpoint"), label="parent_checkpoint")
+    expected_parent_values = {
+        "schema_version": PAPER_CHK2_PARENT_MANIFEST_SCHEMA,
+        "model_path": PAPER_CHK2_PARENT_MODEL_RELATIVE,
+        "model_sha256": PAPER_CHK2_PARENT_MODEL_SHA256,
+        "authorization_schema_version": PAPER_CHK2_PARENT_AUTHORIZATION_SCHEMA,
+        "authorization_sha256": PAPER_CHK2_PARENT_AUTHORIZATION_SHA256,
+        "allowed_stage": "chk2",
+        "further_downstream_stages_allowed": [],
+    }
+    for key, expected in expected_parent_values.items():
+        if parent.get(key) != expected:
+            raise DatasetReleaseValidationError(
+                f"paper chk2 parent checkpoint binding drift: {key}"
+            )
+
+    checkpoint_path = artifact_files.get("provenance/parent_checkpoint_manifest.json")
+    authorization_path = artifact_files.get("provenance/parent_authorization.json")
+    if checkpoint_path is None or authorization_path is None:
+        raise DatasetReleaseValidationError(
+            "paper chk2 release is missing parent provenance"
+        )
+    checkpoint_file = checkpoint_path[0]
+    authorization_file = authorization_path[0]
+    if (
+        parent.get("checkpoint_manifest_file_sha256") != sha256_file(checkpoint_file)
+        or sha256_file(checkpoint_file) != PAPER_CHK2_PARENT_MANIFEST_FILE_SHA256
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent checkpoint manifest hash drift"
+        )
+    checkpoint_manifest = _read_json_object(
+        checkpoint_file, label="paper chk2 parent checkpoint manifest"
+    )
+    unsigned_checkpoint = dict(checkpoint_manifest)
+    checkpoint_integrity = unsigned_checkpoint.pop("integrity", None)
+    model_fingerprint = _required_mapping(
+        checkpoint_manifest.get("model_fingerprint"),
+        label="paper chk2 parent checkpoint model_fingerprint",
+    )
+    checkpoint_scope = _required_mapping(
+        checkpoint_manifest.get("scope"), label="paper chk2 parent checkpoint scope"
+    )
+    checkpoint_authorization = _required_mapping(
+        checkpoint_manifest.get("authorization"),
+        label="paper chk2 parent checkpoint authorization",
+    )
+    if (
+        checkpoint_manifest.get("schema_version") != PAPER_CHK2_PARENT_MANIFEST_SCHEMA
+        or checkpoint_manifest.get("status")
+        != "ready_for_chk2_parent_under_explicit_override"
+        or not isinstance(checkpoint_integrity, Mapping)
+        or checkpoint_integrity.get("payload_sha256")
+        != _sha256_text(_canonical_json(unsigned_checkpoint))
+        or model_fingerprint.get("sha256") != PAPER_CHK2_PARENT_MODEL_SHA256
+        or model_fingerprint.get("file_count") != fingerprint.get("file_count")
+        or model_fingerprint.get("total_bytes") != fingerprint.get("total_bytes")
+        or checkpoint_scope.get("allowed_stage") != "chk2"
+        or checkpoint_scope.get("further_downstream_stages_allowed") != []
+        or checkpoint_authorization.get("authorization_sha256")
+        != PAPER_CHK2_PARENT_AUTHORIZATION_SHA256
+        or checkpoint_authorization.get("file_sha256")
+        != PAPER_CHK2_PARENT_AUTHORIZATION_FILE_SHA256
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent checkpoint manifest content drift"
+        )
+    if parent.get("authorization_file_sha256") != sha256_file(authorization_file):
+        raise DatasetReleaseValidationError(
+            "paper chk2 copied parent authorization hash drift"
+        )
+    if sha256_file(authorization_file) != PAPER_CHK2_PARENT_AUTHORIZATION_FILE_SHA256:
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent authorization is not the pinned receipt"
+        )
+    authorization = _read_json_object(
+        authorization_file, label="paper chk2 parent authorization"
+    )
+    unsigned_authorization = dict(authorization)
+    stored_authorization_sha = unsigned_authorization.pop("authorization_sha256", None)
+    if (
+        stored_authorization_sha != PAPER_CHK2_PARENT_AUTHORIZATION_SHA256
+        or stored_authorization_sha
+        != _sha256_text(_canonical_json(unsigned_authorization))
+        or authorization.get("schema_version") != PAPER_CHK2_PARENT_AUTHORIZATION_SCHEMA
+        or authorization.get("status") != "authorized"
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent authorization content drift"
+        )
+    scope = _required_mapping(
+        authorization.get("scope"), label="paper chk2 parent authorization scope"
+    )
+    if (
+        scope.get("source_stage") != "chk1"
+        or scope.get("target_stage") != "chk2"
+        or scope.get("downstream_stages_allowed") != ["chk2"]
+        or scope.get("further_downstream_stages_allowed") != []
+        or "use_merged_checkpoint_200_as_chk2_parent"
+        not in scope.get("allowed_operations", [])
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent authorization does not authorize chk2 parent use"
+        )
+    bindings = _required_mapping(
+        authorization.get("bindings"), label="paper chk2 parent authorization bindings"
+    )
+    if bindings.get("merged_destination") != PAPER_CHK2_PARENT_MODEL_RELATIVE:
+        raise DatasetReleaseValidationError(
+            "paper chk2 parent authorization destination drift"
+        )
+
+    canonical_authorization = _canonical_path(
+        repo_root / PAPER_CHK2_PARENT_AUTHORIZATION_RELATIVE,
+        label="canonical paper chk2 parent authorization",
+        directory=False,
+    )
+    if (
+        sha256_file(canonical_authorization)
+        != PAPER_CHK2_PARENT_AUTHORIZATION_FILE_SHA256
+        or canonical_authorization.read_bytes() != authorization_file.read_bytes()
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 release authorization differs from the canonical receipt"
+        )
+    canonical_checkpoint = _canonical_path(
+        repo_root / PAPER_CHK2_PARENT_MANIFEST_RELATIVE,
+        label="canonical paper chk2 parent checkpoint manifest",
+        directory=False,
+    )
+    if (
+        sha256_file(canonical_checkpoint) != PAPER_CHK2_PARENT_MANIFEST_FILE_SHA256
+        or canonical_checkpoint.read_bytes() != checkpoint_file.read_bytes()
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 release checkpoint manifest differs from the canonical receipt"
+        )
+    return {
+        "model": fingerprint,
+        "authorization": {
+            "path": str(canonical_authorization),
+            "file_sha256": PAPER_CHK2_PARENT_AUTHORIZATION_FILE_SHA256,
+            "authorization_sha256": PAPER_CHK2_PARENT_AUTHORIZATION_SHA256,
+            "allowed_stage": "chk2",
+        },
+    }
+
+
+def verify_paper_chk2_sft_release(
+    *,
+    dataset_dir: str | Path,
+    manifest_path: str | Path,
+    expected_manifest_sha256: str,
+    training_scope: str,
+    system_prompt: str | None,
+    model_path: str | Path,
+) -> dict[str, Any]:
+    """Bind the recovery-v1 paper chk2 Minutes release to direct SFT.
+
+    The test split and all official-reference artifacts are authenticated, but
+    only the strict ``{prompt,response}`` train and validation files are
+    returned to the training loader.
+    """
+
+    if training_scope != PAPER_CHK2_TRAINING_SCOPE:
+        raise DatasetReleaseValidationError(
+            "paper chk2 training scope is not the approved non-DAG Minutes-SFT scope"
+        )
+    expected_sha = _required_sha256(
+        expected_manifest_sha256,
+        label="dataset_paper_chk2_release_manifest_sha256",
+    )
+    dataset = _canonical_path(dataset_dir, label="dataset_name", directory=True)
+    manifest = _canonical_path(
+        manifest_path,
+        label="dataset_paper_chk2_release_manifest",
+        directory=False,
+    )
+    release_root = manifest.parent
+    if dataset != release_root / "minutes_alignment":
+        raise DatasetReleaseValidationError(
+            "dataset_name must be the minutes_alignment directory beside the "
+            "paper chk2 release manifest"
+        )
+    if sha256_file(manifest) != expected_sha:
+        raise DatasetReleaseValidationError(
+            "paper chk2 release manifest SHA-256 disagrees with the training config"
+        )
+    if (
+        system_prompt != PAPER_CHK2_STUDENT_SYSTEM_PROMPT
+        or _sha256_text(system_prompt or "") != PAPER_CHK2_STUDENT_SYSTEM_PROMPT_SHA256
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 system_prompt is not the sealed permissive-reasoning prompt"
+        )
+    if (
+        _sha256_text(PAPER_CHK2_USER_PROMPT_TEMPLATE)
+        != PAPER_CHK2_USER_PROMPT_TEMPLATE_SHA256
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 compiled user-prompt template digest drift"
+        )
+
+    root = _read_json_object(manifest, label="paper chk2 release manifest")
+    unsigned_manifest = dict(root)
+    stored_manifest_sha = unsigned_manifest.pop("manifest_sha256", None)
+    if (
+        root.get("schema_version") != PAPER_CHK2_RELEASE_SCHEMA
+        or root.get("status") != "complete"
+        or stored_manifest_sha != _sha256_text(_canonical_json(unsigned_manifest))
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 release manifest schema/status/self-hash drift"
+        )
+    exact_manifest_values = {
+        "quality_status": "passed",
+        "dataset_role": PAPER_CHK2_DATASET_ROLE,
+        "training_scope": PAPER_CHK2_TRAINING_SCOPE,
+        "immutable": True,
+        "training_ready": True,
+        "training_only": True,
+        "evaluation_eligible": False,
+        "dag_bindable": False,
+        "promotable_as_canonical_chk2": False,
+        "source_rows": 1743,
+        "split_pass_counts": {"train": 305, "validation": 42, "test": 44},
+    }
+    for key, expected in exact_manifest_values.items():
+        if root.get(key) != expected:
+            raise DatasetReleaseValidationError(
+                f"paper chk2 release manifest policy drift: {key}"
+            )
+
+    prompt_summary = _required_mapping(
+        root.get("student_prompt_contract"), label="student_prompt_contract"
+    )
+    if dict(prompt_summary) != {
+        "system_prompt_sha256": PAPER_CHK2_STUDENT_SYSTEM_PROMPT_SHA256,
+        "user_prompt_template_sha256": PAPER_CHK2_USER_PROMPT_TEMPLATE_SHA256,
+        "response_boundary": "</think>",
+    }:
+        raise DatasetReleaseValidationError(
+            "paper chk2 manifest student-prompt contract drift"
+        )
+
+    artifacts = _required_mapping(root.get("artifacts"), label="artifacts")
+    if set(artifacts) != {"minutes_alignment", "audits", "provenance"}:
+        raise DatasetReleaseValidationError("paper chk2 artifact groups drift")
+    minutes_artifacts = _required_mapping(
+        artifacts.get("minutes_alignment"), label="artifacts.minutes_alignment"
+    )
+    if set(minutes_artifacts) != set(_CHK3_SPLITS):
+        raise DatasetReleaseValidationError("paper chk2 split artifact groups drift")
+    audit_artifacts = _required_mapping(
+        artifacts.get("audits"), label="artifacts.audits"
+    )
+    expected_audits = {
+        "rejections",
+        "source_admission",
+        "validator_a",
+        "validator_b",
+        "repair_history",
+        "compatibility_replay",
+        "evidence_ledger",
+        "tokenizer_replay",
+        "data_quality",
+    }
+    if set(audit_artifacts) != expected_audits:
+        raise DatasetReleaseValidationError("paper chk2 audit artifact groups drift")
+    provenance_artifacts = _required_mapping(
+        artifacts.get("provenance"), label="artifacts.provenance"
+    )
+    expected_provenance = {
+        "student_prompt_contract",
+        "source_handoff_manifest",
+        "source_admission_receipt",
+        "source_prompt_contract",
+        "official_pre_action_reference_bank",
+        "recovery_partial_handoff_manifest",
+        "recovery_receipt",
+        "recovery_prompt_contract",
+        "recovery_attempts",
+        "parent_checkpoint_manifest",
+        "parent_authorization",
+    }
+    if set(provenance_artifacts) != expected_provenance:
+        raise DatasetReleaseValidationError(
+            "paper chk2 provenance artifact groups drift"
+        )
+    recovery_attempts = _required_mapping(
+        provenance_artifacts.get("recovery_attempts"),
+        label="artifacts.provenance.recovery_attempts",
+    )
+    if not recovery_attempts:
+        raise DatasetReleaseValidationError(
+            "paper chk2 release must bind at least one recovery attempt"
+        )
+    artifact_files = _paper_chk2_descriptor_files(
+        release_root=release_root, artifacts=artifacts
+    )
+
+    handoff_path = _canonical_path(
+        release_root / "handoff.json", label="paper chk2 handoff", directory=False
+    )
+    handoff = _read_json_object(handoff_path, label="paper chk2 handoff")
+    unsigned_handoff = dict(handoff)
+    stored_handoff_sha = unsigned_handoff.pop("handoff_sha256", None)
+    if (
+        handoff.get("schema_version") != PAPER_CHK2_HANDOFF_SCHEMA
+        or handoff.get("status") != "complete"
+        or stored_handoff_sha != _sha256_text(_canonical_json(unsigned_handoff))
+        or handoff.get("release_manifest_sha256") != stored_manifest_sha
+        or handoff.get("release_manifest_file_sha256") != expected_sha
+        or handoff.get("parent_checkpoint_model_sha256")
+        != PAPER_CHK2_PARENT_MODEL_SHA256
+        or handoff.get("parent_authorization_sha256")
+        != PAPER_CHK2_PARENT_AUTHORIZATION_SHA256
+        or handoff.get("parent_authorization_file_sha256")
+        != PAPER_CHK2_PARENT_AUTHORIZATION_FILE_SHA256
+    ):
+        raise DatasetReleaseValidationError("paper chk2 release handoff drift")
+
+    prompt_contract_record = artifact_files.get("prompt_contract.json")
+    if prompt_contract_record is None:
+        raise DatasetReleaseValidationError(
+            "paper chk2 release is missing its student prompt contract"
+        )
+    prompt_contract = _read_json_object(
+        prompt_contract_record[0], label="paper chk2 student prompt contract"
+    )
+    if dict(prompt_contract) != {
+        "schema_version": PAPER_CHK2_PROMPT_CONTRACT_SCHEMA,
+        "system_prompt": PAPER_CHK2_STUDENT_SYSTEM_PROMPT,
+        "system_prompt_sha256": PAPER_CHK2_STUDENT_SYSTEM_PROMPT_SHA256,
+        "user_prompt_template": PAPER_CHK2_USER_PROMPT_TEMPLATE,
+        "user_prompt_template_sha256": PAPER_CHK2_USER_PROMPT_TEMPLATE_SHA256,
+        "response_boundary": "</think>",
+        "opening_think_supplied_by_chat_template": True,
+    }:
+        raise DatasetReleaseValidationError(
+            "paper chk2 student prompt contract content drift"
+        )
+
+    parent_binding = _verify_paper_chk2_parent_binding(
+        release_root=release_root,
+        root=root,
+        artifact_files=artifact_files,
+        model_path=model_path,
+    )
+
+    split_counts = dict(root["split_pass_counts"])
+    sample_ids: set[str] = set()
+    source_indexes: set[tuple[str, int]] = set()
+    meeting_dates: dict[str, set[str]] = {split: set() for split in _CHK3_SPLITS}
+    pass_order: list[tuple[str, str]] = []
+    split_files: dict[str, Path] = {}
+    sealed_test: dict[str, Any] | None = None
+    pass_status_counts: dict[str, int] = {}
+    sidecar_ids_by_split: dict[str, list[str]] = {}
+    for split in _CHK3_SPLITS:
+        group = _required_mapping(
+            minutes_artifacts.get(split),
+            label=f"artifacts.minutes_alignment.{split}",
+        )
+        if set(group) != {"data", "manifest"}:
+            raise DatasetReleaseValidationError(
+                f"paper chk2 {split} split descriptor group drift"
+            )
+        expected_data_path = f"minutes_alignment/{split}.jsonl"
+        expected_sidecar_path = f"minutes_alignment/manifests/{split}.jsonl"
+        data_descriptor = _required_mapping(
+            group.get("data"), label=f"paper chk2 {split} data descriptor"
+        )
+        sidecar_descriptor = _required_mapping(
+            group.get("manifest"), label=f"paper chk2 {split} sidecar descriptor"
+        )
+        if (
+            data_descriptor.get("path") != expected_data_path
+            or sidecar_descriptor.get("path") != expected_sidecar_path
+            or data_descriptor.get("rows") != split_counts[split]
+            or sidecar_descriptor.get("rows") != split_counts[split]
+        ):
+            raise DatasetReleaseValidationError(
+                f"paper chk2 {split} split descriptor drift"
+            )
+        data_path = artifact_files[expected_data_path][0]
+        sidecar_path = artifact_files[expected_sidecar_path][0]
+        data_rows = _read_jsonl_objects(data_path, label=f"paper chk2 {split} data")
+        sidecar_rows = _read_jsonl_objects(
+            sidecar_path, label=f"paper chk2 {split} sidecars"
+        )
+        if len(data_rows) != split_counts[split] or len(sidecar_rows) != len(data_rows):
+            raise DatasetReleaseValidationError(
+                f"paper chk2 {split} physical row-count drift"
+            )
+        sidecar_ids_by_split[split] = []
+        for index, (data_row, sidecar) in enumerate(zip(data_rows, sidecar_rows)):
+            label = f"paper chk2 {split} row {index + 1}"
+            if set(data_row) != {"prompt", "response"}:
+                raise DatasetReleaseValidationError(
+                    f"{label} training data must contain prompt/response only"
+                )
+            expected_sidecar_keys = {
+                "sample_id",
+                "split",
+                "source_index",
+                "meeting_date",
+                "atomic_topic",
+                "section_style_id",
+                "terminal_status",
+                "source_analysis_sha256",
+                "prompt_sha256",
+                "response_sha256",
+                "lineage",
+                "release_index",
+            }
+            if set(sidecar) != expected_sidecar_keys:
+                raise DatasetReleaseValidationError(f"{label} sidecar schema drift")
+            prompt = data_row.get("prompt")
+            response = data_row.get("response")
+            if not isinstance(prompt, str) or not isinstance(response, str):
+                raise DatasetReleaseValidationError(f"{label} contains non-text data")
+            analysis = _paper_chk2_extract_analysis(prompt, label=label)
+            if (
+                response.count("\n</think>\n") != 1
+                or response.count("</think>") != 1
+                or "<think>" in response
+            ):
+                raise DatasetReleaseValidationError(
+                    f"{label} violates the single reasoning-boundary contract"
+                )
+            reasoning, minutes = response.split("\n</think>\n", 1)
+            if (
+                not reasoning.strip()
+                or not minutes.strip()
+                or minutes != minutes.strip()
+                or "\n" in minutes
+                or not 20 <= len(PAPER_CHK2_WORD_RE.findall(minutes)) <= 400
+            ):
+                raise DatasetReleaseValidationError(
+                    f"{label} has an invalid single-paragraph Minutes target"
+                )
+            sample_id = sidecar.get("sample_id")
+            source_index = sidecar.get("source_index")
+            meeting_date = sidecar.get("meeting_date")
+            if (
+                not isinstance(sample_id, str)
+                or not sample_id
+                or sample_id in sample_ids
+                or isinstance(source_index, bool)
+                or not isinstance(source_index, int)
+                or source_index < 0
+                or (split, source_index) in source_indexes
+                or not isinstance(meeting_date, str)
+                or not meeting_date
+                or sidecar.get("split") != split
+                or sidecar.get("release_index") != index
+                or sidecar.get("terminal_status") != "PASS"
+            ):
+                raise DatasetReleaseValidationError(f"{label} identity/order drift")
+            for key in ("atomic_topic", "section_style_id"):
+                if not isinstance(sidecar.get(key), str) or not sidecar[key]:
+                    raise DatasetReleaseValidationError(f"{label} has an invalid {key}")
+            expected_hashes = {
+                "source_analysis_sha256": _sha256_text(analysis),
+                "prompt_sha256": _sha256_text(prompt),
+                "response_sha256": _sha256_text(response),
+            }
+            for key, expected in expected_hashes.items():
+                if sidecar.get(key) != expected:
+                    raise DatasetReleaseValidationError(f"{label} {key} mismatch")
+            lineage = _required_mapping(
+                sidecar.get("lineage"), label=f"{label}.lineage"
+            )
+            required_lineage = {
+                "source_analysis_is_exact_chk1_final_answer": True,
+                "source_analysis_was_repaired": False,
+                "c8_used_for_training": False,
+                "rewrite_teacher_saw_official_minutes": False,
+                "target_is_teacher_synthetic_rewrite": True,
+                "validator_a_is_factual_gate": True,
+                "validator_b_is_style_gate": True,
+                "validator_b_used_for_training_selection": True,
+                "official_minutes_used_as_student_target": False,
+                "training_only": True,
+                "evaluation_eligible": False,
+                "suitable_for_leakage_safe_evaluation": False,
+            }
+            for key, expected in required_lineage.items():
+                if lineage.get(key) is not expected:
+                    raise DatasetReleaseValidationError(f"{label} lineage drift: {key}")
+            sample_ids.add(sample_id)
+            source_indexes.add((split, source_index))
+            meeting_dates[split].add(meeting_date)
+            sidecar_ids_by_split[split].append(sample_id)
+            pass_order.append((sample_id, split))
+        pass_status_counts[split] = len(data_rows)
+        if split == "test":
+            sealed_test = {
+                "path": str(data_path),
+                "rows": len(data_rows),
+                "sha256": data_descriptor["sha256"],
+            }
+        else:
+            split_files[split] = data_path
+
+    if len(sample_ids) != 391 or len(pass_order) != 391:
+        raise DatasetReleaseValidationError(
+            "paper chk2 PASS population is not exactly 391 unique samples"
+        )
+    for left, right in (
+        ("train", "validation"),
+        ("train", "test"),
+        ("validation", "test"),
+    ):
+        if meeting_dates[left] & meeting_dates[right]:
+            raise DatasetReleaseValidationError(
+                f"paper chk2 meeting split leakage between {left} and {right}"
+            )
+
+    token_path = artifact_files["audits/tokenizer_replay.jsonl"][0]
+    token_rows = _read_jsonl_objects(token_path, label="paper chk2 tokenizer replay")
+    expected_token_keys = {
+        "sample_id",
+        "split",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "single_bos",
+        "single_eos",
+        "no_truncation",
+        "completion_only_prompt_masked",
+        "completion_mask_covers_reasoning_boundary_answer_eos",
+    }
+    if len(token_rows) != 391:
+        raise DatasetReleaseValidationError(
+            "paper chk2 tokenizer replay population drift"
+        )
+    max_total_tokens = 0
+    for index, (token_row, identity) in enumerate(zip(token_rows, pass_order)):
+        if set(token_row) != expected_token_keys:
+            raise DatasetReleaseValidationError(
+                f"paper chk2 tokenizer replay row {index + 1} schema drift"
+            )
+        if (token_row.get("sample_id"), token_row.get("split")) != identity:
+            raise DatasetReleaseValidationError(
+                f"paper chk2 tokenizer replay row {index + 1} order drift"
+            )
+        prompt_tokens = _required_count(
+            token_row.get("prompt_tokens"), label=f"token replay {index}.prompt_tokens"
+        )
+        completion_tokens = _required_count(
+            token_row.get("completion_tokens"),
+            label=f"token replay {index}.completion_tokens",
+        )
+        total_tokens = _required_count(
+            token_row.get("total_tokens"), label=f"token replay {index}.total_tokens"
+        )
+        if (
+            prompt_tokens <= 0
+            or completion_tokens <= 0
+            or total_tokens != prompt_tokens + completion_tokens
+            or total_tokens > 4096
+            or any(
+                token_row.get(key) is not True
+                for key in (
+                    "single_bos",
+                    "single_eos",
+                    "no_truncation",
+                    "completion_only_prompt_masked",
+                    "completion_mask_covers_reasoning_boundary_answer_eos",
+                )
+            )
+        ):
+            raise DatasetReleaseValidationError(
+                f"paper chk2 tokenizer replay row {index + 1} failed its token gate"
+            )
+        max_total_tokens = max(max_total_tokens, total_tokens)
+    if max_total_tokens != 3316:
+        raise DatasetReleaseValidationError(
+            "paper chk2 tokenizer replay maximum is not the sealed 3,316 tokens"
+        )
+
+    audit_rows = {
+        name: _read_jsonl_objects(
+            artifact_files[f"audits/{name}.jsonl"][0], label=f"paper chk2 {name} audit"
+        )
+        for name in (
+            "rejections",
+            "source_admission",
+            "validator_a",
+            "validator_b",
+            "repair_history",
+            "evidence_ledger",
+        )
+    }
+    ledger_ids = [
+        str(row.get("sample_id", "")) for row in audit_rows["evidence_ledger"]
+    ]
+    reject_ids = [str(row.get("sample_id", "")) for row in audit_rows["rejections"]]
+    source_ids = [
+        str(row.get("sample_id", "")) for row in audit_rows["source_admission"]
+    ]
+    if (
+        len(ledger_ids) != 1743
+        or len(set(ledger_ids)) != 1743
+        or len(reject_ids) != 1352
+        or len(set(reject_ids)) != 1352
+        or set(reject_ids) & sample_ids
+        or set(reject_ids) | sample_ids != set(ledger_ids)
+        or len(source_ids) != 1743
+        or set(source_ids) != set(ledger_ids)
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 PASS/REJECT/evidence-ledger population drift"
+        )
+    for name in ("validator_a", "validator_b", "repair_history"):
+        ids = [str(row.get("sample_id", "")) for row in audit_rows[name]]
+        if len(ids) != len(set(ids)) or not set(ids) <= set(ledger_ids):
+            raise DatasetReleaseValidationError(
+                f"paper chk2 {name} audit population drift"
+            )
+
+    quality = _read_json_object(
+        artifact_files["audits/data_quality.json"][0],
+        label="paper chk2 data-quality audit",
+    )
+    if (
+        quality.get("schema_version") != PAPER_CHK2_RELEASE_SCHEMA
+        or quality.get("source_rows") != 1743
+        or quality.get("split_pass_counts") != split_counts
+        or quality.get("rejected_rows") != 1352
+        or quality.get("pass_rows") != 391
+        or quality.get("three_pass_splits_nonempty") is not True
+        or quality.get("evidence_ledger_rows") != 1743
+        or quality.get("compatibility_all_rejected") is not True
+        or quality.get("validator_a_rows") != len(audit_rows["validator_a"])
+        or quality.get("validator_b_rows") != len(audit_rows["validator_b"])
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 data-quality audit population/policy drift"
+        )
+    compatibility_count = _required_count(
+        quality.get("compatibility_count"), label="data_quality.compatibility_count"
+    )
+    recovery = _required_mapping(root.get("recovery"), label="recovery")
+    compatibility_ids = recovery.get("compatibility_ids")
+    if (
+        compatibility_count != 22
+        or not isinstance(compatibility_ids, list)
+        or len(compatibility_ids) != 22
+        or compatibility_ids != sorted(compatibility_ids)
+        or len(set(compatibility_ids)) != 22
+        or not all(isinstance(value, str) and value for value in compatibility_ids)
+        or recovery.get("compatibility_id_digest")
+        != "e62415eecfdb37df240ab7259aba9e244d8fcdfbc8b3fecf907aaf70c5fd5ca7"
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 compatibility-replay binding drift"
+        )
+    compatibility_rows = _read_jsonl_objects(
+        artifact_files["audits/compatibility_replay.jsonl"][0],
+        label="paper chk2 compatibility replay",
+    )
+    compatibility_keys = {
+        "sample_id",
+        "split",
+        "terminal_status",
+        "rejection_stage",
+        "terminal_record_sha256",
+    }
+    if (
+        len(compatibility_rows) != 22
+        or [row.get("sample_id") for row in compatibility_rows] != compatibility_ids
+    ):
+        raise DatasetReleaseValidationError(
+            "paper chk2 compatibility-replay rows drift"
+        )
+    for row in compatibility_rows:
+        if (
+            set(row) != compatibility_keys
+            or row.get("sample_id") not in set(reject_ids)
+            or row.get("split") not in _CHK3_SPLITS
+            or row.get("terminal_status") == "PASS"
+            or not isinstance(row.get("rejection_stage"), str)
+            or not row.get("rejection_stage")
+        ):
+            raise DatasetReleaseValidationError(
+                "paper chk2 compatibility sample was not preserved as a REJECT"
+            )
+        _required_sha256(
+            row.get("terminal_record_sha256"),
+            label=f"compatibility {row.get('sample_id')}.terminal_record_sha256",
+        )
+
+    split_data_sha = {
+        split: minutes_artifacts[split]["data"]["sha256"] for split in _CHK3_SPLITS
+    }
+    if handoff.get("split_data_sha256") != split_data_sha:
+        raise DatasetReleaseValidationError(
+            "paper chk2 handoff split-data binding drift"
+        )
+
+    return {
+        "schema_version": PAPER_CHK2_BINDING_SCHEMA,
+        "release_schema_version": PAPER_CHK2_RELEASE_SCHEMA,
+        "dataset_role": PAPER_CHK2_DATASET_ROLE,
+        "training_scope": PAPER_CHK2_TRAINING_SCOPE,
+        "release_root": str(release_root),
+        "release_manifest": {
+            "path": str(manifest),
+            "file_sha256": expected_sha,
+            "manifest_sha256": stored_manifest_sha,
+        },
+        "split_counts": split_counts,
+        "split_files": split_files,
+        "sealed_test": sealed_test,
+        "test_verified_but_not_loaded": True,
+        "student_prompt_contract": dict(prompt_contract),
+        "parent_binding": parent_binding,
+        "token_audit": {
+            "rows": len(token_rows),
+            "max_total_tokens": max_total_tokens,
+            "max_length": 4096,
+            "single_bos": True,
+            "single_eos": True,
+            "no_truncation": True,
+            "completion_only_prompt_masked": True,
+            "completion_mask_covers_reasoning_boundary_answer_eos": True,
+        },
+        "quality_audit": {
+            "source_rows": 1743,
+            "pass_rows": 391,
+            "rejected_rows": 1352,
+            "compatibility_count": compatibility_count,
+            "compatibility_all_rejected": True,
+        },
+        "scope": {
+            "training_stage": "chk2",
+            "operation": "minutes_sft_training",
+            "parent_stage": "chk1",
+            "canonical_dag_bindable": False,
+            "promotable_as_canonical_chk2": False,
+            "evaluation_eligible": False,
+            "test_is_authenticated_but_not_loaded": True,
+        },
+    }
+
+
 def _verify_chk1_override_candidate(
     *,
     dataset: Path,
@@ -3222,6 +4179,15 @@ __all__ = [
     "CHK4_PRE2009_ROLES",
     "CHK4_PRE2009_SFT_ROLE",
     "DatasetReleaseValidationError",
+    "PAPER_CHK2_BINDING_SCHEMA",
+    "PAPER_CHK2_DATASET_ROLE",
+    "PAPER_CHK2_HANDOFF_SCHEMA",
+    "PAPER_CHK2_PARENT_MODEL_SHA256",
+    "PAPER_CHK2_RELEASE_SCHEMA",
+    "PAPER_CHK2_STUDENT_SYSTEM_PROMPT",
+    "PAPER_CHK2_STUDENT_SYSTEM_PROMPT_SHA256",
+    "PAPER_CHK2_TRAINING_SCOPE",
+    "PAPER_CHK2_USER_PROMPT_TEMPLATE_SHA256",
     "STANDALONE_CHK3_BINDING_SCHEMA",
     "STANDALONE_CHK3_DATASET_ROLE",
     "STANDALONE_CHK3_DIRECT_SCOPE",
@@ -3229,6 +4195,7 @@ __all__ = [
     "sha256_file",
     "verify_chk1_semantic_override",
     "verify_clean_sft_release",
+    "verify_paper_chk2_sft_release",
     "verify_chk4_pre2009_augmented_release",
     "verify_chk4_pre2009_correction_release",
     "verify_chk4_release_for_role",

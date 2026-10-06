@@ -1,0 +1,29 @@
+{
+  "schema_version": "decision-historical-missing-roster-v1",
+  "population_id": "decision_historical_missing_n19_20260824",
+  "population_role": "historical_evaluation_only_diagnostic",
+  "training_performed": false,
+  "information_cutoff_policy": "official_meeting_start_date_minus_one_calendar_day",
+  "label_policy": "official_minutes_directive; no missing-record-to-zero fallback",
+  "meetings": [
+    {"meeting_id":"fomc-19930202-19930203","meeting_start_date":"1993-02-02","meeting_end_date":"1993-02-03","evidence_cutoff":"1993-02-01","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19931116-19931116","meeting_start_date":"1993-11-16","meeting_end_date":"1993-11-16","evidence_cutoff":"1993-11-15","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19940203-19940204","meeting_start_date":"1994-02-03","meeting_end_date":"1994-02-04","evidence_cutoff":"1994-02-02","direction":"hike","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19940816-19940816","meeting_start_date":"1994-08-16","meeting_end_date":"1994-08-16","evidence_cutoff":"1994-08-15","direction":"hike","magnitude_bp":50,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19950328-19950328","meeting_start_date":"1995-03-28","meeting_end_date":"1995-03-28","evidence_cutoff":"1995-03-27","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19960702-19960703","meeting_start_date":"1996-07-02","meeting_end_date":"1996-07-03","evidence_cutoff":"1996-07-01","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19960820-19960820","meeting_start_date":"1996-08-20","meeting_end_date":"1996-08-20","evidence_cutoff":"1996-08-19","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19961217-19961217","meeting_start_date":"1996-12-17","meeting_end_date":"1996-12-17","evidence_cutoff":"1996-12-16","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19970204-19970205","meeting_start_date":"1997-02-04","meeting_end_date":"1997-02-05","evidence_cutoff":"1997-02-03","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19970520-19970520","meeting_start_date":"1997-05-20","meeting_end_date":"1997-05-20","evidence_cutoff":"1997-05-19","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-19981117-19981117","meeting_start_date":"1998-11-17","meeting_end_date":"1998-11-17","evidence_cutoff":"1998-11-16","direction":"cut","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20011106-20011106","meeting_start_date":"2001-11-06","meeting_end_date":"2001-11-06","evidence_cutoff":"2001-11-05","direction":"cut","magnitude_bp":50,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20041214-20041214","meeting_start_date":"2004-12-14","meeting_end_date":"2004-12-14","evidence_cutoff":"2004-12-13","direction":"hike","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20050322-20050322","meeting_start_date":"2005-03-22","meeting_end_date":"2005-03-22","evidence_cutoff":"2005-03-21","direction":"hike","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20051101-20051101","meeting_start_date":"2005-11-01","meeting_end_date":"2005-11-01","evidence_cutoff":"2005-10-31","direction":"hike","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20070509-20070509","meeting_start_date":"2007-05-09","meeting_end_date":"2007-05-09","evidence_cutoff":"2007-05-08","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20071030-20071031","meeting_start_date":"2007-10-30","meeting_end_date":"2007-10-31","evidence_cutoff":"2007-10-29","direction":"cut","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20080429-20080430","meeting_start_date":"2008-04-29","meeting_end_date":"2008-04-30","evidence_cutoff":"2008-04-28","direction":"cut","magnitude_bp":25,"label_source":"official_minutes_directive","missing_record_fallback_used":false},
+    {"meeting_id":"fomc-20080624-20080625","meeting_start_date":"2008-06-24","meeting_end_date":"2008-06-25","evidence_cutoff":"2008-06-23","direction":"hold","magnitude_bp":0,"label_source":"official_minutes_directive","missing_record_fallback_used":false}
+  ]
+}

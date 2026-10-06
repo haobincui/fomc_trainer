@@ -1,0 +1,78 @@
+{
+  "schema_version": "decision-comparison-baselines-config-v1",
+  "decision_release": "dataset/processed/retrain_v2/chk4_decision_pre2009_train_balanced_v1_20260811",
+  "official_rosters": [
+    "dataset/processed/retrain_v2/chk3_minutes_external_holdout_1993_2008_all_regular_v1/official_meeting_roster.jsonl",
+    "dataset/processed/retrain_v2/chk3_minutes_post2008_2009_2025_fixed_core8_d1_v1/official_meeting_roster.jsonl"
+  ],
+  "external_panels": {
+    "historical_n19": "configs/main/decision_historical_missing_n19_20260824.json",
+    "postcutoff_n12": "configs/main/decision_postcutoff_regular_n12_20260824.json"
+  },
+  "paper_runs": {
+    "chk0": "output/evaluation/retrain_v2/chk0_external_stochastic_core8_n19_n12_vllm_t06_p09_k10_v1_20260824",
+    "chk4": "output/evaluation/retrain_v2/chk4_external_stochastic_core8_n19_n12_vllm_t06_p09_k10_v3_20260824"
+  },
+  "macro_sources": {
+    "http": {
+      "timeout_seconds": 180,
+      "retries": 6,
+      "backoff_initial_seconds": 2,
+      "backoff_max_seconds": 30
+    },
+    "alfred": {
+      "base_url": "https://alfred.stlouisfed.org/graph/alfredgraph.csv",
+      "lookback_years": 3,
+      "max_vintages_per_request": 1,
+      "series": ["UNRATE", "GDPC1"]
+    },
+    "fred_h15_current_vintage": {
+      "base_url": "https://fred.stlouisfed.org/graph/fredgraph.csv",
+      "series": ["DTB6", "DFF"],
+      "observation_cutoff_calendar_days_before_evidence_cutoff": 1,
+      "revision_caveat": "Current-vintage H.15 history; observation timing is conservative, but later source corrections remain possible."
+    }
+  },
+  "models": {
+    "directions": ["cut", "hold", "hike"],
+    "features": [
+      "tbill6m_minus_effr_pp",
+      "unemployment_rate_pct",
+      "real_gdp_growth_annualized_pct"
+    ],
+    "mnl": {
+      "C": 1.0,
+      "max_iter": 5000,
+      "solver": "lbfgs"
+    },
+    "ordered_probit": {
+      "distribution": "probit",
+      "max_iter": 5000,
+      "method": "bfgs"
+    },
+    "ordinal_rf": {
+      "n_estimators": 500,
+      "min_samples_leaf": 5,
+      "class_weight": "balanced_subsample",
+      "max_features": "sqrt"
+    },
+    "expanding_window": {
+      "minimum_training_rows": 30,
+      "minimum_rows_per_class": 3
+    }
+  },
+  "futures": {
+    "default_wrds_root": "output/data/external/wrds_trdstrm_30day_fed_funds_contracts_19880101_20260727_v1",
+    "maximum_settlement_gap_calendar_days": 4,
+    "magnitude_grid_bp": [-100, -75, -50, -25, 0, 25, 50, 75, 100],
+    "risk_premium_adjustment": null,
+    "probability_identification": "linear interpolation between adjacent magnitude-grid points"
+  },
+  "scoring": {
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": 20260827,
+    "log_loss_epsilon": 1e-15,
+    "pooled_panels_allowed": false
+  },
+  "default_output_root": "output/evaluation/retrain_v2/decision_comparison_baselines_v1_20260827"
+}

@@ -1,0 +1,4 @@
+split,prepared,machine_pass,rejected,reject_rate_pct,generation_rejected,generation_reject_rate_pct,verification_rejected,verification_reject_rate_given_generation_pass_pct
+train,2563,1219,1344,52.43854857588763,1164,45.41552867733125,180,12.866333095067906
+validation,327,152,175,53.51681957186544,154,47.09480122324159,21,12.138728323699421
+test,308,117,191,62.01298701298701,170,55.1948051948052,21,15.217391304347826

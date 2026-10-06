@@ -2632,7 +2632,11 @@ def load_and_validate_suite(
     ]
     if any(value != tuple_inventories[0] for value in tuple_inventories[1:]):
         raise StochasticBootstrapGenerationError("suite paired tuple drift")
-    rows_per_model = 1 if expected_scope == "infrastructure_smoke" else 950
+    rows_per_model = (
+        1
+        if expected_scope == "infrastructure_smoke"
+        else EXPECTED_TEST_ROWS * len(REPLICATE_SEEDS)
+    )
     expected_coverage = {
         "models": 3,
         "rows_per_model": rows_per_model,

@@ -1,0 +1,1128 @@
+\newcommand{\inputtag}[1]{**\textless #1\textgreater**}
+
+
+
+\section{Dataset Construction}\label{ch2:sec:the-dataset}
+
+This section describes the construction of the training corpus. The raw text comes from Federal Open Market Committee (FOMC) Minutes and is paired with point-in-time macroeconomic and financial indicators. We then process these sources into structured samples for model training and evaluation. Then these two sources are linked through a controlled generation process.
+
+
+\subsection*{FOMC Minutes and Indicators}\label{ch2:sec:raw_data}
+
+
+\paragraph*{Document corpus and meeting selection.}
+
+The Federal Open Market Committee (FOMC) meetings have been recorded since the committee's formation under the Banking Act of 1935 (\cite{todd2016corollary}). Initially, from 1936 to 1967, the minutes were released only once a year in these early years. Between 1967 and 1992, the minutes were named as ``the Minutes of Actions''. combined with ``the Record of Policy Actions'', these documents provided detailed insights not only into the policies but also the reasoning and proceedings behind them. Starting in 1993, a timely record of all policy issues and decisions made by the Committee was published after each meeting, although the documentation lacked a structured format. After 2009, the minutes were organized into distinct sections, including "Economic Situation," "Financial Situation," "Economic Outlook," and "Committee Policy Action," and the Committee has continued to use this structure to the present day. 
+
+Because early records were less frequent and less standardized, while post-2009 Minutes adopted a relatively stable section structure and section-level consistency is essential for supervised alignment, we use post-2009 Minutes as the primary source corpus.
+
+
+We downloaded Minutes from January 2009 to January 2025 from the Federal Reserve website as the \textbf{main text corpus}, yielding 128 meeting in total. We further split the dataset into 80\% (102) for training, 10\% (13) for evaluation, and 10\% (13) for test partition. 
+% Finally, 102 meetings are assigned to training, 13
+% to validation, and 13 to the held-out test partition.
+
+
+Given the stable section structure after 2009, we parsed major sections ( ``Staff Review of the Economic Situation'', ``Staff Review of the Financial Situation'', ``Staff Economic Outlook'', ``Participants' Views on Current Conditions and Economic Outlook'', and ``Committee Policy Actions'') when available, yielding 486 section-level samples. We further grouped the similarly section names such as ``Staff Review of Financial Situation'' and ``Staff Review of the Financial Situation''and get 58 section-style entries. 
+
+
+Meanwhile, we collected Minutes from February 1993 to December 2008 as a \textbf{supplementary corpus}. Because these earlier files lack stable section headings, they require additional processing described below.
+
+
+Table~\ref{tab:ch2:summary_statis} reports token-level summary statistics for both full Minutes and extracted sections under the tokenizer used in our experiments. Across the sample, Minutes length ranges from roughly 8,000 to 25,000 tokens, while most individual analytical sections fall below 4,096 tokens.
+
+
+In this chapter, ``word'' does not necessarily mean a full lexical word. LLMs operate on tokens (often sub-word units). For example, ``Negative'' may be split into smaller units such as ``Neg'' and ``ative''. This tokenization is controlled by the model-specific tokenizer. Larger models often use larger vocabularies; for example, GPT-4 class models use larger token vocabularies, while LLaMA 3 uses a 128,000-token vocabulary. Table~\ref{tab:ch2:summary_statis} reports token-level summary statistics.
+
+
+\begin{table}[htbp]
+    \scriptsize
+    \centering
+    \setlength{\tabcolsep}{2pt}
+    \begin{tabular}{p{5.3cm}rrrrrrrr}
+        \toprule
+        Names & Count & Mean & Std. & Min. & 25\% & 50\% & 75\% & Max. \\
+        \midrule
+        Total Minutes
+        & 102 & 16,914.96 & 4,741.07 & 9,087 & 12,555.25 & 18,368.50 & 20,493.75 & 26,840 \\
+        \addlinespace[2pt]
+        Total Extracted Section Rows
+        & 3,890 & 195.93 & 149.09 & 16 & 123.00 & 174.00 & 243.00 & 7,128 \\
+        \quad Participants' Views on Current Conditions and the Economic Outlook
+        & 1,100 & 245.70 & 106.04 & 31 & 170.00 & 225.00 & 302.25 & 663 \\
+        \quad Staff Review of the Financial Situation
+        & 1,060 & 160.84 & 75.86 & 33 & 103.00 & 144.00 & 203.00 & 522 \\
+        \quad Staff Review of the Economic Situation
+        & 943 & 160.97 & 68.24 & 25 & 109.50 & 151.00 & 198.00 & 438 \\
+        \quad Staff Economic Outlook
+        & 179 & 181.33 & 95.33 & 48 & 121.00 & 155.00 & 214.50 & 854 \\
+        \quad Developments in Financial Markets and Open Market Operations
+        & 177 & 180.27 & 80.03 & 46 & 123.00 & 167.00 & 210.00 & 540 \\
+        \quad Other normalized section styles (53 groups)
+        & 431 & 244.22 & 356.30 & 16 & 140.50 & 206.00 & 292.00 & 7,128 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Overview of Token-Length Statistics for the Training-Only Minutes Source}
+    \label{tab:ch2:summary_statis}
+\end{table}
+
+
+Because major sections are shorter than 4,096 tokens, we cap the assistant output length at 4,096 tokens to control memory usage.
+
+
+
+
+\paragraph*{Linking indicator and analytical paragraph.}
+
+Because our prompts are constructed from macroeconomic and financial indicators, we must map unstructured Minutes paragraphs to the corresponding indicator topics. We use an LLM (ChatGPT-4o) as a \textit{weakly supervised classifier} to assign indicator labels to Minutes paragraphs, which enables systematic alignment between numerical inputs and textual targets. Since LLM-based labeling can introduce noise or bias, we mitigate this risk by (i) manually cleaning and standardizing the label ontology and (ii) relabeling with a constrained reference list after cleaning. Importantly, we exclude administrative paragraphs and the ``Committee Policy Action'' content from the \textit{analysis-generation} dataset to avoid leaking realized policy decisions into training, which is crucial for a fair decision-prediction evaluation later in the chapter.
+
+
+To construct candidate indicator labels, we first asked the LLM to label paragraphs without a predefined reference list. These model-generated tags are treated as \textit{raw labels}. We then identified several quality issues that required cleaning and standardization.
+
+First, some of the raw labels were too general or lacked measurable indicators—for example, labels like ``Housing'', ``International Markets'', ``Swap Arrangements'', and ``Liquidity Facilities''. These categories do not correspond to specific economic indicators.
+
+Second, different labels were often used for the same underlying indicator. For instance, ``PCE Price Index'', ``Consumer Spending'', and ``Personal Consumption Expenditures (PCE)'' all refer to the same economic concept and were consolidated under ``Personal Consumption Expenditures (PCE)''.
+
+
+Finally, some labels represented subcomponents of broader constructs. For example, ``Total Assets of the Federal Reserve'' and ``Total Liabilities of the Federal Reserve'' were consolidated under ``Federal Reserve Balance Sheet''.
+
+
+Therefore, we manually cleaned the \textit{raw labels} and created a list of \textit{reference labels} based on them. We then asked the LLM to relabel the paragraphs using this refined set of reference labels.
+
+Our raw corpus contains 18,957 paragraphs. We removed paragraphs related to ``Secretary'', ``Attendance'', and ``Voting for this action'' because they contain no substantive analytical content. We also removed ``Committee Policy Action'' paragraphs from the analysis-generation dataset, because these paragraphs primarily summarize realized decisions rather than the underlying discussion; excluding them also reduces the risk of decision-information leakage when we later evaluate the model’s ability to infer policy actions from analytical context. After filtering, 6,266 paragraphs remained for indicator labeling.
+
+
+
+Next, we introduced two fallback tags: ``Non-Core'' for paragraphs without analytical content, and ``Other'' when no relevant indicator could be mapped. Because some paragraphs refer to multiple indicators, the model was allowed to assign multiple labels separated by commas. This stage produced 5,290 labeled analytical paragraphs, which expanded to 5,397 rows across 37 raw labels. 
+
+
+% We then manually standardized the raw labels into 26 \textit{reference-label} categories and relabeled all 6,266 filtered paragraphs using this controlled taxonomy. ``Other'' was assigned when no indicator matched, and ``Non-Core'' when the paragraph contained no analytical content.
+
+
+
+An archived later-stage standardization summary records 4,887 analytical
+paragraphs under a controlled 26-topic taxonomy after fallback and
+non-indicator assignments were removed. The displayed main-corpus counts in
+Table~\ref{tab:ch2:indicator_count} sum to 5,327 standardized label
+assignments. This table is descriptive rather than a documented row-wise
+continuation of the 5,397 raw-label rows above. Its grain is a paragraph--label
+assignment, not a downstream training example: one paragraph can contribute
+more than one assignment, while multiple assignments can later share the same
+canonical meeting--topic key.
+
+ 
+
+For instance, source rows 2,564 and 2,584 both correspond to the January 28,
+2009 meeting and carry the reference-label \textit{Bank Credit to Private Sector}.
+The former was extracted from \textit{System Liquidity Programs and Balance
+Sheet}, whereas the latter was extracted from \textit{Staff Review of the
+Economic and Financial Situation}.  Although the rows originate from different
+sections, both have the canonical meeting date 2009-01-28 and the canonical
+topic \textit{Bank Credit to Private Sector}; they therefore form one canonical
+observation.
+
+Assignments with the same canonical meeting date and topic were subsequently
+collapsed for downstream construction. The surviving project records do not
+contain a row-level manifest that connects the archived label-frequency
+summary to every later filtering and validation step. We therefore do not
+present these intermediate summaries as an arithmetic attrition chain. The
+authoritative downstream core begins with the frozen 2,072 validated atomic
+analyses reported below.
+
+
+We applied the same labeling taxonomy to the \textbf{supplementary corpus}.
+Its archived summary records 4,464 analytical paragraphs, while the displayed
+supplementary category counts in Table~\ref{tab:ch2:indicator_count} sum to
+44,116 standardized label assignments. The table reports descriptive
+assignment frequencies for both corpora. The
+supplementary total is much larger because pre-2009 Minutes are less
+structured and a paragraph can receive all relevant labels, whereas the
+post-2008 procedure generally emphasizes a single primary label. These
+frequency totals are not counts of final model inputs.
+
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Indicator} & \textbf{Main Dataset} & \textbf{Supplementary Dataset} \\
+\hline
+GDP Growth & 623 & 2339 \\
+Federal Funds Rate & 614 & 2859 \\
+Personal Consumption Expenditures (PCE) & 592 & 3517 \\
+Bank Credit to Private Sector & 506 & 1683 \\
+Federal Reserve Balance Sheet & 324 & 1381 \\
+Consumer Price Index (CPI) & 295 & 2383 \\
+Unemployment Rate & 287 & 2276 \\
+Business Investment & 232 & 2300 \\
+Labour Market & 225 & 1893 \\
+Government Purchases & 203 & 1070 \\
+Treasury Yields & 200 & 1557 \\
+Industrial Production & 164 & 2234 \\
+Equity Market Indices & 135 & 1723 \\
+Others & 927 & 16901 \\
+% Housing Starts & 130 & 2121 \\
+% Trade Balance & 115 & 2560 \\
+% Exchange Rate & 96 & 2125 \\
+% Overnight Rate & 94 & 82 \\
+% International Equity Markets & 93 & 349 \\
+% Corporate Bond Yields & 82 & 964 \\
+% Market Volatility (VIX) & 80 & 514 \\
+% Mortgage Rates & 56 & 1586 \\
+% Home Prices & 47 & 1067 \\
+% Commodity Prices & 45 & 1750 \\
+% Money Supply & 39 & 2128 \\
+% Bank Capital & 37 & 26 \\
+% Consumer Confidence Index & 13 & 1629 \\
+\midrule
+~\\
+Total & 5327 & 44116 \\
+\bottomrule
+\end{tabular}
+\caption{Archived standardized label-assignment frequencies for the main and supplementary corpora.}
+\label{tab:ch2:indicator_count}
+\end{table}
+
+
+
+
+    
+
+\subsection*{Economic and Financial Market Indicators}
+
+
+After processing the Minutes, we extracted numerical series to build model prompts. Guided by the reference-label taxonomy, we collected macroeconomic series from the FRED database and financial-market series from WRDS. FRED offers country-level macroeconomic data, while WRDS provides standardized access to widely used asset-pricing variables and benchmark series.
+
+For macroeconomic coverage, we include GDP growth, Consumer Price Index measures, Federal Funds Rate series, unemployment measures, trade indicators, and Treasury yields. For financial coverage, we include equity indices, commodity prices, volatility indices, Federal Reserve balance-sheet measures, overnight-rate series, and corporate-bond yields.
+
+
+Overall, the dataset spans 102 indicators in 26 categories that are relevant for monetary-policy analysis. Table~\ref{tab:ch2:extracted_data} lists the indicators used in this chapter.
+
+The archived construction documentation uses a stored meeting date $D$ and a
+$D-1$ evidence cutoff to reduce forward-looking leakage. The lineage report
+used here directly revalidates that point-in-time contract for the pre-2009
+decision supplement described below, but does not provide a row-level replay of
+the rule for every post-2008 core analysis. The final 2,072-row core is instead
+bound by its frozen downstream artifact and split totals below; it is not
+obtained by subtracting an unverified failure count from the archived
+label-frequency summary.
+
+
+\begin{center}
+\begin{singlespace}    
+\begin{scriptsize}
+\begin{longtable}{p{0.33\textwidth}|p{0.66\textwidth}}
+        \toprule
+        \textbf{Category}  & \textbf{Indicator} \\
+        \hline
+        Labour Market  & All Employees, Total Nonfarm (Thousands of Persons, Seasonally Adjusted) \\
+        \hline
+        Labour Market  & Job Openings, Total Nonfarm(Level in Thousands, Seasonally Adjusted) \\
+        \hline
+        Labour Market  & Labor Force Participation Rate(Percent, Seasonally Adjusted) \\
+        \hline
+        Labour Market  & Total Nonfarm Private Payroll Employment(Persons, Seasonally Adjusted) \\
+        \hline
+        Money Supply  & Total Monetary Base( currency in circulation plus reserve balances, Billions of Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Money Supply  & M2SL(Billions of Dollars, Seasonally Adjusted) \\
+        \hline
+        Unemployment Rate  & Unemployment Rate (Seasonal adjusted) \\
+        \hline
+        International Equity Markets  & MSCI WORLD \\
+        \hline
+        International Equity Markets  & MSCI Emerging Markets Index(future) \\
+        \hline
+        Housing Starts  & Annual Rate for Housing Units Authorized in Permit-Issuing Places in United States (Seasonally Adjusted Total Units [Thousands of Units]) \\
+        \hline
+        Housing Starts  & New Privately-Owned Housing Units Started, Total Units(Thousands of Units, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Home Prices  & Rental Vacancy Rate in the United States(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Home Prices  & All-Transactions House Price Index for the United States( Index 1980Q1=100, Not Seasonally Adjusted) \\
+        \hline
+        Home Prices  & S\&P CoreLogic Case-Shiller U.S. National Home Price Index (Index Jan 2000=100, Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Balance Sheet,Total Assets(Millions of U.S. Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Balance Sheet, Mortgage-Backed Securities(Millions of U.S. Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Reserve Balances with Federal Reserve Banks(Billions of U.S. Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Federal Reserve Balance Sheet  & Summary Of SOMA holdings \\
+        \hline
+        Exchange Rate  & U.S. Dollars to Euro Spot Exchange Rate(U.S. Dollars to One Euro, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & U.S. Dollars to U.K. Pound Sterling Spot Exchange Rate(U.S. Dollars to One U.K. Pound Sterling, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & Japanese Yen to U.S. Dollar Spot Exchange Rate(Japanese Yen to One U.S. Dollar, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & Nominal Broad U.S. Dollar Index(Index Jan 2006=100, Not Seasonally Adjusted) \\
+        \hline
+        Exchange Rate  & Chinese Yuan Renminbi to U.S. Dollar Spot Exchange Rate(Chinese Yuan Renminbi to One U.S. Dollar, Not Seasonally Adjusted) \\
+        \hline
+        Consumer Confidence Index  & Advance Monthly Sales for Retail and Food Services(Seasonally Adjusted Sales - Monthly [Millions of Dollars]) \\
+        \hline
+        Consumer Confidence Index  & Consumer Sentiment(Index 1966Q1=100, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 1-3 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA CCC \& Lower US High Yield Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA AAA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 7-10 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA BBB US Corporate Index Effective Yield (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 5-7 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 3-5 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA B \& Lower US Emerging Markets Liquid Corporate Plus Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 15+ Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA BB US High Yield Index Effective Yield (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA AA US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & ICE BofA 10-15 Year US Corporate Index Effective Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & Moody's Seasoned Baa Corporate Bond Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Corporate Bond Yields  & Moody's Seasoned Aaa Corporate Bond Yield(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, Fuels and Related Products and Power (Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, Farm Products(Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, All Commodities(Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Crude Oil Prices(West Texas Intermediate, Dollars per Barrel, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Producer Price Index by Commodity, Metals and Metal Products(Index 1982=100, Not Seasonally Adjusted) \\
+        \hline
+        Commodity Prices  & Crude Oil Prices(Brent,Dollars per Barrel, Not Seasonally Adjusted) \\
+        \hline
+        GDP Growth  & Gross domestic product ([Millions of dollars] Seasonally adjusted at annual rates) \\
+        \hline
+        Mortgage Rates  & 30-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted, Weekly, Ending Thursday) \\
+        \hline
+        Mortgage Rates  & 15-Year Fixed Rate Mortgage Average in the United States(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Equity Market Indices  & Dow Jones Industrial Average \\
+        \hline
+        Equity Market Indices  & NASDAQ Composite Index \\
+        \hline
+        Equity Market Indices  & S\&P 500 Index \\
+        \hline
+        Industrial Production  & industrial\_production(total manufacturing, Index 2017=100, Seasonally Adjusted) \\
+        \hline
+        Industrial Production  & Industrial Production( Manufacturing, Durable Goods, Semiconductor and Other Electronic Component ) \\
+        \hline
+        Industrial Production  & Industrial Production( Mining) \\
+        \hline
+        Industrial Production  & Industrial Production( Manufacturing, Nondurable Goods, Food, Beverage, and Tobacco) \\
+        \hline
+        Industrial Production  & Industrial Production( Utilities, Electric and Gas Utilities) \\
+        \hline
+        Industrial Production  & Industrial Production(Manufacturing, Durable Goods,  Motor Vehicles and Parts) \\
+        \hline
+        Industrial Production  & industrial\_production(total\_index, Index 2017=100, Seasonally Adjusted) \\
+        \hline
+        Business Investment  & Real Private Nonresidential Fixed Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Business Investment  & Real Gross Private Domestic Investment(Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Business Investment  & Commercial Paper Outstanding(Billions of Dollars, Seasonally Adjusted) \\
+        \hline
+        Personal Consumption Expenditures (PCE)  & Personal Consumption Expenditures Index(Index 2017=100, Seasonally Adjusted) \\
+        \hline
+        Personal Consumption Expenditures (PCE)  & Personal consumption expenditures by major function (Index numbers, 2017=100; quarters and months are seasonally adjusted) \\
+        \hline
+        Personal Consumption Expenditures (PCE)  & Personal consumption expenditures by major function(Millions of dollars; quarters and months are seasonally adjusted at annual rates) \\
+        \hline
+        Market Volatility (VIX)  & CBOE S\&P 500 3-Month Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Gold ETF Volatility Index(Index, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Crude Oil ETF Volatility Index(Index, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE DJIA Volatility Index (Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE NASDAQ 100 Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Volatility Index(Index, Not Seasonally Adjusted) \\
+        \hline
+        Market Volatility (VIX)  & CBOE Russell 2000 Volatility Index(Index, Daily, Not Seasonally Adjusted) \\
+        \hline
+        Trade Balance  & Foreign Transactions in the National Income and Product Accounts (Millions of dollars Seasonally adjusted at annual rates) \\
+        \hline
+        Federal Funds Rate  & Federal Funds Effective Rate(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Federal Funds Rate  & Federal Funds Target Range - Upper Limit (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Capital  & Bank Total Assets, All Commercial Banks(Billions of U.S. Dollars, Seasonally Adjusted) \\
+        \hline
+        Bank Capital  & Bank Capital to Total Assets for United States(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Overnight Rate  & Secured Overnight Financing Rate (Percent, Not Seasonally Adjusted) \\
+        \hline
+        Government Purchases  & Government current expenditures, National defense(Billions of Dollars, Not Seasonally Adjusted) \\
+        \hline
+        Government Purchases  & Real Government Consumption Expenditures and Gross Investment (Billions of Chained 2017 Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Government Purchases  & Federal Government,Current Expenditures(Billions of Dollars, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Consumer Price Index (CPI)  & Consumer Price Index for All Urban Consumers (CPI-U, seasonal adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Credit Card Loans(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & Total Consumer Credit Owned and Securitized(Millions of Dollars, Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Large and Middle-Market Firms(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Tightening Standards for Auto Loans(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & Personal Saving Rate(Percent, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Reporting Increased Willingness to Make Consumer Installment Loans(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS,Net Percentage of Domestic Banks Tightening Standards for Commercial and Industrial Loans to Small Firms(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Bank Credit to Private Sector  & Percent Change of Total Consumer Credit(Percent Change at Annual Rate, Seasonally Adjusted Annual Rate) \\
+        \hline
+        Bank Credit to Private Sector  & KBW Nasdaq Bank Index \\
+        \hline
+        Bank Credit to Private Sector  & SLOOS, Net Percentage of Domestic Banks Tightening Standards for Commercial Real Estate Loans with Construction and Land Development Purposes(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 3-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 1-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 7-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 10-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 3-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 30-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 5-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 2-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 1-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 6-Month Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \hline
+        Treasury Yields  & Market Yield on U.S. Treasury Securities at 20-Year Constant Maturity(Percent, Not Seasonally Adjusted) \\
+        \bottomrule   
+        \caption{Economic and Financial Market Indicators}
+        \label{tab:ch2:extracted_data}   
+\end{longtable}
+\end{scriptsize}
+\end{singlespace}
+\end{center}
+
+
+
+
+
+\subsection*{Constructing Intermediate Rationale Targets}
+
+
+The next step is to link numerical indicators to the analytical narratives in
+FOMC Minutes. Because the Minutes generally report high-level conclusions
+rather than explicit intermediate derivations, we construct teacher-generated
+rationale targets to accompany the analytical answers used for supervision.
+These targets teach a response structure and an evidence-to-analysis pattern;
+they are not independent measurements of factual correctness, internal
+consistency, economic coherence, or reasoning interpretability.
+
+
+
+Model distillation (\cite{hinton2015distilling}) trains a student model on
+outputs produced by a teacher model. In this chapter, distillation supplies
+task-specific analytical completions and intermediate rationale targets. Their
+quality remains dependent on the teacher and the construction protocol and is
+therefore evaluated only through the observable downstream criteria specified
+later in the chapter.
+
+
+
+More specifically, we applied the ``DeepSeek-V4 Pro'' as our teacher model for
+rationale-target generation. As shown in
+Table~\ref{tab:ch2:prompt_for_data_distillation}, each prompt includes the
+\texttt{meeting date}, \texttt{section name}, \texttt{topic} of the indicators,
+\texttt{table} that contains the indicators' data, and the
+\texttt{reference excerpt} from the FOMC Minutes. The
+\texttt{reference excerpt} is strictly limited to constructing distilled
+rationale targets for the training set, where it serves as a teacher-side
+reference to keep the generated analysis relevant to the target FOMC
+discussion. By contrast, evaluation and test samples are constructed without
+any \texttt{reference excerpt} input in order to avoid target leakage and
+maintain a fair downstream assessment of grounding and generation quality.
+
+
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \begin{tabular}{p{0.98\textwidth}}
+    \toprule
+    \textbf{Prompt for Data Distillation} \\
+    \midrule
+You are an economist preparing briefing notes for the Federal Open Market Committee (FOMC) meeting on \texttt{**\{meeting\_date\}**}.  
+Your task is to analyze recent developments in \texttt{**\{topic\}**} and related indicators, using the tone and structure of the \texttt{**\{section\_style\}**} section of the FOMC Minutes. \\
+
+Use neutral, data-driven, and measured language throughout your response. \\
+
+Your analysis must be based on the following indicators: \texttt{**\{emphasized\_label\}**}, using the accompanying data tables from the previous two years: \\
+
+~\\
+\texttt{\{table\_str\}} \\
+~\\
+
+
+Model your tone, structure, and analytical framing on the following excerpt from the FOMC Minutes:\\
+
+~\\
+\texttt{\{reference\_excerpt\}} \\
+~\\
+
+Keep your response focused, analytically rigorous, and under 4,096 tokens. \\
+    \bottomrule
+    \end{tabular}
+    \caption{Prompt for Data Distillation}
+    \label{tab:ch2:prompt_for_data_distillation}
+\end{table}
+
+
+The frozen downstream core contains 2,072 validated atomic-analysis samples:
+1,683 training observations from 102 meetings, 199 validation observations
+from 13 meetings, and 190 test observations from 13 meetings. Thus
+$2{,}072=1{,}683+199+190$. The available lineage does not preserve a complete
+rejection-by-stage audit linking the earlier paragraph-label assignments to
+this final artifact, so no intermediate rejection count is used to derive the
+2,072-row total.
+
+
+
+
+\subsection*{FOMC-Minutes-Style Paragraph Target Construction}
+
+
+To evaluate paragraph-level institutional rewriting, we add a downstream SFT
+stage that maps a supplied analysis to one FOMC-Minutes-style paragraph.
+
+
+The broader data-construction pipeline comprises analysis generation, summary
+creation, and paragraph-target construction. First, individual economic or
+financial indicators are converted into analytical paragraphs. Next, analyses
+for related indicators are combined into a concise source summary. Finally,
+that summary is rewritten as one paragraph following the stylistic conventions
+of FOMC Minutes. Because of GPU memory constraints, the intermediate analyses
+are compressed before the final rewriting stage. The evaluated native
+\textit{Model chk-2} task (repository artifact \texttt{chk3}, checkpoint 318)
+is only the last mapping---analysis to paragraph---and is not presented as an
+end-to-end section-generation evaluation.
+
+
+Because \textit{Model chk-1} already demonstrates baseline analytical capability from the prior stage, the objective here is style and structure alignment rather than new domain learning.
+
+
+Accordingly, we use section titles to organize the teacher-side target
+construction, use \textit{Model chk-1} summaries as the analytical source, and
+associate them with corresponding Minutes prose. In the finalized native task,
+the model receives only the analysis and is instructed to preserve its claims,
+quantities, dates, directions, and expressions of uncertainty in institutional
+language.
+
+
+% \subsubsection*{Analysis Summary Generation}
+
+\paragraph*{Teacher-side paragraph construction.}
+
+Table~\ref{tab:ch2:fomc_summary_prompt} shows the earlier teacher-side prompt
+used to construct Minutes-style paragraph targets. The target section and
+meeting date guide this construction step, but they are not model-visible
+fields in the frozen native prompt for the evaluated \textit{Model chk-2},
+which contains only the analysis to be rewritten.
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabular}{p{0.96\textwidth}}
+\toprule
+\textbf{User Prompt: FOMC Minutes-Style Economic Summary Generation} \\
+\midrule
+You are a senior economist at the Federal Reserve responsible for drafting internal briefing materials that may be incorporated into the official \textbf{FOMC Minutes}. \\
+Your task is to transform the following economic or financial analysis into a formal, institutionally appropriate paragraph aligned with the tone and structure of the \textbf{\{section\_name\}} section in the FOMC Minutes for the \textbf{\{meeting\_date\}} meeting. \\[1ex]
+~\\
+\textbf{\#\#\# You will be provided with:}\\
+    - \textbf{\textless Raw Analysis\textgreater}: A semi-structured or informal analytical paragraph that may include market commentary, data points, or economic observations. \\
+    - \textbf{\textless Target Section\textgreater}: The FOMC Minutes section in which the rewritten paragraph would appear (e.g., \textit{“Economic Outlook,” “Financial Markets,” “Monetary Policy Considerations”}). \\
+~\\
+\textbf{\#\#\# Your Objective:} \\
+   - Rewrite the content in the formal, precise, and policy-grounded style used in FOMC Minutes. \\
+   -  Use an \textbf{objective, technical, and neutral tone} — avoid informal language, first-person voice, or speculative remarks. \\
+   - Where appropriate, incorporate phrases typical of FOMC drafting style, such as: \\
+   \textbullet\ ``Participants noted that...'' \\
+    \textbullet\ ``The Committee observed that...'' \\
+    \textbullet\ ``Recent indicators suggested...'' \\
+~\\
+\textbf{\#\#\# Output Requirements:} \\
+- Generate a \textbf{single, coherent paragraph} between \textbf{100–200 words} in FOMC Minutes style. \\
+- \textbf{Do not merely summarize} — restructure and elevate the input to meet institutional standards. \\
+- Avoid lists or bullet points; use complete sentences and formal syntax. \\
+~\\
+\textbf{\#\#\# FOMC Minutes Section Name:} \\[1ex]
+\inputtag{Target Section} \\
+\texttt{\{section\_name\}} \\
+\inputtag{/Target Section} \\[1ex]
+~\\
+\textbf{\#\#\# Input Content:} \\
+\inputtag{Raw Analysis} \\
+\texttt{\{raw\_analysis\}} \\
+\inputtag{/Raw Analysis} \\
+\bottomrule
+\toprule
+\textbf{Target Output:} \\
+\midrule
+\texttt{\{Corresponding FOMC Section\}} \\
+\bottomrule
+\end{tabular}
+\caption{Teacher-side prompt for constructing Minutes-style paragraph targets.}
+\label{tab:ch2:fomc_summary_prompt}
+\end{table}
+
+
+% \subsubsection*{FOMC-Style rewrite}
+\paragraph*{FOMC-Style paragraph rewrite.}
+
+The final supervised completion contains a fidelity plan $c_i$, the native
+reasoning boundary, and the Minutes-style paragraph $a_i$, as specified in
+Section~\ref{ch2:sec:training}. The available construction record documents
+the teacher-side paragraph prompt for $a_i$ but does not preserve a separate,
+auditable prompt for deriving the fidelity-plan target $c_i$. We therefore do
+not treat Table~\ref{tab:ch2:fomc_summary_prompt} as evidence of how $c_i$ was
+generated; this missing provenance limits exact reproduction of that
+distillation step.
+
+The upstream evidence-to-analysis corpus contains 2,072 rows, including 1,683
+training rows. The archived paragraph-rewriting SFT trajectory reports 1,113
+analysis-to-FOMC-Minutes-style paragraph pairs. The available records do not
+provide an auditable aggregation or filtering manifest that maps the upstream
+rows to those 1,113
+pairs, so the two counts are reported as distinct stages rather than treated
+as interchangeable.
+
+
+Furthermore, to expand the testing dataset, we incorporate pre-2009 Minutes in
+empirical tests; these documents do not provide stable section headers. We
+therefore infer section labels paragraph by paragraph using the project section
+taxonomy and the prompt in Table~\ref{tab:ch2:section_name_prompt}.
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabular}{p{0.96\textwidth}}
+\toprule
+\textbf{User Prompt: Create Section Name} \\
+\hline
+You are a policy editor at the Federal Reserve responsible for organizing **FOMC Minutes** content. \\
+
+Given a paragraph from the FOMC Minutes, assign it to the **single most appropriate section title** from the official list below: \\
+
+**Available Section Titles**: \\
+
+\texttt{**\{Section Names\}**}
+
+--- \\
+~\\
+\#\#\# Instructions: \\
+
+- Read the paragraph carefully and select **one** section title that best reflects its content and purpose. \\
+- Choose the **closest thematic match** based on subject matter, phrasing, and policy focus. \\
+- If multiple titles appear plausible, select the one that best reflects **official FOMC categorization**.\\
+- Your output must follow this format:   \\
+  `\textbackslash boxed\{\{section\_title\}\}` \\
+
+--- \\
+~\\
+\#\#\# FOMC Paragraph: \\
+\inputtag{Paragraph}\\
+\texttt{\{fomc\_paragraph\}}  \\
+\inputtag{/Paragraph}\\
+
+--- \\
+~\\
+\#\#\# Output: \\
+\textbackslash \\boxed\{\{Your selected section title from the list above\}\} \\
+
+Also provide a brief rationale (1--2 sentences) below the boxed output. \\
+
+\bottomrule
+\end{tabular}
+\caption{Prompt for Section Name Creation}
+\label{tab:ch2:section_name_prompt}
+\end{table}
+
+
+Finally, the separate pre-2009 text-generation release covers the complete
+128-meeting official regular-meeting roster, with meeting start dates from
+2 February 1993 through 15 December 2008, and contains 1,725 observations
+across an expanded set of 17 available indicators. This release is not the
+109-meeting decision supplement described below.
+
+The stochastic Core8 LOO diagnostic uses a separate frozen view of this
+external release. It retains all 128 regular meetings (meeting start dates from
+2 February 1993 through 15 December 2008) and exactly eight harmonized topic
+rows per meeting, for 1,024 source rows. For each meeting, the eight topic
+analyses and their deterministic source-grounded Minutes-style references are
+concatenated in a fixed order to form the Full input and common complete target.
+This all-eight-topics-per-meeting panel is distinct from the one-topic-per-
+meeting $K=10$ fidelity cohort and from the market-linked panel described next.
+
+For the direct sentiment-score closeness and historical sentiment--Treasury
+association diagnostics, we construct a separate frozen evaluation panel. It
+combines the 128 pre-2009 meetings with 128 post-2008 meetings through January
+2025, harmonizes each meeting to eight Core8 topics, and links meetings to
+official Minutes release dates. The direct closeness diagnostic uses the
+meeting-level sentiment scores without a market outcome. The association panel
+additionally measures the release-close change in DGS2 and the matching VIX
+window rather than treating the indicator rows themselves as release-day market
+outcomes. This 256-meeting panel is a separate evaluation artifact used for the
+two diagnostics described in Section~\ref{ch2:sec:application}. Its post-2008
+portion overlaps training, development, and checkpoint-selection roles; only
+the pre-2009 view is primary and external to the chapter-specific training and
+checkpoint selection of the evaluated text-generation lineage
+(\textit{Model chk-1} and \textit{Model chk-2}).
+The market-linked panel remains distinct from the decision-action dataset below.
+
+
+
+\subsection*{Monetary Policy Decision Making}
+
+For each FOMC meeting, the Committee selects a federal funds policy-target
+action. We use one target-decision-blind meeting brief and the locally recorded
+direction and magnitude to train the paper's decision branch,
+\textit{Model chk-3} (repository artifact \texttt{chk4}). Decision SFT
+checkpoint 38 is the retained pre-GRPO state. Checkpoint 450 is the
+best-observed exploratory post-GRPO evaluation candidate of the same
+paper-level branch; the formal selected checkpoint is null, so checkpoint 450
+is not a selected, final, or promoted model.
+
+Here, target-decision-blind means that direct target-meeting fields, realized
+outcomes, and known outcome formulations are excluded. It does not exclude
+policy state that was already public before the meeting, and it does not prove
+that meeting identity is impossible to infer from the remaining evidence.
+
+\paragraph*{Roster and aggregation lineage.}
+
+The 128-meeting official pre-2009 roster used by the text-generation
+diagnostics is not the candidate population from which the decision supplement
+was filtered. The older decision-label workbook contains 241 physical rows and
+237 unique meeting dates after four duplicate rows are removed. Filtering
+those unique workbook dates to 1993--2008 produces 109 decision-supplement
+candidates; the other 128 workbook dates form the post-2008 core, so
+$237=109+128$. A later calendar reconciliation found that 84 supplement dates
+match official meeting
+start dates, 25 match official end dates only, and 19 meetings in the complete
+128-meeting official roster are absent from the older workbook. Consequently,
+$128=84+25+19$ describes roster coverage, whereas
+$109=109+0$ describes decision-supplement admission. The 19 missing meetings
+were absent upstream; they were not rejected for sparse evidence, label
+balance, or teacher quality.
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.25\textwidth}
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
+        >{\centering\arraybackslash}p{0.13\textwidth}
+        >{\raggedright\arraybackslash}X
+    @{}}
+        \toprule
+        \textbf{Stage} & \textbf{Grain} & \textbf{Count} & \textbf{Accounting identity or interpretation} \\
+        \midrule
+        Official pre-2009 regular-meeting roster
+        & Meetings & 128
+        & $84$ start-date matches $+25$ end-date-only matches $+19$ absent from the old workbook \\
+
+        Archived decision-label workbook
+        & Workbook rows / unique meetings & $241\rightarrow237$
+        & Four duplicate rows removed; conflicting duplicates would fail validation \\
+
+        Workbook-covered pre-2009 supplement
+        & Meetings & 109
+        & $84+25$ matched dates; all are training-only candidates \\
+
+        Point-in-time source acquisition
+        & Meeting--topic rows & 2,834
+        & $109\times26=2{,}834=1{,}484_{\mathrm{ready}}+1{,}350_{\mathrm{excluded}}$ \\
+
+        Evidence admission
+        & Meetings & 109
+        & $109$ admitted $+0$ rejected under the minimum-eight-topic, three-category rule \\
+
+        Cross-topic synthesis
+        & Meeting briefs & 109
+        & Exactly one target-decision-blind decision brief per admitted meeting \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Count and grain reconciliation for the pre-2009 decision supplement used by \textit{Model chk-3}.}
+    \label{tab:ch2:chk3_pre2009_lineage}
+\end{table}
+
+The post-2008 core follows a separate aggregation path: its 2,072 validated
+atomic analyses are grouped by meeting and compressed into 128 briefs, of
+which the 102 training meetings enter the combined decision-training set. For
+the supplement, the acquisition plan considers 26 topics for each of the 109
+candidates. The 1,350 excluded rows in
+Table~\ref{tab:ch2:chk3_pre2009_lineage} are unavailable meeting--topic rows,
+not excluded meetings. A supplement meeting is admitted when at least eight
+topics are available and prices, employment/activity, and financial conditions
+are all represented. All 109 candidates satisfy this rule; their 1,484 ready
+topic rows are synthesized into 109 single-paragraph meeting briefs before the
+decision prompt is constructed.
+
+The point-in-time cutoff is enforced relative to the workbook's stored date.
+For 25 of the 109 supplement meetings (22.94\%), that stored date matches the
+official meeting end date rather than its start date. For a two-day meeting,
+stored-date minus one day can therefore equal the first meeting day. Direct
+target fields, target-meeting Minutes, and observations later than the stored
+cutoff remain excluded,
+but the present release should not be described as uniformly using
+official-start-date-minus-one-day evidence. A corrected successor for these 109
+meetings would need to normalize the 25 dates and regenerate their evidence.
+Extending it to the full official roster would additionally require labels and
+point-in-time evidence for the 19 workbook-absent meetings, with independent
+label verification.
+
+Decision labels are parsed from only the local workbook's meeting-date and
+rate-change fields. ``No change'' maps to \texttt{hold:0}; a cut or hike must
+specify a magnitude in $\{25,50,75,100\}$ basis points, and unsupported forms
+fail closed. All 42 non-hold supplement actions match an
+explicit federal funds rate change record, 39 on the stored date and three on
+the following date. The 67 hold cases follow the archived implementation's
+missing-record-to-zero fallback, so they should not be described as 67
+explicitly recorded zero changes.
+
+The canonical action is therefore local gold rather than a teacher prediction.
+The teacher supplies a validated qualitative SFT rationale, after which the
+terminal decision JSON is serialized locally from that gold; the final
+materializer cross-checks the SFT and GRPO labels and hashes.
+
+Combining 102 core training meetings with the 109 supplement meetings gives
+$211=102+109$ unique training examples. Their direction counts are 23 cuts,
+156 holds, and 32 hikes, so holds account for 73.93\% of the unique meetings
+(Table~\ref{tab:ch2:chk3_bounded_resampling}).
+We therefore use the bounded, direction-balanced schedule bound by the frozen
+sampler manifest. Each eight-row window in the materialized schedule
+contains four holds, two hikes, and two cuts. Thirty-nine windows produce 312
+physical exposures: 156 holds, 78 hikes, and 78 cuts. The population decomposition
+$312=124+188$ in Table~\ref{tab:ch2:chk3_training_composition} is an outcome of
+this deterministic schedule, not a population quota or a count of unique
+meetings. The SFT and GRPO role files each contain their own 312-row schedule;
+their on-disk sum is not a 624-example training population.
+
+These identities and caveats are bound to the immutable release manifest and
+were independently replayed by the release verifier with status
+\texttt{verified}. The project repository contains the construction scripts,
+local workbooks, row-level unique-source and sampler manifests, prompt
+contracts, and audit outputs needed to reproduce the release as built. The
+manifest nevertheless records \texttt{canonical\_dag\_bindable=false}.
+Immutable closure therefore establishes integrity and replayability for this
+standalone release; it does not authorize canonical model promotion or remove
+the timing and label qualifications above.
+
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
+        >{\centering\arraybackslash}p{0.13\textwidth}
+        >{\centering\arraybackslash}p{0.15\textwidth}
+        >{\centering\arraybackslash}p{0.18\textwidth}
+        >{\raggedright\arraybackslash}X
+    @{}}
+        \toprule
+        \textbf{Data Source}
+        & \textbf{Unique Meeting Samples}
+        & \textbf{Physical Training Rows}
+        & \textbf{Stored Date Range}
+        & \textbf{Role} \\
+        \midrule
+        Core post-2008 dataset
+        & 102
+        & 124
+        & 2009-01-28--2021-11-03
+        & Original core training meetings for \textit{Model chk-3} \\
+        
+        Workbook-covered pre-2009 decision supplement
+        & 109
+        & 188
+        & 1993-03-23--2008-12-16
+        & Training-only historical augmentation \\
+        
+        \midrule
+        \textbf{Combined training dataset}
+        & \textbf{211}
+        & \textbf{312}
+        & \textbf{1993-03-23--2021-11-03}
+        & \textbf{Main training data for both SFT and GRPO} \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Unique meetings and scheduled physical exposures in the decision-training dataset for \textit{Model chk-3}.}
+    \label{tab:ch2:chk3_training_composition}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \scriptsize
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Policy Direction}
+        & \textbf{Unique Samples}
+        & \textbf{Physical Training Rows}
+        & \textbf{Share of Physical Rows} \\
+        \midrule
+        Cut  & 23  & 78  & 25\% \\
+        Hike & 32  & 78  & 25\% \\
+        Hold & 156 & 156 & 50\% \\
+        \midrule
+        \textbf{Total}
+        & \textbf{211}
+        & \textbf{312}
+        & \textbf{100\%} \\
+        \bottomrule
+    \end{tabular}
+    \caption{Policy-direction counts before and after bounded resampling for \textit{Model chk-3}.}
+    \label{tab:ch2:chk3_bounded_resampling}
+\end{table}
+
+
+
+
+
+\subsection*{Dataset Allocation}
+
+Dataset allocation is reported separately for each stage because the unit of
+observation changes across the pipeline.  The analysis stages use atomic-topic
+rows, the Minutes-rewriting stage uses analysis--paragraph pairs, the decision
+stage distinguishes unique meetings from resampled physical training rows, and
+the stochastic evaluation counts meeting--replicate outputs.  Treating these
+quantities as a single sample count would therefore be misleading.
+
+For the post-2008 core, partition membership is assigned chronologically at the
+meeting level, not randomly at the row level.  All rows belonging to a meeting
+remain in the same partition: the training period contains 102 meetings from
+28 January 2009 through 3 November 2021, validation contains 13 meetings from
+15 December 2021 through 14 June 2023, and testing contains 13 meetings from
+26 July 2023 through 29 January 2025.  The resulting split is approximately
+80/10/10 by meeting count and has no meeting overlap across partitions.
+
+\paragraph*{Point-in-time analysis stage.}
+Table~\ref{tab:ch2:dataset_partition_stage1} reconciles three distinct counts.
+The teacher-generation candidate population contains 2,117 atomic-topic rows;
+45 rows are excluded before the 2,072-row canonical analysis release is
+formed.  The clean-v2 projection actually bound to the \textit{Model chk-1}
+cp200 run contains 1,743 rows, of which 1,354 are training observations.  Its
+validation and test partitions retain all 199 and 190 canonical rows,
+respectively.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{3.5pt}
+    \renewcommand{\arraystretch}{1.12}
+    \begin{threeparttable}
+    \caption{Allocation of the Point-in-Time Analysis Population and the
+    Effective \textit{Model chk-1} Runtime Projection}
+    \label{tab:ch2:dataset_partition_stage1}
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.12\textwidth}
+        >{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{0.10\textwidth}
+        >{\raggedleft\arraybackslash}p{0.13\textwidth}
+        >{\raggedleft\arraybackslash}p{0.13\textwidth}
+        >{\raggedleft\arraybackslash}p{0.14\textwidth}@{}}
+        \toprule
+        \textbf{Split} & \textbf{Meeting period} & \textbf{Meetings}
+        & \makecell[r]{\textbf{Candidate}\\\textbf{rows}}
+        & \makecell[r]{\textbf{Canonical}\\\textbf{rows}}
+        & \makecell[r]{\textbf{Clean-v2}\\\textbf{runtime rows}} \\
+        \midrule
+        Training & 2009-01-28--2021-11-03 & 102 & 1,715 & 1,683 & 1,354 \\
+        Validation & 2021-12-15--2023-06-14 & 13 & 205 & 199 & 199 \\
+        Test & 2023-07-26--2025-01-29 & 13 & 197 & 190 & 190 \\
+        \midrule
+        \textbf{Total} & 2009-01-28--2025-01-29 & \textbf{128}
+        & \textbf{2,117} & \textbf{2,072} & \textbf{1,743} \\
+        \bottomrule
+    \end{tabularx}
+    \begin{tablenotes}[flushleft]
+        \footnotesize
+        \item \textit{Notes:} A row is one atomic-topic analysis instance.
+        Only the 1,354 clean-v2 training rows contribute gradient updates to
+        \textit{Model chk-1}; validation and test rows are held out.  The
+        clean-v2 semantic audit did not pass automatically, and use of the
+        projection was authorized through a documented override.  The table
+        therefore reports artifact allocation rather than asserting that every
+        retained row passed an unqualified semantic-validation gate.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+\paragraph*{Minutes-rewriting stage.}
+The standalone supervised release for \textit{Model chk-2} contains 2,072
+analysis--paragraph pairs.  Each row maps an accepted source analysis to a
+reasoning target and one formal Minutes-style paragraph.  Although
+\textit{Model chk-2} is initialized from \textit{Model chk-1} cp200, its
+training release retains the full canonical source population rather than the
+1,743-row clean-v2 projection used to train cp200.  The two equal 2,072 totals
+in Tables~\ref{tab:ch2:dataset_partition_stage1} and
+\ref{tab:ch2:dataset_partition_chk2} thus refer to different supervised-task
+contracts, not duplicated observations within one training set.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.12}
+    \begin{threeparttable}
+    \caption{Allocation of the Supervised Minutes-Rewriting Release for
+    \textit{Model chk-2}}
+    \label{tab:ch2:dataset_partition_chk2}
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.15\textwidth}
+        >{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{0.15\textwidth}
+        >{\raggedleft\arraybackslash}p{0.19\textwidth}@{}}
+        \toprule
+        \textbf{Split} & \textbf{Meeting period} & \textbf{Meetings}
+        & \makecell[r]{\textbf{Analysis--paragraph}\\\textbf{pairs}} \\
+        \midrule
+        Training & 2009-01-28--2021-11-03 & 102 & 1,683 \\
+        Validation & 2021-12-15--2023-06-14 & 13 & 199 \\
+        Test & 2023-07-26--2025-01-29 & 13 & 190 \\
+        \midrule
+        \textbf{Total} & 2009-01-28--2025-01-29 & \textbf{128}
+        & \textbf{2,072} \\
+        \bottomrule
+    \end{tabularx}
+    \begin{tablenotes}[flushleft]
+        \footnotesize
+        \item \textit{Notes:} The training mapping is source analysis to
+        fidelity-oriented reasoning and a formal Minutes-style paragraph.
+        Only training rows are used for parameter updates; validation and test
+        rows retain their chronological meeting-level separation.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+\paragraph*{Policy-decision stage.}
+The decision release extends only the training population.  It combines the
+102 post-2008 core training meetings with a 109-meeting pre-2009 supplement,
+while the 13 validation and 13 test meetings are inherited unchanged from the
+post-2008 core.  Consequently, the release contains 237 unique meetings.  The
+training sampler expands the 211 unique training meetings to 312 physical rows
+within each of the SFT and GRPO role views, as summarized in
+Table~\ref{tab:ch2:dataset_partition_chk3}.
+
+\begin{table}[htbp]
+    \centering
+    \scriptsize
+    \setlength{\tabcolsep}{4pt}
+    \renewcommand{\arraystretch}{1.12}
+    \begin{threeparttable}
+    \caption{Allocation of the Policy-Decision Release for
+    \textit{Model chk-3}}
+    \label{tab:ch2:dataset_partition_chk3}
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.12\textwidth}
+        >{\raggedright\arraybackslash}X
+        >{\centering\arraybackslash}p{0.13\textwidth}
+        >{\centering\arraybackslash}p{0.16\textwidth}
+        >{\centering\arraybackslash}p{0.16\textwidth}@{}}
+        \toprule
+        \textbf{Split} & \textbf{Source composition}
+        & \makecell{\textbf{Unique}\\\textbf{meetings}}
+        & \makecell{\textbf{Decision-SFT}\\\textbf{physical rows}}
+        & \makecell{\textbf{Decision-GRPO}\\\textbf{physical rows}} \\
+        \midrule
+        Training & 102 core $+$ 109 pre-2009 supplement & 211 & 312 & 312 \\
+        Validation & Post-2008 core, inherited without resampling & 13 & 13 & 13 \\
+        Test & Post-2008 core, inherited without resampling & 13 & 13 & 13 \\
+        \midrule
+        \textbf{Total} & & \textbf{237} & \textbf{338} & \textbf{338} \\
+        \bottomrule
+    \end{tabularx}
+    \begin{tablenotes}[flushleft]
+        \footnotesize
+        \item \textit{Notes:} The SFT and GRPO files are alternative role
+        views of the same decision population.  Their counts must not be added
+        to report 624 training samples or 676 total samples.  Bounded
+        resampling is applied only to training; the class-specific allocation
+        is reported in Tables~\ref{tab:ch2:chk3_training_composition} and
+        \ref{tab:ch2:chk3_bounded_resampling}.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+\paragraph*{External Minutes-rewriting evaluation.}
+The pre-2009 release is a separate evaluation population rather than a fourth
+training split.  It covers all 128 regular FOMC meetings from 1993 through
+2008.  The expanded ledger contains 1,725 available meeting--topic rows, while
+the balanced Core8 view contains $128\times8=1,024$ rows.  The formal primary
+evaluation constructs one balanced prompt per meeting and draws ten
+model-specific generations under shared meeting--replicate seeds.  The source
+and output counts are reconciled in
+Table~\ref{tab:ch2:external_minutes_allocation}.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{5pt}
+    \renewcommand{\arraystretch}{1.12}
+    \begin{threeparttable}
+    \caption{Allocation of the External Minutes-Rewriting Evaluation
+    Population}
+    \label{tab:ch2:external_minutes_allocation}
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}X
+        >{\raggedright\arraybackslash}p{0.28\textwidth}
+        >{\raggedleft\arraybackslash}p{0.17\textwidth}@{}}
+        \toprule
+        \textbf{Allocation component} & \textbf{Statistical unit}
+        & \textbf{Count} \\
+        \midrule
+        Official regular-meeting roster & Meeting & 128 \\
+        Expanded source-evidence view & Meeting--topic row & 1,725 \\
+        Balanced Core8 source-evidence view & Meeting--topic row & 1,024 \\
+        Primary evaluation prompts & One prompt per meeting & 128 \\
+        Stochastic generations per model ($K=10$) & Meeting--replicate output
+        & 1,280 \\
+        Three-model primary evaluation & Model--meeting--replicate output
+        & 3,840 \\
+        \bottomrule
+    \end{tabularx}
+    \begin{tablenotes}[flushleft]
+        \footnotesize
+        \item \textit{Notes:} This release is external to task-specific
+        fine-tuning and checkpoint selection.  The evaluation reference is a
+        deterministic, source-grounded synthetic target rather than the
+        official Minutes.  Independence from the pretrained base model's
+        historical training corpus is not claimed.
+    \end{tablenotes}
+    \end{threeparttable}
+\end{table}

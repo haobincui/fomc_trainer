@@ -51,8 +51,8 @@
 - **Model Evaluation Methods** — Defines the evaluation framework used to judge synthetic-text quality.
   - **Evaluation Methods** — Umbrella subsection describing the overall evaluation protocol.
     - **Textual Similarity** — N-gram and embedding-based similarity metrics for comparing synthetic and reference texts.
-    - **Sufficient Information** — Tests whether synthetic text preserves decision-relevant information from the source.
-    - **Statistical Significance using Synthetic Texts** — Runs statistical tests on outputs derived from synthetic text.
+    - **Core8 Leave-One-Out Sensitivity Diagnostic** — Measures within-Model chk-2 target-relative sensitivity to exact-deletion and token-matched-neutral topic interventions across repeated stochastic decodes.
+    - **Historical Sentiment–Treasury Association Diagnostic** — Compares reduced-form historical association coefficients across frozen synthetic-text artifacts.
     - **Decision-making Accuracy** — Measures how well downstream monetary-policy decisions can be predicted from synthetic text.
 
 <br>
@@ -64,8 +64,8 @@
     - **Training Results Summary** — Consolidated summary of the two training stages.
   - **Model Evaluation Results** — Reports results under the evaluation framework defined above.
     - **Textual Similarity Performance** — Results on the textual-similarity metrics.
-    - **Sufficient Information Results** — Results on the information-sufficiency tests.
-    - **Empirical Models Test Results** — Results of econometric tests that use the synthetic texts as inputs.
+    - **Core8 Leave-One-Out Sensitivity Results** — Reports raw MPNet and BERTScore-F1 deltas, hierarchical intervals, and stochastic-replicate adequacy checks.
+    - **Historical Sentiment–Treasury Association Results** — Reports paired coefficient contrasts and construct-sensitivity results.
     - **Decision Prediction Performance** — Results on downstream policy-decision prediction.
 
 <br>

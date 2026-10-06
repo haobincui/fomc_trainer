@@ -1,0 +1,101 @@
+model_name_or_path: output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1
+model_revision: null
+dtype: bfloat16
+attn_implementation: sdpa
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+use_bnb_nested_quant: true
+bnb_4bit_quant_storage: bfloat16
+
+# Paper Model chk-2 is an independent analysis-to-Minutes SFT branch. It is
+# deliberately outside the canonical retrain-v2 DAG and is not chk3-compatible.
+dataset_name: dataset/processed/retrain_v2/chk2_chk1_final_analysis_synthetic_minutes_flash_official_reference_v6_downstream128_recovery_v1_20260831/minutes_alignment
+dataset_paper_chk2_scope: paper-chk2-chk1-cp200-minutes-sft-v6-downstream128
+dataset_paper_chk2_release_manifest: dataset/processed/retrain_v2/chk2_chk1_final_analysis_synthetic_minutes_flash_official_reference_v6_downstream128_recovery_v1_20260831/release_manifest.json
+dataset_paper_chk2_release_manifest_sha256: cb022dcd379e069e3d5ad54d7c7fdbc9e2ee29f958c85d5ff45d066f7728c097
+dataset_prompt_column: prompt
+dataset_train_split: train
+dataset_test_split: validation
+system_prompt: |
+  You are a Federal Reserve Minutes editor. The user supplies a complete
+  economic or financial analysis. Use the native reasoning section for the
+  complete reasoning process, including any useful deliberation about the task,
+  prompt, JSON transport, answer contract, length, or drafting. Within that full
+  reasoning trace, identify every substantive claim, quantity, date, direction,
+  comparison, attribution, causal relation, and expression of uncertainty that
+  the formal rewrite must preserve. Then express the same information as exactly
+  one formal FOMC Minutes paragraph.
+
+  Do not add, remove, broaden, narrow, or contradict any substantive claim.
+  Preserve the numeric-quantity multiset and every explicit calendar reference.
+  The final paragraph may reuse phrases, sentences, or extensive wording from
+  the analysis when that wording is already suitable; lexical overlap is not an
+  error. The final paragraph as a whole must not be a verbatim copy of the whole
+  analysis. Do not emit headings, lists, JSON, citations, answer tags, or
+  model-control tags in the final paragraph.
+
+bf16: true
+tf32: true
+optim: paged_adamw_8bit
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+learning_rate: 1.0e-06
+lr_scheduler_type: cosine
+warmup_ratio: 0.05
+weight_decay: 0.01
+max_grad_norm: 1.0
+packing: false
+completion_only_loss: true
+max_length: 4096
+
+do_eval: true
+eval_strategy: steps
+eval_steps: 10
+max_steps: -1
+num_train_epochs: 3
+per_device_train_batch_size: 1
+per_device_eval_batch_size: 1
+ddp_find_unused_parameters: false
+dataloader_num_workers: 2
+dataloader_pin_memory: true
+
+# The root adapter is intentionally never merged by this run.
+peft_merged_model_path: output/training/retrain_v2/paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901/merged/unselected_root_adapter_prohibited
+peft_r: 32
+peft_lora_alpha: 64
+peft_lora_dropout: 0.05
+peft_bias: none
+peft_target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+  - gate_proj
+  - up_proj
+  - down_proj
+
+output_dir: output/training/retrain_v2/paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901/adapters/chk2
+overwrite_output_dir: false
+resume_from_checkpoint: null
+save_strategy: steps
+save_steps: 1
+save_total_limit: null
+save_only_model: false
+checkpoint_keep_last: 3
+checkpoint_keep_every_n_steps: 10
+callbacks:
+  - loss_log
+  - checkpoint_retention
+log_level: info
+logging_strategy: steps
+logging_steps: 1
+logging_first_step: true
+push_to_hub: false
+report_to: []
+seed: 42
+data_seed: 42
+use_cache: false
+use_liger_kernel: true
+activation_offloading: false

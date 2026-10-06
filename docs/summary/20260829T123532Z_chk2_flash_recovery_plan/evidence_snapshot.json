@@ -1,0 +1,64 @@
+{
+  "schema_version": "chk2-flash-recovery-evidence-v1",
+  "generated_at": "2026-08-29T12:38:47Z",
+  "selection_counts": {
+    "regenerate_and_reverify": 1531,
+    "reverify_only": 53,
+    "defer_targeted_repair": 126,
+    "all": 1710
+  },
+  "selection_id_sha256": {
+    "regenerate_and_reverify": "33b23e053568b7a6f88fa3d46786c69b96ca0ff5aa7d77ff65577b1c3a5fdf83",
+    "reverify_only": "ced1adb671daf5d29dcf24472eca6e70878030339d45e1adaff1eeb28b31d572",
+    "defer_targeted_repair": "06099468c788e6be17d08f5be06139e6b76249502568454bfce2934a05e67f2c",
+    "all": "78bb3d9621abb185d4f5b5650d291eedca3137befcbf06d5b4bd4326b23400ba"
+  },
+  "immediate_recovery": 1584,
+  "split_actions": [
+    {
+      "split": "train",
+      "regenerate_and_reverify": 1199,
+      "reverify_only": 44,
+      "defer_targeted_repair": 101,
+      "total": 1344
+    },
+    {
+      "split": "validation",
+      "regenerate_and_reverify": 159,
+      "reverify_only": 4,
+      "defer_targeted_repair": 12,
+      "total": 175
+    },
+    {
+      "split": "test",
+      "regenerate_and_reverify": 173,
+      "reverify_only": 5,
+      "defer_targeted_repair": 13,
+      "total": 191
+    }
+  ],
+  "canary": {
+    "phase": "verification",
+    "rows": 8,
+    "passes": 0,
+    "request_attempts": 32,
+    "status_codes": [
+      402
+    ],
+    "provider_message": "Insufficient Balance"
+  },
+  "cache_counts": {
+    "fresh_generation": 0,
+    "new_verification": 0,
+    "isolated_reverify_generation_copy": 53,
+    "original_generation": 3198,
+    "original_verification": 1710
+  },
+  "integrity_checks": {
+    "selection_is_complete_and_mutually_exclusive": true,
+    "all_id_digests_match": true,
+    "quality_gates_unchanged": true,
+    "original_caches_preserved": true,
+    "plaintext_api_key_recorded": false
+  }
+}

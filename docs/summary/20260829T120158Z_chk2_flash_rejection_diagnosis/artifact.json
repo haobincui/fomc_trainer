@@ -1,0 +1,506 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "CHK2 DeepSeek V4 Flash 未通过样本诊断",
+    "description": "区分 preparation 排除、generation gate 拒绝和 verification gate 拒绝，并诊断内容长度与 split 差异。",
+    "generatedAt": "2026-08-29T12:07:44Z",
+    "cards": [
+      {
+        "id": "prepared",
+        "dataset": "headline",
+        "field": "prepared",
+        "label": "已进入机器筛选"
+      },
+      {
+        "id": "rejected",
+        "dataset": "headline",
+        "field": "machine_rejected",
+        "label": "机器未通过"
+      },
+      {
+        "id": "reject_rate",
+        "dataset": "headline",
+        "field": "machine_reject_rate_pct",
+        "label": "机器未通过率"
+      },
+      {
+        "id": "promoted",
+        "dataset": "headline",
+        "field": "machine_pass",
+        "label": "已提升为训练就绪"
+      }
+    ],
+    "charts": [
+      {
+        "id": "generation_reasons",
+        "type": "horizontal_bar",
+        "dataset": "generation_reason_families",
+        "title": "Generation gate 的主要原因（可重叠）",
+        "x": "share_of_generation_reject_pct",
+        "y": "reason_family"
+      },
+      {
+        "id": "length_gradient",
+        "type": "bar",
+        "dataset": "length_bands",
+        "title": "段落越长，未通过率越高",
+        "x": "word_band",
+        "y": "reject_rate_pct"
+      }
+    ],
+    "tables": [
+      {
+        "id": "split_table",
+        "dataset": "split_summary",
+        "title": "按 split 分解"
+      },
+      {
+        "id": "verification_table",
+        "dataset": "verification_reason_families",
+        "title": "Verification 原因"
+      },
+      {
+        "id": "preparation_table",
+        "dataset": "preparation_reasons",
+        "title": "进入生成前的排除原因"
+      }
+    ],
+    "blocks": [
+      {
+        "type": "summary",
+        "title": "结论",
+        "text": "主瓶颈是长段落上的内容保真：归因、数字、覆盖和去风格化；不是 API 失败或基础 JSON/schema。"
+      },
+      {
+        "type": "caveat",
+        "title": "计数口径",
+        "text": "原因家族为行级命中且可重叠；同一条记录可能触发多个错误码。机器门禁结果不能替代人工质量评估。"
+      }
+    ],
+    "sources": [
+      {
+        "id": "run_summary",
+        "label": "DeepSeek V4 Flash run summary",
+        "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/summary.json",
+        "role": "prepared/pass/split/API totals"
+      },
+      {
+        "id": "machine_rejections",
+        "label": "Machine rejection ledgers",
+        "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/machine_rejections/*.jsonl",
+        "role": "row-level stages and reason codes"
+      },
+      {
+        "id": "prepared_rows",
+        "label": "Prepared candidate rows",
+        "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/prepared/*.jsonl",
+        "role": "denominators, section categories, paragraph lengths"
+      },
+      {
+        "id": "promoted_summary",
+        "label": "Machine-ready promoted release summary",
+        "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_machine_ready_v1_20260829/summary.json",
+        "role": "confirms 1,488 promoted rows and training_ready=true"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-08-29T12:07:44Z",
+    "datasets": {
+      "headline": [
+        {
+          "prepared": 3198,
+          "machine_pass": 1488,
+          "machine_rejected": 1710,
+          "machine_reject_rate_pct": 53.470919324577864,
+          "generation_rejected": 1488,
+          "verification_rejected": 222,
+          "multi_reason_rows": 679,
+          "preparation_excluded": 1679
+        }
+      ],
+      "stage_breakdown": [
+        {
+          "stage": "Generation gate",
+          "rows": 1488,
+          "share_of_machine_reject_pct": 87.01754385964912
+        },
+        {
+          "stage": "Verification gate",
+          "rows": 222,
+          "share_of_machine_reject_pct": 12.982456140350877
+        }
+      ],
+      "generation_reason_families": [
+        {
+          "reason_family": "归因集合不一致",
+          "rows": 663,
+          "share_of_generation_reject_pct": 44.556451612903224
+        },
+        {
+          "reason_family": "去 Minutes 风格不足",
+          "rows": 502,
+          "share_of_generation_reject_pct": 33.736559139784944
+        },
+        {
+          "reason_family": "数字集合不一致",
+          "rows": 386,
+          "share_of_generation_reject_pct": 25.940860215053764
+        },
+        {
+          "reason_family": "证据/目标覆盖或精确跨度失败",
+          "rows": 295,
+          "share_of_generation_reject_pct": 19.8252688172043
+        },
+        {
+          "reason_family": "日期集合不一致",
+          "rows": 34,
+          "share_of_generation_reject_pct": 2.28494623655914
+        },
+        {
+          "reason_family": "结构或 schema 失败",
+          "rows": 28,
+          "share_of_generation_reject_pct": 1.881720430107527
+        },
+        {
+          "reason_family": "reasoning 含传输元信息",
+          "rows": 17,
+          "share_of_generation_reject_pct": 1.14247311827957
+        }
+      ],
+      "verification_reason_families": [
+        {
+          "reason_family": "语义等价性/相容性失败",
+          "rows": 157,
+          "share_of_verification_reject_pct": 70.72072072072072
+        },
+        {
+          "reason_family": "证据覆盖或精确跨度失败",
+          "rows": 61,
+          "share_of_verification_reject_pct": 27.47747747747748
+        },
+        {
+          "reason_family": "验证缺失或最终失败",
+          "rows": 2,
+          "share_of_verification_reject_pct": 0.9009009009009009
+        },
+        {
+          "reason_family": "验证 verdict/schema 异常",
+          "rows": 2,
+          "share_of_verification_reject_pct": 0.9009009009009009
+        }
+      ],
+      "top_raw_reasons": [
+        {
+          "reason_code": "reasoning_attribution_set_mismatch",
+          "hits": 515
+        },
+        {
+          "reason_code": "analysis_insufficiently_destylized",
+          "hits": 502
+        },
+        {
+          "reason_code": "reasoning_numeric_multiset_mismatch",
+          "hits": 367
+        },
+        {
+          "reason_code": "target_sentence_uncovered",
+          "hits": 279
+        },
+        {
+          "reason_code": "analysis_attribution_set_mismatch",
+          "hits": 248
+        },
+        {
+          "reason_code": "verifier_reported_issues",
+          "hits": 157
+        },
+        {
+          "reason_code": "verifier_overall_fail",
+          "hits": 157
+        },
+        {
+          "reason_code": "verifier_not_bidirectionally_entailed",
+          "hits": 148
+        },
+        {
+          "reason_code": "verifier_reasoning_incompatible",
+          "hits": 115
+        },
+        {
+          "reason_code": "verifier_analysis_claim_not_supported",
+          "hits": 102
+        },
+        {
+          "reason_code": "verifier_target_claim_not_entailed",
+          "hits": 86
+        },
+        {
+          "reason_code": "analysis_evidence_not_exact",
+          "hits": 67
+        },
+        {
+          "reason_code": "analysis_numeric_multiset_mismatch",
+          "hits": 65
+        },
+        {
+          "reason_code": "verification_analysis_sentence_uncovered",
+          "hits": 57
+        },
+        {
+          "reason_code": "target_span_not_exact",
+          "hits": 38
+        },
+        {
+          "reason_code": "nonconsecutive_claim_id",
+          "hits": 32
+        },
+        {
+          "reason_code": "reasoning_date_set_mismatch",
+          "hits": 30
+        },
+        {
+          "reason_code": "verification_analysis_evidence_not_exact",
+          "hits": 17
+        }
+      ],
+      "split_summary": [
+        {
+          "split": "train",
+          "prepared": 2563,
+          "machine_pass": 1219,
+          "rejected": 1344,
+          "reject_rate_pct": 52.43854857588763,
+          "generation_rejected": 1164,
+          "generation_reject_rate_pct": 45.41552867733125,
+          "verification_rejected": 180,
+          "verification_reject_rate_given_generation_pass_pct": 12.866333095067906
+        },
+        {
+          "split": "validation",
+          "prepared": 327,
+          "machine_pass": 152,
+          "rejected": 175,
+          "reject_rate_pct": 53.51681957186544,
+          "generation_rejected": 154,
+          "generation_reject_rate_pct": 47.09480122324159,
+          "verification_rejected": 21,
+          "verification_reject_rate_given_generation_pass_pct": 12.138728323699421
+        },
+        {
+          "split": "test",
+          "prepared": 308,
+          "machine_pass": 117,
+          "rejected": 191,
+          "reject_rate_pct": 62.01298701298701,
+          "generation_rejected": 170,
+          "generation_reject_rate_pct": 55.1948051948052,
+          "verification_rejected": 21,
+          "verification_reject_rate_given_generation_pass_pct": 15.217391304347826
+        }
+      ],
+      "length_quartiles": [
+        {
+          "quartile": "Q1",
+          "n": 800,
+          "min_words": 25,
+          "median_words": 61,
+          "max_words": 77,
+          "rejected": 301,
+          "reject_rate_pct": 37.625,
+          "generation_reject_rate_pct": 29.875,
+          "verification_reject_rate_given_generation_pass_pct": 11.05169340463458
+        },
+        {
+          "quartile": "Q2",
+          "n": 799,
+          "min_words": 77,
+          "median_words": 92,
+          "max_words": 108,
+          "rejected": 370,
+          "reject_rate_pct": 46.30788485607009,
+          "generation_reject_rate_pct": 38.67334167709637,
+          "verification_reject_rate_given_generation_pass_pct": 12.448979591836734
+        },
+        {
+          "quartile": "Q3",
+          "n": 800,
+          "min_words": 108,
+          "median_words": 125,
+          "max_words": 145,
+          "rejected": 452,
+          "reject_rate_pct": 56.5,
+          "generation_reject_rate_pct": 49.5,
+          "verification_reject_rate_given_generation_pass_pct": 13.861386138613861
+        },
+        {
+          "quartile": "Q4",
+          "n": 799,
+          "min_words": 145,
+          "median_words": 184,
+          "max_words": 393,
+          "rejected": 587,
+          "reject_rate_pct": 73.46683354192741,
+          "generation_reject_rate_pct": 68.08510638297872,
+          "verification_reject_rate_given_generation_pass_pct": 16.862745098039216
+        }
+      ],
+      "length_bands": [
+        {
+          "word_band": "≤50",
+          "n": 177,
+          "rejected": 59,
+          "reject_rate_pct": 33.333333333333336
+        },
+        {
+          "word_band": "51–100",
+          "n": 1255,
+          "rejected": 529,
+          "reject_rate_pct": 42.15139442231076
+        },
+        {
+          "word_band": "101–150",
+          "n": 1039,
+          "rejected": 583,
+          "reject_rate_pct": 56.111645813282
+        },
+        {
+          "word_band": "151–200",
+          "n": 458,
+          "rejected": 324,
+          "reject_rate_pct": 70.74235807860262
+        },
+        {
+          "word_band": ">200",
+          "n": 269,
+          "rejected": 215,
+          "reject_rate_pct": 79.92565055762081
+        }
+      ],
+      "section_categories": [
+        {
+          "section_category": "core_economic_financial",
+          "prepared": 2999,
+          "rejected": 1578,
+          "reject_rate_pct": 52.61753917972658
+        },
+        {
+          "section_category": "descriptive_market_operations",
+          "prepared": 194,
+          "rejected": 129,
+          "reject_rate_pct": 66.49484536082474
+        },
+        {
+          "section_category": "descriptive_research_topic",
+          "prepared": 5,
+          "rejected": 3,
+          "reject_rate_pct": 60.0
+        }
+      ],
+      "section_summary": [
+        {
+          "section_name": "Participants' Views on Current Conditions and the Economic Outlook",
+          "prepared": 756,
+          "rejected": 539,
+          "reject_rate_pct": 71.29629629629629
+        },
+        {
+          "section_name": "Developments in Financial Markets and Open Market Operations",
+          "prepared": 169,
+          "rejected": 113,
+          "reject_rate_pct": 66.86390532544378
+        },
+        {
+          "section_name": "Staff Economic Outlook",
+          "prepared": 144,
+          "rejected": 82,
+          "reject_rate_pct": 56.94444444444444
+        },
+        {
+          "section_name": "Staff Review of the Financial Situation",
+          "prepared": 1086,
+          "rejected": 503,
+          "reject_rate_pct": 46.316758747697975
+        },
+        {
+          "section_name": "Staff Review of the Economic Situation",
+          "prepared": 965,
+          "rejected": 432,
+          "reject_rate_pct": 44.766839378238345
+        }
+      ],
+      "preparation_reasons": [
+        {
+          "reason_code": "administrative_or_policy_target",
+          "hits": 990
+        },
+        {
+          "reason_code": "official_target_contains_section_heading",
+          "hits": 574
+        },
+        {
+          "reason_code": "section_not_in_descriptive_allowlist",
+          "hits": 289
+        },
+        {
+          "reason_code": "header_only_table",
+          "hits": 249
+        },
+        {
+          "reason_code": "abnormal_section",
+          "hits": 43
+        },
+        {
+          "reason_code": "official_target_too_long",
+          "hits": 24
+        },
+        {
+          "reason_code": "official_target_too_short",
+          "hits": 9
+        },
+        {
+          "reason_code": "official_source_exact_match_count_not_one",
+          "hits": 3
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "run_summary",
+      "label": "DeepSeek V4 Flash run summary",
+      "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/summary.json",
+      "role": "prepared/pass/split/API totals"
+    },
+    {
+      "id": "machine_rejections",
+      "label": "Machine rejection ledgers",
+      "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/machine_rejections/*.jsonl",
+      "role": "row-level stages and reason codes"
+    },
+    {
+      "id": "prepared_rows",
+      "label": "Prepared candidate rows",
+      "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/prepared/*.jsonl",
+      "role": "denominators, section categories, paragraph lengths"
+    },
+    {
+      "id": "promoted_summary",
+      "label": "Machine-ready promoted release summary",
+      "path": "output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_machine_ready_v1_20260829/summary.json",
+      "role": "confirms 1,488 promoted rows and training_ready=true"
+    }
+  ],
+  "package_info": {
+    "originUrl": "artifact://chk2-flash-rejection-diagnosis-20260829T120158Z",
+    "controls": {
+      "edit": false,
+      "refresh": false
+    },
+    "renderer": "standalone-static-fallback"
+  }
+}

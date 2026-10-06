@@ -1,0 +1,101 @@
+{
+  "checkpoint_annotations": {
+    "evaluated_exploratory_checkpoint": 450,
+    "selected_checkpoint_step": null,
+    "terminal_checkpoint": 468
+  },
+  "coverage": {
+    "completion_reward_rows": 3744,
+    "completion_rewards_per_step": 8,
+    "epochs": 3,
+    "optimizer_steps": 468,
+    "rolling_window_steps": 20
+  },
+  "epoch_summaries": [
+    {
+      "completion_reward_count": 1248,
+      "epoch": 1,
+      "mean_within_step_sample_std": 0.32839399798748214,
+      "reward_mean": 0.26851462339743587,
+      "reward_sample_std": 0.3882330526941111,
+      "step_clustered_standard_error": 0.015238890936678968,
+      "step_end": 156,
+      "step_start": 1
+    },
+    {
+      "completion_reward_count": 1248,
+      "epoch": 2,
+      "mean_within_step_sample_std": 0.4020173097849716,
+      "reward_mean": 0.3912810496794871,
+      "reward_sample_std": 0.44745533503569324,
+      "step_clustered_standard_error": 0.016736271274554952,
+      "step_end": 312,
+      "step_start": 157
+    },
+    {
+      "completion_reward_count": 1248,
+      "epoch": 3,
+      "mean_within_step_sample_std": 0.3969121155854624,
+      "reward_mean": 0.41346153846153844,
+      "reward_sample_std": 0.45763832962379253,
+      "step_clustered_standard_error": 0.018657676215946203,
+      "step_end": 468,
+      "step_start": 313
+    }
+  ],
+  "implementation": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/jobs/eval/plot_chk3_grpo_reward_with_standard_error.py",
+    "sha256": "b65717d1b78281f66e846afb6c40d2adecb88a0cf453edd4a7681b3fbac57962"
+  },
+  "paper_model": "Model chk-3",
+  "rendering": {
+    "pdf": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/chk3_grpo_reward_with_standard_error.pdf",
+      "sha256": "5c8b111c4fc4dfabd5365204f7b7c323bb4fbb0acdaea257ffc524b08b04b28d"
+    },
+    "per_step_reward_mean_line": false,
+    "png": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/chk3_grpo_reward_with_standard_error.png",
+      "sha256": "cf5050818cfe2d4f526302bc52bc34b55b52b67318ed1b4f952458d42ed93329"
+    },
+    "reward_mean_window_steps": 20,
+    "reward_support": [
+      0.0,
+      1.0
+    ],
+    "step_clustered_standard_error_band": true
+  },
+  "repository_artifact": "chk4",
+  "runtime": {
+    "matplotlib": "3.7.2",
+    "numpy": "1.24.3",
+    "python": "3.11.5"
+  },
+  "schema_version": "chk3-grpo-reward-mean-plus-minus-one-se-figure-v1",
+  "source": {
+    "completion_reward_rows": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk4_from_pre2009_cp38_direct_grpo_full_no_smoke_v1_20260812/adapters/chk4_grpo/reward.jsonl",
+    "completion_reward_rows_sha256": "123491ea525bef4baf6fc1aeb7d7ff3f216be8a6f8ad0b606aee46ebfdd031f4",
+    "trainer_state": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk4_from_pre2009_cp38_direct_grpo_full_no_smoke_v1_20260812/adapters/chk4_grpo/trainer_state.json",
+    "trainer_state_sha256": "1ff7297e3ecd84c55c63a505646ac7c8e52412928d82f5b12465ea5998f9f387"
+  },
+  "standard_error_definition": {
+    "accounts_for_between_run_randomness": false,
+    "accounts_for_within_step_completion_clustering": true,
+    "band": "rolling step-level mean plus or minus one step-level standard error",
+    "band_clipped": false,
+    "cluster_unit": "optimizer step",
+    "clusters_per_window": 20,
+    "completion_rewards_per_step": 8,
+    "completion_rewards_per_window": 160,
+    "corrects_between_step_serial_dependence": false,
+    "corrects_overlapping_window_dependence": false,
+    "formula": "sample_sd(step_reward_means)/sqrt(number_of_steps)",
+    "is_confidence_interval": false,
+    "is_standard_error": true,
+    "name": "naive optimizer-step-level standard error",
+    "sample_standard_deviation_ddof": 1,
+    "treats_step_means_as_independent_within_window": true,
+    "window_steps": 20
+  },
+  "training_stage": "GRPO"
+}

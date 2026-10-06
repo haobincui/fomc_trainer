@@ -164,7 +164,7 @@ _NUMBER_ATOM = (
     r"|(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?"
 )
 _NUMBER_EXPRESSION_RE = re.compile(
-    rf"(?<![A-Za-z0-9])(?P<number>{_NUMBER_ATOM})"
+    rf"(?<![A-Za-z0-9])(?P<sign>[+\-\u2212])?(?P<number>{_NUMBER_ATOM})"
     r"(?:\s*(?P<scale>thousand|million|billion|trillion))?"
     r"(?:\s*(?P<rate>percentage\s+points?|percent|basis\s+points?|bps?|%))?"
     r"(?![A-Za-z0-9])",
@@ -756,7 +756,8 @@ def _numeric_values(text: str) -> Counter[str]:
         # them as a set in _date_values so repeating a year after several
         # month names does not create a false unsupported-number error.
         if (
-            not match.group("scale")
+            not match.group("sign")
+            and not match.group("scale")
             and not match.group("rate")
             and re.fullmatch(r"(?:19|20)\d{2}", raw_number)
         ):
@@ -765,6 +766,8 @@ def _numeric_values(text: str) -> Counter[str]:
             value = _decimal_number_atom(raw_number)
         except (InvalidOperation, ZeroDivisionError):
             continue
+        if match.group("sign") in {"-", "\u2212"}:
+            value = -value
         scale = str(match.group("scale") or "").casefold()
         if scale:
             value *= _SCALE_FACTORS[scale]

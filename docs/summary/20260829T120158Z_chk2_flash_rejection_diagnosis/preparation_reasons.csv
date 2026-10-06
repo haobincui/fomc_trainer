@@ -1,0 +1,9 @@
+reason_code,hits
+administrative_or_policy_target,990
+official_target_contains_section_heading,574
+section_not_in_descriptive_allowlist,289
+header_only_table,249
+abnormal_section,43
+official_target_too_long,24
+official_target_too_short,9
+official_source_exact_match_count_not_one,3

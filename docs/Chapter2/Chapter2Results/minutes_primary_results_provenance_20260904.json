@@ -1,0 +1,516 @@
+{
+  "schema_version": "chapter2-minutes-primary-results-reconciliation-v1",
+  "reconciliation_date": "2026-09-04",
+  "source_run": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901",
+  "notebook": "docs/Chapter2/review/minutes_primary_results_reconciliation_20260904.ipynb",
+  "results_csv": "docs/Chapter2/Chapter2Results/minutes_primary_meeting_paired_tests_20260904.csv",
+  "results_csv_sha256": "598841c1ea037f9f399c96816bb8887dddf8cc884b28c68e2f022dc51788cc90",
+  "validation_status": "all_executed_assertions_passed",
+  "environment": {
+    "python": "3.11.5",
+    "numpy": "1.26.4",
+    "pandas": "2.1.4",
+    "scipy": "1.11.1"
+  },
+  "source_bindings": [
+    {
+      "binding": "pinned_score_manifest",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/score_manifest.json",
+      "sha256": "f76666c99d5fb8c50fab637dff92d6cdb6c672d4db23fd9a238e298c6d949ede",
+      "bytes": 9320,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.bootstrap_draws.jsonl",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/bootstrap_draws.jsonl",
+      "sha256": "4f44e77d537eddb0d99a35ce17b8f7137a3ab78ea40432e857536c3bc9422d4c",
+      "bytes": 6602391,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.model_summary.csv",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/model_summary.csv",
+      "sha256": "02192df1c24bf5aba030ad455f8ea0ce83594eb53b013e3166ab05f377474fc6",
+      "bytes": 3890,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.pairwise_contrasts.csv",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/pairwise_contrasts.csv",
+      "sha256": "2ff1a6a8bcf2d719dd70be971eb7e2bed802fec72b307b1b1ba8dc31377bb17a",
+      "bytes": 51798,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.per_k_results.csv",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/per_k_results.csv",
+      "sha256": "761014dad527d55fee3a9662a73d2d5873b30de12a50c52fd10917d63d88e213",
+      "bytes": 37490,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.results.json",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/results.json",
+      "sha256": "764bcabcf4e9aec8a714a9d67930b91f6da54dc37880850e0de995b61e41737d",
+      "bytes": 312556,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.row_scores",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/row_scores.jsonl",
+      "sha256": "38fb692087819c8fef6f1724a9ce6f90551307e5087886533f57538a170bb5a8",
+      "bytes": 12626740,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.artifacts.split_results.csv",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/split_results.csv",
+      "sha256": "3ebd47f1437684065f1a9a440685b8905631c4f838139d68c8a5481dd0ae0115",
+      "bytes": 5922,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.inputs.evaluation_manifest",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/complete_evaluation_manifest.json",
+      "sha256": "b8e37c31c6f56ecaa3f9e5b41a2a814dc9e3f9e2c963d23e18adb5c2b308321d",
+      "bytes": 6456,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.inputs.generations",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/generation_rows.jsonl",
+      "sha256": "6ce480f45b1aa29f4465c12e064814f53efe9abb398cdd04c38ad996ad3531bd",
+      "bytes": 119750991,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.inputs.samples",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/samples.jsonl",
+      "sha256": "acacb637c7a63cf22ac0111e0865997af14a9ac4b7f6007c4959dcfa55c7bffd",
+      "bytes": 1194318,
+      "verified": true
+    },
+    {
+      "binding": "score_manifest.inputs.semantic_manifest",
+      "path": "configs/main/checkpoint_eval_semantic_models.json",
+      "sha256": "639ca25cf4f5e695b0c6cfeeb47aba75d3e6dfeda1ad87510c23bb4f4a378bf7",
+      "bytes": 1199,
+      "verified": true
+    },
+    {
+      "binding": "scoring_implementation",
+      "path": "jobs/eval/paper_chk2_text_similarity_scoring.py",
+      "sha256": "ce82c6a322270cc2b573646b27b9d76339e2e75486adb403edc559d26acf1dc4",
+      "bytes": 82190,
+      "verified": true
+    },
+    {
+      "binding": "source_evaluation_manifest",
+      "path": "output/evaluation/retrain_v2/paper_chk2_text_similarity_all391_chk0_chk1_chk2cp50_vllm_t06_p09_k10_b1000_v1_20260901/evaluation_manifest.json",
+      "sha256": "776538ed252d274daf11c88a76bf06b4fc827a5050ef5bd96923cc9ff8cef126",
+      "bytes": 9241,
+      "verified": true
+    },
+    {
+      "binding": "evaluation_release.release_manifest",
+      "path": "dataset/processed/retrain_v2/chk2_chk1_final_analysis_synthetic_minutes_flash_official_reference_v6_downstream128_recovery_v1_20260831/release_manifest.json",
+      "sha256": "cb022dcd379e069e3d5ad54d7c7fdbc9e2ee29f958c85d5ff45d066f7728c097",
+      "bytes": 12624,
+      "verified": true
+    },
+    {
+      "binding": "evaluation_release.prompt_contract",
+      "path": "dataset/processed/retrain_v2/chk2_chk1_final_analysis_synthetic_minutes_flash_official_reference_v6_downstream128_recovery_v1_20260831/prompt_contract.json",
+      "sha256": "1355f417b26cd7c44289951258e0ed86d1243448c64aef9d6bf33de7f4c5c616",
+      "bytes": 1585,
+      "verified": true
+    },
+    {
+      "binding": "checkpoint_selection",
+      "path": "output/evaluation/retrain_v2/paper_chk2_minutes_checkpoint_hard_gate_probe_v1_20260901/relaxed_checkpoint_selection_v1.json",
+      "sha256": "9c2fcff135114ff1165c60b881f109c69bb3c0f3b04368157744e634b99e138f",
+      "bytes": 6131,
+      "verified": true
+    }
+  ],
+  "score_manifest_payload_sha256": "6bc89b2c1b962d3bef58fa69807ce6fbe7bcd20c4334a481069f3cdb14b929ba",
+  "score_contract_sha256": "54b3a7c936da1cee2f5d471e79bf89b97155d3347d5266ec33dcf613fae2d886",
+  "coverage": {
+    "samples": 391,
+    "meetings": 124,
+    "models": 3,
+    "replicates": 10,
+    "row_scores": 11730,
+    "meeting_date_min": "2009-01-28",
+    "meeting_date_max": "2025-01-29",
+    "split_rows": {
+      "train": 305,
+      "test": 44,
+      "validation": 42
+    },
+    "split_meetings": {
+      "test": 13,
+      "train": 98,
+      "validation": 13
+    }
+  },
+  "evaluation_role": "in_sample_training_release_reconstruction_diagnostic",
+  "scope": {
+    "held_out_generalization_claim_allowed": false,
+    "leakage_safe_evaluation": false,
+    "reference": "teacher_synthetic_rewritten_minutes_after_unique_think_boundary",
+    "training_release_reconstruction_diagnostic": true
+  },
+  "training_release_evaluation_eligible": false,
+  "models": {
+    "chk0": {
+      "files": {
+        "config.json": "c6162f33d194369772137ecdd4bdcac4cf3fed4f40607d694b94bcbb8e5dc39f",
+        "generation_config.json": "cd5194726d1e8f7361a8c8425fc11d33ade5e69de1fd7615eb23fae5601af68b",
+        "model-00001-of-000002.safetensors": "7e6b24744354ef4ba547547cc758339090f46ba2da917845cfc69f7d4ded9edb",
+        "model-00002-of-000002.safetensors": "19fb83b79bd0d06d49b7cf6f86b83f5183cd292aa2c028d633ca4fceac1ae742",
+        "model.safetensors.index.json": "83bdf4be4bb1a054ff315cd804554c48a88036226fdfbc65bee84ff562fea32a",
+        "tokenizer.json": "b9c9eb63a8e03059914880f918cd28a880dec8b6e15e4461e1ff677e3743dbb8",
+        "tokenizer_config.json": "5a773d1f7a8716f53f414040cbbf94ddf5f55f4f00bc3b4cc8fd8d6b64369777"
+      },
+      "path": "models/DeepSeek-R1-Distill-Llama-8B",
+      "runtime_payload_sha256": "97480b0fa2614940b2a4277a828620585485495c6742ba463634869adab7cabc",
+      "sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11"
+    },
+    "chk1": {
+      "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3"
+    },
+    "chk2": {
+      "adapter_model_sha256": "158f73c538f6969c7d829f869ec79bff501caaa92c40bb61b564c957d92717bf",
+      "adapter_path": "output/training/retrain_v2/paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901/adapters/chk2/checkpoint-50",
+      "base_model_path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "config_sha256": "1b92cf693cb4f3e2b727dafdd84967c8578438b3380626ec100053f810a398eb",
+      "sha256": "4fa9a27ebf284b71c6630225dd68d4b8bd3c0900300fcba712baa83d0640a667"
+    }
+  },
+  "model_fingerprints_recorded_not_rehashed": {
+    "chk0": {
+      "excluded_from_runtime_fingerprint": [
+        ".git/**",
+        ".gitattributes",
+        "README.md",
+        "LICENSE",
+        "figures/**"
+      ],
+      "file_count": 7,
+      "files": [
+        {
+          "bytes": 828,
+          "path": "config.json",
+          "sha256": "c6162f33d194369772137ecdd4bdcac4cf3fed4f40607d694b94bcbb8e5dc39f"
+        },
+        {
+          "bytes": 181,
+          "path": "generation_config.json",
+          "sha256": "cd5194726d1e8f7361a8c8425fc11d33ade5e69de1fd7615eb23fae5601af68b"
+        },
+        {
+          "bytes": 8667826246,
+          "path": "model-00001-of-000002.safetensors",
+          "sha256": "7e6b24744354ef4ba547547cc758339090f46ba2da917845cfc69f7d4ded9edb"
+        },
+        {
+          "bytes": 7392730108,
+          "path": "model-00002-of-000002.safetensors",
+          "sha256": "19fb83b79bd0d06d49b7cf6f86b83f5183cd292aa2c028d633ca4fceac1ae742"
+        },
+        {
+          "bytes": 24240,
+          "path": "model.safetensors.index.json",
+          "sha256": "83bdf4be4bb1a054ff315cd804554c48a88036226fdfbc65bee84ff562fea32a"
+        },
+        {
+          "bytes": 9084480,
+          "path": "tokenizer.json",
+          "sha256": "b9c9eb63a8e03059914880f918cd28a880dec8b6e15e4461e1ff677e3743dbb8"
+        },
+        {
+          "bytes": 3072,
+          "path": "tokenizer_config.json",
+          "sha256": "5a773d1f7a8716f53f414040cbbf94ddf5f55f4f00bc3b4cc8fd8d6b64369777"
+        }
+      ],
+      "kind": "directory_runtime_payload_allowlist",
+      "lineage_full_directory_sha256": "bfb086cb87e9616e60805fc6f6f95826294b1de70b158cfea2d3e213df38ca11",
+      "path": "models/DeepSeek-R1-Distill-Llama-8B",
+      "sha256": "97480b0fa2614940b2a4277a828620585485495c6742ba463634869adab7cabc",
+      "total_bytes": 16069669155
+    },
+    "chk1": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 14,
+      "kind": "directory",
+      "path": "output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1",
+      "sha256": "0989b94792f8ab6377e2979aaedeb37010b9a2c5e05c77a459b4e5cda5b806e3",
+      "total_bytes": 16077912659
+    },
+    "chk2": {
+      "algorithm": "sha256(sorted UTF-8 records '<relative_path>\\0<size>\\0<file_sha256>\\n')",
+      "file_count": 13,
+      "kind": "directory",
+      "path": "output/training/retrain_v2/paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901/adapters/chk2/checkpoint-50",
+      "sha256": "4fa9a27ebf284b71c6630225dd68d4b8bd3c0900300fcba712baa83d0640a667",
+      "total_bytes": 356084868
+    }
+  },
+  "checkpoint_selection": {
+    "bytes": 6131,
+    "path": "output/evaluation/retrain_v2/paper_chk2_minutes_checkpoint_hard_gate_probe_v1_20260901/relaxed_checkpoint_selection_v1.json",
+    "sha256": "9c2fcff135114ff1165c60b881f109c69bb3c0f3b04368157744e634b99e138f"
+  },
+  "release": {
+    "max_prompt_tokens": 465,
+    "meeting_union": 124,
+    "prompt_contract": {
+      "bytes": 1585,
+      "path": "dataset/processed/retrain_v2/chk2_chk1_final_analysis_synthetic_minutes_flash_official_reference_v6_downstream128_recovery_v1_20260831/prompt_contract.json",
+      "sha256": "1355f417b26cd7c44289951258e0ed86d1243448c64aef9d6bf33de7f4c5c616"
+    },
+    "release_manifest": {
+      "bytes": 12624,
+      "path": "dataset/processed/retrain_v2/chk2_chk1_final_analysis_synthetic_minutes_flash_official_reference_v6_downstream128_recovery_v1_20260831/release_manifest.json",
+      "sha256": "cb022dcd379e069e3d5ad54d7c7fdbc9e2ee29f958c85d5ff45d066f7728c097"
+    },
+    "split_meetings": {
+      "test": 13,
+      "train": 98,
+      "validation": 13
+    },
+    "split_rows": {
+      "test": 44,
+      "train": 305,
+      "validation": 42
+    },
+    "system_prompt_sha256": "4730a4ed585238547447ab850836db5a9fc67e5c3b1328b485c88d701ae78c4e",
+    "user_prompt_template_sha256": "423e79849cb66d6361c986f705ea4d4b16a03e28fec5826113eb9c8030a976d0"
+  },
+  "scoring_policy": "raw_best_effort",
+  "reference": "teacher_synthetic_rewritten_minutes_after_unique_think_boundary",
+  "aggregation": "replicate mean within sample; sample mean within meeting; equal meeting mean",
+  "relative_percent_denominator": "metric-specific chk0 equal-meeting mean for every contrast",
+  "paired_t": {
+    "method": "two-sided Student paired t on 124 observed replicate-averaged meeting differences",
+    "df": 123,
+    "confidence": 0.95,
+    "multiplicity_adjusted": false
+  },
+  "frozen_bootstrap": {
+    "scheme": "meeting_cluster_primary",
+    "draws": 1000,
+    "confidence": 0.95,
+    "method": "split-stratified paired meeting and paired replicate resampling; linear percentile intervals",
+    "verification": "recomputed endpoints from hash-verified frozen bootstrap_draws.jsonl"
+  },
+  "meeting_sign_flip": {
+    "method": "two-sided Monte Carlo plus-one",
+    "assignments": 100000,
+    "multiplicity": "Holm across 3 contrasts x 2 raw metrics",
+    "family_size": 6,
+    "verification": "independently rerun using frozen seeds and raw-score meeting differences"
+  },
+  "model_means": [
+    {
+      "model_id": "chk0",
+      "mpnet_cosine": 0.9367933482000737,
+      "bertscore_f1": 0.957022279051523
+    },
+    {
+      "model_id": "chk1",
+      "mpnet_cosine": 0.9419947945700049,
+      "bertscore_f1": 0.9604525103329223
+    },
+    {
+      "model_id": "chk2",
+      "mpnet_cosine": 0.9443598738220018,
+      "bertscore_f1": 0.9612857831160777
+    }
+  ],
+  "results": [
+    {
+      "contrast_id": "chk1_minus_chk0",
+      "metric": "mpnet_cosine",
+      "before_model": "chk0",
+      "after_model": "chk1",
+      "scoring_policy": "raw_best_effort",
+      "meetings": 124,
+      "df": 123,
+      "chk0_mean": 0.9367933482000737,
+      "before_mean": 0.9367933482000737,
+      "after_mean": 0.9419947945700049,
+      "estimate": 0.005201446369931266,
+      "relative_percent_of_chk0": 0.5552394644907724,
+      "paired_difference_sd": 0.009840402290340914,
+      "paired_t_se": 0.0008836942127108238,
+      "paired_t_statistic": 5.886025160191204,
+      "paired_t_p_two_sided_unadjusted": 3.5102010330418165e-08,
+      "paired_t_ci_lower_95": 0.0034522278595215568,
+      "paired_t_ci_upper_95": 0.006950664880340976,
+      "frozen_bootstrap_ci_lower_95": 0.002132312198808249,
+      "frozen_bootstrap_ci_upper_95": 0.008000312880975004,
+      "frozen_bootstrap_draws": 1000,
+      "meeting_sign_flip_p_two_sided": 9.99990000099999e-06,
+      "meeting_sign_flip_holm_adjusted_p": 5.999940000599994e-05,
+      "meeting_sign_flip_holm_family_size": 6,
+      "meeting_sign_flip_assignments": 100000,
+      "meeting_sign_flip_seed": 2431875015,
+      "frozen_bootstrap_ci_includes_zero": false
+    },
+    {
+      "contrast_id": "chk2_minus_chk1",
+      "metric": "mpnet_cosine",
+      "before_model": "chk1",
+      "after_model": "chk2",
+      "scoring_policy": "raw_best_effort",
+      "meetings": 124,
+      "df": 123,
+      "chk0_mean": 0.9367933482000737,
+      "before_mean": 0.9419947945700049,
+      "after_mean": 0.9443598738220018,
+      "estimate": 0.00236507925199686,
+      "relative_percent_of_chk0": 0.2524654190319617,
+      "paired_difference_sd": 0.009256345278100346,
+      "paired_t_se": 0.0008312443446686622,
+      "paired_t_statistic": 2.845227479941041,
+      "paired_t_p_two_sided_unadjusted": 0.005200320790907142,
+      "paired_t_ci_lower_95": 0.0007196820394164687,
+      "paired_t_ci_upper_95": 0.0040104764645772515,
+      "frozen_bootstrap_ci_lower_95": -0.0005558396636575237,
+      "frozen_bootstrap_ci_upper_95": 0.005238743536226724,
+      "frozen_bootstrap_draws": 1000,
+      "meeting_sign_flip_p_two_sided": 0.005239947600523995,
+      "meeting_sign_flip_holm_adjusted_p": 0.005239947600523995,
+      "meeting_sign_flip_holm_family_size": 6,
+      "meeting_sign_flip_assignments": 100000,
+      "meeting_sign_flip_seed": 3553509052,
+      "frozen_bootstrap_ci_includes_zero": true
+    },
+    {
+      "contrast_id": "chk2_minus_chk0",
+      "metric": "mpnet_cosine",
+      "before_model": "chk0",
+      "after_model": "chk2",
+      "scoring_policy": "raw_best_effort",
+      "meetings": 124,
+      "df": 123,
+      "chk0_mean": 0.9367933482000737,
+      "before_mean": 0.9367933482000737,
+      "after_mean": 0.9443598738220018,
+      "estimate": 0.007566525621928126,
+      "relative_percent_of_chk0": 0.8077048835227342,
+      "paired_difference_sd": 0.01045748240258749,
+      "paired_t_se": 0.000939109642678205,
+      "paired_t_statistic": 8.057126961607475,
+      "paired_t_p_two_sided_unadjusted": 5.764515787728574e-13,
+      "paired_t_ci_lower_95": 0.005707615665691356,
+      "paired_t_ci_upper_95": 0.009425435578164897,
+      "frozen_bootstrap_ci_lower_95": 0.004405330588734073,
+      "frozen_bootstrap_ci_upper_95": 0.011333016936276617,
+      "frozen_bootstrap_draws": 1000,
+      "meeting_sign_flip_p_two_sided": 9.99990000099999e-06,
+      "meeting_sign_flip_holm_adjusted_p": 5.999940000599994e-05,
+      "meeting_sign_flip_holm_family_size": 6,
+      "meeting_sign_flip_assignments": 100000,
+      "meeting_sign_flip_seed": 2038447725,
+      "frozen_bootstrap_ci_includes_zero": false
+    },
+    {
+      "contrast_id": "chk1_minus_chk0",
+      "metric": "bertscore_f1",
+      "before_model": "chk0",
+      "after_model": "chk1",
+      "scoring_policy": "raw_best_effort",
+      "meetings": 124,
+      "df": 123,
+      "chk0_mean": 0.957022279051523,
+      "before_mean": 0.9570222790515229,
+      "after_mean": 0.9604525103329223,
+      "estimate": 0.003430231281399295,
+      "relative_percent_of_chk0": 0.35842752634754727,
+      "paired_difference_sd": 0.0030704314270020017,
+      "paired_t_se": 0.000275732881899598,
+      "paired_t_statistic": 12.440414279818603,
+      "paired_t_p_two_sided_unadjusted": 1.6729781012314535e-23,
+      "paired_t_ci_lower_95": 0.0028844349482221956,
+      "paired_t_ci_upper_95": 0.003976027614576394,
+      "frozen_bootstrap_ci_lower_95": 0.0025515832950375023,
+      "frozen_bootstrap_ci_upper_95": 0.004352869544939361,
+      "frozen_bootstrap_draws": 1000,
+      "meeting_sign_flip_p_two_sided": 9.99990000099999e-06,
+      "meeting_sign_flip_holm_adjusted_p": 5.999940000599994e-05,
+      "meeting_sign_flip_holm_family_size": 6,
+      "meeting_sign_flip_assignments": 100000,
+      "meeting_sign_flip_seed": 4119032026,
+      "frozen_bootstrap_ci_includes_zero": false
+    },
+    {
+      "contrast_id": "chk2_minus_chk1",
+      "metric": "bertscore_f1",
+      "before_model": "chk1",
+      "after_model": "chk2",
+      "scoring_policy": "raw_best_effort",
+      "meetings": 124,
+      "df": 123,
+      "chk0_mean": 0.957022279051523,
+      "before_mean": 0.9604525103329223,
+      "after_mean": 0.9612857831160777,
+      "estimate": 0.0008332727831553287,
+      "relative_percent_of_chk0": 0.08706931922015035,
+      "paired_difference_sd": 0.0031604838132730383,
+      "paired_t_se": 0.00028381982491681865,
+      "paired_t_statistic": 2.9359217010282586,
+      "paired_t_p_two_sided_unadjusted": 0.003970158054872801,
+      "paired_t_ci_lower_95": 0.00027146884212600963,
+      "paired_t_ci_upper_95": 0.0013950767241846479,
+      "frozen_bootstrap_ci_lower_95": -8.970308228581712e-05,
+      "frozen_bootstrap_ci_upper_95": 0.0018231578359548697,
+      "frozen_bootstrap_draws": 1000,
+      "meeting_sign_flip_p_two_sided": 0.0024699753002469975,
+      "meeting_sign_flip_holm_adjusted_p": 0.004939950600493995,
+      "meeting_sign_flip_holm_family_size": 6,
+      "meeting_sign_flip_assignments": 100000,
+      "meeting_sign_flip_seed": 774719074,
+      "frozen_bootstrap_ci_includes_zero": true
+    },
+    {
+      "contrast_id": "chk2_minus_chk0",
+      "metric": "bertscore_f1",
+      "before_model": "chk0",
+      "after_model": "chk2",
+      "scoring_policy": "raw_best_effort",
+      "meetings": 124,
+      "df": 123,
+      "chk0_mean": 0.957022279051523,
+      "before_mean": 0.9570222790515229,
+      "after_mean": 0.9612857831160777,
+      "estimate": 0.004263504064554623,
+      "relative_percent_of_chk0": 0.4454968455676976,
+      "paired_difference_sd": 0.003675846022309834,
+      "paired_t_se": 0.00033010071752043846,
+      "paired_t_statistic": 12.915767334830603,
+      "paired_t_p_two_sided_unadjusted": 1.2079912784270053e-24,
+      "paired_t_ci_lower_95": 0.003610089934326264,
+      "paired_t_ci_upper_95": 0.0049169181947829824,
+      "frozen_bootstrap_ci_lower_95": 0.0032684963286844517,
+      "frozen_bootstrap_ci_upper_95": 0.005300772959950234,
+      "frozen_bootstrap_draws": 1000,
+      "meeting_sign_flip_p_two_sided": 9.99990000099999e-06,
+      "meeting_sign_flip_holm_adjusted_p": 5.999940000599994e-05,
+      "meeting_sign_flip_holm_family_size": 6,
+      "meeting_sign_flip_assignments": 100000,
+      "meeting_sign_flip_seed": 2844958330,
+      "frozen_bootstrap_ci_includes_zero": false
+    }
+  ],
+  "limitations": [
+    "Training-release reconstruction diagnostic with teacher-synthetic references; external held-out claims prohibited.",
+    "Both chk2-minus-chk1 hierarchical bootstrap intervals include zero despite significant paired t and sign-flip tests.",
+    "Meeting-level t and sign-flip inference conditions on observed replicate averages; temporal dependence is not modeled.",
+    "Model-weight directories not rehashed; generation and semantic scoring not rerun."
+  ]
+}

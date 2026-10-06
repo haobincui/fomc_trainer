@@ -1,7 +1,9 @@
 import hashlib
+import importlib.metadata
 import json
 import logging
 import os
+import platform
 import sys
 import tempfile
 from abc import ABC, abstractmethod
@@ -21,11 +23,14 @@ from open_r1.configs import GRPOConfig, LoraArguments, ModelConfig, SFTConfig
 from open_r1.data_loader import load_train_eval_datasets
 from open_r1.trainer.dataset_release import (
     CHK4_STUDENT_SYSTEM_PROMPT_SHA256,
+    PAPER_CHK2_BINDING_SCHEMA,
+    PAPER_CHK2_TRAINING_SCOPE,
     STANDALONE_CHK3_BINDING_SCHEMA,
     STANDALONE_CHK3_DIRECT_SCOPE,
     verify_chk1_semantic_override,
     verify_chk4_release_for_role,
     verify_clean_sft_release,
+    verify_paper_chk2_sft_release,
     verify_standalone_chk3_direct_sft_release,
 )
 from open_r1.trainer.fixed_schedule_sampler import (
@@ -44,6 +49,62 @@ from open_r1.utils import get_model, get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
 from open_r1.utils.plot_loss import plot_training_curve
 from open_r1.utils.wandb_logging import init_wandb_training
+
+
+def _paper_chk2_environment_inventory() -> dict[str, object]:
+    """Record a deterministic, credential-free training environment inventory."""
+
+    distributions = sorted(
+        {
+            (
+                str(distribution.metadata.get("Name") or "").strip().lower(),
+                str(distribution.version),
+            )
+            for distribution in importlib.metadata.distributions()
+            if str(distribution.metadata.get("Name") or "").strip()
+        }
+    )
+    records = [{"name": name, "version": version} for name, version in distributions]
+    serialized = json.dumps(
+        records,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    versions = {record["name"]: record["version"] for record in records}
+    core_names = (
+        "accelerate",
+        "bitsandbytes",
+        "datasets",
+        "peft",
+        "tokenizers",
+        "torch",
+        "transformers",
+        "trl",
+    )
+    return {
+        "schema_version": "paper-chk2-runtime-environment-v1",
+        "python": {
+            "version": platform.python_version(),
+            "implementation": platform.python_implementation(),
+            "executable": sys.executable,
+            "platform": platform.platform(),
+        },
+        "conda_environment": os.environ.get("CONDA_DEFAULT_ENV"),
+        "core_packages": {name: versions.get(name) for name in core_names},
+        "installed_distributions": records,
+        "installed_distributions_sha256": hashlib.sha256(
+            serialized.encode("utf-8")
+        ).hexdigest(),
+        "cuda_launch_contract": {
+            "cuda_visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES"),
+            "nccl_p2p_disable": os.environ.get("NCCL_P2P_DISABLE"),
+            "nccl_ib_disable": os.environ.get("NCCL_IB_DISABLE"),
+            "pytorch_alloc_conf": os.environ.get("PYTORCH_ALLOC_CONF"),
+            "tokenizers_parallelism": os.environ.get("TOKENIZERS_PARALLELISM"),
+        },
+    }
 
 
 class Trainer(ABC):
@@ -68,6 +129,11 @@ class Trainer(ABC):
         "dataset_chk4_release_manifest",
         "dataset_chk4_release_manifest_sha256",
     )
+    _PAPER_CHK2_FIELDS = (
+        "dataset_paper_chk2_scope",
+        "dataset_paper_chk2_release_manifest",
+        "dataset_paper_chk2_release_manifest_sha256",
+    )
 
     def __init__(
         self,
@@ -89,6 +155,7 @@ class Trainer(ABC):
         self._dataset = None
         self._peft_config = None
         self._chk4_release_binding = None
+        self._paper_chk2_release_binding = None
 
     @property
     def logger(self):
@@ -237,19 +304,63 @@ class Trainer(ABC):
                 "chk4 Decision release fields must all be configured; missing: "
                 + ", ".join(missing)
             )
+        paper_chk2 = {
+            field: getattr(self.script_args, field, None)
+            for field in self._PAPER_CHK2_FIELDS
+        }
+        configured_paper_chk2_fields = {
+            field
+            for field, value in paper_chk2.items()
+            if value is not None and value != ""
+        }
+        if configured_paper_chk2_fields and len(configured_paper_chk2_fields) != len(
+            paper_chk2
+        ):
+            missing = sorted(set(paper_chk2) - configured_paper_chk2_fields)
+            raise ValueError(
+                "paper chk2 release fields must all be configured; missing: "
+                + ", ".join(missing)
+            )
         configured_modes = sum(
             (
                 bool(release_manifest),
                 bool(configured_standalone_fields),
                 bool(configured_override_fields),
                 bool(configured_chk4_fields),
+                bool(configured_paper_chk2_fields),
             )
         )
         if configured_modes > 1:
             raise ValueError(
                 "clean release, standalone chk3 release, chk1 semantic override, "
-                "and chk4 Decision bindings are mutually exclusive"
+                "chk4 Decision, and paper chk2 bindings are mutually exclusive"
             )
+        if configured_paper_chk2_fields:
+            if getattr(self.script_args, "dataset_prompt_column", None) != "prompt":
+                raise ValueError(
+                    "paper chk2 release requires dataset_prompt_column=prompt"
+                )
+            if getattr(self.script_args, "dataset_train_split", None) != "train":
+                raise ValueError(
+                    "paper chk2 release requires dataset_train_split=train"
+                )
+            if getattr(self.script_args, "dataset_test_split", None) != "validation":
+                raise ValueError(
+                    "paper chk2 release requires dataset_test_split=validation"
+                )
+            if getattr(self.script_args, "user_prompt_suffix", None):
+                raise ValueError(
+                    "paper chk2 release forbids user_prompt_suffix prompt drift"
+                )
+            if getattr(self.training_args, "completion_only_loss", None) is not True:
+                raise ValueError(
+                    "paper chk2 release requires completion_only_loss=true"
+                )
+            if getattr(self.training_args, "packing", None) is not False:
+                raise ValueError("paper chk2 release requires packing=false")
+            if getattr(self.training_args, "max_length", None) != 4096:
+                raise ValueError("paper chk2 release requires max_length=4096")
+            return "paper_chk2_minutes_sft", paper_chk2
         if configured_chk4_fields:
             if getattr(self.script_args, "dataset_prompt_column", None) != "prompt":
                 raise ValueError(
@@ -278,6 +389,24 @@ class Trainer(ABC):
                 "manifest_sha256": release_manifest_sha256,
             }
         return "legacy_unbound", {}
+
+    def _verify_paper_chk2_release_binding(
+        self, binding: dict[str, object]
+    ) -> dict[str, object]:
+        cached = getattr(self, "_paper_chk2_release_binding", None)
+        if cached is None:
+            cached = verify_paper_chk2_sft_release(
+                dataset_dir=self.script_args.dataset_name,
+                manifest_path=binding["dataset_paper_chk2_release_manifest"],
+                expected_manifest_sha256=binding[
+                    "dataset_paper_chk2_release_manifest_sha256"
+                ],
+                training_scope=str(binding["dataset_paper_chk2_scope"]),
+                system_prompt=self.training_args.system_prompt,
+                model_path=self.model_args.model_name_or_path,
+            )
+            self._paper_chk2_release_binding = cached
+        return cached
 
     def _verify_chk4_release_binding(
         self, binding: dict[str, object]
@@ -394,6 +523,13 @@ class Trainer(ABC):
                 "test remains sealed evaluation-only",
                 release["release_id"],
                 release["dataset_role"],
+            )
+            manifest_split_files = release["split_files"]
+        elif binding_mode == "paper_chk2_minutes_sft":
+            release = self._verify_paper_chk2_release_binding(binding)
+            self.logger.info(
+                "Verified immutable paper chk2 Minutes-SFT release; "
+                "test remains authenticated but is not loaded"
             )
             manifest_split_files = release["split_files"]
         dataset = load_train_eval_datasets(
@@ -579,6 +715,76 @@ class Trainer(ABC):
                     "versioned non-promotable scope"
                 )
 
+        paper_chk2_receipt = None
+        if dataset_binding_mode == "paper_chk2_minutes_sft":
+            verified_paper_chk2 = self._verify_paper_chk2_release_binding(
+                dataset_binding
+            )
+            if verified_paper_chk2.get("schema_version") != PAPER_CHK2_BINDING_SCHEMA:
+                raise ValueError("paper chk2 runtime binding schema drift")
+            if dataset_binding["dataset_paper_chk2_scope"] != PAPER_CHK2_TRAINING_SCOPE:
+                raise ValueError("paper chk2 runtime scope drift")
+            paper_chk2_receipt = {
+                "schema_version": PAPER_CHK2_BINDING_SCHEMA,
+                "scope": verified_paper_chk2["scope"],
+                "release_manifest": {
+                    "path": dataset_binding["dataset_paper_chk2_release_manifest"],
+                    "sha256": dataset_binding[
+                        "dataset_paper_chk2_release_manifest_sha256"
+                    ],
+                    "manifest_sha256": verified_paper_chk2["release_manifest"][
+                        "manifest_sha256"
+                    ],
+                },
+                "dataset_role": verified_paper_chk2["dataset_role"],
+                "training_scope": verified_paper_chk2["training_scope"],
+                "split_counts": verified_paper_chk2["split_counts"],
+                "test_verified_but_not_loaded": verified_paper_chk2[
+                    "test_verified_but_not_loaded"
+                ],
+                "student_prompt_contract": verified_paper_chk2[
+                    "student_prompt_contract"
+                ],
+                "parent_binding": verified_paper_chk2["parent_binding"],
+                "token_audit": verified_paper_chk2["token_audit"],
+                "quality_audit": verified_paper_chk2["quality_audit"],
+                "environment_inventory": _paper_chk2_environment_inventory(),
+            }
+            paper_config_path_value = os.environ.get("FOMC_PAPER_CHK2_CONFIG_PATH")
+            paper_config_sha = os.environ.get("FOMC_PAPER_CHK2_CONFIG_SHA256")
+            paper_branch_id = os.environ.get("FOMC_PAPER_CHK2_BRANCH_ID")
+            expected_paper_branch_id = (
+                "paper_chk2_chk1_cp200_minutes_v6_recovery_full3ep_lr1e6_v1_20260901"
+            )
+            if (
+                not paper_config_path_value
+                or not paper_config_sha
+                or paper_branch_id != expected_paper_branch_id
+            ):
+                raise ValueError(
+                    "paper chk2 training requires exact branch/config launch provenance"
+                )
+            paper_config_path = Path(paper_config_path_value)
+            if (
+                not paper_config_path.is_absolute()
+                or not paper_config_path.is_file()
+                or paper_config_path.is_symlink()
+                or paper_config_path.resolve() != paper_config_path
+            ):
+                raise ValueError(
+                    "paper chk2 training config path is missing, noncanonical, or unsafe"
+                )
+            observed_paper_config_sha = hashlib.sha256(
+                paper_config_path.read_bytes()
+            ).hexdigest()
+            if observed_paper_config_sha != paper_config_sha:
+                raise ValueError("paper chk2 training config SHA-256 drift")
+            paper_chk2_receipt["training_config"] = {
+                "path": str(paper_config_path),
+                "sha256": observed_paper_config_sha,
+            }
+            paper_chk2_receipt["branch_id"] = paper_branch_id
+
         chk4_decision_receipt = None
         fixed_schedule_receipt = None
         if dataset_binding_mode == "chk4_decision_release":
@@ -729,6 +935,7 @@ class Trainer(ABC):
                     self.script_args, "dataset_release_manifest_sha256", None
                 ),
                 "standalone_chk3_direct": standalone_chk3_receipt,
+                "paper_chk2_minutes_sft": paper_chk2_receipt,
                 "chk4_decision": chk4_decision_receipt,
                 "semantic_override": semantic_override_receipt,
                 "user_prompt_suffix_sha256": (

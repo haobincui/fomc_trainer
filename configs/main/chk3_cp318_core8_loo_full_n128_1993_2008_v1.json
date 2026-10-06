@@ -1,0 +1,67 @@
+{
+  "schema_version": "chk3-core8-loo-full-config-v1",
+  "evaluation_id": "chk3-cp318-core8-loo-full-n128-1993-2008-v1",
+  "scope": {
+    "evaluation_only": true,
+    "checkpoint_selection_allowed": false,
+    "promotable": false,
+    "claim": "full-panel descriptive stage-local indicator sensitivity; not Shapley value or causal attribution",
+    "primary_result": "raw paired MPNet cosine and BERTScore-F1 LOO deltas",
+    "generation_gates": "diagnostic_only"
+  },
+  "source_release_manifest": "dataset/processed/retrain_v2/chk3_minutes_external_holdout_1993_2008_all_regular_v1/release_manifest.json",
+  "source_release_manifest_sha256": "82b045866d9ed6ccbc0d4f00014bffc97694859c2827215309dc8eabe5406937",
+  "source_panel": "dataset/processed/retrain_v2/chk3_minutes_external_holdout_1993_2008_all_regular_v1/panels/core8.jsonl",
+  "source_panel_sha256": "eb74e0bb89614d089675cd0b1396f5963f590844fc94042759671e6170b5cec6",
+  "training_config": "configs/retrain_v2/chk3_minutes_sft_direct_chk1_cp200_full3ep_lr1e6_20260810.yaml",
+  "training_config_sha256": "a54da7a9a4c89afacff94d6c59765a771a3efbcb41a663a87268a33a79b0b033",
+  "model": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/models/chk3_cp318_merged",
+  "model_anchor_manifest": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/native_n12_merged/cp318/manifest.json",
+  "model_anchor_manifest_sha256": "8bc24bbf7827bf210ffffeb443c88740baf3e9773c66f9456fdaf13bbd4105c4",
+  "exact_merge_evidence": "output/evaluation/main/chk3_checkpoint_selection_cp200_cp318_20260811_v1/lineage/chk3_cp318_exact_merge_lineage.json",
+  "exact_merge_evidence_sha256": "599bd49bf093dbfcecedadb8901cfb65831aa58dc8fcf42b5e58f10cafd1f80e",
+  "semantic_manifest": "configs/main/checkpoint_eval_semantic_models.json",
+  "topics": [
+    "Consumer-Price-Index-(CPI)",
+    "GDP-Growth",
+    "Government-Purchases",
+    "Housing-Starts",
+    "Industrial-Production",
+    "Labour-Market",
+    "Money-Supply",
+    "Unemployment-Rate"
+  ],
+  "meeting_selection": {
+    "algorithm": "all-regular-meetings-chronological-1993-2008-v1",
+    "bins": [[1993, 2008]],
+    "count": 128
+  },
+  "interventions": ["full", "exact_deletion", "token_matched_neutral"],
+  "expected_variants_per_meeting": 17,
+  "expected_generation_rows": 2176,
+  "decoding": {
+    "generation_mode": "greedy",
+    "do_sample": false,
+    "seed": 20260814,
+    "max_new_tokens": 2560,
+    "tail_tokens": 1024,
+    "load_in_4bit": true,
+    "quantization": "nf4-double-quant-bfloat16",
+    "attn_implementation": "sdpa",
+    "batch_size": 1,
+    "physical_gpu_index": 0
+  },
+  "quality_gates": {
+    "input_truncation_rows": 0,
+    "completion_cap_rows": 0,
+    "strict_periodic_tail_rows": 0,
+    "minimum_structure_delivery_rate": 0.0,
+    "use": "diagnostic_only"
+  },
+  "semantic": {
+    "primary": "mpnet_cosine_raw_paired_delta",
+    "secondary": "bertscore_f1_raw_paired_delta",
+    "core_invalid_policy": "report_but_do_not_filter_raw_loo",
+    "statistical_inference_authorized": false
+  }
+}

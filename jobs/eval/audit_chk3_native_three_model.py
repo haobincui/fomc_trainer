@@ -463,6 +463,9 @@ def _numeric_summary(values: Sequence[float | int]) -> dict[str, Any]:
 def summarize_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     if not rows:
         return {"cases": 0}
+    model_labels = {str(row["model_label"]) for row in rows if row.get("model_label")}
+    if len(model_labels) > 1:
+        raise CpuAuditError("model label drift within stage cohort")
     boolean_fields = (
         "delivery_valid",
         "degeneration_free",
@@ -487,7 +490,10 @@ def summarize_rows(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "answer_reference_punctuation_insensitive_exact",
         "strict_periodic_tail",
     )
-    result: dict[str, Any] = {"cases": len(rows)}
+    result: dict[str, Any] = {
+        "cases": len(rows),
+        "model_label": next(iter(model_labels), None),
+    }
     for field in boolean_fields:
         count = sum(bool(row[field]) for row in rows)
         result[f"{field}_count"] = count
@@ -646,6 +652,7 @@ def _build_report(summary: Mapping[str, Any]) -> str:
     stages = summary["cohorts"]["all"]["stages"]
     chk1 = stages["chk1"]
     chk3 = stages["chk3"]
+    chk3_label = str(chk3.get("model_label") or "chk3")
     chk3_regressed = chk3["core_native_valid_count"] < chk1["core_native_valid_count"]
     delivery_regressed = chk3["delivery_valid_count"] < chk1["delivery_valid_count"]
     runner_quality_regressed = (
@@ -653,13 +660,13 @@ def _build_report(summary: Mapping[str, Any]) -> str:
     )
     if chk3_regressed or delivery_regressed or runner_quality_regressed:
         verdict = (
-            "chk3 checkpoint-250 在原生 analysis → Minutes N12 上相对 chk1 出现了"
+            f"{chk3_label} 在原生 analysis → Minutes N12 上相对 chk1 出现了"
             "可复现的交付/退化回归，不能判定为无退化。"
         )
     elif chk3["core_native_valid_count"] < chk3["cases"]:
-        verdict = "chk3 checkpoint-250 未全量通过原生合同，仍存在失败样本。"
+        verdict = f"{chk3_label} 未全量通过原生合同，仍存在失败样本。"
     else:
-        verdict = "chk3 checkpoint-250 在本次 N12 诊断上通过核心原生合同。"
+        verdict = f"{chk3_label} 在本次 N12 诊断上通过核心原生合同。"
 
     lines = [
         "# chk3 原生 analysis → Minutes 三模型 N12 独立 CPU 审计",
@@ -680,9 +687,7 @@ def _build_report(summary: Mapping[str, Any]) -> str:
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     labels = {
-        "chk0": "chk0",
-        "chk1": "chk1 cp200",
-        "chk3": "chk3 cp250",
+        stage: str(stages[stage].get("model_label") or stage) for stage in STAGES
     }
     for stage in STAGES:
         item = stages[stage]
@@ -701,6 +706,9 @@ def _build_report(summary: Mapping[str, Any]) -> str:
             )
         )
 
+    nonidentity_cases = int(
+        summary["cohorts"]["non_identity_n11"]["cases_per_stage"]
+    )
     lines.extend(
         [
             "",
@@ -708,7 +716,7 @@ def _build_report(summary: Mapping[str, Any]) -> str:
             "",
             "## Final answer 与 reference",
             "",
-            "| 模型 | ROUGE-L all | ROUGE-L non-identity N11 | Answer tokens p50/max | Answer word-3gram rep | Source exact copy | Reference exact copy |",
+            f"| 模型 | ROUGE-L all | ROUGE-L non-identity N{nonidentity_cases} | Answer tokens p50/max | Answer word-3gram rep | Source exact copy | Reference exact copy |",
             "|---|---:|---:|---:|---:|---:|---:|",
         ]
     )

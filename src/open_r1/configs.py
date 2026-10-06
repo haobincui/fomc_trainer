@@ -620,6 +620,33 @@ class SFTScriptArguments(trl.ScriptArguments):
         metadata={"help": "Pinned SHA-256 of the standalone chk3 release manifest."},
     )
 
+    dataset_paper_chk2_scope: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "Explicit non-DAG paper chk2 Minutes-SFT training scope. This "
+                "binding is separate from the canonical chk2 analysis-GRPO stage."
+            )
+        },
+    )
+
+    dataset_paper_chk2_release_manifest: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "Immutable paper chk2 recovery release manifest. The runtime "
+                "loads only its sealed train and validation splits."
+            )
+        },
+    )
+
+    dataset_paper_chk2_release_manifest_sha256: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Externally pinned file SHA-256 of the paper chk2 release manifest."
+        },
+    )
+
     dataset_semantic_override_stage: Optional[str] = field(
         default=None,
         metadata={

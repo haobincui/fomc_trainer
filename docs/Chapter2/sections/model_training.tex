@@ -2,26 +2,240 @@
 
 \section{Model Training Details}\label{ch2:sec:training}
 
-\subsection*{Implemented Supervised Fine-tuning Sequence}
+The final training lineage contains four named models. The pretrained base
+model is denoted \textit{Model chk-0}. Supervised fine-tuning (SFT) on
+point-in-time evidence-to-analysis pairs produces \textit{Model chk-1}, which
+serves as the common parent for two downstream branches. Analysis-to-FOMC-
+Minutes-style paragraph-rewriting SFT produces \textit{Model chk-2}; decision
+SFT followed by Group Relative
+Policy Optimization (GRPO) produces \textit{Model chk-3}. This paper-level
+naming maps the experimental Minutes model to \textit{Model chk-2} and the
+experimental decision model to \textit{Model chk-3}. Figure~\ref{fig:ch2:training_stage1} summarizes the lineage.
 
-The completed experiment contains two supervised adaptation stages.  First,
-the pretrained base model (\textit{Model chk-0}) is fine-tuned on point-in-time
-evidence-to-analysis pairs.  This stage produces \textit{Model chk-1}, with
-checkpoint 200 selected as the experimental baseline.  Second, the selected
-\textit{Model chk-1} checkpoint is fine-tuned on analysis-to-Minutes rewriting
-pairs.  This stage produces \textit{Model chk-3}, with checkpoint 318 retained
-for task-aligned evaluation.  Both stages use completion-only QLoRA and
-supervised token-level objectives.  The resulting implemented sequence is
-\texttt{chk-0}$\rightarrow$\texttt{chk-1}$\rightarrow$\texttt{chk-3}.
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        >=latex,
+        model/.style={draw, rounded corners, align=center, text width=3.1cm,
+            minimum height=1.25cm},
+        every path/.style={->, thick}
+    ]
+        \node[model] (chk0) at (0,0)
+            {\textit{Model chk-0}\\Pretrained base model};
+        \node[model] (chk1) at (4.2,0)
+            {\textit{Model chk-1}\\Evidence-to-analysis SFT};
+        \node[model] (chk2) at (8.7,1.25)
+            {\textit{Model chk-2}\\Analysis-to-paragraph SFT};
+        \node[model] (chk3) at (8.7,-1.25)
+            {\textit{Model chk-3}\\Decision SFT + GRPO};
+        \draw (chk0) -- (chk1);
+        \draw (chk1) -- (chk2);
+        \draw (chk1) -- (chk3);
+    \end{tikzpicture}
+    \caption{Final paper-level training lineage.}
+    \label{fig:ch2:training_stage1}
+\end{figure}
 
-\subsection*{Model Input}
+Figure~\ref{fig:ch2:training_process} expands the lineage into the data and
+optimization flows for analytical SFT and the two downstream tasks. The
+retained diagrams use the original experimental identifiers: the
+\textit{Model chk-3} and \textit{Model chk-4} labels printed in the graphics
+correspond, respectively, to the paper-level \textit{Model chk-2} and
+\textit{Model chk-3}. In addition, the ``Minutes'' box in the decision panel is
+an earlier project-side shorthand; the finalized decision model receives the
+target-neutral, pre-meeting analysis specified later in this section.
 
-\subsubsection*{Input for Analysis SFT}
-We first reformat the point-in-time analysis dataset into the model's
-task-specific chat template.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{train/stage1.png}
+    \par\medskip
+    \includegraphics[width=\textwidth]{train/stage2.png}
+    \caption{Overview of Two-step Training Process}
+    \label{fig:ch2:training_process}
+\end{figure}
 
-\paragraph*{SFT (\textit{Model chk-1})} 
-For SFT , each input consists of three parts (denoted as $input^{SFT}_i = (q_i, o^{SFT}_i)$, $o^{SFT}_i = (c_i, a_i)$): Question ($q_i$), reasoning process ($c_i$), and final answer ($a_i$). The reasoning process and final answer are combined as the target output, after which the sample is reformatted into a Q\&A pair. During SFT, the model predicts $o_i^* = (c_i^*, a_i^*)$ from question $q_i$, and training minimizes the supervised loss $\mathcal{L}^{SFT}$ between predicted and target outputs.
+
+%SFT
+\paragraph*{Supervised fine-tuning.}
+SFT adapts the model to the macro-financial tasks by learning from paired
+prompts and reference completions. Each training example contains a system
+instruction, a user prompt, and a target assistant response. The model is
+optimized under teacher forcing, while parameter-efficient adapters reduce
+the number of trainable parameters. Figure~\ref{fig:ch2:ft_detail} summarizes
+this workflow.
+
+
+\begin{figure}
+    \begin{center}
+        \includegraphics[width=0.3\textwidth]{Chapter2/Chapter2Figs/ft_detail.png}
+      \end{center}
+      \caption{Supervised fine-tuning workflow.}
+      \label{fig:ch2:ft_detail}
+\end{figure}
+
+
+
+During SFT, let $x=(x_1,\ldots,x_M)$ denote the serialized prompt and
+$y=(y_1,\ldots,y_N)$ the target assistant completion. At each target
+position, the model predicts a distribution over the vocabulary conditional
+on the prompt and preceding target tokens. The mean token-level negative
+log-likelihood is
+\begin{equation}
+    \mathcal{L}_{\mathrm{SFT}}(\theta)
+    =
+    -\frac{1}{W}
+    \sum_{t=1}^{N}
+    w_t
+    \log \pi_\theta\!\left(y_t\mid x,y_{<t}\right),
+    \qquad
+    W=\sum_{t=1}^{N}w_t,
+\end{equation}
+where $w_t\in\{0,1\}$ masks padding and any positions excluded from the
+supervised objective. If every completion token is trained, $w_t=1$ and
+$W=N$. Thus, SFT minimizes the negative log-probability assigned to the
+reference completion; it does not compare a separately decoded response with
+the target text.
+
+
+%RL
+\paragraph*{Reinforcement learning.}
+Unlike SFT, policy optimization does not require a token-level reference
+completion. In the decision task, however, the reference action remains
+available to the deterministic reward function: the policy sees the prompt,
+whereas the target direction and magnitude are used only to score sampled
+completions.
+
+Proximal Policy Optimization (PPO; \cite{schulman2017proximal}) stabilizes
+policy-gradient updates by clipping the importance-sampling ratio. Let
+$s_t=(q,o_{<t})$ be the token-generation state and define
+\begin{equation*}
+    \rho_t(\theta)
+    =
+    \frac{\pi_\theta(o_t\mid s_t)}
+         {\pi_{\theta_{\mathrm{old}}}(o_t\mid s_t)}.
+\end{equation*}
+The clipped policy objective is
+\begin{equation}
+    \mathcal{J}_{\mathrm{PPO}}(\theta)
+    =
+    \mathbb{E}_t\!\left[
+        \min\!\left(
+            \rho_t(\theta)\widehat{A}_t,
+            \operatorname{clip}
+            \bigl(\rho_t(\theta),1-\epsilon,1+\epsilon\bigr)
+            \widehat{A}_t
+        \right)
+    \right].
+\end{equation}
+Here, $\widehat{A}_t$ is an advantage estimate rather than the reward itself;
+clipping constrains the policy ratio rather than rescaling the reward.
+
+
+
+
+GRPO (\cite{shao2024deepseekmath}) removes the learned value function. For
+each prompt $q$, the behavior policy samples a group
+$\{o_i\}_{i=1}^{G}$, and the task reward assigns one terminal score
+$R_i=R(q,y,o_i)$ to each completion. The group-relative advantage is
+\begin{equation}
+    \widehat{A}_i
+    =
+    \begin{cases}
+    \displaystyle\frac{R_i-\overline{R}}{s_R+\eta}, & s_R>0,\\[7pt]
+    0, & s_R=0,
+    \end{cases}
+    \qquad
+    \overline{R}=\frac{1}{G}\sum_{j=1}^{G}R_j,
+\end{equation}
+where $s_R$ is the within-group reward standard deviation and $\eta>0$ is a
+numerical stabilizer. The same completion-level advantage is applied to every
+generated token in $o_i$. A group whose completions all receive the same
+reward therefore supplies no group-relative learning signal.
+
+
+
+
+For token $t$ of completion $i$, define
+\begin{equation*}
+    \rho_{i,t}(\theta)
+    =
+    \frac{\pi_\theta(o_{i,t}\mid q,o_{i,<t})}
+         {\pi_{\theta_{\mathrm{old}}}(o_{i,t}\mid q,o_{i,<t})}.
+\end{equation*}
+A sampled per-token estimator for the KL regularizer is
+\begin{equation*}
+    \widehat{D}_{\mathrm{KL},i,t}
+    =
+    \frac{\pi_{\mathrm{ref}}(o_{i,t}\mid q,o_{i,<t})}
+         {\pi_\theta(o_{i,t}\mid q,o_{i,<t})}
+    -\log
+    \frac{\pi_{\mathrm{ref}}(o_{i,t}\mid q,o_{i,<t})}
+         {\pi_\theta(o_{i,t}\mid q,o_{i,<t})}
+    -1.
+\end{equation*}
+Using
+\begin{equation*}
+    \ell_{i,t}(\theta)
+    =
+    \min\!\left(
+        \rho_{i,t}(\theta)\widehat{A}_i,
+        \operatorname{clip}
+        \bigl(\rho_{i,t}(\theta),1-\epsilon,1+\epsilon\bigr)
+        \widehat{A}_i
+    \right)
+    -\beta\widehat{D}_{\mathrm{KL},i,t},
+\end{equation*}
+the original sequence-normalized GRPO objective can be written as
+\begin{equation}
+    \mathcal{J}_{\mathrm{GRPO}}(\theta)
+    =
+    \mathbb{E}\!\left[
+        \frac{1}{G}\sum_{i=1}^{G}
+        \frac{1}{|o_i|}\sum_{t=1}^{|o_i|}
+        \ell_{i,t}(\theta)
+    \right].
+\end{equation}
+
+The completed decision run instead sets \texttt{loss\_type=dapo}. In this
+trainer setting, DAPO denotes token-level loss aggregation: the losses are
+normalized by the number of active completion tokens in the accumulated
+training batch rather than separately by each completion length. If
+$\mathcal{C}$ is the set of unmasked completions in that batch, the realized
+aggregation is
+\begin{equation}
+    \mathcal{J}_{\mathrm{DAPO}}(\theta)
+    =
+    \mathbb{E}\!\left[
+        \frac{\displaystyle
+            \sum_{i\in\mathcal{C}}\sum_{t=1}^{|o_i|}\ell_{i,t}(\theta)}
+             {\displaystyle
+            \sum_{i\in\mathcal{C}}|o_i|}
+    \right].
+\end{equation}
+This setting is related to the token-level aggregation proposed in DAPO
+(\cite{yu2025dapo}), but it does not imply that the run adopted the complete
+DAPO recipe. The realized configuration retained symmetric clipping and a KL
+penalty; its numerical settings are reported with the decision-training
+configuration below.
+
+
+
+
+
+\subsection*{Analytical and Downstream Training}
+
+\subsubsection*{Supervised Fine-tuning for the Analytical Model}
+
+\paragraph*{Model chk-1.}
+The first SFT stage adapts \textit{Model chk-0} to point-in-time
+macro-financial analysis. Each supervised example is a pair
+$(q_i,o_i^{\mathrm{SFT}})$, where $q_i$ is the model-visible prompt and
+$o_i^{\mathrm{SFT}}=(c_i,a_i)$ is the reference assistant completion. Here,
+$c_i$ denotes the reasoning prefix and $a_i$ the concise final analysis. This
+distinction separates the model input from the supervision target. Training
+for a small number of epochs limits, but does not eliminate, the risk that the
+model memorizes task-specific wording.
+
 
 
 Moreover, each LLM requires a model-specific message format, because tokenizers encode role boundaries differently. Explicit role labels are used specifically to distinguish the sections: the ``\texttt{System Prompt}'', ``\texttt{User Prompt}'', and ``\texttt{Assistant Response}''. Table. \ref{tab:ch2:input_template_for_llama3} presents the labels used by LLAMA3, where ``\prompttag{start\_header\_id}'' and ``\prompttag{end\_header\_id}'' wrap around the role labels indicating the message type. The label ``\prompttag{begin\_of\_text}'' signals the start of the conversation, while ``\prompttag{end\_id}'' denotes its end.
@@ -51,729 +265,129 @@ Moreover, each LLM requires a model-specific message format, because tokenizers 
 
 
 
-\paragraph*{Incorporate Reasoning Process}
-
-The implemented SFT experiments represent each target response as a generated
-rationale followed by a final answer.  The chat template opens the assistant
-turn with \texttt{<think>}; the supervised completion contains the rationale,
-one closing \texttt{</think>} delimiter, and a plain-text answer.  An additional
-\texttt{<answer>} wrapper is not used.  Thus, the target response is
-
-
-
+\paragraph*{Reasoning boundary and final answer.}
+The supervised completions follow the model's native reasoning-boundary
+convention. A nonempty reasoning prefix $c_i$ is followed by exactly one
+literal \texttt{</think>} marker and a nonempty final
+answer $a_i$. Writing the boundary token as $b_{\mathrm{think}}$, the
+serialized completion is
 \begin{equation*}
-    o_i = \text{\texttt{<think>}}c_i\text{\texttt{</think>}}a_i.
+    o_i=c_i\;\Vert\;b_{\mathrm{think}}\;\Vert\;a_i,
 \end{equation*}
+where $\Vert$ denotes string concatenation,$b_{\mathrm{think}} = \texttt{</think>} $. The semantic form of $a_i$ is task-specific: prose for \textit{Models chk-1} and \textit{chk-2}, and a decision object for \textit{Model chk-3}. 
 
 
 
-Here, \(c_i\) is an externally generated rationale used as a supervision signal
-and for consistency checks.  It should not be interpreted as a direct or
-necessarily faithful representation of the model's latent computation.  The
-system prompt in Table~\ref{tab:ch2:system_prompt} defines the evidentiary
-boundary for the analysis-SFT task.
 
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{System Prompt:} \\
-    \midrule
-      Analyze only the supplied point-in-time FOMC evidence. Do not infer facts from later releases or from the target meeting's Minutes. Use the model's native reasoning boundary, then provide a concise, evidence-grounded final analysis. \\
-    \bottomrule
-    \end{tabular}
-    \caption{System Prompt Used for Analysis SFT}
-    \label{tab:ch2:system_prompt}
-\end{table}
 
+\subsubsection*{Further Training for Downstream Tasks}
 
+We adapt \textit{Model chk-1} separately for two downstream tasks. SFT on
+analysis-to-FOMC-Minutes-style paragraph pairs produces \textit{Model chk-2}.
+A separate branch uses decision SFT followed by GRPO to produce
+\textit{Model chk-3}, which
+predicts the direction and magnitude of a federal funds rate action.
 
-\subsubsection*{Input for Downstream Tasks}
 
-\paragraph*{Synthetic FOMC Minutes Generation (\textit{Model chk-3})}
-The synthetic Minutes experiment examines whether task-specific SFT can
-transform an indicator-based analysis into institutionally styled policy prose
-without altering the information contained in the source analysis.
+\paragraph*{FOMC-Minutes-Style Paragraph Rewriting (\textit{Model chk-2})}
 
-The implemented Minutes-rewriting experiment maps an indicator-based analysis
-to a paragraph written in the style of the FOMC Minutes.  Its sole
-user-supplied input is a \texttt{chk-1} analysis.  Formally,
-\(input_i^{minutes}=a_i\), where \(a_i\) denotes the supplied analysis.
-The supervised response contains a synthetic teacher-generated fidelity
-rationale followed by a paragraph derived from the same analysis.  Official
-Minutes are used neither as an input nor as
-the response target in this experiment.  The model is initialized from
-\texttt{chk-1} checkpoint 200.  The experiment therefore estimates the
-task-specific transition from the \texttt{chk-1} baseline to \texttt{chk-3}.
-Table~\ref{tab:ch2:fomc_summary_prompt_training} presents the corresponding
-prompt.
+The Minutes-rewriting branch begins from the exact-merged \textit{Model chk-1}  and applies task-specific supervised fine-tuning to learn an analysis-to-paragraph transformation. 
 
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{Condensed Prompt Contract for Synthetic FOMC Minutes Rewriting:} \\
-    \midrule
-    You are a senior economist at the Federal Reserve responsible for drafting internal briefing materials that may be incorporated into the official \textbf{FOMC Minutes}. \\
+First of all, because official FOMC Minutes often contain substantial details absent from the corresponding economic-analysis passages used as training inputs, treating the Minutes directly as targets would create misaligned supervision. We therefore used a teacher model to reconstruct a factually complete, de-styled analysis from each Official Minutes paragraph, ensuring that the student learns stylistic rewriting rather than supplying missing facts.
 
-    Your task is to rewrite the following analysis as one formal, institutionally appropriate paragraph in the style of the FOMC Minutes. \\
+Then, for each training instance, the student model receives a fixed system instruction and a user message containing the analysis to be rewritten. Under teacher forcing, the target completion consists of a fidelity-planning reasoning section, one literal \texttt{</think>} boundary, and a single rewrote formal FOMC Minutes paragraph. The optimization objective therefore emphasizes the preservation of claims, quantities, dates, directions, comparisons, and uncertainty while adapting the output to the institutional style and structure of the FOMC Minutes. 
 
-    You will be provided with: \\
-    \begin{itemize}
-        \item \textbf{\texttt{<Raw Analysis>}}: An economic or financial analysis paragraph prepared from prior analytical work.
-    \end{itemize}
 
-    \textbf{Your Objective:} \\
-    \begin{itemize}
-        \item Rewrite the content in the formal, precise, policy-grounded style used in FOMC Minutes.
-        \item Preserve the substantive meaning of the input analysis while improving structure, tone, and institutional phrasing.
-        \item Reorganize and elevate the wording where needed, but do not introduce new facts, new data points, or unsupported judgments.
-    \end{itemize}
 
-    \textbf{Output Requirements:} \\
-    \begin{itemize}
-        \item Produce exactly one coherent paragraph in FOMC Minutes style.
-        \item Do not use lists, bullets, titles, or section headers.
-        \item Do not quote the input verbatim unless a phrase is necessary for accuracy.
-        \item Do not mention that you are rewriting or transforming text.
-    \end{itemize}
 
-    \textbf{Input Analysis:} \\
-    \texttt{<Raw Analysis>} \\
-    \texttt{\{raw\_analysis\}} \\
-    \texttt{</Raw Analysis>} \\
-    \bottomrule
-    \end{tabular}
-    \caption{Prompt Template for Synthetic FOMC Minutes Rewriting}
-    \label{tab:ch2:fomc_summary_prompt_training}
-\end{table}
+\paragraph*{Monetary Policy Decision Making (\textit{Model chk-3})}
 
-
-
-
-\paragraph*{Monetary Policy Decision Making (\textit{Model chk-4})}
-For the Federal Funds Rate prediction task, we employ GRPO on Model ``chk-2''. The input is a block of meeting-related analysis and the output is a discrete policy decision.
-
-Depending on the experiment, the input text may come from the original non-decision sections of the FOMC Minutes or from synthetic Minutes generated by the model. We denote this input as $input_i^{vote} = (m_i, \mathcal{C}_{vote})$, where $m_i$ is the analysis text and $\mathcal{C}_{vote}$ is the predefined set of admissible vote choices. The model is required to choose the most likely policy action from the analytical discussion alone and return one standardized decision from the choice list in Table~\ref{tab:ch2:model_train_vote_choice}. Unlike the rewriting task, this objective emphasizes decision-relevant reasoning and aggregation of multiple signals, which is why we use GRPO to further improve performance on this task. Table~\ref{tab:ch2:decision_grpo_prompt} illustrates the prompt for this GRPO training.
-
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{User Prompt for GRPO-Based Monetary Policy Decision Making:} \\
-    \midrule
-    You are a voting member of the Federal Open Market Committee (FOMC), responsible for setting U.S. monetary policy. \\
-
-    Below is an analysis of U.S. economic and financial conditions ahead of the FOMC meeting on \textbf{\texttt{\{meeting\_date\}}}. The current Effective Federal Funds Rate is \textbf{\texttt{\{current\_rate\}\%}}. \\
-
-    \textbf{Your assignment:} \\
-    \begin{itemize}
-        \item Review the analysis and identify the key economic and financial factors that matter for this meeting.
-        \item Weigh the policy trade-offs implied by the analysis before reaching a conclusion.
-        \item Conclude with exactly one policy vote chosen from the options provided below.
-    \end{itemize}
-
-    \textbf{Guidelines:} \\
-    \begin{itemize}
-        \item Stay professional, structured, and objective.
-        \item Base your reasoning only on the information provided in the analysis.
-        \item Do not introduce a policy action that is not listed in the allowed options.
-        \item Your final vote must appear exactly once in the form \texttt{\textbackslash boxed\{\ldots\}} and the boxed content must match one allowed option verbatim.
-    \end{itemize}
-
-    \textbf{Allowed Policy Options} \\
-    \texttt{\{policy\_options\}} \\
-
-    \textbf{Current Economic and Financial Market Analysis} \\
-    \texttt{\{analysis\_text\}} \\
-    \bottomrule
-    \end{tabular}
-    \caption{Prompt Template for GRPO-Based Monetary Policy Decision Making}
-    \label{tab:ch2:decision_grpo_prompt}
-\end{table}
-
-
-
-
-
-
-
-\subsection*{Supervised Fine-Tuning}
-
-In this section, we explain SFT inputs and optimization flow. The SFT process in this research aims at enhancing model's ability in financial analysis. The model will learn to generate a logical reasoning process and draw a similar conclusion as the target output. The workflow includes four steps. Firstly, we need to prepare training dataset. Q\&A pairs are required for SFT. Then, we need to design system and user prompts. Well-structured prompts can help the model generate logical outputs. After that, we employ quantization method, such as LoRA, for partial-parameter FT to reduce the computational costs. Finally, the the loss will be calculated by comparing the target response with the output generated by the model. The process will keep iterating until the convergence of the loss function. Fig. \ref{fig:ch2:ft_detail} illustrates the fine-tuning process:
-
-
-\begin{figure}
-    \begin{center}
-        \includegraphics[width=0.3\textwidth]{Chapter2/Chapter2Figs/ft_detail.png}
-      \end{center}
-      \caption{Fine-Tune Process Flow Chart}
-      \label{fig:ch2:ft_detail}
-\end{figure}
-
-
-As an example, consider inflation analysis using the Personal Consumption Expenditures (PCE) indicator set. The corresponding input prompt $q_i$ is shown in Table~\ref{tab:ch2:sft_user_prompt_example}.
-
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{User Prompt ($q_i$):} \\
-    \midrule
-    You are an economist preparing briefing notes for the Federal Open Market Committee (FOMC) meeting on \textbf{2023-07-26 00:00:00}. Your task is to analyze recent trends in \textbf{Personal Consumption Expenditures (PCE)} and related indicators, writing in the tone and style of the \textbf{Developments in Financial Markets and Open Market Operations} section of the FOMC minutes. \\
-    
-    Use neutral, data-driven, and measured language throughout your response. \\
-    
-    Your analysis \textbf{must} be based on the following indicators: 
-    \begin{itemize}
-        \item \texttt{Personal Consumption Expenditures Index (Index 2017=100, Seasonally Adjusted).csv}
-        \item \texttt{Personal consumption expenditures by major function (Index numbers, 2017=100; quarters and months are seasonally adjusted).xlsx}
-        \item \texttt{Personal consumption expenditures by major function (Millions of dollars; quarters and months are seasonally adjusted at annual rates).xlsx}
-    \end{itemize}
-
-    Using the accompanying data tables from the past two years provided below: \\
-
-    \vspace{0.5em}
-    \textbf{Indicators: Personal Consumption Expenditures (PCE)} \\
-    \texttt{Personal Consumption Expenditures Index (Index 2017=100, Seasonally Adjusted).csv} \\
-    
-    \begin{tabular}{|l|l|}
-    \hline
-    \texttt{observation\_date} & \texttt{PCEPI} \\
-    \hline
-    2021-08-01 & 109.72 \\
-    2021-09-01 & 110.047 \\
-    \vdots & \vdots \\
-    2023-06-01 & 120.435 \\
-    2023-07-01 & 120.598 \\
-    \hline
-    \end{tabular} \\
-
-    \vspace{0.5em}
-    Keep your response focused, analytically rigorous, and under 4096 tokens. \\
-    \bottomrule
-    \end{tabular}
-    \caption{SFT User Prompt Example}
-    \label{tab:ch2:sft_user_prompt_example}
-\end{table}
-
-
-
-
-The target response combines the generated rationale \(c_i\) and final answer
-\(a_i\).  The rationale terminates with
-\textbf{\texttt{\textless /think\textgreater}}, after which the final answer is
-represented as plain text.  Table~\ref{tab:ch2:sft_target_output_example}
-provides an illustrative example.
-
-
-
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{Target Output ($o_i = (c_i, a_i)$):} \\
-    \midrule
-    \textbf{\textless think\textgreater} Okay, I need to prepare a briefing note for the FOMC meeting based on the provided data. The user wants an analysis of recent trends in PCE and related indicators, structured like the \textquotedblleft Developments in Financial Markets and Open Market Operations\textquotedblright{} section from the FOMC minutes. The tone needs to be neutral, data-driven, and measured. Let's start by looking at the data given. \\
-
-    First, the Personal Consumption Expenditures Index (PCEPI) shows a steady increase from 109.72 in August 2021 to 120.598 in July 2023. The monthly growth rates have slowed in recent months. \\
-
-    ... ... \\
-
-    Finally, tie this into the broader economic context, like the potential for a delayed recession and inflation moving towards 2\% by 2025 as per the survey mentioned in the example. \\
-
-    Make sure the language is neutral, avoid speculation, and stick strictly to the data provided. Use terms like ``moderated'', ``deceleration'', ``partially offset'', and ``notable contributions''. Structure the analysis into sections: overall PCE trends, sectoral breakdown, and implications for inflation outlook. Avoid mentioning any data not provided, and ensure all points are backed by the numbers given. \textbf{\textless /think\textgreater} \\[1ex]
-
-    \textbf{Developments in Personal Consumption Expenditures and Implications for Inflation} \\
-
-    Recent data through July 2023 indicate sustained growth in personal consumption expenditures (PCE), albeit with moderating momentum in key categories. The PCE Price Index (PCEPI) rose to 120.60 in July 2023, reflecting a 3.6\% year-over-year increase, down from the 5.9\% pace observed in July 2022. Monthly gains have decelerated notably, with the index advancing at an average rate of 0.16\% over the three months ending in July. \\
-
-    ... ... \\
-
-    While consumption growth remains positive, real outlays are being constrained by tighter financial conditions and moderating excess savings. This dynamic supports a baseline of below-trend GDP growth with incremental labor market rebalancing, reducing the risk of entrenched inflation expectations. However, the resilience in wage-sensitive services categories warrants continued vigilance regarding price-setting behavior. \\
-    \bottomrule
-    \end{tabular}
-    \caption{SFT Target Output Example}
-    \label{tab:ch2:sft_target_output_example}
-\end{table}
-
-
-
-The refinement of the model through retraining employs stochastic gradient descent (SGD) to iteratively adjust the model parameters ($\theta$) based on the \textit{loss function}. In partial fine-tuning (Partial FT), the update process selectively modifies certain layers while leaving others unchanged by zeroing out their gradients. This targeted approach enables the model to adapt to new tasks while preserving the knowledge learned during pre-training.
-
-
-During SFT training, the \textit{loss} is calculated as the discrepancy between the model's generated responses ($\bm{o^*} \in R^{m\times n}$) and the target responses ($\bm{o}^{SFT} \in R^{m \times n}$). This discrepancy is quantified by the multi-class Cross Entropy Loss ($\mathcal{L}^{CE}$):
-
-
-\begin{equation*}
-  \mathcal{L}^{CE} = -\frac{1}{n}\sum_{i=1}^{n} o^{SFT}_{k, i}\log  o^*_i(y_i|x_1, x_2, \dots,x_m, y_1, y_2, \dots, y_{i-1}; \theta)
-\end{equation*}
-
-
-
-
-where $o_{k,i} = [o_1, o_2, \cdots, o_k, \cdots, o_m]$ is a unit vector with $o_k = 1$ (also known as one-hot encoded vector), which represents the target token, $o^*_i(\cdot)$ denotes the probabilities for the predicted token given the input tokens $\bm{x}$ and previously generated words $\bm{y}$, which are always smaller than 1. Here, the $n$ is the total number of words in the generated response sequence. The Cross Entropy Loss ($\mathcal{L}_{CE}$) represents sum of the negative log probabilities that the model assigns to the target tokens. The correct probabilities will occur when $o_{k,i}=o^*_i(\cdot) = 1$ and $\mathcal{L}^{CE}=0$. Therefore, the objective of the SFT is to minimize $\mathcal{L}^{CE}$ by updating the model's weights $\theta$.
-
-
-
-
-\subsection*{Reinforcement Learning}\label{ch2:sec:model_train:rl}
-
-
-Reinforcement Learning (RL) updates parameters ($\theta$) by optimizing feedback. Different from the Supervised Fine-Tuning, the target of the Reinforcement Learning is to maximize the feedback signals by changing the way of producing the output rather than matching fixed token-level targets. As the same analysis can be constructed in different ways, recent reasoning models illustrate the value of RL-style optimization for reasoning-heavy outputs, such as the ChatGPT o1 (\cite{jaech2024openai}) and the Deepseek-R1 (\cite{guo2025deepseek}) for general purpose, the Fin-R1 \cite{liu2025fin} and the Fino1 \cite{qian2025fino1} in finance domain.
-
-
-
-More specifically, in this stage, we employed Group Relative Policy Optimization (GRPO, \cite{shao2024deepseekmath}).
-
-
-GRPO is an on-policy RL algorithm derived from the Proximal Policy Optimization algorithm (PPO; \cite{schulman2017proximal}). PPO is a policy-gradient-based reinforcement learning technique designed for stable optimization. It requires the model to maximize a reward signal ($A_t$), provided by a reward function, by generating outputs from the current policy model ($\pi_{\theta}$). Unlike Supervised Fine-Tuning, RL does not rely on predefined target outputs. Instead, it uses a scoring function to evaluate model outputs. This score, known as the reward, serves as feedback for model training. The goal of training is to maximize an objective function ($\mathcal{J}(\theta)$) defined in terms of the reward. Consequently, only the question ($q_i$) is required as training input ($input^{RL}_i$).
-
-
-Additionally, PPO employs a clipping function ($CLIP(\cdot)$) to scale the reward in the objective function, enhancing training stability. The model parameters ($\theta$) are updated using stochastic gradient descent (SGD) until the objective function is maximized. The objective function ($\mathcal{J}^{\text{PPO}}$) is given by:
-
-
-
-
-\begin{footnotesize}
-    \begin{equation}
-        \begin{split}
-            \mathcal{J}^{\text{PPO}}(\theta) =
-             &\mathbb{E}_{q\sim P(Q), o\sim\pi_{\theta_{\text{old}}}(O|q)}\frac{1}{|o|}\sum_{t=1}^{|o|}\Bigg[\min\Bigg\{ \\
-             &\frac{\pi_{\theta}(o_t | q, o_{<t})}{\pi_{\theta_{\text{old}}}(o_t | q, o_{<t})} A_t(r_t, v_t), \text{CLIP}\left(\frac{\pi_{\theta}(o_t | q, o_{<t})}{\pi_{\theta_{\text{old}}}(o_t | q, o_{<t})}, 1 - \epsilon, 1+\epsilon\right)A_t(r_t, v_t)\Bigg\}\Bigg]
-        \end{split}
-    \end{equation}
-\end{footnotesize}
-
-
-
-where:
-
-\begin{equation*}
-r_t = r_\phi(q, o_{\leq t}) - \beta \log\frac{\pi_{\theta}(o_t | q, o_{<t})}{\pi_{\text{ref}}(o_t | q, o_{<t})}
-\end{equation*}
-
-\begin{equation*}
-v_t = V_t(o_t | q, o_{<t})
-\end{equation*}
-
-Here, $\pi_{\theta}$ represents our trainable \textit{policy model}. $r_t$ is the KL-divergence adjusted reward, where $r_\phi$ is the reward from the \textit{reward model}. $\pi_{\text{ref}}$ is the \textit{reference model}, initialized as a copy of the original policy model. $V_t(\cdot)$ denotes a trainable \textit{value model} used to estimate expected rewards, aiding the policy in exceeding baseline expectations. $A_t$ is the advantage function, providing final feedback to the model, typically calculated using Generalized Advantage Estimation (GAE). $\beta$ is the penalty coefficient for KL divergence, while $\epsilon$ controls the extent of clipping. Both $\beta$ and $\epsilon$ are hyperparameters crucial for maintaining training stability.
-
-However, the training cost for the PPO is significantly higher than the Supervised Fine-Tuning. In PPO, four models, the policy model, the reference model, the reward model, and the value model, need to be loaded. Two models, the policy model and the value model, are being trained at the same time. To address the issue, we employed the Group Relative Policy Optimization (GRPO), which removed the value model by calculating the relative average reward from multiple sampled outputs as the advantage. The objective function for GRPO ($\mathcal{J}^{\text{GRPO}}$) is given by:
-
-
-
-
-\begin{footnotesize}
-    \begin{equation}
-        \begin{split}
-            \mathcal{J}^{\text{GRPO}}(\theta) 
-            &= \mathbb{E}_{q \sim P(Q), \{o\}^G_{i=1} \sim \pi_{\theta_{\text{old}}}(O \mid q)} \Bigg[ \frac{1}{G} \sum_{i=1}^{G} \frac{1}{|o_i|} \sum_{t=1}^{|o_i|} \Bigg\{ \nonumber \\
-            &\quad \min \Bigg( 
-                \frac{ \pi_{\theta}(o_{i,t} \mid q, o_{i,<t}) }{ \pi_{\theta_{\text{old}}}(o_{i,t} \mid q, o_{i,<t}) } \hat{A}_{i,t}(r_{i,t}), \;
-                \text{CLIP}\left( \frac{ \pi_{\theta}(o_{i,t} \mid q, o_{i,<t}) }{ \pi_{\theta_{\text{old}}}(o_{i,t} \mid q, o_{i,<t}) }, 1 - \epsilon, 1 + \epsilon \right) \hat{A}_{i,t}(r_{i,t}) 
-            \Bigg) \nonumber \\
-            &\quad - \beta \, \mathbb{D}_{\text{KL}}\left[ \pi_{\theta} \,\|\, \pi_{\text{ref}} \right] 
-            \Bigg\} \Bigg]
-        \end{split}
-    \end{equation}
-\end{footnotesize}
-
-
-
-
-where:
-
-\begin{equation*}
-    \hat{A}_{i,t}(r_{i, t}) = \frac{r_{i, t} - \text{mean}(\mathbf{r}_t)}{\text{std}(\mathbf{r}_t)}
-\end{equation*}
-
-\begin{equation*}
-    \mathbb{D}_{KL}[\pi_{\theta} || \pi_{ref}] = \frac{\pi_{\text{ref}}(o_{i, t} | q, o_{i, <t})}{\pi_{\theta}(o_{i, t} | q, o_{i, <t})} - \log \frac{\pi_{\text{ref}}(o_{i, t} | q, o_{i, <t})}{\pi_{\theta}(o_{i, t} | q, o_{i, <t})} - 1
-\end{equation*}
-
-
-
-Here, $G$ is the size of the sampled outputs for each iteration $t$. $r_{i,t}$ is reward for output $i$ at iteration $t$. Instead of training a \textit{value model} in calculating the expected rewards, the GRPO uses the sum of the normalized rewards from a sample outputs of size $G$ as the advantage function $\hat{A}_{i,t}$. Additionally, the KL divergence penalty is added directly to the objective function to reduce the calculation cost in the advantage function. This design significantly lowers training cost while preserving optimization stability.
-
-
-
-Finally, in implementation, the GRPO stage for monetary policy decision making uses the task-specific decision prompt defined above in Table~\ref{tab:ch2:decision_grpo_prompt}. Rewards are then assigned with an ``LLM-as-Judge'' setup, where a stronger evaluator model scores policy outputs.
-
-
-\subsection*{Reward Function Design}\label{ch2:sec:mode_training:reward_function}
-% 
-
-
-Inspired by existing literature (\cite{qian2025fino1}), we adopt a multi-component reward design. The core components are format compliance, analytical quality, and reasoning coherence.
-
-RL training targets analytical quality. Unlike mathematical reasoning tasks, economic and financial analyses do not always yield a single ground-truth answer. To address this, we employ the ``LLM-as-Judge framework'' (\cite{zheng2024judging}) to evaluate both the reasoning process and the final analysis. Several key criteria are used for this evaluation, with the reward model assessing the output and assigning a score accordingly. Specifically, we design the following reward components: the \textit{Accuracy Reward} ($\mathcal{R}_{acc}(o_i)$) and the \textit{Reasoning Reward} ($\mathcal{R}_{reason}(o_i)$). 
-
-In addition, we include a \textit{Format Reward} ($\mathcal{R}_{fmt}(o_i)$) to encourage outputs to follow the required response structure.
-
-
-Finally, the \textit{Total Reward} is computed as the sum of the individual reward components. The model updates its parameters based on the \textit{Total Reward} obtained from the most recent generation.
-
-
-\subsubsection*{Format Reward}
-To enforce output structure, reasoning must appear in \texttt{<think>...</think>} and the final response in \texttt{<answer>...</answer>}. Therefore, we designed a format reward function ($\mathcal{R}_{fmt}(\cdot)$) checking the output. A correct format will be scored as 1 while the wrong format will be marked as 0:
-
-
-\begin{equation}\label{eq:ch2:format_reward}
-    \mathcal{R}_{\text{fmt}}(o_i) = 
-    \begin{cases}
-        1, & \text{if the format is correct} \\
-        0, & \text{if the format is wrong}
-    \end{cases}
-\end{equation}
-
-
-
-
-\subsubsection*{Accuracy Reward}
-
-Our objective differs from tasks with fixed answers (e.g., FinQA; \cite{chen2021finqa}). We target comprehensive macro-financial analysis, where multiple valid responses may exist. We therefore use an ``LLM-as-Judge'' reward model (\cite{zheng2023judging}) by employing a powerful evaluation model (referred to as the \textit{``reward model''}, denoted by $\mathcal{R}_{acc}(\cdot)$) to score the output based on specific instructions.
-
-However, the reward obtained through this method heavily depends on the quality and clarity of the instructions provided; biased evaluation criteria may lead to biased rewards. To mitigate this issue, we carefully designed seven evaluation dimensions: problem definition, data usage, theoretical support, empirical analysis, analytical depth, policy relevance, and language accuracy. Table~\ref{tab:ch2:llm_as_judge_evaluation} summarizes these seven aspects along with a brief description of each criterion.
-
-
-
-\begin{table}[h]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.33\textwidth}|p{0.63\textwidth}}
-    \toprule
-    \textbf{Evaluation Dimension} & \textbf{Evaluation Focus} \\
-    \midrule
-    \textbf{1. Problem Definition \& Structural Completeness} &
-    \parbox[t]{0.65\textwidth}{
-        \textbullet\ Is the core research or policy question clearly defined? \newline
-        \textbullet\ Is there sufficient background and objective? \newline
-        \textbullet\ Is the structure complete (e.g., introduction, method, findings, conclusion)?\newline
-        \textbullet\ Is the logical flow coherent from question to conclusion?\newline
-} \\
-\hline
-\textbf{2. Data Usage \& Verifiability} &
-\parbox[t]{0.65\textwidth}{
-    \textbullet\ Are the data selected from credible sources?\newline
-    \textbullet\ Are the data sources clearly cited?\newline
-    \textbullet\ Are the data relevant to the argument?\newline
-    \textbullet\ Can the analysis be independently verified using the data?\newline
-} \\
-\hline
-\textbf{3. Theoretical Support \& Citations} &
-\parbox[t]{0.65\textwidth}{
-    \textbullet\ Are appropriate economic or financial theories applied?\newline
-    \textbullet\ Are relevant scholarly or institutional sources cited?\newline
-    \textbullet\ Are the cited theories or sources correctly interpreted?\newline
-} \\
-\hline
-\textbf{4. Empirical Methodology \& Transparency} &
-\parbox[t]{0.65\textwidth}{
-    \textbullet\ Are the empirical methods appropriate for the question?\newline
-    \textbullet\ Are the methods clearly explained and reproducible?\newline
-    \textbullet\ Are assumptions and limitations discussed?\newline
-} \\
-\hline
-\textbf{5. Analytical Depth \& Insight} &
-\parbox[t]{0.65\textwidth}{
-    \textbullet\ Are key variables correctly identified and analyzed?\newline
-    \textbullet\ Does the analysis show meaningful economic or financial insight?\newline
-    \textbullet\ Are policy trade-offs or complex relationships discussed?\newline
-    \textbullet\ Is there a forward-looking or scenario-based component?\newline
-} \\
-\hline
-\textbf{6. Policy Relevance \& Real-world Significance} &
-\parbox[t]{0.65\textwidth}{
-    \textbullet\ Are the conclusions tied to real-world policy implications?\newline
-    \textbullet\ Does the analysis provide decision-relevant insights?\newline
-    \textbullet\ Is the analysis useful for policymakers or market actors?\newline
-} \\
-\hline
-\textbf{7. Clarity \& Language Accuracy} &
-\parbox[t]{0.65\textwidth}{
-    \textbullet\ Is the language clear, professional, and grammatically correct?\newline
-    \textbullet\ Are economic and financial terms used accurately?\newline
-    \textbullet\ Is the terminology consistent throughout the analysis?\newline
-} \\
-\bottomrule
-    \end{tabular}
-    \caption{Evaluation Criteria for Assessing LLM-Generated Economic/Financial Analyses}
-    \label{tab:ch2:llm_as_judge_evaluation}
-\end{table}
-
-%% TODO: each point
-
-Each criterion is scored on a scale from 1 to 5, where 1 indicates "Very Poor" and 5 indicates "Excellent". The summed score is normalized by 35 to produce the final accuracy reward $\mathcal{R}_{\text{acc}}(o_i)\in[0,1]$. We employ the prompt shown in Table~\ref{tab:ch2:accuracy_reward_prompt} to format the policy model's output before submitting it to the reward model. Finally, to normalize the reward and balance the influence of different reward functions, the \textit{total score} is divided by 35, resulting in a final accuracy reward ($\mathcal{R}_{\text{acc}}(o_i)$) scaled between 0 and 1.
-
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-    \textbf{Prompt for Accuracy Reward ($\mathcal{R}_{\text{acc}}(o_i)$):} \\
-    \midrule
-    You are an economic and financial policy expert serving as an internal evaluator at the Federal Reserve. You are tasked with \textbf{assessing the analytical quality and fidelity} of a large language model's output based on structured economic/financial data. \\[1ex]
-
-\textbf{Evaluation Criteria (Score each from 1--5):} \\
-
--- Problem Definition \& Structural Completeness \\
-\quad \textit{... description ...} \\
-
--- Accuracy of Economic Relationships and Logic \\
-\quad \textit{... description ...} \\
-
--- Correct Use of Data and Trends \\
-\quad \textit{... description ...} \\[1ex]
-
-\textbf{Scoring Instructions:} \\
-- Each category receives an integer score (1--5). \\
--  Justify each score briefly and concisely. \\[1ex]
-
-\textbf{Output Template:} \\
-- \textbf{Score}: \texttt{\textbackslash boxed\{\{X\}\}} \\
-- \textbf{Justification}: Your explanation in 1--2 sentences. \\[1ex]
-
-\textbf{Input Data:} \\
-The model analysis is based on the following indicators: \texttt{\{emphasized\_label\}}. \\
-
-\textbf{\textless Provided Data\textgreater} \\
-\texttt{\{provided\_data\}} \\
-\textbf{\textless /Provided Data\textgreater} \\[1ex]
-
-\textbf{\textless Model Analysis\textgreater} \\
-\texttt{\{model\_analysis\}} \\
-\textbf{\textless /Model Analysis\textgreater} \\
-\bottomrule
-    \end{tabular}
-    \caption{Accuracy Reward Prompt}
-    \label{tab:ch2:accuracy_reward_prompt}
-\end{table}
-
-
-
-\subsubsection*{Reasoning Reward}
-
-
-Furthermore, to enforce logical consistency between reasoning and final answers, we introduce a reasoning reward ($\mathcal{R}_{\text{reason}}(o_i)$) to evaluate the quality of the reasoning trajectory. Using the same ``LLM-as-Judge'' framework, the evaluator assigns a score from 1 to 5 based on reasoning-answer consistency (Table~\ref{tab:ch2:reasoin_reward_prompt}). We normalize by 5 so that $\mathcal{R}_{\text{reason}}(o_i)\in[0,1]$.
-
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \begin{tabular}{p{0.98\textwidth}}
-    \toprule
-        \textbf{Prompt for Reasoning Reward ($\mathcal{R}_{\text{reason}}(o_i)$):} \\
-    \midrule
-    You are an economic and financial policy expert serving as an internal Federal Reserve evaluator. Your task is to assess the **logical consistency** between a model's reasoning and its final answer. \\
-    ~\\
-    You will be provided with: \\
-    - **\textless Model Reasoning\textgreater**: The model’s internal reasoning process.  \\
-    - **\textless Model Answer\textgreater**: The model’s final answer or policy recommendation derived from that reasoning. \\
-
-    Your evaluation must be **objective, consistent, and aligned with policy-analysis standards**. \\
-    Determine whether the reasoning clearly and sufficiently supports the final answer. \\
-
-    --- \\
-
-    \#\#\# Scoring Criteria (1--5) \\
-
-    1 = Very poor (reasoning contradicts or fails to support the answer). \\
-    2 = Weak (reasoning is partial, unclear, or logically weak).  \\
-    3 = Acceptable (reasoning and answer are mostly aligned, with minor issues).  \\
-    4 = Strong (reasoning supports the answer with good coherence).  \\
-    5 = Excellent (reasoning fully supports the answer without logical gaps).\\
-    
-    --- \\
-
-    \#\#\# Output Instructions:\\
-
-    - Output the score using the format: \texttt{\textbackslash boxed\{\{score\}\}}  \\
-    - Then provide a **short paragraph** (1–3 sentences) summarizing the main justification  \\
-    - If the reasoning is incoherent, irrelevant, or contradicts the answer, assign a score of **1** \\
-
-    Do **not** explain each criterion separately.  \\
-    Only return the final score and the overall justification. \\
-
-    --- \\
-
-    \#\#\# Input \\
-
-    **\textless Model Reasoning\textgreater** \\
-    \texttt{\{model\_reasoning\}}\\  
-    **\textless /Model Reasoning\textgreater**\\
-    ~\\
-    **\textless Model Answer\textgreater**  \\
-    \texttt{\{model\_analysis\}}  \\
-    **\textless /Model Answer\textgreater** \\
-    \bottomrule
-    \end{tabular}
-    \caption{Reasoning Reward Prompt}
-    \label{tab:ch2:reasoin_reward_prompt}
-\end{table}
-
-
-
-\subsubsection*{Vote Accuracy Reward}
-In Monetary Policy Decision Making prediction, we need the model to accurately predict the voting outcomes for the Federal Funds Rate in FOMC meetings.
-
-We therefore parsed the model’s response ($o_i$) and compared it with the ground-truth voting outcome, using this comparison to compute the Vote Accuracy Reward ($\mathcal{R}_{vote\_acc}(o_i)$), as defined in Eq.~(\ref{eq:ch2:vote_acc_reward}).
-
-\begin{equation}\label{eq:ch2:vote_acc_reward}
-    \mathcal{R}_{vote\_acc}(o_i) = 
-    \begin{cases}
-        1, & \text{if the voting result is correct} \\
-        0, & \text{if the voting result is wrong}
-    \end{cases}
-\end{equation}
-
-
-
-
-\subsubsection*{Vote Format Reward}
-
-Furthermore, unlike mathematical calculations, voting results in FOMC contexts may be expressed in various formats, which presents a challenge for consistent evaluation. To address this, we summarized the daily Federal Funds Rate (FFR) changes from January 1, 2000 to May 8, 2025 (see Table~\ref{tab:ch2:model_train_ffr_changes}), and constructed a list of standardized potential outcomes (Table~\ref{tab:ch2:model_train_vote_choice}). We then instructed the model to select its final vote from this predefined list. Accordingly, the Vote Format Reward (see Eq.~(\ref{eq:ch2:vote_format_reward})) measures whether the model’s predicted decision conforms to one of the allowed options in the list.
-
-\begin{equation}\label{eq:ch2:vote_format_reward}
-    \mathcal{R}_{vote\_fmt}(o_i) = 
-    \begin{cases}
-        1, & \text{if the voting result is correct} \\
-        0, & \text{if the voting result is wrong}
-    \end{cases}
-\end{equation}
-
-
-
-\begin{table}[htbp]
-    \centering
-    \footnotesize
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \begin{tabular}{c c}
-            \toprule
-            Rate Change (bps) & Frequency \\
-            \midrule
-            0    & 6,177 \\
-            25   & 31 \\
-            -50  & 15 \\
-            -25  & 12 \\
-            75   & 4 \\
-            50   & 2 \\
-            -75  & 2 \\
-            \bottomrule
-        \end{tabular}
-        \caption{Daily Federal Fund Rate Changes (in BPS) from Jan 1, 2000 to May 9, 2025}
-        \label{tab:ch2:model_train_ffr_changes}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.48\textwidth}
-        \centering
-        \begin{tabular}{l}
-            \toprule
-            Target Vote Choices \\
-            \midrule
-            Raise by 100 basis points \\
-            Raise by 75 basis points \\
-            Raise by 50 basis points \\
-            Raise by 25 basis points \\
-            No change \\
-            Cut by 25 basis points \\
-            Cut by 50 basis points \\
-            Cut by 75 basis points \\
-            Cut by 100 basis points \\
-            \bottomrule
-        \end{tabular}
-        \caption{Choices for Target Vote}
-        \label{tab:ch2:model_train_vote_choice}
-    \end{minipage}
-\end{table}
-
-
-
-
-
+The monetary-policy decision branch begins independently from the exact-merged \textit{Model chk-1} and proceeds through decision-specific SFT followed by GRPO. During SFT, the model receives a fixed system instruction and a user message containing a target-neutral pre-meeting analysis. The supervised completion consists of a qualitative dual-mandate rationale, one literal \texttt{</think>} boundary, and a terminal object specifying the policy direction and magnitude. GRPO then initializes from decision SFT checkpoint, retains the same model-facing prompt, action space, and response contract, and optimizes the parser-contingent decision proxy reward. 
 
 
 
 \subsection*{Technique for Parameter-Efficient Fine-Tuning (PEFT)}
 
+Full-parameter fine-tuning updates every model parameter and must retain the
+associated gradients and optimizer states. Parameter-efficient fine-tuning
+instead freezes the pretrained weights and optimizes a much smaller set of
+task-specific parameters.
 
-Fine-tuning models to enhance their performance on specific task is a common practice in the NLP. When conducting Full-parameter Fine-Tuning (FT), the entire base model will be updated, leading to enhanced capabilities in generating task-specific text. However, this comes at a significant computational cost.  Full-parameter fine-tune the model requires about 120GB of GPU memory even only for a 8 billion parameters' model. In contrast, Partial-parameter Fine-Tuning (FT) offers more economical alternative, significantly reducing GPU memory requirements by freezing certain layers of the model.
+We use Low-Rank Adaptation (LoRA; \cite{hu2021lora}). For a pretrained linear
+transformation with weight
+$W\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}$, LoRA represents
+the trainable update as
+\begin{equation}
+    W'=W+\Delta W,
+    \qquad
+    \Delta W=\frac{\alpha}{r}BA,
+\end{equation}
+where $A\in\mathbb{R}^{r\times d_{\mathrm{in}}}$,
+$B\in\mathbb{R}^{d_{\mathrm{out}}\times r}$, and
+$r\ll\min(d_{\mathrm{in}},d_{\mathrm{out}})$. The pretrained matrix $W$
+remains frozen; only the low-rank factors are optimized.
 
-
-
-To further optimize memory usage without compromising performance, Parameter-Efficient Fine-Tuning (PEFT) and Quantization techniques, such as LoRA (Low-Rank Adaptation, \cite{hu2021lora}), Quantized Low-Rank Adaptation (QLoRA, \cite{dettmers2024qlora}), and Gated Low-Rank Evolving (GaLoRE, \cite{zhao2024galore}), are employed to significantly reduce memory consumption. PEFT involves fine-tuning only a subset of the model's parameters or introducing additional lightweight trainable layers, rather than updating the full model. Quantization, on the other hand, reduces the precision of model weights to formats such as FP16, FP8, or FP4, thereby lowering the memory footprint. For example, LoRA—widely adopted for its efficiency in the fine-tuning literature—can reduce memory requirements from 120GB to as little as 24GB.
-
-
-
-LoRA's mechanism involves introducing additional layers, referred to as Adapters, with a much smaller rank (typically 1 or 2) compared to the pre-trained weight matrices (such as 2048 in the LLaMA3 model). These Adapters are specifically designed for the task at hand and undergo training during the fine-tuning process. Upon completion of training, these adapted layers are merged back into the base model, effectively enhancing its capabilities for the target task while keeping the overall memory footprint minimal. This approach not only facilitates the fine-tuning of large models on resource-constrained environments but also allows for the integration of task-specific knowledge without the need to retrain the entire model from scratch. By strategically updating the parameters in the Adapters, LoRA and similar techniques enable efficient adaptation to new domains or tasks, making them powerful tools in the fine-tuning. For our research , we choose to use QLoRA, a technique combined the traditional LoRA and Quantization, that dramatically increase the fine-tuning efficiency by lower the precision formats to FP4.
-
-
-
-\subsection*{Training Hyperparameters}\label{ch2:sec:parameter}
-
-
-Following the literature on model training and fine-tuning
-(\cite{gpt2018}; \cite{meta2024llama3}; \cite{yang2025qwen3};
-\cite{howard2018universal}; \cite{ding2023parameter}), the SFT experiments use
-small learning rates and gradient accumulation to accommodate the available
-GPU memory.  Table~\ref{tab:ch2:training_hyperparameters_archive} reports the
-realized hyperparameters for the two completed SFT experiments.  The remaining
-rows reproduce the specifications reported for the other stages and are
-retained without reinterpretation.
-
-
-The \texttt{chk-1} SFT experiment comprises three epochs and 255 optimization
-steps with a learning rate of \(1.0\times10^{-6}\).  Checkpoint 200 is selected
-using the validation and generation criteria described below.
-
-The \texttt{chk-3} SFT experiment also comprises three epochs and
-terminates after 318 optimization steps.  Checkpoint 318 is retained for the
-task-aligned evaluation but is not interpreted as a canonical downstream
-checkpoint.
-
-The reported small batch sizes are hardware-constrained. Larger batches could
-improve throughput but would exceed available GPU memory.  Both completed SFT
-stages use three passes through their respective training samples.  The
-decision-task specification is retained separately and is not interpreted as a
-completed result in this subsection.
+Quantized Low-Rank Adaptation (QLoRA; \cite{dettmers2024qlora}) combines LoRA
+with a quantized frozen base model; its 4-bit NormalFloat (NF4) representation
+is distinct from generic FP4. The final training record for \textit{chk-2}
+checkpoint 50 verifies NF4 QLoRA training with double quantization and
+BF16 compute and storage, using a rank-32, $\alpha=64$ LoRA adapter with
+dropout 0.05 on \texttt{q\_proj},
+\texttt{k\_proj}, \texttt{v\_proj}, \texttt{o\_proj},
+\texttt{gate\_proj}, \texttt{up\_proj}, and \texttt{down\_proj}. The main
+text-similarity evaluation loads this adapter over the exact-merged
+\textit{chk-1} checkpoint 200 parent in BF16 without inference quantization;
+the \textit{chk-2} adapter itself remains active rather than being merged.
+An adapter may remain
+separate from its parent model or be merged for deployment; merging does not
+by itself reduce the size of the resulting base-sized model.
 
 
-\begin{table}[htbp]
+
+
+\subsection{Training Hyperparameters}\label{ch2:sec:parameter}
+
+Table~\ref{tab:ch2:training_hyperparameters_archive} reports checkpoint
+identities and configuration values. 
+
+\begin{table}[H]
     \centering
-    \scriptsize
-    \setlength{\tabcolsep}{2.5pt}
-    \renewcommand{\arraystretch}{1.12}
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.16}
     \begin{tabularx}{\textwidth}{@{}
-        >{\centering\arraybackslash}p{0.075\textwidth}
-        >{\centering\arraybackslash}p{0.065\textwidth}
-        >{\centering\arraybackslash}p{0.115\textwidth}
-        >{\centering\arraybackslash}p{0.065\textwidth}
-        >{\centering\arraybackslash}p{0.085\textwidth}
-        >{\centering\arraybackslash}p{0.12\textwidth}
+        >{\centering\arraybackslash}p{0.08\textwidth}
+        >{\centering\arraybackslash}p{0.08\textwidth}
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
         >{\raggedright\arraybackslash}X
     @{}}
         \toprule
-        \makecell[c]{\textbf{Model}} &
-        \makecell[c]{\textbf{Stage}} &
-        \makecell[c]{\textbf{Learning}\\\textbf{Rate}} &
-        \makecell[c]{\textbf{Epochs}} &
-        \makecell[c]{\textbf{Batch}\\\textbf{Size}} &
-        \makecell[c]{\textbf{Gradient}\\\textbf{Accum.}} &
-        \makecell[l]{\textbf{Key Settings}} \\
+        \textbf{Model} & \textbf{Stage} & \textbf{Initialization} &
+        \textbf{Selected Point} &
+        \textbf{Configuration} \\
         \midrule
-        \textit{chk-1} & SFT & $1.0\times10^{-6}$ & 3 & 1 & 8 & Max sequence length = 7,168; QLoRA NF4; LoRA \(r=32\), \(\alpha=64\), dropout \(=0.05\); checkpoint 200 selected. \\
-        \textit{chk-3} & SFT & $1.0\times10^{-6}$ & 3 & 1 & 8 & Max sequence length = 4,096; QLoRA NF4; LoRA \(r=32\), \(\alpha=64\), dropout \(=0.05\); checkpoint 318 selected for evaluation. \\
-        \textit{chk-4} & GRPO & $1.0\times10^{-6}$ & 10 & 1 & 4 & Max prompt/completion length = 8096/2048;\newline 4 generations per prompt; rewards = rate\_accuracy (1.0) and rate\_format (1.0). \\
+        \textit{chk-1} & SFT & \textit{chk-0} & Checkpoint 200 selected and
+        exact-merged & Final evaluation records fix the artifact identity;
+        full training settings are not bound in the current record set. \\
+        \textit{chk-2} & SFT & Exact-merged \textit{chk-1} checkpoint 200 &
+        Checkpoint 50 selected by the validation-probe rule; active adapter &
+        NF4 QLoRA $r=32$, $\alpha=64$, dropout 0.05; learning rate
+        $10^{-6}$; three epochs (60 optimizer steps); completion-only loss.
+        Selection evidence is reported in Appendix~\ref{app:checkpoint_selection}. \\
+        \textit{chk-3} & SFT & Exact-merged \textit{chk-1} checkpoint 200 &
+        Checkpoint 38 initializes GRPO & 211 unique meetings, 312 physical
+        training rows. \\
+        \textit{chk-3} & GRPO & Decision SFT checkpoint 38 & Run completed at
+        step 468; checkpoint 450 used for evaluation &
+        \texttt{loss\_type=dapo}; within-group scaling; four generations per
+        prompt; generation batch 8; temperature 0.7; top-$p$ 0.9;
+        $\beta=0.04$; $\epsilon=0.2$; prompt/completion limits 2,560/1,536;
+        truncated completions masked; sole proxy reward
+        \texttt{decision\_dense\_v3} with external weight 1.0. \\
         \bottomrule
     \end{tabularx}
-    \caption{Training Hyperparameters. {\footnotesize \textit{Notes:} The \texttt{chk-1} and \texttt{chk-3} rows report the realized configurations of the completed SFT experiments.  Both use \texttt{bf16}, seed 42, and LoRA on \texttt{q\_proj}, \texttt{k\_proj}, \texttt{v\_proj}, \texttt{o\_proj}, \texttt{gate\_proj}, \texttt{up\_proj}, and \texttt{down\_proj}.  The \texttt{chk-4} row reproduces an earlier decision-task specification and is not interpreted as a result in this subsection.}}
+    \caption{Paper-level model lineage and verified subset of the training configuration.}
     \label{tab:ch2:training_hyperparameters_archive}
 \end{table}

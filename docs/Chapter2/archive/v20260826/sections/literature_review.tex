@@ -1,0 +1,499 @@
+% New citation records introduced in this section are supplied in
+% Chapter2/chapter2_literature_review_additions.bib. The thesis-level
+% bibliography, which is not present in this repository snapshot, must include
+% that database when the master document is restored.
+
+\section{Literature Review}\label{ch2:sec:lr}
+
+This chapter lies at the intersection of several literatures that study different objects and support different empirical claims. 
+
+Research on central-bank communication asks what information is contained in observed policy documents and how markets respond when those documents are released. Research on monetary-policy forecasting asks whether an action can be predicted from information available before a meeting. 
+
+Work on data-to-text generation instead asks whether a model can transform a supplied record into a fluent and faithful text, while the post-training literature studies how supervised or reward-based objectives alter model behaviour. 
+
+These questions are related, but their estimands are not interchangeable. In particular, a synthetic paragraph that resembles an FOMC Minute is neither an observed communication shock nor evidence that the paragraph affected historical asset prices. The review therefore separates the relevant strands before locating the two parallel tasks studied in this chapter.
+
+
+\subsection{Synthetic Economic Data and Controlled Data-to-Text Generation}
+\label{ch2:sec:lr:synthetic}
+
+Synthetic data are generated observations intended to reproduce selected properties of an empirical data-generating process without being literal copies of the original observations. In economics and finance, their uses include simulation, robustness analysis, privacy protection, rare-event augmentation, and stress testing. These uses impose different validity requirements. A sample that is useful for testing a forecasting pipeline need not reproduce every feature of the source distribution, while data intended for substantive counterfactual inference require a much stronger structural argument. Financial applications illustrate the distinction: synthetic limit-order books and price paths can be useful for controlled robustness exercises even when they are not treated as newly observed market histories (\cite{cao2022synthetic}; \cite{carvajal2022synthetic}). Likewise, pretrained language models can generate additional labelled examples or task demonstrations (\cite{schick2021generating}), but the utility of those examples depends on the fidelity of the generator, the selection rule, and the downstream task.
+
+One particularly relevant methodological tradition for the Minutes branch is
+consequently
+\emph{controlled data-to-text generation}, rather than unconstrained document
+simulation. Natural-language generation research distinguishes content
+selection, document planning, surface realization, and evaluation
+(\cite{gatt2018survey}). Neural data-to-document systems can produce fluent
+prose while omitting source records, introducing unsupported relations, or
+misstating values; \citet{wiseman2017challenges} therefore evaluate both
+linguistic quality and record-level content fidelity. This distinction is
+especially important for central-bank prose, where a misplaced sign, date, or
+rate can reverse the economic interpretation even if the paragraph remains
+stylistically convincing. Accuracy protocols for data-to-text systems
+accordingly treat factual error annotation and metric validation as separate
+from fluency assessment (\cite{thomson2020gold}).
+
+This literature narrows the claim made in the present chapter. Model chk-2
+does not generate a complete institutional record from an unconstrained
+counterfactual economy. It rewrites a supplied macro-financial analysis into
+one Minutes-style paragraph under a fixed output contract. The relevant
+question is thus whether task-specific training improves preservation of the
+supplied content and alignment to a fixed source-grounded target. Style
+similarity is useful only after delivery and source-preservation requirements
+are checked. Moreover, because the evaluation targets are synthetic rather
+than official FOMC Minutes, agreement with them establishes target alignment,
+not equivalence to the Committee's historical language or deliberative
+process.
+
+\subsection{Central-Bank Communication, Information, and Asset Prices}
+\label{ch2:sec:lr:communication}
+
+Central-bank communication is part of the monetary-policy transmission
+mechanism because it can shape expectations about both the current instrument
+and its future path. The survey by \citet{blinder2008central} concludes that
+communication can move financial markets and improve the predictability of
+policy, while also emphasizing that communication strategies and their
+effects vary across institutions and instruments. High-frequency evidence
+reinforces the need to separate an action from its accompanying message.
+\citet{gurkaynak2005actions} show that U.S. announcement responses cannot be
+summarized by a single target-rate surprise: a distinct path factor, closely
+associated with FOMC statements, helps explain longer-maturity yields. At the
+same time, the central bank may reveal information about economic fundamentals
+that private agents do not possess (\cite{romer2000federal}). The
+\emph{information effect} identified by \citet{nakamura2018information}
+therefore warns against reading every announcement-window price movement as a
+pure policy shock.
+
+Communication content is itself multidimensional. \citet{hansen2016shocking}
+separate language about current economic conditions from forward guidance and
+show that the dimensions have different yield effects. A scalar sentiment
+index can therefore be a useful summary without being a sufficient statistic
+for the economic content of a policy document.
+
+Minutes are also an institutional record of deliberation rather than simply a
+longer policy statement. Using the 1993 transparency change and computational
+linguistics, \citet{hansen2018transparency} show that publication rules can
+alter deliberative communication itself. This result matters for synthetic
+generation: matching the surface form of published Minutes does not recreate
+the incentives, information, or bargaining process that produced the official
+document. It also cautions against treating a generated paragraph as a
+measurement-free proxy for an unobserved institutional state.
+
+Nor are Minutes verbatim transcripts. \citet{apel2022disclosure} compare FOMC
+Minutes with the underlying transcripts and show that the shortened, edited
+Minutes can omit committee, chair, and disagreement signals that retain
+predictive content for future policy. Institutional style is therefore not a
+lossless encoding of the meeting. A model trained to reproduce the published
+genre can at most learn the disclosure convention represented in its targets;
+it cannot be assumed to recover omitted deliberative information.
+
+Within the empirical text-as-data literature, the unit of analysis and the
+release clock determine the interpretation. Event studies examine asset-price
+movements when statements or Minutes become public. Existing work reports
+effects on exchange rates, yields, returns, or volatility around Federal
+Reserve communications (\cite{rosa2011high}; \cite{rosa2013financial};
+\cite{jubinski2013fomc}). Other studies convert observed Minutes into
+sentiment or topic measures and assess their predictive content.
+\citet{huang2021economic}, for example, construct mandate-specific indicators
+and study forecasts of macroeconomic variables, whereas
+\citet{tadle2022fomc} relates policy-document sentiment to fed funds futures
+and foreign-exchange valuations. These designs study realized official text.
+They do not validate a generated document merely because a classifier assigns
+it a similar tone.
+
+Recent work brings LLM measurement directly into this literature.
+\citet{chen2026decoding} use an LLM-based framework to measure incremental
+linguistic information in actual Minutes relative to same-meeting statements
+and combine that measure with a one-minute Treasury-futures event study. This
+is a particularly close observed-document application among the studies
+reviewed here, but its identification comes from the staged release of two
+official texts. The
+present Minutes branch instead evaluates synthetic rewriting of a supplied
+analysis and has no historical release event of its own.
+
+Text scores are also generated covariates rather than error-free observables.
+\citet{christensen2026valid} show that ignoring error in AI- or
+machine-learning-generated regressors can bias estimation and invalidate
+inference, including in an FOMC-sentiment application. Accordingly, agreement
+between coefficient signs across generated-text artifacts is weaker evidence
+than a validated, error-corrected estimate based on observed communication.
+
+The distinction is decisive for the historical sentiment--Treasury exercise
+in this chapter. The synthetic paragraphs were not released to investors at
+the historical event time. A regression using their sentiment scores can
+compare reduced-form coefficient patterns across text artifacts, but it cannot
+identify a market response caused by the synthetic text. It also cannot, by
+itself, establish factual grounding: two documents can induce similar
+sentiment scores while differing in economically important claims. The
+exercise is therefore an association diagnostic motivated by the observed-text
+literature, not a synthetic event study.
+
+\subsection{Real-Time Information Sets and Monetary-Policy Prediction}
+\label{ch2:sec:lr:realtime}
+
+Monetary-policy prediction requires a stricter timing convention than
+retrospective text classification. Revised macroeconomic series can contain
+information that policymakers and market participants did not possess when a
+decision was made. \citet{croushore2001realtime} formalize the use of data
+vintages, and \citet{orphanides2001monetary} demonstrates that policy-rule
+recommendations and estimated historical reaction functions can change
+materially when real-time rather than revised data are used. A historically
+accurate model can therefore be information-infeasible if its inputs include
+later releases, revisions, or the target meeting's outcome.
+
+The action being predicted must also be defined. Econometric work often
+separates whether the target rate changes from the conditional size of the
+change (\cite{hamiltonjorda2002target}). Research using Minutes to forecast
+subsequent federal funds rate changes, such as \citet{jung2016minutes}, asks
+whether released official documents revise expectations about a later
+meeting. That problem differs from the decision branch in this chapter, which
+maps a target-neutral pre-meeting analysis directly to the action at the same
+meeting. Here, \emph{target-neutral} means that explicit target actions and
+post-meeting observations are excluded; it does not prove that meeting
+identity is impossible to infer from the remaining historical context.
+
+Established forecasting designs make these timing requirements operational.
+\citet{hayo2010federal} augment a real-time, forward-looking Taylor-rule
+ordered probit with Federal Reserve communications, while
+\citet{vandendhauwe2013bayesian} combine real-time macro-financial predictors,
+dynamic ordered probit models, and Bayesian variable selection in an
+out-of-sample decision exercise. A particularly close text-informed action
+comparator is \citet{aruoba2024identifying}, who use NLP on staff documents prepared
+before policy decisions to approximate the Federal Reserve's information set
+and predict target-rate changes. Their prediction is an intermediate step in
+monetary-shock identification, and the internal staff documents were not
+available to external forecasters at the decision time. Market-based studies
+provide another benchmark: fed funds futures isolate anticipated and surprise
+components (\cite{kuttner2001monetary}), while the yield curve and meeting
+calendar also contain information about policy decisions
+(\cite{piazzesi2005bond}).
+
+These findings motivate three design requirements. First, inputs must be bound
+to a point-in-time cutoff rather than reconstructed from final-vintage data.
+Second, a prospective forecasting study should separate train, validation,
+and test meetings chronologically so that later meetings do not teach the
+model how earlier information maps to a future policy regime. Third,
+evaluation must reflect the ordered but imbalanced cut--hold--hike action
+space. Raw accuracy can be dominated by the majority hold class; balanced
+accuracy, macro F1, class-wise recall, exact action, and output delivery
+consequently answer different questions. The current release is date ordered,
+but its 13-meeting test has already been opened and is class sparse; it is
+therefore a training-held-out historical check rather than a new prospective
+validation. In addition, the pre-2009 supplement enforces its cutoff relative
+to the workbook's stored date, which is the meeting end date for 25 of 109
+meetings, not uniformly the official start date. These qualifications prevent
+the exercise from being interpreted as a structural policy rule or a causal
+estimate of how the FOMC would respond in an unseen counterfactual economy.
+
+\subsection{Domain Adaptation, Synthetic Supervision, and Model Lineage}
+\label{ch2:sec:lr:adaptation}
+
+Broadly pretrained language models need not encode the terminology, discourse
+structure, or evidentiary discipline of a specialized task. Domain- and
+task-adaptive training can improve downstream performance even after general
+pretraining (\cite{gururangan2020dont}). Parameter-efficient methods such as
+LoRA and QLoRA make such adaptation feasible by updating low-rank components
+rather than every base-model parameter (\cite{hu2021lora};
+\cite{dettmers2024qlora}). These methods explain how a comparatively small
+institutional corpus can alter output behaviour, but they do not guarantee
+that the resulting model is faithful or that an apparent improvement is due
+to the intended capability.
+
+The provenance of the supervision therefore determines what a checkpoint
+contrast can identify. Knowledge
+distillation transfers behaviour from a teacher to a smaller or otherwise
+different student (\cite{hinton2015distilling}); language-model-generated
+training pairs extend this idea to synthetic supervision. Self-generated
+instructions and rationales can provide useful task supervision
+(\cite{wang2023selfinstruct}; \cite{hsieh2023distilling}), but imitation may
+transfer a teacher's response conventions more readily than its underlying
+factual capabilities (\cite{gudibande2024false}). Such targets can scale
+annotation and impose a consistent response contract, but they can also
+transmit teacher omissions, factual errors, stylistic artefacts, and prompt
+dependencies. A student--teacher similarity score is consequently not an
+independent truth criterion. The teacher prompt, generation settings, frozen
+outputs, split discipline, and post-generation audits must be treated as part
+of the data provenance.
+
+This chapter's shared-parent design is motivated by that concern. Model chk-1
+provides the same analytical parent for two independent branches, so the main
+Minutes contrast isolates the incremental association of Minutes-rewriting SFT
+with output metrics relative to Model chk-1. The decision branch likewise
+compares an SFT state with its own post-GRPO descendant. These are
+checkpoint-specific contrasts, not generic estimates of \emph{fine-tuning} or
+\emph{reinforcement learning}. They also do not establish a serial
+indicators-to-Minutes-to-decision pipeline, because Model chk-3 never consumes
+Model chk-2 outputs.
+
+\subsection{Faithfulness, Evaluation, and Input-Sensitivity Diagnostics}
+\label{ch2:sec:lr:evaluation}
+
+The generation literature distinguishes \emph{faithfulness} to a supplied
+source from \emph{factuality} with respect to the external world. A statement
+may be entailed by an erroneous source, or may be externally true but
+unsupported by the provided input. Human evaluations of abstractive systems
+show that fluent outputs can still contain substantial unsupported content
+(\cite{maynez2020faithfulness}), and broader reviews document the persistence
+of hallucination under modern language modelling (\cite{huang2025survey}).
+For this chapter, at least four constructs must therefore remain separate:
+source preservation, external factuality, target-text similarity, and
+institutional style or delivery. None is an automatic substitute for the
+others.
+
+Automatic metrics operationalize only parts of these constructs. N-gram
+scores measure surface overlap, while embedding-based measures such as
+BERTScore reward contextual similarity (\cite{zhang2019bertscore}). They can
+recognize valid paraphrases, but a high semantic score does not ensure that
+every number, date, direction, or attribution is correct. Conversely, one
+lexically different but faithful realization may score below a stylistically
+similar text containing a critical numerical error. The data-to-text
+evaluation literature therefore recommends validating automatic metrics
+against explicit accuracy judgements (\cite{thomson2020gold}). The present
+chapter implements this construct separation by reporting hard structure,
+numeric, date, and degeneration gates alongside reliability-adjusted semantic
+scores. Zeroing semantic scores after a hard-gate failure encodes a declared
+reliability rule; it does not transform the semantic metric itself into a
+factuality test.
+
+Reference provenance further limits interpretation. The external
+Minutes-rewriting targets used here are deterministic, synthetic, and
+source-grounded, not official Minutes. They permit a controlled paired
+comparison among checkpoints, but agreement may reflect shared target design
+choices. The evaluation release is independent of chapter-specific
+fine-tuning and checkpoint selection, yet this chapter cannot establish that
+its historical subject matter was absent from the pretrained base model. This
+is a contamination limitation, not a reason to relabel the release as part of
+chapter-specific training (\cite{magar2022contamination};
+\cite{jacovi2023stop}). Similarly, the small diagnostic used to choose a
+checkpoint is selection evidence rather than an unbiased population estimate,
+because optimizing and evaluating on the same cases induces selection bias
+(\cite{cawley2010overfitting}).
+
+Repeated stochastic decoding is consequently used to estimate performance
+over generated samples rather than one favourable completion, with common
+meeting--replicate seeds preserving the paired comparison. Paired resampling
+is well suited to system comparisons in NLG (\cite{deutsch2021statistical}),
+and the broader machine-learning literature shows that reported performance
+can vary with multiple stochastic sources (\cite{bouthillier2021accounting}).
+The present hierarchy covers meeting and decoding variation; it does not cover
+independent retraining variation because each stage contributes one trained
+artifact. Meeting-level hierarchical resampling and family-wise multiplicity
+correction reflect the nested design and multiple reported endpoints,
+consistent with the requirement that NLP significance procedures match the
+sampling unit and experimental comparison (\cite{dror2018hitchhiker}).
+
+The canonical Core8 intervention would ask a different question: how target
+alignment changes when one complete input block is deleted or replaced by
+token-matched neutral text while a deterministic synthetic source-grounded
+target remains fixed. The surviving evidence in this chapter instead
+comprises two legacy deletion aggregates, one referenced to the model's
+unmasked output and one to actual FOMC Minutes, whose paired seed- and
+row-level provenance could not be reconstructed. Those archived targets define
+different estimands from the canonical synthetic-target contract; the
+neutral-text comparison and canonical paired run remain to be completed.
+Shapley-value methods define feature contributions by
+averaging marginal changes across coalitions (\cite{shapley1953value};
+\cite{lundberg2017unified}). A single leave-one-block contrast does not perform
+that averaging and can be sensitive to an out-of-distribution mask. The legacy
+aggregate should therefore be interpreted only as a local prompt-sensitivity
+diagnostic, not as a causal decomposition of the generated text, proof that
+the model used the indicator in a human-like way, or a full Shapley
+attribution. Keeping this boundary explicit connects the proposed
+perturbation design to the literature without overstating what the surviving
+evidence identifies.
+
+\subsection{Reward-Based Post-Training and Structured Policy Decisions}
+\label{ch2:sec:lr:decision}
+
+Reinforcement learning can optimize sequence-level properties that are awkward
+to express through token-level supervised likelihood. Classical RLHF pipelines
+may learn a reward model from human rankings and optimize it with Proximal
+Policy Optimization (\cite{ouyang2022training};
+\cite{schulman2017proximal}). The present decision branch is different: it
+uses a deterministic action-and-format reward rather than human preferences or
+a learned preference model. Group Relative Policy Optimization (GRPO)
+estimates relative advantages from multiple completions for the same prompt
+without a separate critic (\cite{shao2024deepseekmath}). DAPO subsequently
+introduced changes to clipping, sampling, loss aggregation, and handling of
+long responses for large-scale reasoning-model training
+(\cite{yu2025dapo}). These methods were developed primarily in settings with
+verifiable mathematical or rule-based outcomes. Their use for a small,
+imbalanced monetary-policy task remains an empirical transfer, not a guarantee
+of improved policy reasoning.
+
+The reward definition is central to that transfer. A deterministic reward for
+JSON delivery, action direction, magnitude proximity, and exact match can make
+the response contract auditable. It is nevertheless a proxy for the broader
+construct of decision quality. Optimizing an imperfect proxy can increase the
+proxy while reducing performance under an external criterion, a pattern
+studied directly in work on reward-model overoptimization
+(\cite{gao2023reward}). Format compliance and economic classification should
+therefore be reported separately, component weights should not be presented as
+theory-derived without evidence, and checkpoint selection should rely on
+held-out outcome metrics rather than training reward alone.
+
+Generated rationales create an additional interpretive risk. Chain-of-thought
+text can be plausible while failing to reveal the causal basis of a model's
+answer (\cite{turpin2023unfaithful}). In the current decision reward, a
+nonempty reasoning prefix satisfies a delivery condition, but the reward does
+not independently score the rationale's factual grounding, completeness, or
+economic coherence. The chapter accordingly evaluates the terminal action
+and native delivery contract and does not treat the emitted rationale as
+evidence of interpretable or institutionally valid reasoning. This literature
+also explains why a higher post-GRPO delivery rate accompanied by lower
+decision metrics is a format--decision trade-off rather than an overall GRPO
+improvement.
+
+\subsection{Selected Closely Related Work and the Research Gap}
+\label{ch2:sec:lr:gap}
+
+Table~\ref{tab:ch2:closest_literature} compares selected closely related
+research designs
+along the dimensions that determine what each can identify. No single row is
+a direct predecessor to the entire chapter. Observed-communication studies
+have institutional authenticity and market timing but do not generate
+controlled counterfactual text. Generic data-to-text studies provide methods
+for conditional generation and fidelity assessment but do not impose a
+real-time monetary-policy information set. Policy-choice models produce
+actions from quantitative information but do not test institutional rewriting.
+Finally, reward-based LLM training can enforce verifiable output contracts,
+but an optimized proxy need not improve external policy classification.
+
+\begin{table}[htbp]
+    \centering
+    \footnotesize
+    \setlength{\tabcolsep}{3pt}
+    \renewcommand{\arraystretch}{1.18}
+    \begin{tabularx}{\textwidth}{@{}
+        >{\raggedright\arraybackslash}p{0.15\textwidth}
+        >{\raggedright\arraybackslash}p{0.23\textwidth}
+        >{\raggedright\arraybackslash}p{0.17\textwidth}
+        >{\raggedright\arraybackslash}p{0.18\textwidth}
+        >{\raggedright\arraybackslash}X@{}}
+        \toprule
+        \textbf{Study or design} & \textbf{Task and information timing} &
+        \textbf{Method} & \textbf{Evidence supported} &
+        \textbf{Remaining gap relative to this chapter} \\
+        \midrule
+        Central-bank announcements
+        (\cite{gurkaynak2005actions}; \cite{nakamura2018information})
+        & Official actions and communication observed in an announcement
+        window
+        & High-frequency event-study and shock-identification designs
+        & Asset-price responses and policy- versus information-shock
+        distinctions
+        & Studies realized public communication, not synthetic
+        source-conditioned text. \\
+
+        FOMC Minutes disclosure and text analysis
+        (\cite{apel2022disclosure}; \cite{huang2021economic};
+        \cite{tadle2022fomc})
+        & Official Minutes and, for Apel et al., transcripts observed after
+        the meeting
+        & Dictionaries, text mining, and predictive regressions
+        & Disclosure loss, tone, forecasts, and predictive content
+        & Establishes that actual Minutes are edited and potentially
+        incomplete; does not validate a generator. \\
+
+        LLM analysis of observed FOMC text
+        (\cite{dunn2024using}; \cite{chen2026decoding})
+        & Released Statements or Minutes at or after publication
+        & LLM classification or measurement combined with validation or an
+        event study
+        & Topic-label agreement or Treasury-futures response
+        & Measures authentic documents; does not test source-conditioned
+        generation or pre-meeting action prediction. \\
+
+        Text-informed policy-action models
+        (\cite{hayo2010federal}; \cite{vandendhauwe2013bayesian};
+        \cite{aruoba2024identifying})
+        & Real-time variables, communication, or pre-decision internal staff
+        text
+        & Ordered probit, Bayesian selection, NLP, and machine learning
+        & Out-of-sample action prediction or shock diagnostics
+        & Does not produce Minutes-style prose; the information set and
+        estimand differ from this chapter. \\
+
+        Controlled data-to-text generation
+        (\cite{wiseman2017challenges}; \cite{thomson2020gold})
+        & Structured records or source documents available at generation
+        & Neural conditional generation with content planning or copying
+        & Fluency, record coverage, and human factual-accuracy assessment
+        & Establishes fidelity tools in other domains, not an FOMC-specific
+        information contract. \\
+
+        Domain adaptation and synthetic supervision
+        (\cite{gururangan2020dont}; \cite{hinton2015distilling})
+        & Domain corpora or teacher outputs whose timing depends on provenance
+        & Continued pretraining, SFT, or distillation
+        & Changes in downstream task performance
+        & Gains can inherit teacher error and do not by themselves establish
+        grounding. \\
+
+        GRPO and structured-output optimization
+        (\cite{shao2024deepseekmath}; \cite{yu2025dapo})
+        & Prompts paired with verifiable targets or proxy rewards
+        & Group-relative policy optimization
+        & Reward, exact-answer, and format metrics
+        & Developed in more readily verifiable domains; proxy improvement may
+        diverge from policy accuracy. \\
+
+        \textbf{This chapter}
+        & Minutes branch: supplied Model chk-1 analysis on an external
+        pre-2009 evaluation. Decision branch: target-neutral pre-meeting brief
+        in a date-ordered release, subject to the 25/109 supplement-date caveat
+        and an already-opened, class-sparse test
+        & Shared analytical parent with separate rewriting-SFT and
+        decision-SFT--GRPO branches
+        & Hard fidelity gates, semantic alignment, bounded perturbation
+        evidence, and training-held-out action metrics
+        & Does not validate full-document institutional simulation, causal
+        market impact, rationale faithfulness, or a serial
+        Minutes-to-decision pipeline. \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Selected Closely Related Research Designs and the Remaining
+    Identification Gap}
+    \label{tab:ch2:closest_literature}
+\end{table}
+
+The resulting gap is narrower, and more testable, than a claim to simulate the
+FOMC. Prior work largely either measures observed central-bank text or develops
+general-purpose conditional generation and post-training methods. This chapter
+tests two conditional mappings from supplied analyses: whether
+Minutes-specific SFT improves source-preserving institutional rewriting, and
+whether a separate decision-specific GRPO stage changes structured delivery
+without degrading held-out policy-action quality. The first link is evaluated
+with hard fidelity gates, stochastic semantic comparisons, and bounded
+sensitivity diagnostics. The second is evaluated as a small historical
+classification exercise in which delivery and decision quality remain
+distinct. It does not treat the mappings from analysis to Minutes-style prose
+and, separately, from a pre-meeting brief to a policy action as a serial causal
+system.
+
+Taken together, these literatures motivate five bounded empirical questions
+rather than one general claim of institutional simulation. RQ1 separates hard
+source preservation from semantic alignment in the Model chk-2 contrast. RQ2
+frames Core8 deletion and neutralization as local input-sensitivity tests, not
+as causal or Shapley decompositions; only the legacy deletion aggregate is
+currently available. RQ3 specifies a future direct sentiment-score closeness
+diagnostic for which no active result is reported. RQ4 asks what the surviving
+historical sentiment--Treasury record documents, while recognizing that its
+provenance is insufficient for a verified cross-artifact difference test. RQ5
+evaluates delivery and action quality on the independent Model chk-3 branch
+and requires the two outcomes to be reported separately. This mapping assigns
+each question an evidentiary standard drawn from the relevant literature and
+prevents a positive result on one construct from being used as evidence for
+another.
+
+Among the studies reviewed here, \citet{chen2026decoding} provide a
+particularly close comparator on the Minutes side, but they measure
+information in actual released documents rather than generate
+source-conditioned prose. \citet{aruoba2024identifying} provide a particularly
+close comparator on the action side, but their prediction uses internal staff
+documents and serves monetary-shock construction rather than evaluation of an
+externally deployable classifier. The intersection addressed
+here---controlled institutional rewriting and a separately evaluated,
+date-ordered action branch with the disclosed supplement-date
+qualification---therefore remains comparatively underexplored.

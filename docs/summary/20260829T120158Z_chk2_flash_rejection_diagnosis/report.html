@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHK2 DeepSeek V4 Flash 未通过样本诊断</title>
+<style>
+:root{--ink:#172033;--muted:#657086;--line:#dfe4ec;--panel:#ffffff;--bg:#f4f6fa;--blue:#2f6fed;--blue2:#8eb1ff;--orange:#e58a2f;}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif}
+main{max-width:1120px;margin:0 auto;padding:40px 24px 64px} h1{font-size:32px;line-height:1.2;margin:0 0 10px} h2{font-size:21px;margin:0 0 12px} h3{font-size:16px;margin:20px 0 8px} p{margin:8px 0} .sub{color:var(--muted);margin-bottom:24px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0} .card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px #16213a0a}
+.card{padding:16px} .card-label,.card-note{color:var(--muted)} .card-value{font-size:28px;font-weight:700;margin:5px 0} .card-note{font-size:13px}
+.panel{padding:22px;margin:16px 0} .callout{border-left:4px solid var(--blue);padding:10px 14px;background:#eef4ff;border-radius:6px;margin:12px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} .bar-row{display:grid;grid-template-columns:190px 1fr 58px;gap:10px;align-items:center;margin:10px 0} .bar-label{font-size:13px;text-align:right} .bar-track{height:14px;background:#edf0f5;border-radius:99px;overflow:hidden} .bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue2));border-radius:99px} .bar-value{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.table-wrap{overflow:auto} table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap} th:first-child,td:first-child{text-align:left} th{background:#f7f8fb;color:#48536a} code{font-size:12px;background:#eef1f5;padding:2px 5px;border-radius:4px} ul{padding-left:21px} .fine{font-size:13px;color:var(--muted)} .tag{display:inline-block;padding:2px 8px;border-radius:99px;background:#edf3ff;color:#285dc0;font-size:12px;font-weight:600}
+@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.bar-row{grid-template-columns:140px 1fr 50px}} @media(max-width:520px){main{padding:24px 14px}.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<span class="tag">Machine-gate diagnosis</span>
+<h1>CHK2 DeepSeek V4 Flash 未通过样本诊断</h1>
+<p class="sub">运行目录：target_derived_minutes_deepseek_v4_flash_v1_20260828 · 生成于 2026-08-29T12:07:44Z</p>
+<div class="cards"><div class='card'><div class='card-label'>已进入机器筛选</div><div class='card-value'>3,198</div><div class='card-note'>preparation 后的候选</div></div><div class='card'><div class='card-label'>机器未通过</div><div class='card-value'>1,710</div><div class='card-note'>53.5%</div></div><div class='card'><div class='card-label'>Generation gate</div><div class='card-value'>1,488</div><div class='card-note'>占未通过 87.0%</div></div><div class='card'><div class='card-label'>已提升训练就绪</div><div class='card-value'>1,488</div><div class='card-note'>46.5%</div></div></div>
+
+<section class="panel">
+<h2>结论先行</h2>
+<div class="callout"><strong>主瓶颈是长段落上的内容保真，不是 API 失败或基础格式。</strong> 1,710 条机器未通过中，1,488 条（87.0%）在 generation gate 已被确定性规则拦下；只有 222 条进入 verification 后失败。</div>
+<p>Generation 阶段最常见的是归因对象变化、保留了过多 Minutes 风格、数字集合变化，以及目标句/证据跨度覆盖不完整。≤50 词段落的未通过率为 33.3%，>200 词升到 79.9%，说明事实密度与覆盖复杂度是强关联驱动；这是关联证据，不单独证明因果。</p>
+<p>严格库存检查在 fidelity_reasoning 上尤其容易触发：reasoning 归因不一致 515 次、数字不一致 367 次，分别高于 analysis 的 248 和 65 次。因此部分行是 reasoning 没完整复现严格库存，不表示 analysis 一定整体错误。</p>
+<p>Verification 阶段的 222 条中，157 条（70.7%）被第二次同模型调用判为语义不双向蕴含、分析主张缺乏支持、目标主张遗漏或 reasoning 不相容；61 条（27.5%）是覆盖/精确证据问题。最终 API failure_count 为 0，仅 2 条记录触发 verification_missing_or_failed，且属于返回内容无法严格解析，不是网络失败。</p>
+</section>
+
+<div class="grid">
+<section class="panel"><h2>Generation gate 原因</h2><p class="fine">行级原因家族，可重叠；分母为 1,488 条 generation reject。</p><div class='bar-row'><div class='bar-label'>归因集合不一致</div><div class='bar-track'><div class='bar-fill' style='width:44.56%'></div></div><div class='bar-value'>44.6%</div></div><div class='bar-row'><div class='bar-label'>去 Minutes 风格不足</div><div class='bar-track'><div class='bar-fill' style='width:33.74%'></div></div><div class='bar-value'>33.7%</div></div><div class='bar-row'><div class='bar-label'>数字集合不一致</div><div class='bar-track'><div class='bar-fill' style='width:25.94%'></div></div><div class='bar-value'>25.9%</div></div><div class='bar-row'><div class='bar-label'>证据/目标覆盖或精确跨度失败</div><div class='bar-track'><div class='bar-fill' style='width:19.83%'></div></div><div class='bar-value'>19.8%</div></div><div class='bar-row'><div class='bar-label'>日期集合不一致</div><div class='bar-track'><div class='bar-fill' style='width:2.28%'></div></div><div class='bar-value'>2.3%</div></div><div class='bar-row'><div class='bar-label'>结构或 schema 失败</div><div class='bar-track'><div class='bar-fill' style='width:1.88%'></div></div><div class='bar-value'>1.9%</div></div><div class='bar-row'><div class='bar-label'>reasoning 含传输元信息</div><div class='bar-track'><div class='bar-fill' style='width:1.14%'></div></div><div class='bar-value'>1.1%</div></div></section>
+<section class="panel"><h2>段落长度梯度</h2><p class="fine">按 3,198 条候选的官方段落词数分组。</p><div class='bar-row'><div class='bar-label'>≤50</div><div class='bar-track'><div class='bar-fill' style='width:33.33%'></div></div><div class='bar-value'>33.3%</div></div><div class='bar-row'><div class='bar-label'>51–100</div><div class='bar-track'><div class='bar-fill' style='width:42.15%'></div></div><div class='bar-value'>42.2%</div></div><div class='bar-row'><div class='bar-label'>101–150</div><div class='bar-track'><div class='bar-fill' style='width:56.11%'></div></div><div class='bar-value'>56.1%</div></div><div class='bar-row'><div class='bar-label'>151–200</div><div class='bar-track'><div class='bar-fill' style='width:70.74%'></div></div><div class='bar-value'>70.7%</div></div><div class='bar-row'><div class='bar-label'>&gt;200</div><div class='bar-track'><div class='bar-fill' style='width:79.93%'></div></div><div class='bar-value'>79.9%</div></div></section>
+</div>
+
+<section class="panel"><h2>哪些 Minutes section 更难</h2>
+<div class='table-wrap'><table><thead><tr><th>Section（仅列 n≥50）</th><th>候选</th><th>未通过</th><th>未通过率</th></tr></thead><tbody><tr><td>Participants&#x27; Views on Current Conditions and the Economic Outlook</td><td>756</td><td>539</td><td>71.3%</td></tr><tr><td>Developments in Financial Markets and Open Market Operations</td><td>169</td><td>113</td><td>66.9%</td></tr><tr><td>Staff Economic Outlook</td><td>144</td><td>82</td><td>56.9%</td></tr><tr><td>Staff Review of the Financial Situation</td><td>1086</td><td>503</td><td>46.3%</td></tr><tr><td>Staff Review of the Economic Situation</td><td>965</td><td>432</td><td>44.8%</td></tr></tbody></table></div>
+<p class="fine">Participants’ Views（71.3%）和 Financial Markets/Open Market Operations（66.9%）最难；两者都包含大量主体归因，和 attribution mismatch 的主瓶颈一致。</p>
+</section>
+
+<section class="panel"><h2>按 split 分解</h2>
+<div class='table-wrap'><table><thead><tr><th>Split</th><th>候选</th><th>通过</th><th>未通过</th><th>未通过率</th><th>Generation 拒绝率</th><th>Verification 条件拒绝率</th></tr></thead><tbody><tr><td>train</td><td>2563</td><td>1219</td><td>1344</td><td>52.4%</td><td>45.4%</td><td>12.9%</td></tr><tr><td>validation</td><td>327</td><td>152</td><td>175</td><td>53.5%</td><td>47.1%</td><td>12.1%</td></tr><tr><td>test</td><td>308</td><td>117</td><td>191</td><td>62.0%</td><td>55.2%</td><td>15.2%</td></tr></tbody></table></div>
+<p class="fine">Test 的 62.0% 高于 train 52.4% 和 validation 53.5%，差距主要来自 generation gate。Test 的段落中位词数反而更短，因此不能用“test 段落更长”解释该差距；会议/主题构成仍需进一步分层。</p>
+</section>
+
+<section class="panel"><h2>Verification 未通过原因</h2>
+<div class='table-wrap'><table><thead><tr><th>原因家族</th><th>行数</th><th>占 verification 未通过</th></tr></thead><tbody><tr><td>语义等价性/相容性失败</td><td>157</td><td>70.7%</td></tr><tr><td>证据覆盖或精确跨度失败</td><td>61</td><td>27.5%</td></tr><tr><td>验证缺失或最终失败</td><td>2</td><td>0.9%</td></tr><tr><td>验证 verdict/schema 异常</td><td>2</td><td>0.9%</td></tr></tbody></table></div>
+<p class="fine">“语义等价性/相容性”内部的 verifier 错误码高度重叠，不能把 not_bidirectionally_entailed、reasoning_incompatible、analysis_claim_not_supported 等计数相加。</p>
+</section>
+
+<section class="panel"><h2>容易混淆的另一批：preparation 排除</h2>
+<p>原始 4,877 行里另有 1,679 行在进入 DeepSeek 生成前就被规则排除；它们不属于上面的 1,710 条机器生成/验证未通过。原因计数同样可重叠。</p>
+<div class='table-wrap'><table><thead><tr><th>准备阶段原因码</th><th>命中次数</th></tr></thead><tbody><tr><td>administrative_or_policy_target</td><td>990</td></tr><tr><td>official_target_contains_section_heading</td><td>574</td></tr><tr><td>section_not_in_descriptive_allowlist</td><td>289</td></tr><tr><td>header_only_table</td><td>249</td></tr><tr><td>abnormal_section</td><td>43</td></tr><tr><td>official_target_too_long</td><td>24</td></tr><tr><td>official_target_too_short</td><td>9</td></tr><tr><td>official_source_exact_match_count_not_one</td><td>3</td></tr></tbody></table></div>
+</section>
+
+<section class="panel"><h2>建议处理顺序</h2>
+<ol>
+<li><strong>先做可确定修复：</strong>针对归因、数字、日期和 exact evidence span 做失败后定向重写，再重新过同一门禁，不要直接放宽这些保真规则。</li>
+<li><strong>对长段落拆分或分步生成：</strong>先抽取 claim/evidence，再生成分析与 reasoning，可降低一次性覆盖过多事实导致的遗漏。</li>
+<li><strong>单独校准去风格化规则：</strong>用小规模人工样本判断 502 条 destylization reject 中有多少是真正泄漏式复述，避免把“措辞相近”和“事实不正确”混为一类。</li>
+<li><strong>排查 test 会议构成：</strong>test 差距不由长度解释；下一步应按 meeting、section_name 与主题核查集中失败点。</li>
+</ol>
+</section>
+
+<section class="panel"><h2>口径与限制</h2>
+<ul>
+<li>679/1,710（39.7%）记录包含多个错误码；所有原因家族比例均按“至少命中一次的行”计算。</li>
+<li>错误码说明哪条规则触发，不等同于模型行为的因果解释；长度结果属于相关性诊断。</li>
+<li>当前 promoted release 已去除人工审核要求，1,488 条仅表示通过机器规则；不代表完成了人工语义抽查。</li>
+</ul>
+<h3>数据来源</h3><ul><li><code>output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/summary.json</code> — prepared/pass/split/API totals</li><li><code>output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/machine_rejections/*.jsonl</code> — row-level stages and reason codes</li><li><code>output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_v1_20260828/prepared/*.jsonl</code> — denominators, section categories, paragraph lengths</li><li><code>output/data/retrain_v2/chk2/target_derived_minutes_deepseek_v4_flash_machine_ready_v1_20260829/summary.json</code> — confirms 1,488 promoted rows and training_ready=true</li></ul>
+</section>
+</main></body></html>

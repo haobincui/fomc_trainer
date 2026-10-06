@@ -1,0 +1,90 @@
+{
+  "schema_version": "van-den-hauwe-2013-reduced-config-v1",
+  "model_id": "van_den_hauwe_2013_reduced_predictor",
+  "replication_claim": "architecture-faithful reduced-predictor nested implementation; not the published 33-predictor replication",
+  "source_release": {
+    "default_root": "output/data/external/van_den_hauwe_2013_reduced_inputs_v3_20260830",
+    "manifest": "manifest.json",
+    "monthly_source": "monthly_source.jsonl",
+    "required_manifest_schema": "van-den-hauwe-2013-reduced-source-v1",
+    "real_time_vintages_required_for": ["IP", "INF"],
+    "historical_market_nonrevised_allowed_for": ["6TFF"],
+    "current_vintage_fallback_allowed": false
+  },
+  "sample": {
+    "start_month": "1990-01",
+    "end_month": "2008-06",
+    "expected_months": 222,
+    "expected_observed_decision_months": 157,
+    "frequency": "monthly"
+  },
+  "historical_h19": "configs/main/decision_historical_missing_n19_20260824.json",
+  "predictors": [
+    {
+      "paper_id": "6TFF",
+      "transform": "av",
+      "m": 1,
+      "source_policy": "historical_market_nonrevised",
+      "definition": "six-month Treasury bill rate minus federal funds rate"
+    },
+    {
+      "paper_id": "IP",
+      "transform": "gr",
+      "m": 1,
+      "source_policy": "real_time_vintage",
+      "definition": "industrial production"
+    },
+    {
+      "paper_id": "INF",
+      "transform": "gr",
+      "m": 1,
+      "source_policy": "real_time_vintage",
+      "definition": "consumer-price inflation"
+    }
+  ],
+  "contracts": {
+    "matched_h19_posterior_imputation": {
+      "evaluation_months": "historical_h19_meeting_months",
+      "training_rule": "hide H19 direction indicators but retain the complete realized target-rate path and all non-H19 outcomes in the frozen 1990-01--2008-06 panel",
+      "interpretation": "retrospective posterior imputation conditional on future outcomes and the realized policy path; not a holdout forecast"
+    },
+    "paper_recursive_oos": {
+      "initial_estimation_end_month": "2000-12",
+      "first_forecast_month": "2001-01",
+      "last_forecast_month": "2008-06",
+      "expected_forecast_decision_months": 62,
+      "training_rule": "strictly prior monthly observations; recursively expanding window",
+      "interpretation": "paper-style recursive monthly out-of-sample exercise"
+    }
+  },
+  "model": {
+    "implementation_module": "open_r1.utils.van_den_hauwe_2013",
+    "ordered_classes": ["cut", "hold", "hike"],
+    "latent_error": "AR(1)",
+    "variable_selection": "Kuo-Mallick",
+    "coefficient_prior_variance": 16.0,
+    "inclusion_probability_prior": {
+      "distribution": "Beta",
+      "alpha": 1.0,
+      "beta": 1.0
+    },
+    "posterior_prediction": "MCMC posterior predictive with Appendix-B recursive importance sampling",
+    "simulation_protocol": "discard the 50,000-run initialization/convergence period documented in van den Hauwe's thesis Chapter 2 Appendix B, then retain the following 100,000 consecutive draws",
+    "simulation_protocol_source": "https://repub.eur.nl/pub/80126/vanderHauwe.pdf",
+    "mcmc": {
+      "draws": 100000,
+      "burn_in": 50000,
+      "thin": 1,
+      "phi_proposal_sd": 0.12,
+      "standardize_predictors": true
+    },
+    "seed": 20260830
+  },
+  "scoring": {
+    "direction_order": ["cut", "hold", "hike"],
+    "probability_tolerance": 1e-08,
+    "log_loss_epsilon": 1e-15,
+    "pooled_contracts_allowed": false
+  },
+  "default_output_root": "output/evaluation/retrain_v2/van_den_hauwe_2013_reduced_v2_20260830"
+}

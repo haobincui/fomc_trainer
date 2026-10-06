@@ -1,0 +1,46 @@
+{
+  "coverage": {
+    "epochs": 3.0,
+    "eval_frequency_steps": 10,
+    "eval_loss_points": 25,
+    "full_run_steps": 255,
+    "train_loss_points": 255
+  },
+  "implementation": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/jobs/eval/plot_chk1_train_eval_loss.py",
+    "sha256": "86424849aa3a9415c5cd683ebbb101ba251799727b26db3f0a6129539c245ed4"
+  },
+  "rendering": {
+    "eval_raw": true,
+    "pdf": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/chk1_train_eval_loss_cp200.pdf",
+      "sha256": "151387b406959dd66c67eb1d22c526329e6e93bbdd395a84964cf4c3eb8cd59b"
+    },
+    "png": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/chk1_train_eval_loss_cp200.png",
+      "sha256": "9e961722549fcf1081d9c4d713197b99a822e6f1547ec719c5797ee69e9b93a2"
+    },
+    "train_raw": true,
+    "train_trailing_mean_window": 10
+  },
+  "runtime": {
+    "matplotlib": "3.7.2",
+    "numpy": "1.26.4",
+    "python": "3.11.5"
+  },
+  "schema_version": "chk1-train-eval-loss-figure-v1",
+  "selected_checkpoint": {
+    "epoch": 2.3545051698670605,
+    "eval_loss": 1.6860989332199097,
+    "minimum_logged_eval_loss": 1.6860989332199097,
+    "minimum_logged_eval_loss_step": 200,
+    "step": 200,
+    "train_loss_at_step": 1.7227
+  },
+  "source": {
+    "full_trainer_state": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_override_full3ep_lr1e6_maxlen7168_20260810/adapters/chk1/trainer_state.json",
+    "full_trainer_state_sha256": "ea7143be36657dfff23e5871ee642f4df166af428a86c433d5665575fded45ca",
+    "selected_cp200_trainer_state": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk1_clean_v2_lr1e6_selected_cp200_for_chk2_20260810/merged/chk1/trainer_state.json",
+    "selected_cp200_trainer_state_sha256": "6199b764f21f24b57eb0b48a48ead880a9112fb33c1b9279f9ad8b648d5c8a87"
+  }
+}

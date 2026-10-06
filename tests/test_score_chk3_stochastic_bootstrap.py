@@ -357,6 +357,48 @@ def test_formal_2000_draw_index_plan_is_byte_reproducible() -> None:
     assert first.replicate_indices.tobytes() == second.replicate_indices.tobytes()
 
 
+def test_bootstrap_view_uses_runtime_replicate_profile(monkeypatch) -> None:
+    """A K=10 profile must not inherit make_bootstrap_plan's K=5 default."""
+
+    monkeypatch.setattr(subject, "REPLICATE_IDS", tuple(range(10)))
+    records = [
+        {"sample_id": "s0", "meeting_id": "m0", "normalized_identity": False}
+    ]
+    rows = []
+    for model_id in subject.MODEL_ORDER:
+        for replicate_id in subject.REPLICATE_IDS:
+            metrics = {metric: 1.0 for metric in subject.SIX_METRICS}
+            rows.append(
+                {
+                    "model_id": model_id,
+                    "sample_id": "s0",
+                    "replicate_id": replicate_id,
+                    "generation_metrics": {
+                        metric: True for metric in subject.GENERATION_METRICS
+                    },
+                    "six_metrics": metrics,
+                }
+            )
+
+    result, _ = subject.bootstrap_view(
+        view={
+            "view_id": "k10",
+            "sample_ids": ["s0"],
+            "generation_prompts": 1,
+            "semantic_prompts": 1,
+            "inferential_conclusion_authorized": True,
+        },
+        full_sample_records=records,
+        row_scores=rows,
+        draws=4,
+        seed=7,
+    )
+
+    plan = result["bootstrap_index_plan"]
+    assert plan["replicates"] == 10
+    assert plan["replicate_index_shape"] == [4, 1, 1, 10]
+
+
 def test_shared_indices_preserve_constant_paired_semantic_difference() -> None:
     rows = _score_rows({"chk0": 0.2, "chk1": 0.2, "chk3": 0.4})
     # Generation metrics are contractual binaries; keep only semantic values fractional.
@@ -473,6 +515,21 @@ def test_holm_and_exact_sign_flip_contracts() -> None:
     assert combinations == 8192
     with pytest.raises(subject.StochasticBootstrapError, match="1..13"):
         subject.exact_sign_flip_p_value([0.1] * 14)
+
+
+def test_large_meeting_sign_flip_is_reproducible_monte_carlo() -> None:
+    differences = [0.1 if index % 3 else -0.02 for index in range(128)]
+    left = subject.paired_sign_flip_p_value(
+        differences, monte_carlo_draws=2_000, seed=20260813
+    )
+    right = subject.paired_sign_flip_p_value(
+        differences, monte_carlo_draws=2_000, seed=20260813
+    )
+    assert left == right
+    p_value, assignments, method = left
+    assert 0.0 < p_value <= 1.0
+    assert assignments == 2_000
+    assert method == "two_sided_monte_carlo_sign_flip_plus_one"
 
 
 def test_sealed_bootstrap_result_reproducible() -> None:

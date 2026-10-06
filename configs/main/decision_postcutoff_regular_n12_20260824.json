@@ -1,0 +1,118 @@
+{
+  "schema_version": "decision-postcutoff-regular-roster-v1",
+  "population_id": "decision_postcutoff_regular_n12_20260824",
+  "population_role": "retrospective_post_training_data_cutoff_chronological_evaluation",
+  "training_performed": false,
+  "training_data_end_date": "2025-01-29",
+  "information_cutoff_policy": "official_meeting_start_date_minus_one_calendar_day",
+  "meetings": [
+    {
+      "meeting_start_date": "2025-03-18",
+      "decision_date": "2025-03-19",
+      "evidence_cutoff": "2025-03-17",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "4.25--4.50",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250319a.htm"
+    },
+    {
+      "meeting_start_date": "2025-05-06",
+      "decision_date": "2025-05-07",
+      "evidence_cutoff": "2025-05-05",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "4.25--4.50",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250507a.htm"
+    },
+    {
+      "meeting_start_date": "2025-06-17",
+      "decision_date": "2025-06-18",
+      "evidence_cutoff": "2025-06-16",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "4.25--4.50",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250618a.htm"
+    },
+    {
+      "meeting_start_date": "2025-07-29",
+      "decision_date": "2025-07-30",
+      "evidence_cutoff": "2025-07-28",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "4.25--4.50",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250730a.htm"
+    },
+    {
+      "meeting_start_date": "2025-09-16",
+      "decision_date": "2025-09-17",
+      "evidence_cutoff": "2025-09-15",
+      "direction": "cut",
+      "magnitude_bp": 25,
+      "resulting_target_range": "4.00--4.25",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20250917a.htm"
+    },
+    {
+      "meeting_start_date": "2025-10-28",
+      "decision_date": "2025-10-29",
+      "evidence_cutoff": "2025-10-27",
+      "direction": "cut",
+      "magnitude_bp": 25,
+      "resulting_target_range": "3.75--4.00",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251029a.htm"
+    },
+    {
+      "meeting_start_date": "2025-12-09",
+      "decision_date": "2025-12-10",
+      "evidence_cutoff": "2025-12-08",
+      "direction": "cut",
+      "magnitude_bp": 25,
+      "resulting_target_range": "3.50--3.75",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251210a.htm"
+    },
+    {
+      "meeting_start_date": "2026-01-27",
+      "decision_date": "2026-01-28",
+      "evidence_cutoff": "2026-01-26",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "3.50--3.75",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260128a.htm"
+    },
+    {
+      "meeting_start_date": "2026-03-17",
+      "decision_date": "2026-03-18",
+      "evidence_cutoff": "2026-03-16",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "3.50--3.75",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260318a.htm"
+    },
+    {
+      "meeting_start_date": "2026-04-28",
+      "decision_date": "2026-04-29",
+      "evidence_cutoff": "2026-04-27",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "3.50--3.75",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260429a.htm"
+    },
+    {
+      "meeting_start_date": "2026-06-16",
+      "decision_date": "2026-06-17",
+      "evidence_cutoff": "2026-06-15",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "3.50--3.75",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260617a.htm"
+    },
+    {
+      "meeting_start_date": "2026-07-28",
+      "decision_date": "2026-07-29",
+      "evidence_cutoff": "2026-07-27",
+      "direction": "hold",
+      "magnitude_bp": 0,
+      "resulting_target_range": "3.50--3.75",
+      "official_statement_url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260729a.htm"
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+\section{Introduction}\label{ch2:sec:introduction}
+
+
+Federal Reserve announcements and communications are associated with
+economically meaningful movements in interest-rate and other asset markets
+(\cite{vergote2012}; \cite{rosa2013financial};
+\cite{jubinski2013fomc}). U.S. Treasury futures trade nearly continuously,
+which permits high-frequency research designs around scheduled policy
+releases. The empirical association diagnostic in this chapter, however, uses
+release-day closes and does not isolate an instantaneous announcement-window
+response.
+
+A related text-as-data literature documents associations between textual
+sentiment and financial outcomes (\cite{bollen2011twitter};
+\cite{ding2015deep}; \cite{ding2016knowledge}; \cite{xu2018stock}). Such
+associations do not establish that sentiment is a single causal driver of
+market movements. Central-bank communication is multidimensional, and a
+document can convey policy-path or economic-information news that a scalar
+tone score does not recover.
+
+Policy meetings and institutional documents also form a sparse historical
+record, motivating controlled synthetic-data exercises. Synthetic financial
+data have been used for robustness testing and model development
+(\cite{cao2022synthetic}; \cite{carvajal2022synthetic}), while pretrained
+language models can be adapted to generate task-specific examples or
+structured text (\cite{schick2021generating}; \cite{peng2023instruction};
+\cite{yu2024large}; \cite{li2021synthetic};
+\cite{meoni2024generating}). These applications motivate an empirical test;
+they do not make an LLM an intrinsically valid institutional simulator.
+
+Accordingly, this chapter treats synthetic text as a conditional research
+artifact whose source preservation, target alignment, and delivery must be
+measured separately. The implemented Minutes task rewrites a supplied analysis
+as one formal paragraph. It does not generate arbitrary counterfactual
+scenarios, reproduce the FOMC's full deliberative process, or establish an
+improvement in a downstream volatility model.
+
+This chapter studies a shared-parent, two-branch post-training design. First,
+\textit{Model chk-1} maps point-in-time macro-financial evidence into analytical
+narratives and provides the common analytical representation. From this parent,
+\textit{Model chk-2} (repository artifact \texttt{chk3}, checkpoint 318) is
+trained to rewrite a supplied analysis as source-preserving
+FOMC-Minutes-style prose. \textit{Model chk-3} (repository artifact
+\texttt{chk4}) is trained separately to map a target-neutral pre-meeting
+analysis into a monetary-policy action: decision SFT checkpoint 38 initializes
+GRPO, whose completed run terminates at step 468. Checkpoint 450 is retained
+only as the best-observed exploratory post-GRPO evaluation candidate. The
+formal selection record has \texttt{selected\_checkpoint\_step=null}, and the
+test verdict is \texttt{quality\_not\_demonstrated}; checkpoint 450 is not a
+selected, final, or promoted model. Checkpoint 38 is therefore the retained
+pre-GRPO state of \textit{Model chk-3}, not a separate paper-level model.
+
+The two downstream branches are evaluated independently. In particular,
+\textit{Model chk-3} does not consume the synthetic Minutes produced by
+\textit{Model chk-2}. Accordingly, the decision-prediction results are not
+interpreted as evidence of the downstream decision utility of synthetic
+Minutes, and this chapter does not claim to validate an end-to-end
+indicators-to-Minutes-to-decision system. The completed empirical assessments
+instead distinguish source-preserving paragraph rewriting from policy-action
+performance in the separate decision branch. The Core8 and
+sentiment--Treasury records are retained as legacy descriptive evidence, while
+the direct sentiment-score closeness diagnostic remains planned rather than a
+reported result. The principal decision evidence is the 13-meeting
+training-held-out test. The all-237 comparison is a within-release diagnostic,
+not a generalization estimate, because it contains 211 training meetings, 13
+validation meetings, and the same 13 test meetings. The test has now been
+opened and cannot serve as a new prospective sealed evaluation.
+
+
+
+\subsection*{Research Motivation}
+
+Monetary-policy prediction remains relevant for asset pricing and risk
+management, and text can contain contextual information not summarized by a
+small quantitative predictor set. The information clock is nevertheless
+decisive. Official Minutes and post-decision statements cannot serve as public
+pre-meeting inputs for the same decision they document. As discussed in
+Section~\ref{ch2:sec:lr:realtime}, the decision branch is therefore framed as
+a historical classification exercise using a target-neutral pre-meeting
+brief, not as a claim that released Minutes forecast the contemporaneous
+action in real time.
+
+
+LLMs provide a practical route for connecting structured indicators with
+formal policy narratives. This chapter focuses on two narrower and separately
+identified downstream tasks built on a common analytical parent. The first
+tests whether Minutes-specific SFT improves faithful analysis-to-prose
+rewriting. The second studies policy-action prediction through a comparison
+between a decision-SFT checkpoint and its post-GRPO descendant. The GRPO score
+is treated as an engineered, format-sensitive proxy for action-label agreement
+and native response delivery, not as a measure of reasoning quality or overall
+decision quality. This branch does not treat the generated Minutes as a
+decision-model input. The Core8 intervention, direct sentiment-score closeness,
+and historical sentiment--Treasury exercises are supporting diagnostics rather
+than evidence that the two branches form a serial decision-support pipeline.
+
+
+\subsection*{Research Questions}
+
+This chapter investigates two parallel downstream uses of a shared
+macro-financial analysis. The primary research question for the
+paragraph-rewriting branch is:
+
+\textit{Relative to its analytical parent, does Minutes-specific supervised
+fine-tuning improve source preservation and target alignment when rewriting a
+supplied macro-financial analysis as FOMC-Minutes-style prose?}
+
+A separate extension compares structured policy-action delivery and decision
+quality between the decision-SFT checkpoint and its post-GRPO descendant. The
+completed evidence and explicitly identified follow-up diagnostics are
+organized around the following questions:
+
+\begin{itemize}
+\item[1.] Does \textit{Model chk-2} improve exact source preservation and
+reliability-adjusted semantic alignment relative to its immediate
+\textit{Model chk-1} parent?
+
+\item[2.] What do the surviving legacy deletion aggregates suggest about
+target-relative sensitivity when one supplied Core8 topic block is removed,
+given that row-level pairing and seed provenance cannot be reconstructed?
+
+\item[3.] In a future frozen run, how closely do \textit{Model chk-2}'s
+meeting-level sentiment scores track the deterministic synthetic reference,
+and is it closer than \textit{Model chk-1} and \textit{Model chk-0} under
+prespecified score-space metrics?
+
+\item[4.] What does the surviving legacy sentiment--Treasury record document,
+and is its provenance sufficient to estimate cross-artifact coefficient
+differences?
+
+\item[5.] In the independent decision branch, does the best-observed
+exploratory post-GRPO checkpoint exhibit higher native structured delivery than
+its decision-SFT initialization without lower direction accuracy, balanced
+accuracy, macro F1, or exact-action accuracy?
+\end{itemize}
+
+RQ1 and RQ5 have current frozen evaluation evidence. RQ2 is answered only at
+the level of legacy deletion aggregates; the paired deletion--neutralization
+design remains to be rerun. RQ3 is a planned diagnostic with no active result
+in this chapter, and the surviving RQ4 record is insufficient for a verified
+model-difference test. None of these questions treats an emitted rationale as
+evidence of interpretable or economically valid reasoning, because the
+present evaluation contains no independent reasoning-quality measure.
+
+
+\subsection*{Contribution}
+
+This study makes several important contributions to the literature at the intersection of central banking, financial economics, and artificial intelligence:
+
+\begin{itemize}
+\item[] \textbf{Shared-Parent, Two-Branch Design:} We develop a common
+analytical model followed by two independently evaluated downstream branches:
+analysis-to-FOMC-Minutes-style paragraph rewriting and analysis-to-policy-action
+prediction. The decision branch is a separate post-training comparison, not a
+validation of the downstream usefulness of synthetic Minutes; its
+post-GRPO comparison is descriptive rather than a causal estimate of GRPO.
+
+\item[] \textbf{Source-Preserving Text Rewriting:} We evaluate whether
+Minutes-specific SFT improves exact numeric preservation and
+reliability-adjusted target alignment when rewriting supplied analyses as
+formal FOMC-Minutes-style paragraphs. On the external 128-meeting evaluation
+with ten stochastic replicates per model and meeting, the Minutes branch shows
+supported numeric and semantic increments over its analytical parent. One
+additional date failure and one additional degeneration failure nevertheless
+trigger the preregistered zero-tolerance verdict
+\texttt{random\_decoding\_regression}, precluding an unconditional improvement
+claim.
+
+\item[] \textbf{Independent Decision-Branch Diagnostic:} We compare decision
+SFT with its post-GRPO descendant under a common action and response contract,
+using the 13-meeting training-held-out test as the principal decision
+assessment. We report the 237-meeting comparison only as a within-release
+diagnostic because it comprises 211 training, 13 validation, and 13 test
+meetings. Policy-action quality, native structured delivery, and the engineered
+proxy score are reported separately.
+
+
+\item[] \textbf{Extension of LLM Applications:} This study applies
+domain-specific LLM post-training to controlled institutional-text rewriting
+and policy-action diagnostics, extending its use beyond conventional text
+classification and information retrieval.
+
+\item[] \textbf{Proxy-Objective Diagnostic:} The evaluated post-GRPO
+checkpoint has higher native JSON delivery and a higher replayed proxy score on
+the all-237 diagnostic, but checkpoint 38 has higher point estimates on all
+four primary policy-decision metrics. On the 13-meeting test, checkpoints 38
+and 450 have the same direction and exact-action accuracy and neither produces
+a delivery-valid output. No GRPO candidate passes all selection gates, the
+formal selected checkpoint is null, and the evidence therefore supports a
+decision-quality--delivery trade-off rather than an overall GRPO improvement.
+
+\item[] \textbf{Practical Implications:} The findings identify both the
+potential and the current reliability limits of domain-adapted LLMs for
+source-controlled policy-text generation and structured policy-action tasks.
+
+\item[] \textbf{Evidence-Layered Evaluation:} We combine the formal
+Minutes-fidelity evaluation with legacy descriptive Core8 deletion and
+historical sentiment--Treasury records, while identifying the canonical
+paired intervention and direct sentiment-score closeness test as unfinished.
+Policy-action performance is evaluated separately in the parallel decision
+branch; these evidence layers do not constitute a serial end-to-end pipeline.
+\end{itemize}
+
+
+\subsection*{Chapter Structure}
+
+This chapter is organized as follows. Section~\ref{ch2:sec:lr} reviews the
+literatures on central-bank communication, real-time policy prediction,
+controlled data-to-text generation, domain adaptation, faithfulness
+evaluation, and reward-based post-training. Section~\ref{ch2:sec:training-plan}
+defines the shared-parent, two-branch post-training design and the
+paper-to-repository model mapping. Section~\ref{ch2:sec:the-dataset} describes
+the dataset construction process and prompt templates.
+Section~\ref{ch2:sec:base_model} introduces the base model, while
+Sections~\ref{ch2:sec:training} and~\ref{ch2:sec:parameter} describe the
+fine-tuning method and hyperparameter settings.
+Section~\ref{ch2:sec:application} presents the evaluation dimensions and
+empirical tests, and Section~\ref{ch2:sec:result} reports the training and
+evaluation results. Finally, Section~\ref{ch2:sec:conclusion} concludes the
+chapter and discusses future research.

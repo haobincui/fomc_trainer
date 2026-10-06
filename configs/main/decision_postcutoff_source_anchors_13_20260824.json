@@ -1,0 +1,40 @@
+{
+  "schema_version": "loo-population-v1",
+  "population_id": "decision_postcutoff_source_anchors_13_20260824",
+  "phase": "evaluation",
+  "split_label": "post_training_data_cutoff_chronological_evaluation",
+  "meeting_dates": [
+    "2025-01-28",
+    "2025-03-18",
+    "2025-05-06",
+    "2025-06-17",
+    "2025-07-29",
+    "2025-09-16",
+    "2025-10-28",
+    "2025-12-09",
+    "2026-01-27",
+    "2026-03-17",
+    "2026-04-28",
+    "2026-06-16",
+    "2026-07-28"
+  ],
+  "date_semantics": "official_regular_meeting_start_date",
+  "information_cutoff_policy": "official_meeting_start_date_minus_one_calendar_day",
+  "anchor_only_dates": [
+    "2025-01-28"
+  ],
+  "evaluated_decision_dates": [
+    "2025-03-19",
+    "2025-05-07",
+    "2025-06-18",
+    "2025-07-30",
+    "2025-09-17",
+    "2025-10-29",
+    "2025-12-10",
+    "2026-01-28",
+    "2026-03-18",
+    "2026-04-29",
+    "2026-06-17",
+    "2026-07-29"
+  ]
+}

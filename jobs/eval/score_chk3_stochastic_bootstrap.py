@@ -778,6 +778,42 @@ def exact_sign_flip_p_value(differences: Sequence[float]) -> tuple[float, int]:
     return p_value, combinations
 
 
+def paired_sign_flip_p_value(
+    differences: Sequence[float],
+    *,
+    monte_carlo_draws: int = 100_000,
+    seed: int = BOOTSTRAP_SEED + 1,
+) -> tuple[float, int, str]:
+    """Use exact sign flips when feasible, otherwise deterministic Monte Carlo.
+
+    The original 13-meeting contract remains bit-for-bit exact.  Larger external
+    meeting panels cannot enumerate ``2**M`` assignments, so they use a seeded
+    plus-one-corrected Monte Carlo randomization test.
+    """
+
+    values = np.asarray(differences, dtype=np.float64)
+    if values.ndim != 1 or len(values) < 1 or not np.all(np.isfinite(values)):
+        raise StochasticBootstrapError("sign-flip differences must be finite 1-D")
+    if len(values) <= 13:
+        p_value, combinations = exact_sign_flip_p_value(values)
+        return p_value, combinations, "two_sided_exact_sign_flip"
+    if monte_carlo_draws < 1:
+        raise StochasticBootstrapError("Monte Carlo sign-flip draws must be positive")
+    rng = np.random.default_rng(seed)
+    observed = abs(float(values.mean()))
+    extreme = 0
+    remaining = monte_carlo_draws
+    chunk = 10_000
+    while remaining:
+        size = min(chunk, remaining)
+        signs = rng.choice(np.asarray([-1.0, 1.0]), size=(size, len(values)))
+        null_values = np.abs((signs * values).mean(axis=1))
+        extreme += int(np.count_nonzero(null_values >= observed - 1e-15))
+        remaining -= size
+    p_value = (extreme + 1.0) / (monte_carlo_draws + 1.0)
+    return float(p_value), monte_carlo_draws, "two_sided_monte_carlo_sign_flip_plus_one"
+
+
 def make_bootstrap_plan(
     *,
     view_id: str,
@@ -987,6 +1023,11 @@ def bootstrap_view(
         sample_ids=sample_ids,
         draws=draws,
         seed=seed,
+        # The external evaluation profile expands the formal contract from K=5
+        # to K=10 at runtime.  Do not rely on make_bootstrap_plan's definition-
+        # time default, which was captured while REPLICATE_IDS still described
+        # the original K=5 profile.
+        replicates=len(REPLICATE_IDS),
     )
     boot = {
         model_id: {
@@ -1101,7 +1142,9 @@ def bootstrap_view(
                 - meeting_estimates[before][metric][meeting_id]
                 for meeting_id in meeting_ids
             ]
-            p_value, combinations = exact_sign_flip_p_value(meeting_differences)
+            p_value, combinations, p_value_method = paired_sign_flip_p_value(
+                meeting_differences
+            )
             contrast_records.append(
                 {
                     "contrast_id": contrast_id,
@@ -1118,8 +1161,10 @@ def bootstrap_view(
                     "meeting_ids": meeting_ids,
                     "meeting_differences": meeting_differences,
                     "p_value": p_value,
-                    "p_value_method": "two_sided_exact_sign_flip",
+                    "p_value_method": p_value_method,
                     "sign_flip_combinations": combinations,
+                    "sign_flip_assignments_evaluated": combinations,
+                    "sign_flip_exact": p_value_method == "two_sided_exact_sign_flip",
                     "holm_adjusted_p": None,
                 }
             )

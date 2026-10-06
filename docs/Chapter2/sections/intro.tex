@@ -1,23 +1,30 @@
 \section{Introduction}\label{ch2:sec:introduction}
 
 
-Government announcements materially influence interest-rate markets (\cite{vergote2012}; \cite{rosa2013financial}; \cite{jubinski2013fomc}). Among these, the Federal Open Market Committee (FOMC) plays a particularly critical role in shaping both the U.S. and global economic outlook through its monetary policy decisions—most notably, adjustments to the target range of the federal funds rate, which have direct and immediate effects on the government bond market. Moreover, U.S. government bond derivatives, such as the 10-Year Treasury Note futures and options, are traded nearly continuously, with only a one-hour pause from 4 p.m. to 5 p.m. Central Time (CT). This continuous trading structure enables market participants to incorporate policy announcements and macroeconomic information into prices in real time, thereby making these instruments an ideal channel through which to observe the market’s instantaneous response to government communications.
+Government announcements materially influence interest-rate markets (\cite{vergote2012}; \cite{rosa2013financial}; \cite{jubinski2013fomc}). Among these, the Federal Open Market Committee (FOMC) plays a particularly critical role in shaping both the U.S. and global economic outlook through its monetary policy decisions—most notably, adjustments to the target range of the federal funds rate, which have direct and immediate effects on the government bond market. Moreover, U.S. government bond derivatives, such as the 10-Year Treasury Note futures and options, are traded nearly continuously, with only a one-hour pause from 4 p.m. to 5 p.m. Central Time (CT). This trading structure permits high-frequency studies of market responses to policy communication. The empirical diagnostic in this chapter, however, uses release-day closes and does not isolate an instantaneous intraday response.
 
 
-Meanwhile, current literatures confirmed the textual sentiment is one of the key drivers of market movements (\cite{bollen2011twitter}, \cite{ding2015deep},\cite{ding2016knowledge}, and \cite{xu2018stock}).
+A related text-as-data literature documents associations between textual
+sentiment and financial outcomes (\cite{bollen2011twitter}; \cite{ding2015deep}; \cite{ding2016knowledge}; \cite{xu2018stock}). Such associations do not establish that sentiment is a single causal driver of market movements. Central-bank communication is multidimensional, and a document can convey policy-path or economic-information news that a scalar tone score does not recover.
 
 
-However, unlike quantitative data, qualitative data are inherently discontinuous, making historical data insufficient for analyzing a wide range of potential scenarios. For instance, the Federal Reserve has adjusted the federal funds rate only 130 times since the 1990s. To address this challenge, we propose leveraging a fine-tuned large language model (LLM) to generate synthetic texts across a variety of scenarios, thereby enhancing the capability of volatility models to incorporate qualitative inputs.
+Policy meetings and institutional documents also form a sparse historical record, motivating controlled synthetic-data exercises. 
 
+
+However, unlike quantitative data, these qualitative data are inherently discontinuous, making historical data insufficient for analyzing a wide range of potential scenarios. For instance, the Federal Reserve has adjusted the federal funds rate only 130 times since the 1990s. To address this challenge, we propose leveraging a fine-tuned large language model (LLM) to generate synthetic texts across a variety of scenarios, thereby enhancing the capability of volatility models to incorporate qualitative inputs.
 
 
 
 On the other hand, recent advances in neural networks and LLMs have led to remarkable performance improvements across a broad range of natural language processing (NLP) tasks. LLMs are pre-trained on vast and diverse text corpora, which can be adapted to domain-specific tasks and have already been used for synthetic data generation in multiple settings (\cite{schick2021generating}; \cite{peng2023instruction}; \cite{yu2024large}; \cite{li2021synthetic}; \cite{meoni2024generating}). In finance, synthetic datasets are also used for robustness testing (\cite{cao2022synthetic}; \cite{carvajal2022synthetic}).
 
 
+
 Moreover, synthetic data have been widely accepted by financial researchers as powerful tools for robustness testing. For instance, \cite{cao2022synthetic} created a synthetic limit order book to evaluate forecasting models, while \cite{carvajal2022synthetic} used synthetic stock prices to train trading algorithms. Beyond time-series data, the financial industry manages vast volumes of structured documents, such as financial reports, Bank of England Monetary Policy Committee (MPC) meeting minutes, and Federal Reserve FOMC meeting minutes. The simulation capabilities of LLMs make them ideal for generating synthetic structured textual data in these contexts.
 
-This chapter proposes a fine-tuned LLM framework for simulating monetary-policy communication and decision-relevant analysis. Conditioned on macroeconomic and financial indicators, the model is first adapted to produce domain-consistent analytical narratives. The selected analytical checkpoint, ``Model chk-1,'' then serves both as the experimental baseline and as the initialization for a task-specific Minutes-rewriting model, ``Model chk-3.'' The primary completed experiment therefore evaluates whether the transition from ``Model chk-1'' to ``Model chk-3'' improves the fidelity of institutionally styled text while preserving the information contained in the source analysis. Additional leave-one-out, market-association, and policy-decision analyses are treated separately according to their respective completion status and evidentiary limitations.
+
+This chapter studies a shared-parent, two-branch post-training design on LLM. First, \textit{Model chk-1} maps point-in-time macro-financial evidence into analytical narratives and provides the common analytical representation. From this parent, \textit{Model chk-2} is trained to rewrite a supplied analysis as source-preserving FOMC-Minutes-style prose, whereas \textit{Model chk-3} is trained separately to map a target-neutral pre-meeting analysis into a monetary-policy action.
+
+After that, we then evaluate whether the synthetic text is stylistically faithful, input-grounded, and economically meaningful through prompt-contribution tests, sentiment-return regressions, and policy-decision prediction.
 
 
 
@@ -26,14 +33,16 @@ This chapter proposes a fine-tuned LLM framework for simulating monetary-policy 
 The motivation for this research arises from the critical importance of accurately forecasting monetary policy decisions and the well-recognized limitations of traditional econometric models in capturing qualitative and contextual signals. Firstly, monetary-policy forecasting remains important for asset pricing and risk management. Secondly, conventional quantitative models do not fully exploit textual policy signals from minutes, statements, and staff discussions. As a result, they may miss informative cues about policy direction.
 
 
-LLMs provide a practical route to close this gap by integrating structured indicators with unstructured text. Furthermore, evidence on using LLMs to simulate committee-style policy communication and decision-relevant reasoning is still limited. Hence, this chapter addresses that gap through a scenario-based simulation framework. More specifically, the framework is designed to (i) generate Minutes-style synthetic texts under alternative macro-financial conditions and (ii) evaluate whether such synthetic communications preserve policy-relevant signals, including the ability to infer the direction of policy-rate changes.
+LLMs provide a practical route to close this gap by integrating structured
+indicators with unstructured text. Furthermore, evidence on using LLMs to simulate committee-style policy communication and decision-relevant reasoning is still limited. Hence, this chapter addresses that gap through a scenario-based simulation framework. More specifically, the framework is designed to (i) generate Minutes-style synthetic texts under alternative macro-financial conditions and (ii) evaluate whether such synthetic communications preserve policy-relevant signals, including the ability to infer the direction of policy-rate changes
+
 
 
 \subsection*{Research Questions}
 
 This chapter investigates whether large language models can be used as simulation tools for monetary-policy communication and decision support. The main research question is:
 
-\textit{Can a fine-tuned, reasoning-capable LLM generate FOMC-Minutes-style sections that respond systematically to macroeconomic and financial indicators, and do those synthetic texts preserve policy-relevant signals such as market impact and policy-rate outcomes?}
+\textit{Can a fine-tuned, reasoning-capable LLM generate FOMC-Minutes-style sections grounded in macroeconomic and financial indicators, and do those synthetic texts preserve policy-relevant signals such as market impact and policy-rate outcomes?}
 
 To address this central question, we study the following sub-questions:
 
@@ -44,10 +53,13 @@ To address this central question, we study the following sub-questions:
 
 \item[3.] How closely do generated sections match the tone, format, and information content of authentic Minutes?
 
-\item[4.] How does model-based decision prediction compare with baseline approaches on historical FOMC actions?
-
-\item[5.] Are generated reasoning paths interpretable and consistent with communication patterns in FOMC materials?
+\item[4.] How does model-based decision prediction on historical FOMC actions?
 \end{itemize}
+
+These questions concern observable output fidelity, semantic alignment,
+prompt sensitivity, classifier-score closeness, historical association,
+policy-action accuracy, and delivery. 
+
 
 
 \subsection*{Contribution}
@@ -55,23 +67,27 @@ To address this central question, we study the following sub-questions:
 This study makes several important contributions to the literature at the intersection of central banking, financial economics, and artificial intelligence:
 
 \begin{itemize}
-\item[] \textbf{Methodological Innovation:} We design a sequential supervised fine-tuning framework in which an indicator-conditioned analytical model serves as the experimental baseline for a task-specific Minutes-rewriting model. This design permits a direct, provenance-controlled comparison between \textit{Model chk-1} and \textit{Model chk-3}, while retaining the pretrained \textit{Model chk-0} only as an auxiliary reference.
+\item[] \textbf{Shared-Parent, Two-Branch Design:} We develop a common analytical model followed by two independently evaluated downstream branches: analysis-to-FOMC-Minutes-style paragraph rewriting and analysis-to-policy-action prediction. The decision branch is a separate post-training comparison.
 
-\item[] \textbf{Framework for Synthetic Text Generation:} We propose a framework for generating structured textual data through LLM fine-tuning. This approach translates discrete qualitative information into a continuous distribution, offering new perspectives on risk management strategies in the financial sector.
+\item[] \textbf{Extension of LLM Applications:} This study applies
+domain-specific LLM post-training to controlled institutional-text rewriting and policy-action diagnostics, extending its use beyond conventional text classification and information retrieval.
 
-\item[] \textbf{Benchmarking Against Traditional Models:} We introduce a novel approach to predicting interest rate changes by incorporating qualitative information, thereby enabling a meaningful comparison with traditional quantitative forecasting methods, such as those based on Federal Funds Futures prices (e.g., the CME Group's FedWatch tool).
+
+\item[] \textbf{Minutes-Style Text Rewriting:} We compare raw-best-effort semantic similarity to synthetic teacher references across the base, analytical-SFT, and Minutes-SFT checkpoints on 391 released samples from 124 meetings. This is a training-release reconstruction diagnostic; similarity scores alone do not establish numerical fidelity, source preservation, or held-out generalization.
 
 
-\item[] \textbf{Extension of LLM Applications:} This study represents one of the first empirical investigations into the use of LLMs as simulation tools for modeling and generating structured textual data. It extends the application of LLMs beyond conventional text analysis and information retrieval tasks.
+\item[] \textbf{Independent Decision-Branch Diagnostic:} We compare decision SFT with its post-GRPO descendant under a common action and response contract, reporting policy-action quality, native structured delivery, and the engineered proxy score separately.
 
-\item[] \textbf{Advancement of Reasoning LLMs in Decision-Making:} By emphasizing the generation of step-by-step reasoning chains and interpretable decision paths, this study contributes to the growing literature on reasoning-capable LLMs as analytical tools for supporting and simplifying complex decision-making processes.
 
-\item[] \textbf{Practical and Policy-Relevant Implications:} The findings offer actionable insights for central banks, financial market participants, and policymakers by demonstrating the potential of LLMs to augment human decision-making under conditions of uncertainty and information overload.
-
-\item[] \textbf{Multi-Dimensional Evaluation:} We evaluate synthetic Minutes not only with text-based similarity metrics, but also with target-relative indicator-sensitivity diagnostics and economics-based validations (market relevance and decision prediction), thereby providing a more comprehensive notion of ``realism'' than surface-level textual resemblance alone.
+\item[] \textbf{Multi-Dimensional Evaluation:} We evaluate synthetic Minutes not only with text-based similarity metrics, but also with grounding (prompt-contribution) tests and economics-based validations (market relevance and decision prediction), thereby providing a more comprehensive notion of ``realism'' than surface-level textual resemblance alone.
 \end{itemize}
+
+
+Finally, our findings offer actionable insights for central banks, financial market participants, and policymakers by demonstrating the potential of LLMs to augment human decision-making under conditions of uncertainty and information overload.
+
+
 
 
 \subsection*{Chapter Structure}
 
-This chapter is organized as follows. Section~\ref{ch2:sec:lr} reviews the related literature on synthetic data and large language models. Section~\ref{ch2:sec:training-plan} defines the implemented checkpoint sequence and experimental baseline. Section~\ref{ch2:sec:the-dataset} describes the dataset construction process and prompt templates. Section~\ref{ch2:sec:base_model} introduces the base model, while Sections~\ref{ch2:sec:training} and~\ref{ch2:sec:parameter} describe the fine-tuning method and hyperparameter settings. Section~\ref{ch2:sec:application} presents the evaluation dimensions and empirical tests, and Section~\ref{ch2:sec:result} reports the training and evaluation results. Finally, Section~\ref{ch2:sec:conclusion} concludes the chapter and discusses future research.
+This chapter is organized as follows. Section~\ref{ch2:sec:lr} reviews the related literature on synthetic data and large language models. Section~\ref{ch2:sec:2-step-training} outlines the shared-parent, two-branch post-training design. Section~\ref{ch2:sec:the-dataset} describes the dataset construction process and prompt templates. Section~\ref{ch2:sec:base_model} introduces the base model, while Sections~\ref{ch2:sec:training} and~\ref{ch2:sec:parameter} describe the fine-tuning method and hyperparameter settings. Section~\ref{ch2:sec:application} presents the evaluation dimensions and empirical tests, and Section~\ref{ch2:sec:result} reports the training and evaluation results. Finally, Section~\ref{ch2:sec:conclusion} concludes the chapter and discusses future research.

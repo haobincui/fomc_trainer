@@ -1,0 +1,11 @@
+method_group,model,model_display_name,information_set,historical_n19_score,historical_n19_ci_lower,historical_n19_ci_upper,historical_n19_available,historical_n19_total,postcutoff_n12_score,postcutoff_n12_ci_lower,postcutoff_n12_ci_upper,postcutoff_n12_available,postcutoff_n12_total,score_contract
+operational_baseline,always_hold,Always Hold,constant action,0.526316,0.526316,0.526316,19,19,0.750000,0.750000,0.750000,12,12,mean probability assigned to realized signed action
+operational_baseline,lag1,Lag-1 action,previous policy action,0.555556,0.333333,0.777778,18,19,0.833333,0.583333,1.000000,12,12,mean probability assigned to realized signed action
+operational_baseline,kauppi_mnl,Kauppi-style MNL,three real-time macro variables,0.540526,0.499365,0.580938,19,19,0.551215,0.491317,0.594740,12,12,mean probability assigned to realized signed action
+operational_baseline,ordered_probit,Ordered probit,three real-time macro variables,0.544024,0.501838,0.585422,19,19,0.642272,0.579154,0.686809,12,12,mean probability assigned to realized signed action
+operational_baseline,ordinal_rf,Cumulative ordinal RF,three real-time macro variables,0.472450,0.373040,0.568563,19,19,0.301396,0.225583,0.374638,12,12,mean probability assigned to realized signed action
+operational_baseline,futures,Fed Funds futures,pre-meeting settlement,0.435212,0.287482,0.589146,19,19,,,,0,12,mean probability assigned to realized signed action
+llm_checkpoint,model_chk0,Model chk-0,D-1 Core-8 text,0.210526,0.157895,0.263158,19,19,0.133333,0.083333,0.191667,12,12,K=10 empirical parser-recoverable exact-action share
+llm_checkpoint,model_chk1_cp200,Model chk-1 SFT cp200,D-1 Core-8 text,0.163158,0.121053,0.205263,19,19,0.141667,0.083333,0.200000,12,12,K=10 empirical parser-recoverable exact-action share
+llm_checkpoint,model_chk3_sft_cp38,Model chk-3 SFT cp38,D-1 Core-8 text,0.205263,0.152632,0.252632,19,19,0.175000,0.125000,0.225000,12,12,K=10 empirical parser-recoverable exact-action share
+llm_checkpoint,model_chk3_grpo_cp450,Model chk-3 GRPO cp450,D-1 Core-8 text,0.189474,0.136842,0.242105,19,19,0.183333,0.116667,0.266667,12,12,K=10 empirical parser-recoverable exact-action share

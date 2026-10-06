@@ -1,0 +1,53 @@
+{
+  "checkpoint_summary": {
+    "final_training_step": 39,
+    "minimum_logged_eval_loss": 1.6015053987503052,
+    "minimum_logged_eval_loss_step": 39,
+    "retained_sft_checkpoint_step": 38,
+    "train_loss_at_retained_step": 1.6149
+  },
+  "coverage": {
+    "epochs": 1.0,
+    "eval_loss_points": 3,
+    "eval_samples": 13,
+    "eval_steps": [
+      13,
+      26,
+      39
+    ],
+    "full_run_steps": 39,
+    "train_loss_points": 39
+  },
+  "implementation": {
+    "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/jobs/eval/plot_chk3_sft_train_eval_loss.py",
+    "sha256": "04e8d1574d2e5277995b8518efd4bc7e5b7b87741495382c0a8cc737377a3531"
+  },
+  "paper_model": "Model chk-3",
+  "rendering": {
+    "eval_raw": true,
+    "pdf": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/chk3_sft_train_eval_loss_cp38.pdf",
+      "sha256": "6b79c31a52830fc0852a6a5b3ce930cfa395098f6a38233e0514056cb6be51ad"
+    },
+    "png": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/Chapter2/Chapter2Figs/chk3_sft_train_eval_loss_cp38.png",
+      "sha256": "ee46c3698df80a5a7bd57a4721f574e108ce54f73674381a0f82c16e8630d263"
+    },
+    "train_raw": true,
+    "train_trailing_mean_window": 5
+  },
+  "repository_artifact": "chk4",
+  "runtime": {
+    "matplotlib": "3.7.2",
+    "numpy": "1.26.4",
+    "python": "3.11.5"
+  },
+  "schema_version": "chk3-sft-train-eval-loss-figure-v1",
+  "source": {
+    "all_results": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_pre2009_balanced_lr1e5_steps39_v1_20260811/adapters/chk4_sft/all_results.json",
+    "all_results_sha256": "3a963935d31ba1e1dc1012e666f73fd026ec98ae7e02a194ebb67177ae7414ce",
+    "trainer_state": "/home/haobin_cui/research_files_space_2/fomc_trainer/output/training/retrain_v2/chk4_from_chk1_cp200_sft_grpo_pre2009_balanced_lr1e5_steps39_v1_20260811/adapters/chk4_sft/trainer_state.json",
+    "trainer_state_sha256": "dccb3c1ab9f822b3dc01cca5a88ab51a744393ba267255417e92f62545d73c35"
+  },
+  "training_stage": "SFT"
+}

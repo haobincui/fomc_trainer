@@ -1,0 +1,10 @@
+method_group,model,model_display_name,cut_score,cut_coverage,cut_llm_generations,hold_score,hold_coverage,hold_llm_generations,hike_score,hike_coverage,hike_llm_generations,panel,direction_score_contract
+operational_baseline,lag1,Lag-1 action,1.000000,4/4,,0.666667,9/10,,0.400000,5/5,,historical_n19,mean probability assigned to realized direction conditional on true direction
+operational_baseline,kauppi_mnl,Kauppi-style MNL,0.467176,4/4,,0.831375,10/10,,0.339907,5/5,,historical_n19,mean probability assigned to realized direction conditional on true direction
+operational_baseline,ordered_probit,Ordered probit,0.466529,4/4,,0.822020,10/10,,0.409281,5/5,,historical_n19,mean probability assigned to realized direction conditional on true direction
+operational_baseline,ordinal_rf,Cumulative ordinal RF,0.704303,4/4,,0.518620,10/10,,0.642224,5/5,,historical_n19,mean probability assigned to realized direction conditional on true direction
+operational_baseline,futures,Fed Funds futures,0.840361,4/4,,0.412892,10/10,,0.363000,5/5,,historical_n19,mean probability assigned to realized direction conditional on true direction
+llm_checkpoint,model_chk0,Model chk-0,0.125000,4/4,5/40,0.240000,10/10,24/100,0.480000,5/5,24/50,historical_n19,K=10 empirical parser-recoverable correct-direction share; magnitude ignored
+llm_checkpoint,model_chk1_cp200,Model chk-1 SFT cp200,0.125000,4/4,5/40,0.180000,10/10,18/100,0.360000,5/5,18/50,historical_n19,K=10 empirical parser-recoverable correct-direction share; magnitude ignored
+llm_checkpoint,model_chk3_sft_cp38,Model chk-3 SFT cp38,0.175000,4/4,7/40,0.160000,10/10,16/100,0.660000,5/5,33/50,historical_n19,K=10 empirical parser-recoverable correct-direction share; magnitude ignored
+llm_checkpoint,model_chk3_grpo_cp450,Model chk-3 GRPO cp450,0.100000,4/4,4/40,0.170000,10/10,17/100,0.540000,5/5,27/50,historical_n19,K=10 empirical parser-recoverable correct-direction share; magnitude ignored

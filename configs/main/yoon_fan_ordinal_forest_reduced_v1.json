@@ -1,0 +1,91 @@
+{
+  "schema_version": "yoon-fan-ordinal-forest-reduced-v1",
+  "model": {
+    "id": "yoon_fan_ordfor_reduced_3var",
+    "display_name": "Yoon--Fan ordinal forest (three-predictor reduced adaptation)",
+    "citation_doi": "10.1002/for.3144",
+    "algorithm_reference_doi": "10.1007/s00357-018-9302-x",
+    "r_package": "ordinalForest",
+    "r_package_version": "2.4-3",
+    "r_package_archive_url": "https://cran.r-project.org/src/contrib/Archive/ordinalForest/ordinalForest_2.4-3.tar.gz",
+    "r_package_archive_sha256": "fa60dcb890818b650a7cf35cda60cc85e29cd53864c811b336bb09622baf7419",
+    "class_order": [
+      "cut",
+      "hold",
+      "hike"
+    ],
+    "parameters": {
+      "nsets": 1000,
+      "ntreeperdiv": 100,
+      "ntreefinal": 5000,
+      "importance": "rps",
+      "perffunction": "equal",
+      "nbest": 10,
+      "naive": false,
+      "num_threads": 1,
+      "npermtrial": 500,
+      "permperdefault": false,
+      "mtry": 1,
+      "min_node_size": 5,
+      "replace": true,
+      "sample_fraction": 1.0,
+      "keep_inbag": false
+    }
+  },
+  "data_contract": {
+    "training_contract": "matched_unique_train_n211",
+    "evaluation_panel": "historical_n19",
+    "feature_names": [
+      "tbill6m_minus_effr_pp",
+      "unemployment_rate_pct",
+      "real_gdp_growth_annualized_pct"
+    ],
+    "expected_training_rows": 211,
+    "expected_training_classes": {
+      "cut": 23,
+      "hold": 156,
+      "hike": 32
+    },
+    "expected_evaluation_rows": 19,
+    "expected_evaluation_classes": {
+      "cut": 4,
+      "hold": 10,
+      "hike": 5
+    },
+    "expected_training_rows_after_h19_end": 106,
+    "source_root": "output/evaluation/retrain_v2/decision_comparison_direction_only_v4_audit_20260829",
+    "source_hashes": {
+      "action_roster.jsonl": "a94c1dc31eda52fc5ac4255e6b1127c585207cd911c09d4a76cc141584600d17",
+      "features.jsonl": "f0962ea34fd4e5f1901deb9b6173d0631302a60d865d064b6f2644f6f261286c",
+      "sources/macro/manifest.json": "ee165a730e9dc3f5d290a9a8b52ad331975c20154a17e33dac66b7b1d41a24ac"
+    }
+  },
+  "evaluation": {
+    "primary_metric": "meeting_level_point_classification_accuracy",
+    "direction_metrics": [
+      "per_class_recall",
+      "overall_accuracy",
+      "balanced_accuracy",
+      "macro_f1",
+      "confusion_matrix"
+    ],
+    "probability_metrics": null,
+    "probability_unavailable_reason": "ordinalForest 2.4-3 predict.ordfor returns classprobs=NA under the authors' perffunction='equal' configuration"
+  },
+  "replication_status": {
+    "same_estimator_as_authors": true,
+    "exact_paper_replication": false,
+    "reduced_predictor_set": true,
+    "differences_from_paper": [
+      "three predictors instead of 45",
+      "matched N211 task roster instead of the paper's 238-action rolling-origin sample",
+      "106 of the 211 training meetings occur after the final H19 meeting, so the comparison is retrospective rather than chronological",
+      "D-1 project evidence cutoff instead of one month before each decision",
+      "the project action roster does not contain every unscheduled action in the paper sample",
+      "the paper did not disclose its random seed or complete dependency lock"
+    ]
+  },
+  "seed": 20260827,
+  "default_r_library": "output/cache/r/yoon_fan_ordinalForest_2.4-3",
+  "default_output_root": "output/evaluation/retrain_v2/yoon_fan_ordfor_reduced_3var_matched_h19_v2_20260830"
+}

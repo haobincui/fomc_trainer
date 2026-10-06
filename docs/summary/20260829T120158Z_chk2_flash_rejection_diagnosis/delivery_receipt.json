@@ -1,0 +1,17 @@
+{
+  "schema_version": "chk2-flash-rejection-diagnosis-delivery-v1",
+  "generated_at": "2026-08-29T12:07:44Z",
+  "status": "local_static_validated",
+  "checks": {
+    "artifact_json_parsed": true,
+    "source_totals_reconciled": true,
+    "report_has_title": true,
+    "report_has_tables": true,
+    "report_has_chart_rows": true,
+    "report_is_self_contained": true
+  },
+  "portable_builder": {
+    "status": "not_run",
+    "reason": "Node executable is not installed in the active environment"
+  }
+}

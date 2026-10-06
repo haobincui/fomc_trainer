@@ -1,0 +1,143 @@
+{
+  "aggregate_deltas": {
+    "contract_valid_rate_drop": 0.0,
+    "mean_full_repetition": 0.03384248,
+    "mean_tail_repetition": 0.03384248
+  },
+  "aggregate_failures": [],
+  "baseline": {
+    "cap_rate": 0.0,
+    "cases": 8,
+    "catastrophic_cases": 0,
+    "contract_valid_rate": 1.0,
+    "eos_rate": 1.0,
+    "finite_rate": 1.0,
+    "greedy_cases": 2,
+    "max_full_token_4gram_repetition": 0.14251497,
+    "max_tail_token_4gram_repetition": 0.14251497,
+    "mean_full_token_4gram_repetition": 0.0827192875,
+    "mean_tail_token_4gram_repetition": 0.0827192875,
+    "model_label": "chk0_baseline",
+    "periodic_tail_rate": 0.0,
+    "sample_manifest_sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246",
+    "sampled_cases": 6,
+    "schema_version": "chk1-sft-degeneration-probe-v1",
+    "status": "complete"
+  },
+  "candidate": {
+    "cap_rate": 0.0,
+    "cases": 8,
+    "catastrophic_cases": 0,
+    "contract_valid_rate": 1.0,
+    "eos_rate": 1.0,
+    "finite_rate": 1.0,
+    "greedy_cases": 2,
+    "max_full_token_4gram_repetition": 0.25764192,
+    "max_tail_token_4gram_repetition": 0.25764192,
+    "mean_full_token_4gram_repetition": 0.11656176499999998,
+    "mean_tail_token_4gram_repetition": 0.11656176499999998,
+    "model_label": "chk1_clean_v2_full3ep_lr1e6_cp230",
+    "periodic_tail_rate": 0.0,
+    "sample_manifest_sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246",
+    "sampled_cases": 6,
+    "schema_version": "chk1-sft-degeneration-probe-v1",
+    "status": "complete"
+  },
+  "case_deltas": [
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": -0.00669047,
+      "mode": "sampled",
+      "sample_id": "chk1-analysis-2022-05-04-c6e89b57fba89e15",
+      "seed": 20260810,
+      "tail_repetition_delta": -0.00669047
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": 0.01942705,
+      "mode": "greedy",
+      "sample_id": "chk1-analysis-2022-06-15-6558d32ea2374172",
+      "seed": 20260811,
+      "tail_repetition_delta": 0.01942705
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": -0.04820228,
+      "mode": "sampled",
+      "sample_id": "chk1-analysis-2022-06-15-6558d32ea2374172",
+      "seed": 20260811,
+      "tail_repetition_delta": -0.04820228
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": 0.02479645,
+      "mode": "sampled",
+      "sample_id": "chk1-analysis-2022-07-27-1d1c8ca2ec7405f0",
+      "seed": 20260813,
+      "tail_repetition_delta": 0.02479645
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": 0.05972255,
+      "mode": "sampled",
+      "sample_id": "chk1-analysis-2024-06-12-8808d8fb65a6dd20",
+      "seed": 20260812,
+      "tail_repetition_delta": 0.05972255
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": 0.02140636,
+      "mode": "sampled",
+      "sample_id": "chk1-analysis-2024-07-31-229179952b21dcd5",
+      "seed": 20260809,
+      "tail_repetition_delta": 0.02140636
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": 0.04148503,
+      "mode": "greedy",
+      "sample_id": "chk1-analysis-2024-12-18-ce9ea2e170ce36fc",
+      "seed": 20260814,
+      "tail_repetition_delta": 0.04148503
+    },
+    {
+      "baseline_contract_valid": true,
+      "candidate_contract_valid": true,
+      "full_repetition_delta": 0.15879513,
+      "mode": "sampled",
+      "sample_id": "chk1-analysis-2024-12-18-ce9ea2e170ce36fc",
+      "seed": 20260814,
+      "tail_repetition_delta": 0.15879513
+    }
+  ],
+  "case_failures": [],
+  "inputs": {
+    "baseline_results": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260809T234411Z/chk0_baseline_probe/results.jsonl",
+      "sha256": "26063038ea3258fb17ba7500a3af321389a6b39a394694a15c7c982229d72391"
+    },
+    "candidate_results": {
+      "path": "/home/haobin_cui/research_files_space_2/fomc_trainer/docs/summary/20260823T_chk1_post_cp200_hard_gates/chk1_lr1e6_cp230_probe/results.jsonl",
+      "sha256": "a06bd899f399cd94e67abb8e495e9940832f6d73b7109c6d84a1bd13cb20e754"
+    }
+  },
+  "sample_manifest_sha256": "3675e72983f6f235015b80460c1895f662bb8dbfe3fdd28bb1ac4634ecf65246",
+  "schema_version": "chk1-sft-degeneration-comparison-v1",
+  "status": "passed",
+  "thresholds": {
+    "catastrophic_full_4gram_repetition": 0.5,
+    "catastrophic_tail_4gram_repetition": 0.6,
+    "completion_cap_rate": 0.0,
+    "contract_rate_drop_limit": 0.0,
+    "finite_rate": 1.0,
+    "mean_repetition_delta_limit": 0.1,
+    "per_case_repetition_delta_limit": 0.2
+  }
+}

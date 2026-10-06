@@ -338,6 +338,7 @@ def test_month_day_dates_may_repeat_but_cannot_be_added_or_omitted() -> None:
         ("The rate was 0.30 percent.", "The rate was 30 basis points."),
         ("The rate was 5.25 percent.", "The rate was 5-1/4 percent."),
         ("The amount was $40,900 million.", "The amount was $40.9 billion."),
+        ("The rate was -0.30 percent.", "The rate was \u221230 basis points."),
     ],
 )
 def test_exact_number_unit_and_form_conversions_are_allowed(
@@ -368,6 +369,16 @@ def test_rounded_derived_missing_and_repeated_numbers_are_rejected() -> None:
             "The rate was 5 percent and later remained at 5 percent.",
             "The rate remained at 5 percent.",
             ("missing_numbers",),
+        ),
+        (
+            "The rate was -0.5 percent.",
+            "The rate was +0.5 percent.",
+            ("missing_numbers", "unsupported_numbers"),
+        ),
+        (
+            "The balance was -2024 units.",
+            "The balance was +2024 units.",
+            ("missing_numbers", "unsupported_numbers"),
         ),
     ]
     for index, (analysis, answer, expected_codes) in enumerate(cases):
