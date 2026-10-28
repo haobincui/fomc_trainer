@@ -54,6 +54,10 @@ EXPECTED_VALIDATION_SAMPLES = 42
 ROLLING_WINDOW = 7
 SELECTED_STEP = 50
 MINIMUM_LOSS_STEP = 60
+# Match the thesis inclusion width: 0.9 of its 14.5 cm text block.  Rendering
+# at the final physical size preserves the specified type sizes in print.
+FIGURE_WIDTH_CM = 13.05
+MINIMUM_FONT_PT = 9.5
 
 
 def sha256_file(path: Path) -> str:
@@ -190,7 +194,6 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
     eval_loss = data["eval_loss"]
     selected_loss = float(eval_loss[np.where(eval_steps == SELECTED_STEP)[0][0]])
     minimum_loss = float(eval_loss[np.where(eval_steps == MINIMUM_LOSS_STEP)[0][0]])
-    final_delta = minimum_loss - selected_loss
 
     blue = "#2F5F98"
     blue_light = "#9AB8D8"
@@ -203,7 +206,8 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
     plt.rcParams.update(
         {
             "font.family": "DejaVu Sans",
-            "font.size": 10,
+            "font.size": MINIMUM_FONT_PT,
+            "axes.labelsize": 10,
             "axes.labelcolor": ink,
             "xtick.color": "#4B5563",
             "ytick.color": "#4B5563",
@@ -212,10 +216,10 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
     fig, (ax_top, ax_bottom) = plt.subplots(
         2,
         1,
-        figsize=(8.2, 6.7),
+        figsize=(FIGURE_WIDTH_CM / 2.54, 5.0),
         dpi=180,
         sharex=True,
-        gridspec_kw={"height_ratios": [1.9, 1.05], "hspace": 0.13},
+        gridspec_kw={"height_ratios": [1.55, 1.0], "hspace": 0.34},
         facecolor="white",
     )
 
@@ -250,7 +254,7 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
         color=blue_light,
         linewidth=0.85,
         alpha=0.58,
-        label="Train loss (per optimizer step)",
+        label="Training",
         zorder=1,
     )
     ax_top.plot(
@@ -258,7 +262,7 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
         rolling_loss,
         color=blue,
         linewidth=2.2,
-        label=f"Train loss ({ROLLING_WINDOW}-step trailing mean)",
+        label=f"{ROLLING_WINDOW}-step mean",
         zorder=3,
     )
     ax_top.plot(
@@ -266,41 +270,36 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
         eval_loss,
         color=orange,
         linewidth=1.9,
+        linestyle="--",
         marker="o",
         markersize=4.4,
         markerfacecolor="white",
         markeredgewidth=1.2,
-        label="Validation loss (42-sample monitoring split)",
+        label="Validation",
         zorder=4,
     )
-    ax_top.axvline(
-        SELECTED_STEP,
-        color=blue,
-        linewidth=1.15,
-        linestyle=(0, (5, 3)),
-        alpha=0.85,
-        label="Selected checkpoint (cp50)",
-        zorder=2,
-    )
+    ax_top.set_title("(a) Training and validation", loc="left", fontsize=10)
     ax_top.set_ylabel("Completion loss")
     ax_top.set_ylim(1.15, 2.03)
-    ax_top.legend(
-        loc="upper right",
-        frameon=True,
-        fontsize=8.2,
-        handlelength=2.7,
-        facecolor="white",
-        edgecolor="none",
-        framealpha=0.94,
+    fig.legend(
+        *ax_top.get_legend_handles_labels(),
+        loc="upper center",
+        bbox_to_anchor=(0.55, 1.0),
+        ncol=3,
+        frameon=False,
+        fontsize=MINIMUM_FONT_PT,
+        handlelength=1.7,
+        columnspacing=1.0,
+        handletextpad=0.5,
     )
-    for x, label in ((10, "Epoch 1"), (30, "Epoch 2"), (45, "Epoch 3")):
+    for x, label in ((10, "Epoch 1"), (30, "Epoch 2"), (50, "Epoch 3")):
         ax_top.text(
             x,
             1.18,
             label,
             ha="center",
             va="bottom",
-            fontsize=8.5,
+            fontsize=MINIMUM_FONT_PT,
             color=muted,
         )
 
@@ -309,6 +308,7 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
         eval_loss,
         color=orange,
         linewidth=2.1,
+        linestyle="--",
         marker="o",
         markersize=5.0,
         markerfacecolor="white",
@@ -335,78 +335,34 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
         linewidth=0.9,
         zorder=6,
     )
-    for step, value in zip(eval_steps[:4], eval_loss[:4], strict=True):
-        ax_bottom.annotate(
-            f"{value:.4f}",
-            xy=(step, value),
-            xytext=(0, 8),
-            textcoords="offset points",
-            ha="center",
-            va="bottom",
-            fontsize=8.1,
-            color="#4B5563",
-        )
     ax_bottom.annotate(
-        f"Selected cp50\n{selected_loss:.4f}",
+        f"Selected: step 50\n{selected_loss:.4f}",
         xy=(SELECTED_STEP, selected_loss),
-        xytext=(48.2, 1.5398),
+        xytext=(45.5, 1.5398),
         ha="right",
         va="bottom",
-        fontsize=8.5,
+        fontsize=MINIMUM_FONT_PT,
         color=blue,
         arrowprops={"arrowstyle": "-", "color": blue, "linewidth": 0.9},
     )
     ax_bottom.annotate(
-        f"Minimum cp60\n{minimum_loss:.4f}",
+        f"Minimum: step 60\n{minimum_loss:.4f}",
         xy=(MINIMUM_LOSS_STEP, minimum_loss),
-        xytext=(58.6, 1.5370),
+        xytext=(60.5, 1.5575),
         ha="right",
         va="bottom",
-        fontsize=8.5,
+        fontsize=MINIMUM_FONT_PT,
         color=ink,
         arrowprops={"arrowstyle": "-", "color": muted, "linewidth": 0.9},
     )
-    ax_bottom.text(
-        58.8,
-        1.5585,
-        f"cp50→cp60: {final_delta:+.6f} ({final_delta / selected_loss * 100:+.3f}%)",
-        ha="right",
-        va="center",
-        fontsize=8.4,
-        color=ink,
-    )
+    ax_bottom.set_title("(b) Validation detail", loc="left", fontsize=10)
     ax_bottom.set_xlim(0, 62)
-    ax_bottom.set_ylim(1.519, 1.571)
+    ax_bottom.set_ylim(1.519, 1.574)
     ax_bottom.set_xticks([0, 10, 20, 30, 40, 50, 60])
-    ax_bottom.set_xlabel("Optimizer step")
+    ax_bottom.set_xlabel("Optimiser step")
     ax_bottom.set_ylabel("Validation loss\n(focused scale)")
-
-    fig.suptitle(
-        "Model chk-2 SFT: Training and validation loss",
-        x=0.10,
-        y=0.975,
-        ha="left",
-        fontsize=15,
-        fontweight="semibold",
-        color="#18212B",
-    )
-    fig.text(
-        0.10,
-        0.936,
-        "305 training samples · 42-sample monitoring split · 3 epochs · evaluation every 10 optimizer steps",
-        ha="left",
-        fontsize=9.1,
-        color="#59636E",
-    )
-    fig.text(
-        0.10,
-        0.018,
-        "Epoch boundaries are grey dashed; cp50 is blue dashed. Selection used generation-quality screening, not minimum loss alone.",
-        ha="left",
-        fontsize=8.0,
-        color=muted,
-    )
-    fig.subplots_adjust(left=0.11, right=0.98, top=0.895, bottom=0.105)
+    ax_bottom.set_yticks([1.52, 1.54, 1.56])
+    fig.subplots_adjust(left=0.17, right=0.98, top=0.875, bottom=0.11)
 
     png_path = OUTPUT_STEM.with_suffix(".png")
     pdf_path = OUTPUT_STEM.with_suffix(".pdf")
@@ -415,7 +371,7 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
             raise RuntimeError(f"create-only output already exists: {path}")
     fig.savefig(
         png_path,
-        dpi=300,
+        dpi=600,
         facecolor="white",
         metadata={
             "Title": "Model chk-2 SFT: Training and validation loss",
@@ -429,7 +385,7 @@ def render(data: dict[str, Any]) -> tuple[Path, Path]:
             "Title": "Model chk-2 SFT: Training and validation loss",
             "Author": "",
             "CreationDate": datetime(2026, 9, 1, tzinfo=timezone.utc),
-            "ModDate": datetime(2026, 9, 1, tzinfo=timezone.utc),
+            "ModDate": datetime(2026, 10, 11, tzinfo=timezone.utc),
         },
     )
     plt.close(fig)
@@ -451,7 +407,7 @@ def main() -> int:
     selected_loss = float(eval_loss[np.where(eval_steps == SELECTED_STEP)[0][0]])
     minimum_loss = float(eval_loss[np.where(eval_steps == MINIMUM_LOSS_STEP)[0][0]])
     manifest = {
-        "schema_version": "paper-chk2-train-eval-loss-figure-v2",
+        "schema_version": "paper-chk2-train-eval-loss-figure-v3",
         "paper_model": "Model chk-2",
         "status": "complete",
         "implementation": {
@@ -497,6 +453,10 @@ def main() -> int:
             "selection_panel_evaluation_eligible": False,
         },
         "rendering": {
+            "figure_width_cm": FIGURE_WIDTH_CM,
+            "minimum_font_pt": MINIMUM_FONT_PT,
+            "thesis_width_fraction": 0.9,
+            "thesis_crop_required": False,
             "train_raw": True,
             "train_trailing_mean_window": ROLLING_WINDOW,
             "validation_focused_panel": True,
